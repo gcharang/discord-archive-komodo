@@ -25,27 +25,15 @@ client.on('ready', () => {
         } else {
             return 0
         }
-
     });
+
     console.log(textChannels)
 
-    text = "1";
-    for (i = 0; i < channelIds.length; i++) {
-        sleep(4000);
-        if (channelIds[i] !== 0) {
-
-            client.channels.get(channelIds[i]).send(text)
-
-        }
-
-
-    }
-
+    fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 })
 
 client.on("message", message => {
-    let reply = parseInt(message.content) + 1
-    return message.channel.send(`${reply}`);
+
 })
 
 function sleep(milliseconds) {
