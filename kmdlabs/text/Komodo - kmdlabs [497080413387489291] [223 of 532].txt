@@ -1,0 +1,392 @@
+==============================================================
+Guild: Komodo
+Channel: kmdlabs
+Topic: Please read pinned messages
+Messages: 100
+Range: 
+==============================================================
+
+[14-Jan-19 11:36 AM] smk762 -  dracocanis ominator#7640
+k, didnt look at that yet
+
+[14-Jan-19 11:36 AM] smk762 -  dracocanis ominator#7640
+chain start is manual because params pubkey etc
+
+[14-Jan-19 11:44 AM] smk762 -  dracocanis ominator#7640
+too easy. I was in ~/Knomp
+
+[14-Jan-19 11:45 AM] smk762 -  dracocanis ominator#7640
+no komodod in there, but komodod in /usr/local/bin
+
+[14-Jan-19 11:49 AM] blackjok3r#3181
+list.json is a hardcoded as a relative path, from whereever komodod was started from... maybe we need to fix that somehow.
+
+[14-Jan-19 11:49 AM] smk762 -  dracocanis ominator#7640
+just change error message 😄
+
+[14-Jan-19 11:50 AM] blackjok3r#3181
+That was like that from before... the instructions said to copy it to komodo/src which it actally didnt need to be there... until I added staker.py to use list.json
+
+[14-Jan-19 12:11 PM] blackjok3r#3181
+I've got it to stake blocks.... but they are all rejected due to a time rule.... Think I am close... There was either a whole bunch of code removed from verushash miner function, or it didnt exist yet, when this function was written.
+
+[14-Jan-19 01:38 PM] smk762 -  dracocanis ominator#7640
+that was quicker than I thought
+
+[14-Jan-19 01:38 PM] smk762 -  dracocanis ominator#7640
+```
+Please specify the amount of UTXOs to send to each segid: 700
+Total number of UTXOs: 44800
+Average utxo size: 7.456397473842188
+Enter percentage of variance: 7
+```
+
+[14-Jan-19 01:54 PM] blackjok3r#3181
+yeah its fast as 😄  
+Just like VerusHash.... It appears its too fast to do PoS64 ... finds one block then just mines all block in the future.
+
+[14-Jan-19 01:54 PM] blackjok3r#3181
+😦 Very much stuck here
+
+[14-Jan-19 01:57 PM] blackjok3r#3181
+thats a LOT of utxo ... lol
+
+[14-Jan-19 01:57 PM] blackjok3r#3181
+maybe 10,000 or so seems to be enough really... see how you go though
+
+[14-Jan-19 02:06 PM] smk762 -  dracocanis ominator#7640
+yeah, I was aiming for 700 utxos, forgot about the multiplier lol
+
+[14-Jan-19 02:07 PM] jl777c#5810
+i fixed the verushash pos64, in FSM branch
+
+[14-Jan-19 02:07 PM] blackjok3r#3181
+Doesnt work
+
+[14-Jan-19 02:07 PM] blackjok3r#3181
+I already lmerged that down
+
+[14-Jan-19 02:07 PM] jl777c#5810
+well, you need to stop PoW mining after 10 blocks and then start PoS
+
+[14-Jan-19 02:07 PM] blackjok3r#3181
+messing here for hours
+
+[14-Jan-19 02:07 PM] blackjok3r#3181
+I did that
+
+[14-Jan-19 02:08 PM] blackjok3r#3181
+or on same node?
+
+[14-Jan-19 02:08 PM] jl777c#5810
+stop all PoW at around block 10 and PoS only?
+
+[14-Jan-19 02:08 PM] jl777c#5810
+i did a test and first 100 blocks were found very fast, so the diff exploded and it was stuck at 100 for a while
+
+[14-Jan-19 02:08 PM] blackjok3r#3181
+The issue I ran into was the the VerusHash mingin loop was using PoW difficulty for PoS and PoW
+
+[14-Jan-19 02:08 PM] jl777c#5810
+but after a day, i am up to about height 350
+
+[14-Jan-19 02:09 PM] blackjok3r#3181
+I fixed that and now the blocktimes prevent anything working
+
+[14-Jan-19 02:09 PM] jl777c#5810
+oh, a trick
+
+[14-Jan-19 02:09 PM] jl777c#5810
+to stake you must start with -gen and -genproclimit=0
+
+[14-Jan-19 02:09 PM] blackjok3r#3181
+I ahve been... I will start a new chain and try it that way
+
+[14-Jan-19 02:09 PM] jl777c#5810
+and have to restart
+
+[14-Jan-19 02:10 PM] jl777c#5810
+the way it is now, is that it uses the init time settings to launch either the normal miner or the verusminer
+
+[14-Jan-19 02:10 PM] jl777c#5810
+for staking, it needs the normal miner
+
+[14-Jan-19 02:10 PM] blackjok3r#3181
+Why? I just made it so that her verus miner can stake?
+
+[14-Jan-19 02:11 PM] jl777c#5810
+oh! that is even better. but you need to stake using the normal diff, not the PoW diff
+
+[14-Jan-19 02:11 PM] blackjok3r#3181
+I fixed that already
+
+[14-Jan-19 02:11 PM] blackjok3r#3181
+but it blocking up blocktimes int he staking loop
+
+[14-Jan-19 02:11 PM] blackjok3r#3181
+it stakes on block.. .then the bloctim is set too far in the future
+
+[14-Jan-19 02:12 PM] jl777c#5810
+ok, so it sounds like it should work. not sure what you mean
+
+[14-Jan-19 02:12 PM] jl777c#5810
+put an if statement to set the blocktime the same as normal miner for staking
+
+[14-Jan-19 02:12 PM] blackjok3r#3181
+ok so after the staking loop has run, I just reset the blocktime back to what it was before the staking loop has run?
+
+[14-Jan-19 02:13 PM] jl777c#5810
+or suppress the changing of the blocktime with each iteration
+
+[14-Jan-19 02:13 PM] jl777c#5810
+i think that is what I do for the normal miner
+
+[14-Jan-19 02:13 PM] blackjok3r#3181
+ok... I have equihash staking chian, so have been testing changes I made are not breakign that as I go.
+
+[14-Jan-19 02:14 PM] blackjok3r#3181
+I will try to reset the blocktime as a brute force and see if that works as a start
+
+[14-Jan-19 02:14 PM] jl777c#5810
+i think i had it use the same blocktime, until it was taking too long, so it would use the same time for a few minutes and then advance the blocktime
+
+[14-Jan-19 02:15 PM] blackjok3r#3181
+Yeah it appears to instantly just end up at max blocktime as soon as it is called a second time... its been very tricky to figure out
+
+[14-Jan-19 03:02 PM] smk762 -  dracocanis ominator#7640
+https://twitter.com/KomodoPlatform/status/1084825316537835526
+
+{Embed}
+Komodo (@KomodoPlatform)
+https://twitter.com/KomodoPlatform/status/1084825316537835526
+"Coins without Borders: Migration" written by @smk_cartografix. Step-by-step walkthrough of the #CLI commands used in Ubuntu 16.04/18.04 to burn coins from one asset chain and have them rise like a phoenix on a different chain in the same cluster. https://t.co/EL7VuC6KEa #...
+https://pbs.twimg.com/media/Dw4S34KXcAAHImQ.jpg:large
+Twitter
+
+{Reactions}
+😎 (5) 
+
+[14-Jan-19 03:06 PM] TonyL#3577
+Hahaha "Finally reached Bangkok"
+
+{Reactions}
+👣 
+
+[14-Jan-19 03:07 PM] jorian#4555
+nice blog!
+
+{Reactions}
+🐣 
+
+[15-Jan-19 05:01 AM] blackjok3r#3181
+Just about sorted this out. We now have Verushash and PoS64 variable PoS % as an option. I also think from this debugging I worked out how to "fix" the PoS getting to 100% over time with low hash rates for equihash. However, for 0BR chains it makes more sense to just use verus hash, as a single modern CPU core can keep the PoW % at the exact target even if ther is billions of coins 😄
+
+[15-Jan-19 05:04 AM] blackjok3r#3181
+this is a hardforking chage... I have a 500 block chain, that cant ever sync 😂
+
+[15-Jan-19 07:04 AM] blackjok3r#3181
+```        coinage = (value * diff);
+        
+        if ( ASSETCHAINS_ALGO != ASSETCHAINS_EQUIHASH )
+        {
+            if ( nHeight < 100 ) 
+            { 
+                // early chain ridiculous multiplier to keep chain moving with out 500s blocks.
+                if ( blocktime+iter+segid*2 > prevtime+60 )
+                    coinage *= (coinage/2);
+            } 
+            else 
+            {
+                // Rest of the time flat 1000 multi seems to be enough to keep utxo elegible.
+                coinage *= 1000;
+            }
+        }        
+        if ( blocktime+iter+segid*2 > prevtime+480 )
+            coinage *= ((blocktime+iter+segid*2) - (prevtime+400));```
+@jl777c 
+This was the change I ended up with to make it move... I have a feeling it has to do with how VerusHash calculates its nBits for the block, changing that was far too hard, as it would have broken PoW.  So I modified the existing coinage multiplierr you have to cap PoS block times. IF there is a better way to solve this please point me in the right direction.
+
+[15-Jan-19 07:13 AM] blackjok3r#3181
+also It requires manually turning on and off PoW during the first 100 blocks,... otherwise PoW just powers to block 100 in no time at all, and the chain will simply stop when it gets to block 100.
+
+[15-Jan-19 07:20 AM] jl777c#5810
+if ( ASSETCHAINS_ALGO != ASSETCHAINS_EQUIHASH )
+should check that it matches VERUSHASH instead. i think we will need to tune each new hash algo with a rough balancer like you did
+
+[15-Jan-19 07:20 AM] jl777c#5810
+and yes this is the right approach to calibrate a new hashalgo diff to match realistic conditions
+
+[15-Jan-19 07:20 AM] blackjok3r#3181
+Yeah I was thinking the same... just playing with values at the moment... this is extremly time consuming
+
+[15-Jan-19 07:21 AM] jl777c#5810
+i think over time it will normalize back to the desired blocktimes, but it could take 1000 blocks
+
+[15-Jan-19 07:21 AM] jl777c#5810
+by pretuning with magic multipliers, it saves a lot of time
+
+[15-Jan-19 07:21 AM] jl777c#5810
+and spending a few days to tune a new algo isnt bad in the overall scheme of things
+
+{Reactions}
+👍 
+
+[15-Jan-19 07:22 AM] blackjok3r#3181
+Yeah, the trick seems to be to flat multiply it early on, exepically with lower balances... maybe the coinage^2 should even last longer than 100 blocks,. I'm not sure yet.. 
+As balance increase the difficulty will just increase calibrating the blcok times.
+
+[15-Jan-19 07:23 AM] blackjok3r#3181
+I think this method may be able to solve equihash balloning to 100% PoS aswell... it might just need a small reduction in coinage multiplier.
+
+[15-Jan-19 07:56 AM] TonyL#3577
+Started to work on migrations_v3 script which will blast migrations permanently until you stop it and basing on parallel fifo queues (will not wait for previous step to be finished before proceed to the next one). Because of this logic change I think to change data collection also to deque to make things faster.
+`Deque is preferred over list in the cases where we need quicker append and pop operations from both the ends of container, as deque provides an O(1) time complexity for append and pop operations as compared to list which provides O(n) time complexity.`
+
+[15-Jan-19 08:34 AM] blackjok3r#3181
+After more screwing around... I think I found a bug that was preventing Difficulty setting correcty. 
+Nice tony! Sounds great. My idea was like a blaster than pings received utxos back to the source upon arrival. Seems similar. I wasnt able to get ti working with bash though lol.
+
+[15-Jan-19 08:53 AM] blackjok3r#3181
+Yes I used a deque for the streamer...
+
+[15-Jan-19 08:53 AM] blackjok3r#3181
+2 threads, pass data to bottom with one, and tak it off the top with the other.
+
+[15-Jan-19 09:24 AM] smk762 -  dracocanis ominator#7640
+I had a thought of something similar, a script which would play ping pong with transactions by listenening to the wallet in a while loop. Not sure how efficient it would be tho
+
+[15-Jan-19 09:31 AM] smk762 -  dracocanis ominator#7640
+looks like my staking on cfekpos51 has added about 260 to the wallet 😃
+
+[15-Jan-19 09:31 AM] blackjok3r#3181
+Nice so its working... has the number of unspents incrreased? The staker should hold it at a steady number.
+
+[15-Jan-19 09:31 AM] smk762 -  dracocanis ominator#7640
+`0a3266aa8119f0262df7954fee2257376c7aaa1d3bf14d50f70f54e65a575ed5 mined CFEKPOS51 block 4570!`
+
+[15-Jan-19 09:33 AM] smk762 -  dracocanis ominator#7640
+lol, I think my approx. 50k utxos are making that hard to confirm.
+
+[15-Jan-19 09:34 AM] blackjok3r#3181
+lol
+
+[15-Jan-19 09:35 AM] smk762 -  dracocanis ominator#7640
+listaddressgroupings has 63 of the addresses with balance within 20 of all others. one address is a bit more than double the average, I think thats the one which had spare after spreading to segids
+
+[15-Jan-19 09:35 AM] blackjok3r#3181
+if you leave them ... onec its been running for liek 3-4 weeks your node will be unstopable 🏎
+
+[15-Jan-19 09:35 AM] smk762 -  dracocanis ominator#7640
+one address is empty, but it's the one I had before and not part of list.json
+
+[15-Jan-19 09:35 AM] blackjok3r#3181
+yep makes sense
+
+[15-Jan-19 09:36 AM] smk762 -  dracocanis ominator#7640
+sweet
+
+[15-Jan-19 09:36 AM] blackjok3r#3181
+basically... by using list.json you remove the need for the wallet... The wallet can break, while I managed to code  work around that appears to fix itm, its much better having a list of private keys you can safly recover if something goes wrong.
+
+[15-Jan-19 09:36 AM] smk762 -  dracocanis ominator#7640
+still seeing ` runCommand error: system(/home/smk762/pos64staker/staker.py 030ccb4e99c7d7cac0d470c688d1ca3f9103f12d5842d1cfdcbaec18962118f4 CFEKPOS51) returned 256` a bit, but not such a worry now, just want to know what it means!
+
+[15-Jan-19 09:36 AM] blackjok3r#3181
+not sure either.
+
+[15-Jan-19 09:37 AM] smk762 -  dracocanis ominator#7640
+I've got similar scripts to generate store pub/priv keys for the pool, but not as many.
+
+[15-Jan-19 09:37 AM] blackjok3r#3181
+yeah dont appear to have that error here.
+
+[15-Jan-19 09:39 AM] smk762 -  dracocanis ominator#7640
+running it manually with same hash as in error returns `not our block, exit.`
+
+[15-Jan-19 09:40 AM] blackjok3r#3181
+seems harmless then
+
+{Reactions}
+3040_suspepe 
+
+[15-Jan-19 09:40 AM] blackjok3r#3181
+my staker si still getting nearlyt all the blocks... which is expected as your utxos are very small... it willl take many days for the age to come in to play.
+
+[15-Jan-19 09:41 AM] blackjok3r#3181
+once it does though ... it will dominate
+
+{Reactions}
+3040_kingpeepo 
+
+[15-Jan-19 09:42 AM] smk762 -  dracocanis ominator#7640
+!kmdtip @whoever_added_the_pepes
+
+{Reactions}
+💯 
+
+[15-Jan-19 11:45 AM] blackjok3r#3181
+This is the hardest blockchain to start we will ever find 😂
+
+[15-Jan-19 11:45 AM] blackjok3r#3181
+I cant even think of how to script this right now
+
+[15-Jan-19 11:49 AM] blackjok3r#3181
+```
+1. Start 2 nodes with mining disabled. 
+2. Enable mining on one node. Disable it as soon as it has got 1 block.
+3. Run PoS splitter to split over 64 address's
+4. start PoW mining on the other node
+5. let it PoW mine until around block 25
+6. stop Pow mining and enable staking on other node
+7. Turn on PoW mining on toher node after PoS% is close to 50.
+8. When the PoW node starts shitting blocks stop it PoW mining```
+
+{Reactions}
+😬 
+
+[15-Jan-19 11:50 AM] blackjok3r#3181
+Verus hash is so powerful even on a single core.. if you let it PoW mine it will just mine a block every second or 2... and just kill the chain.
+
+[15-Jan-19 11:51 AM] blackjok3r#3181
+🤔 
+maybe I can make it mine PoW and the PoS  alternatlely as a rule for the first 200 blocks 😆
+
+[15-Jan-19 12:37 PM] smk762 -  dracocanis ominator#7640
+can you start it with huge difficulty early so it's slow enough on early blocks to control more easily?
+
+[15-Jan-19 12:37 PM] jl777c#5810
+yes, starting it with much higher initial diff is the way to go
+
+[15-Jan-19 01:03 PM] blackjok3r#3181
+```        if ( ASSETCHAINS_ALGO == ASSETCHAINS_VERUSHASH )
+        {
+            if ( nHeight < 100 )
+                coinage *= coinage;
+            else if ( nHeight < 200 )
+                coinage *= coinage/2;
+            else
+                coinage *= 500;
+            if ( blocktime+iter+segid*2 > prevtime+120 )
+                coinage *= ((blocktime+iter+segid*2) - (prevtime+40));
+        }```
+```    if ( height < 200 && height % 5 == 0 )
+        return(target);```
+
+[15-Jan-19 01:03 PM] blackjok3r#3181
+this might do it... starting with a very high hash rate
+
+[15-Jan-19 01:16 PM] blackjok3r#3181
+this is the best its worked so far by a long way. hopefully 200 blocks is enough. Cant ahve every 5th block PoW only permenantly lol.
+
+[15-Jan-19 01:28 PM] TonyL#3577
+Made 7 threads non-stop migration tool, seems it's working. Testing speed now 🤞
+
+{Reactions}
+3040_kingpeepo (2) 
+
+[15-Jan-19 01:30 PM] blackjok3r#3181
+@ComputerGenie 👴🏼📢  What do you think about giving PoW some defined "free" block? how close together would they need to be to keep miners on the chain?
+
+[15-Jan-19 01:30 PM] ComputerGenie 👴🏼📢#7004
+free?
+

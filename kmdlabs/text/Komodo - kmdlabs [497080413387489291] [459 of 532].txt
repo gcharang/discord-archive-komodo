@@ -1,0 +1,359 @@
+==============================================================
+Guild: Komodo
+Channel: kmdlabs
+Topic: Please read pinned messages
+Messages: 100
+Range: 
+==============================================================
+
+[03-Aug-19 11:17 PM] Alright#0419
+Tony is not contributing directly, but will be the deciding factor in the event 3 of us can't agree with the other 3
+
+[04-Aug-19 12:13 AM] phm87#7395
+Komodo binary stopped without any warning a third time today on my KMDLabs node:
+
+[04-Aug-19 12:13 AM] phm87#7395
+```2019-08-04 00:03:06 Erased 156cc7339ef127603522229ed93ac79e5d294d57229f81d51896df5127c4b9ee from wallet.
+2019-08-04 00:03:06 Erased 44a2f66246cccb2d0029a0ade0afb754568f957f9e56cf795249dd017029d1f0 from wallet.
+2019-08-04 00:03:06 Erased 51a47fd4bb142db0df23eec2d0c5175725e864a050b5c960f55ade5797dcd0f7 from wallet.
+2019-08-04 00:03:06 Erased df14399c3017fd8591ff8416ef29145e7a1617acba2b8cda456ab85fb01e93f8 from wallet.
+2019-08-04 00:03:06 Erased 806634271939a98cec409b75a6e988b9a34f1d1dae861cd1bfa7aa58b34e29f9 from wallet.
+2019-08-04 00:03:06 Erased 22679a22f606ca1ffc7a4f8b39403b3d8b748f129277d70c8afcc3b4cc856bfc from wallet.
+2019-08-04 00:03:06 Erased bebac4390b70b1a45b7055192754a3c2395f036ff508f682fcf27e6ca74f88fe from wallet.
+2019-08-04 00:03:06 AddToWallet c8091847508ff81c73290b8faa7891a6402041456a903a11127d7e4c41d57a0c  new
+2019-08-04 00:04:42 ConnectBlock: wrote 3 block notarisations in block: 0c092b045d8c6a373fbbc83e3aa0ca02da6cab92ec12da044761f2252310d0cf
+2019-08-04 00:04:43 UpdateTip: new best=0c092b045d8c6a373fbbc83e3aa0ca02da6cab92ec12da044761f2252310d0cf  height=1471733  log2_work=50.215582  log2_stake=-inf  tx=5999335  date=2019-08-04 00:04:42 progress=1.000000  cache=8.0MiB(18416tx)```
+
+[04-Aug-19 12:13 AM] phm87#7395
+the log is not very interesting, i'll try to run it into gdb
+
+[04-Aug-19 12:25 AM] phm87#7395
+it crashed after walletreset.sh
+
+[04-Aug-19 02:12 AM] smk762 -  dracocanis ominator#7640
+``` git log -1
+commit e3ae8559edaa82d8c9cd9aaca78b9ee55d48df38```
+
+[04-Aug-19 03:01 AM] blackjok3r#3181
+Yes we should be on latest supernet commit. Also make sure komodo is up to date. Start.sh should handle it, at least it did on my node. Bit if a clusterfuck sorry, but notas are working so everything is OK. Getting the delay right may take a few iterations. I hope you don't all freek out over a few dollars worth of labs, its worth it to get the notary nodes working correctly.
+
+[04-Aug-19 03:08 AM] blackjok3r#3181
+I would say doing a wallet reset with the utxo cache is very dangerous and is probably expected to crash tbh.
+
+[04-Aug-19 03:08 AM] blackjok3r#3181
+@phm87
+
+[04-Aug-19 03:12 AM] blackjok3r#3181
+I really font have any time to spend on this for at least another 24h. For the time being please just make sure all nodes are up to date, and anyone that can please DM any ops we don't know about, if they don't respond we will need to change port.
+
+[04-Aug-19 04:20 AM] smk762 -  dracocanis ominator#7640
+is it the `cleanwallettransactions` which doesnt play nice with utxocache? I also noticed a crash
+
+[04-Aug-19 04:53 AM] blackjok3r#3181
+It may do.... iok i'll push a fix for this now.
+
+[04-Aug-19 05:02 AM] blackjok3r#3181
+https://github.com/KMDLabs/komodo/commit/2103b55efadfc77a9b71dc89f4a44066cf47f2cb
+This *should* work. After using sendtoaddress it will reset the cache. Still quite limited fix, but it should at least prevent sendtoaddress crashing the daemon, or making iguana use spent utxos. 
+Again with cache wallet reset and merge of mined funds isnt really required untl you have vast numbers of utxos.,
+
+{Embed}
+https://github.com/KMDLabs/komodo/commit/2103b55efadfc77a9b71dc89f4a44066cf47f2cb
+reset utxo cache after using sendtoaddress sucessfully · KMDLabs/...
+https://avatars1.githubusercontent.com/u/30971146?s=200&v=4
+
+[04-Aug-19 05:03 AM] blackjok3r#3181
+My node may have something wrong with it, I will try to sort it out tomorrow. Ther may need to be some changes to how you guys run things with this new method so that we know everything is equal.
+
+{Reactions}
+🔥 
+
+[04-Aug-19 11:53 AM] daemonfox#6136
+wow IDK wtf is happening to my node after those pulls but I had to chmod the src folder manually after, then chmod the .ccache manually... werent issues before not sure what made that an issue.
+
+[04-Aug-19 11:54 AM] daemonfox#6136
+then it finally built
+
+[04-Aug-19 11:54 AM] daemonfox#6136
+restarting NN now
+
+[04-Aug-19 12:04 PM] daemonfox#6136
+seems to be up
+
+[04-Aug-19 12:50 PM] Bar_F1sh_Rel#0834
+Had to ./start.sh twice - but otherwise no issues.
+
+[04-Aug-19 01:32 PM] CMaurice#1685
+it was only an iguana rebuild i think
+
+[04-Aug-19 01:35 PM] blackjok3r#3181
+yes. I dont think he updated to the first delay and utxo cache version. We may need to deploy another entire network with just a hand full of us to make sure the right code is being run. One thing I have learnt so far is that any node who is not running it, will get mroe notarizations.. Its not working as I expected it to work 😦
+
+[04-Aug-19 01:36 PM] CMaurice#1685
+uh, wonder if I updated but skipped the komodo by not doing it manually
+
+[04-Aug-19 01:36 PM] blackjok3r#3181
+Need to have a think about it. Maybe we should focus on utxo cache being stable as thats an extremly good qualiy of life improvement for all nodes, makes them much easier to manage.
+
+[04-Aug-19 01:36 PM] CMaurice#1685
+_goes to check_
+
+[04-Aug-19 01:36 PM] CMaurice#1685
+nope
+
+[04-Aug-19 01:37 PM] blackjok3r#3181
+You can check what version you have by looking at the iguana TV and seeing the print that tells you which utxo its using. should alwasy show 0 of 1.
+
+[04-Aug-19 01:38 PM] CrisF#3405
+For the update ./stop.sh and ./start.sh is enough?
+
+[04-Aug-19 01:39 PM] blackjok3r#3181
+yes, as far as I know its all working as expected still.
+
+{Reactions}
+👌 
+
+[04-Aug-19 01:39 PM] CMaurice#1685
+yep for all but CFEKLOTTO1: `[CFEKLOTTO1] : chosen = 320  out of 895 loop.(1)` <- lotsa
+
+[04-Aug-19 01:39 PM] ComputerGenie 👴🏼📢#7004
+895? clean yer wallet 😛
+
+[04-Aug-19 01:40 PM] blackjok3r#3181
+yeah that branch doesnt have it.. maybe it should be removed.... So we ONLY notarize LABS for a little bit.. Once this test is either over, or we make a new controlled network to test with we can add a new CFEK cluster to try and blast crosschain tx.
+
+[04-Aug-19 01:40 PM] blackjok3r#3181
+I would like to get the MoMoM stuff working with nSPV though... so you dont need a KMD full node to do crosschain
+
+[04-Aug-19 01:40 PM] ComputerGenie 👴🏼📢#7004
+but....but....but, how can I win the lotto if we don't have it? 😭
+
+[04-Aug-19 01:41 PM] CMaurice#1685
+oh yeah I did that withdraw scpt of blackjok3rs ad inifinitum
+
+[04-Aug-19 01:41 PM] blackjok3r#3181
+also wont need a centalised server
+
+[04-Aug-19 01:41 PM] blackjok3r#3181
+Didnt it already end a long time ago.?
+
+[04-Aug-19 01:41 PM] ComputerGenie 👴🏼📢#7004
+fek, I dunno; I was on the roof when you did that 😛
+
+[04-Aug-19 01:42 PM] blackjok3r#3181
+as far as I remeber it was all working ok, but its missing some validation so you can easily cheat, and little bit of a mission to fix.
+
+[04-Aug-19 01:43 PM] ComputerGenie 👴🏼📢#7004
+so, shut down the cfek miners?
+
+[04-Aug-19 01:46 PM] blackjok3r#3181
+I think we can really yes. Should try to isolate things... If we can get 1 chain notarizing close to evenly  it should be fine for the rest.
+
+[04-Aug-19 01:47 PM] blackjok3r#3181
+cant see much of a reason to keep those chains with ridiiculous block rewwards running.
+
+{Reactions}
+👌 
+
+[04-Aug-19 01:47 PM] ComputerGenie 👴🏼📢#7004
+ok, still working on OOT for main NN, but as soon as I get that back up I'll load up the pool server and kill those 2 nodes
+
+[04-Aug-19 01:48 PM] blackjok3r#3181
+yeah i'll pull it out from assetchains.json... It may be a good way to detect who has updated, track who is still sending packets for the removed chains 🤔
+
+[04-Aug-19 01:49 PM] blackjok3r#3181
+Changeing port on LABS could be dangerous.. It may stop it working for a while.
+
+[04-Aug-19 01:53 PM] ComputerGenie 👴🏼📢#7004
+pool server is so empty now 🙃
+
+{Attachments}
+https://cdn.discordapp.com/attachments/497080413387489291/607571918492663834/Screenshot_2019-08-04_08-53-25.png
+
+[04-Aug-19 02:09 PM] ComputerGenie 👴🏼📢#7004
+```~/SuperNET$ git status|grep 'branch' && git log -1|grep 'commit'
+On branch staked
+Your branch is up-to-date with 'origin/staked'.
+commit e3ae8559edaa82d8c9cd9aaca78b9ee55d48df38```
+and only LABS and KMD running
+
+[04-Aug-19 02:12 PM] blackjok3r#3181
+updating my node now.. Added a print for CFEK chains that tells everyone when a node sends a CFEK packet... but I have a feeling it will spame litterally millions of them. So will test first.
+
+[04-Aug-19 02:13 PM] ComputerGenie 👴🏼📢#7004
+_lets you keep that print all to yourself :troll:_
+
+[04-Aug-19 02:13 PM] blackjok3r#3181
+Its not fool proof... as someone can run the old version and just not notarize CFEK... but there seems to be OPs that are MIA, this wil help detect that at least.
+
+[04-Aug-19 02:14 PM] blackjok3r#3181
+Well... if it spams to everyone then they will get very mad at ppl who didnt update :troll:
+
+[04-Aug-19 02:14 PM] ComputerGenie 👴🏼📢#7004
+since when does folks getting mad at a guy change what he does? 🤔
+
+[04-Aug-19 02:14 PM] blackjok3r#3181
+not much, especially if they cannot be contacted lol
+
+[04-Aug-19 02:15 PM] ComputerGenie 👴🏼📢#7004
+I seem to recall 2 or 3 convos where I've had more folks mad at me than we have NNs :troll_lol:
+
+{Reactions}
+😆 
+
+[04-Aug-19 02:16 PM] blackjok3r#3181
+🤣
+
+[04-Aug-19 02:16 PM] blackjok3r#3181
+there is a DPOW version felid... but again... someone can just change what their node is reporting...
+
+[04-Aug-19 02:17 PM] ComputerGenie 👴🏼📢#7004
+jokes aside, I'm not sure that everyone that signed up to be a LABS NN realized how interactive it's meant to be
+
+[04-Aug-19 02:17 PM] blackjok3r#3181
+Having same issues with nSPV... Determining who is and is not a good peer
+
+[04-Aug-19 02:17 PM] blackjok3r#3181
+Yes, I agree... But the selection should weed those out that cannot participate.
+
+[04-Aug-19 02:19 PM] CrisF#3405
+I figure more NNs will be back when action picks up here.  We've been very quiet since people got busy with KMD NN things.
+
+[04-Aug-19 02:19 PM] blackjok3r#3181
+Yes its been pretty bad,. launched and then did nothing pretty much lol.
+
+[04-Aug-19 02:20 PM] CrisF#3405
+Nothing that a few projects won't fix up.
+
+[04-Aug-19 02:20 PM] blackjok3r#3181
+That will change. We have a good team here need to get everyone having some fun 😃
+
+{Reactions}
+labs labs1 
+
+[04-Aug-19 02:21 PM] ComputerGenie 👴🏼📢#7004
+for me, it's just an issue of bad timing with a bunch of irl stuff
+
+[04-Aug-19 02:21 PM] ComputerGenie 👴🏼📢#7004
+that's why I've been mostly out
+
+[04-Aug-19 02:21 PM] blackjok3r#3181
+Same here man. Life has been crazy last few months, not sure how I got though it.
+
+[04-Aug-19 02:22 PM] CrisF#3405
+Me the same.  Also the KMD NN has taken a while for me to sort out.  I'm still so slow...
+
+[04-Aug-19 02:22 PM] ComputerGenie 👴🏼📢#7004
+most of me hates farm/ranch life, but it's what really pays the bills
+
+[04-Aug-19 02:22 PM] CrisF#3405
+Chicken farm?
+
+[04-Aug-19 02:23 PM] ComputerGenie 👴🏼📢#7004
+chickens and some cattle
+
+{Reactions}
+👍 💯 
+
+[04-Aug-19 02:23 PM] CrisF#3405
+Nice.
+
+[04-Aug-19 02:23 PM] CrisF#3405
+Steak and eggs!
+
+[04-Aug-19 02:23 PM] blackjok3r#3181
+LOL my blackjok3r_SH node is terrible...but it works and after the week it too me to sort out it hasnt stopped working... Even if its not notarizing verty much.... Running a delay in iguana when n other node is at all... kind of breaks it totally :abusedsmily:
+
+[04-Aug-19 02:24 PM] blackjok3r#3181
+I think I will remove it from that real node for now until we can get something better working.
+
+[04-Aug-19 02:25 PM] ComputerGenie 👴🏼📢#7004
+make better shit without breaking it the 1st 15 times :troll_lol:
+
+[04-Aug-19 02:25 PM] blackjok3r#3181
+this isnt somehting that will be easy to get right.
+
+[04-Aug-19 02:26 PM] blackjok3r#3181
+I hardly understand how its doing what it does... I know why it does it, but I needed to wrap my head around a heap of bitwise stuff
+
+[04-Aug-19 02:26 PM] blackjok3r#3181
+Not something you can learn 1 day lol .
+
+[04-Aug-19 02:27 PM] ComputerGenie 👴🏼📢#7004
+`I hardly understand how its doing what it does...`
+just think of how the rest of us feel :P
+I "sort of" understand *some* of the code and mostly know none of what any of it does LOL
+
+[04-Aug-19 02:28 PM] ComputerGenie 👴🏼📢#7004
+my whole background is in much more linear code
+
+[04-Aug-19 02:28 PM] blackjok3r#3181
+my background was in no code :troll:
+
+[04-Aug-19 02:29 PM] blackjok3r#3181
+Guess that helps a lot tbh
+
+[04-Aug-19 02:29 PM] ComputerGenie 👴🏼📢#7004
+that actually gives you an "advantage"
+
+[04-Aug-19 02:29 PM] ComputerGenie 👴🏼📢#7004
+you don't have anything to "unlearn"
+
+[04-Aug-19 02:29 PM] blackjok3r#3181
+yes
+
+{Reactions}
+💯 
+
+[04-Aug-19 03:50 PM] daemonfox#6136
+seems to be running smooth now just a lot less found
+
+[04-Aug-19 04:37 PM] zatJUM#9924
+I don't have any iguana connexions for a few hours (restarted iguana 2 or 3 times):```netstat -an | grep 9333 | grep ESTAB```
+
+[04-Aug-19 04:40 PM] zatJUM#9924
+Oh! 4th time is the good one 😃
+
+[04-Aug-19 04:40 PM] blackjok3r#3181
+restarting it atm is a bad idea... im messing with things
+
+[04-Aug-19 04:40 PM] blackjok3r#3181
+unless you didnt build it
+
+[04-Aug-19 04:40 PM] zatJUM#9924
+I didn't 😉
+
+[04-Aug-19 04:41 PM] zatJUM#9924
+```netstat -an | grep 9333 | grep ESTAB | wc -l
+26```
+
+[04-Aug-19 05:29 PM] Exile13#4458
+I need some chicken! I love fresh eggs.
+
+[04-Aug-19 05:29 PM] blackjok3r#3181
+```for (z=n=0; z<bp->numnotaries; z++)
+                if ( (bp->notaries[z].recvmask & (1LL << k)) != 0 )
+                    n++;
+            if ( n >= bp->numnotaries/2 );```
+
+[04-Aug-19 05:29 PM] blackjok3r#3181
+I found it
+
+[04-Aug-19 05:30 PM] blackjok3r#3181
+2 is just too low... somehow that must be a variable and start at a high number and increment down over time until it reaches the same number on all nodes.
+
+[04-Aug-19 05:30 PM] blackjok3r#3181
+consenus change too...
+
+[04-Aug-19 05:30 PM] blackjok3r#3181
+😄
+
+[04-Aug-19 05:36 PM] blackjok3r#3181
+that determines how many nodes need the same recvmask before bestmask is calculated... Currently it is half the nodes. This seems reasonable, but most of the time 80% + of nodes are actually working.... I think after one block passes on KMD if 80% of nodes cannot agree it drops back to 50%
+
+[04-Aug-19 05:37 PM] blackjok3r#3181
+ONly issue I see is that if a bunch of nodes see the KMD block at a diffrent time, they all cannot agree at all for a while
+
+[04-Aug-19 05:46 PM] blackjok3r#3181
+@Alright  We need a CFEK notary network ASAP
+
