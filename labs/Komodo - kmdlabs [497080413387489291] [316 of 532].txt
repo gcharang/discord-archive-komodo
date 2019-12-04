@@ -1,0 +1,333 @@
+==============================================================
+Guild: Komodo
+Channel: kmdlabs
+Topic: Please read pinned messages
+Messages: 100
+Range: 
+==============================================================
+
+[01-Mar-19 10:34 AM] blackjok3r#3181
+thats what ALL build.sh uses... except the DIMXTY branch where i changed it to use makecclib
+
+[01-Mar-19 10:36 AM] Alright#0419
+my understanding is that libcc.so does not need to be there unless you're using a chain that uses CCs from it
+
+[01-Mar-19 10:36 AM] Alright#0419
+not sure about it building without it though
+
+[01-Mar-19 10:36 AM] blackjok3r#3181
+it needs to be there Im pretty sure
+
+[01-Mar-19 10:36 AM] Alright#0419
+delete it
+
+[01-Mar-19 10:36 AM] Alright#0419
+and restart it
+
+[01-Mar-19 10:37 AM] Alright#0419
+Oh wait
+
+[01-Mar-19 10:37 AM] Alright#0419
+it's statically linked right now
+
+[01-Mar-19 10:37 AM] blackjok3r#3181
+no to build komodod it must be there
+
+[01-Mar-19 10:37 AM] Alright#0419
+deleting it won't do shit
+
+[01-Mar-19 10:38 AM] blackjok3r#3181
+Im 99% sure the fix I just pushed out works... but not sure why it fails on some systems though. Maybe someone can give me access to one of them to debug it on the weekend ? Im going out for tea soon and wont ab back tonight I dont think.
+
+[01-Mar-19 10:38 AM] Alright#0419
+testing a build with latest CFEKDIMXY right now
+
+{Reactions}
+👍 
+
+[01-Mar-19 10:44 AM] Alright#0419
+@blackjok3r it just worked?
+
+[01-Mar-19 10:45 AM] Alright#0419
+not sure man, I really need to dig into how start.sh works and emulate it's behavior
+
+[01-Mar-19 10:45 AM] blackjok3r#3181
+it built on my server simply using start.sh with master and CFEK daemons deleted (forces it to build even if no update found)
+
+[01-Mar-19 10:46 AM] blackjok3r#3181
+so I think it works... Like I siad before. github is bein shit, and not propagating commits to everyone at the same time somehow. This is most liley the problem
+
+[01-Mar-19 10:46 AM] blackjok3r#3181
+or a fail make, needs to havce make clean done... which you cant do until you run build.sh first
+
+[01-Mar-19 10:46 AM] Alright#0419
+how can I be sure the daemon built with correct commit?
+
+[01-Mar-19 10:46 AM] Alright#0419
+and was started with correct commit?
+
+[01-Mar-19 10:48 AM] blackjok3r#3181
+you cant...
+
+[01-Mar-19 10:49 AM] Alright#0419
+I was thinking we will eventually need a way to force notaries to update
+
+[01-Mar-19 10:49 AM] Alright#0419
+say a dev pushes a fix to their branch, we need to push notaries to actually want to update in a timely matter
+
+[01-Mar-19 10:50 AM] Alright#0419
+right now if there are more notaries not updated, it's in the notaries best interest not to update as they will get more notarizations
+
+[01-Mar-19 10:52 AM] Alright#0419
+we could try to compensate notaries for updates 😈
+
+{Reactions}
+👍 
+
+[01-Mar-19 10:52 AM] Alright#0419
+it does make sense
+
+[01-Mar-19 10:54 AM] Alright#0419
+maybe instead of compensation for updating, some negative impact if they don't
+
+[01-Mar-19 10:55 AM] blackjok3r#3181
+```I dont think we need to chagne iguana for this, just return an error to it instead of null to that it will not create the notarization. If there are changes needed for iguana
+I can do that
+So what it needs to do is:
+1) check that there is more than 2 notarizations on a chain
+2) if there is more than 2, refuse to submit null
+3) if there are less than 2 submit null.
+the issue is comming from a notarization not yet being confirmed on KMD when iguana makes the notarization. It must wait until the last notarization has been confirmed.
+this is why when we increased notarization frequency number to 15 blocks everything ALWAYS works 100% of the time.```
+
+[01-Mar-19 10:55 AM] blackjok3r#3181
+Finally know what the problem is guys 😄
+
+[01-Mar-19 10:56 AM] blackjok3r#3181
+now we just need to fix it. dimxy is going to see what he can do, otherwise I'll try to fix it over the weekend.
+
+[01-Mar-19 10:56 AM] blackjok3r#3181
+`the issue is comming from a notarization not yet being confirmed on KMD when iguana makes the notarization. It must wait until the last notarization has been confirmed.` libscott said this right from day 1, that iguana not waiting for notas being confirmed would be a problem.
+
+[01-Mar-19 10:57 AM] blackjok3r#3181
+at least we can now fix it.
+
+[01-Mar-19 10:59 AM] CMaurice#1685
+`failed to update please build manually`
+
+[01-Mar-19 11:19 AM] jorian#4555
+updating fast will boost your stats in the beginning, since you'll be among the few that updated
+
+[01-Mar-19 11:19 AM] jorian#4555
+so if notarizations is a metric i think that should be covered
+
+[01-Mar-19 11:19 AM] smk762 -  dracocanis ominator#7640
+`failed to boot, please rebuild with new hard drives`
+
+[01-Mar-19 11:20 AM] smk762 -  dracocanis ominator#7640
+done, now I can put the screwdriver down...
+
+[01-Mar-19 11:37 AM] Alright#0419
+@jorian if the chain doesn't fork, non-updated nodes will continue to notarize if there is enough of them
+
+[01-Mar-19 11:38 AM] jorian#4555
+ohh. i get it, didn't read lol
+
+[01-Mar-19 11:38 AM] jorian#4555
+yes that happens
+
+[01-Mar-19 11:58 AM] Alright#0419
+I turned my HAX off, let's see how quickly I fall in counts
+
+{Reactions}
+labs 
+
+[01-Mar-19 12:47 PM] ComputerGenie 👴🏼📢#7004
+OK, so some idiot thought it would be a good idea to run a reindex on komodo with 2 cores and 4G of RAM
+after 2 days, he says "don't be an idiot like me; just don't do that"...
+
+[01-Mar-19 12:47 PM] blackjok3r#3181
+lol.... cores doesnt matter. I ran it ona  24 core VM and it took 18H to finish
+
+[01-Mar-19 12:48 PM] ComputerGenie 👴🏼📢#7004
+not time issue, it crashed 😛
+
+[01-Mar-19 12:48 PM] blackjok3r#3181
+lol, yeah RAM is important... Notary nodes need boat loads of it
+
+[01-Mar-19 12:48 PM] ComputerGenie 👴🏼📢#7004
+it used up all the RAM and swap
+
+[01-Mar-19 12:48 PM] blackjok3r#3181
+using 32GB for LABS, only uses like 3GB most of the time though
+
+[01-Mar-19 12:49 PM] blackjok3r#3181
+16GB is probably needed if you want to build daemons and stuff while notary is stil running
+
+[01-Mar-19 12:50 PM] blackjok3r#3181
+8Gb + 8GB swap would suffice
+
+[01-Mar-19 12:50 PM] ComputerGenie 👴🏼📢#7004
+in my experience 4 works, but 4 *free* works better
+
+{Reactions}
+👍 
+
+[01-Mar-19 12:50 PM] blackjok3r#3181
+is there much ram savings with the current master?
+
+[01-Mar-19 12:51 PM] blackjok3r#3181
+I removed a large amount of data from the runtime memory stucture
+
+[01-Mar-19 12:51 PM] ComputerGenie 👴🏼📢#7004
+I don't think I have that one running on the remote, I think I have the build just before that one
+
+[01-Mar-19 12:52 PM] blackjok3r#3181
+cool. Yeah I didnt notrice a lot of diffrence tbh which was surprising... Only guess is it wasnt actually using all the paths I removed.
+
+[01-Mar-19 12:52 PM] ComputerGenie 👴🏼📢#7004
+not seeing a difference on local komodo right at usual 3.9
+
+[01-Mar-19 12:53 PM] blackjok3r#3181
+Actually I know it wasnt using them... Likely the savings would be under 100MB
+
+[01-Mar-19 12:55 PM] blackjok3r#3181
+At least I know what the problem with MoMoM is now... and the sledgehammer code we thaught fixed it actaully didnt.... What fixed it last time, was the face I added a supress of notarizations unless 3KMD blocks ahd happened. Now with more txns on KMD and the sapling stuff, 3 blocks isnt enough to guarentee that the previous notarization has confirmed. 
+This isnt all bad, as just adding mroe and more delay was only covering up the problem.
+
+[01-Mar-19 12:55 PM] blackjok3r#3181
+Really needs to be fixed properly.
+
+[01-Mar-19 12:56 PM] blackjok3r#3181
+Ironicly, the bug causing the gaps is caused by another bug fix added at the very start of STAKED MoMoM tests lol
+
+[01-Mar-19 12:56 PM] blackjok3r#3181
+that said, the bug fix propably uncovered this bug ... rather than causing it directly
+
+[01-Mar-19 12:57 PM] ComputerGenie 👴🏼📢#7004
+I forget, is there any special daemon/build needed to run your pool code?
+
+[01-Mar-19 12:57 PM] blackjok3r#3181
+no the getblocktemplate change should be in everything apart from master, could be there also
+
+{Reactions}
+👍🏽 
+
+[01-Mar-19 12:57 PM] blackjok3r#3181
+havent checked
+
+[01-Mar-19 12:58 PM] ComputerGenie 👴🏼📢#7004
+Someone asked me last night about soloing rogue with a GPU and I couldn't remember
+
+[01-Mar-19 12:59 PM] blackjok3r#3181
+lol why mine rogue 😆
+
+[01-Mar-19 12:59 PM] ComputerGenie 👴🏼📢#7004
+feked if I know, all I know is that without work yours is the only pool that will likely work
+
+[01-Mar-19 01:00 PM] blackjok3r#3181
+that pool is the only pool that works for nearly all AC params I think... Very useful in the end... I knew what I was doing it for.
+
+[01-Mar-19 01:00 PM] ComputerGenie 👴🏼📢#7004
+_wouldn't even know where to start with_ `OP_CHECKCRYPTOCONDITION` ☹
+
+[01-Mar-19 01:00 PM] blackjok3r#3181
+exactly
+
+[01-Mar-19 01:01 PM] blackjok3r#3181
+which is what I was trying to say the whole time
+
+[01-Mar-19 01:01 PM] blackjok3r#3181
+once that was made possible lots and lots of things are going to use it.
+
+[01-Mar-19 01:02 PM] ComputerGenie 👴🏼📢#7004
+I wasn't ever saying yours didn't work, I was saying that "someone" should make one that would (more specifically that we need a tx lib that covers all the komodo txes)
+
+[01-Mar-19 01:02 PM] blackjok3r#3181
+we do, but they change so fast nobody is going to be able to maintain it
+
+[01-Mar-19 01:03 PM] blackjok3r#3181
+so for now until things are set in stone and stable, there is no reason to make it
+
+[01-Mar-19 01:03 PM] ComputerGenie 👴🏼📢#7004
+`they change so fast nobody is going to be able to maintain it`
+exactly why I haven't touched mine in almost a month ☹
+
+[01-Mar-19 01:04 PM] blackjok3r#3181
+yep. We need to work with what we have, if something can be hacked that makes it easy to use and it works. That seems to be the way to go IMO. If they stuff is very popular and useful then those extra thigns that can be built on top will come.
+
+[01-Mar-19 01:07 PM] ComputerGenie 👴🏼📢#7004
+My original resistance to your pool was "someone" needed to code the payments, but with all the crazy shit james keeps throwing in, it's about going to be faster to recode payments than to finish the "old" new ac stuff, much less the new-new stuff
+
+[01-Mar-19 01:08 PM] ComputerGenie 👴🏼📢#7004
+_kinda misses the free-spirt days when he had free time_
+
+[01-Mar-19 01:08 PM] Alright#0419
+hey while you're at it, I'm going to need a payment processor for a staking pool :troll:
+
+[01-Mar-19 01:08 PM] Alright#0419
+please and thank you
+
+[01-Mar-19 01:09 PM] ComputerGenie 👴🏼📢#7004
+that's 3rd on my list, mostly because it involves accounts and I haven't time to learn how to secure accounts atm
+
+[01-Mar-19 01:09 PM] Alright#0419
+accounts?
+
+[01-Mar-19 01:10 PM] Alright#0419
+ah sorry thought you meant the deprecated thing in the daemon
+
+[01-Mar-19 01:10 PM] Alright#0419
+yes user accounts
+
+[01-Mar-19 01:10 PM] ComputerGenie 👴🏼📢#7004
+yes
+
+[01-Mar-19 01:10 PM] Alright#0419
+gateway?
+
+[01-Mar-19 01:10 PM] ComputerGenie 👴🏼📢#7004
+there's no decent way to do a staking pool without user accounts ☹
+
+[01-Mar-19 01:10 PM] Alright#0419
+repurposing that might be a cool way to do it
+
+[01-Mar-19 01:11 PM] Alright#0419
+deposit coins in gateway, get 1:1 in return, gateway stakes coins then distributes "shares" on 1:1 chain
+
+[01-Mar-19 01:11 PM] Alright#0419
+withdraw whenever via gateway
+
+[01-Mar-19 01:11 PM] Alright#0419
+Ah wait
+
+[01-Mar-19 01:11 PM] blackjok3r#3181
+Not really... My plan from before, to somehow add mupltiple wallets is probably the way to go.. Combined with Alrights idea for each walelt to just use a diffren RPC interface/port.
+
+[01-Mar-19 01:11 PM] ComputerGenie 👴🏼📢#7004
+so easy that even you can write it, right? :troll:
+
+[01-Mar-19 01:12 PM] Alright#0419
+multisig staking probably not viable 😂
+
+[01-Mar-19 01:12 PM] blackjok3r#3181
+for each user, you track their adddress
+
+[01-Mar-19 01:12 PM] Alright#0419
+the gateways thing would work but it would be 1 signer gateway
+
+[01-Mar-19 01:12 PM] Alright#0419
+otherwise the coins can't be staked on the real chain
+
+[01-Mar-19 01:13 PM] blackjok3r#3181
+with a staking pool ... what is the goal of it? to combine smaller utxos into larger ones? Or just to make it so that a user doen tneed his/her own full daemon online 24/7 ?
+
+[01-Mar-19 01:13 PM] Alright#0419
+@ComputerGenie 👴🏼📢 I could likely get the staking aspect of it working and distributing shares aspect working
+
+[01-Mar-19 01:13 PM] Alright#0419
+no idea about the gateway aspect of it though
+
+[01-Mar-19 01:14 PM] Alright#0419
+yes, user pays % so they don't have to manage it
+

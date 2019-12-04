@@ -1,0 +1,460 @@
+==============================================================
+Guild: Komodo
+Channel: kmdlabs
+Topic: Please read pinned messages
+Messages: 100
+Range: 
+==============================================================
+
+[15-Jan-19 01:30 PM] blackjok3r#3181
+it doesnt get teh difficulty wall..
+
+[15-Jan-19 01:31 PM] blackjok3r#3181
+because otherwise on 50/50 chain its just doing 1s blocks for PoW and llike 20-30s for PoS this is with diff lowered for the PoS by a square root 😂
+
+[15-Jan-19 01:31 PM] blackjok3r#3181
+when it gets a run on PoW for 50 blocks the PoS cant get a block.
+
+[15-Jan-19 01:32 PM] blackjok3r#3181
+ends up feeback loop
+
+[15-Jan-19 01:32 PM] blackjok3r#3181
+fast... slow
+
+[15-Jan-19 01:32 PM] jl777c#5810
+doing PoW on a 100% staked will cause problems, but there is no need to use verushash for a 100% staked chain, so I guess it is ok
+
+[15-Jan-19 01:32 PM] blackjok3r#3181
+I will add that exception
+
+[15-Jan-19 01:36 PM] ComputerGenie 👴🏼📢#7004
+imo:
+diff = some amount based on block speed and "compensation diff"
+PoS diff = some "compensation diff" formula to keep PoS in line with posperc
+PoW diff = reciprocal change from PoS (if PoS goes up 1% in compensation diff then PoW goes down 1% in compensation diff)
+
+Granted, I haven't looked at the math in months, but I'm at a loss as to why this is such a perplexing thing :/
+
+[15-Jan-19 01:37 PM] blackjok3r#3181
+I think verushash makes it act a bitt diffrently... what it does at standard diff. is every PoS block takes 400s or longer. the PoW  just drives the overall diff up so high it cant work.
+
+[15-Jan-19 01:37 PM] blackjok3r#3181
+making PoW get a block every 5 seems to be working very well
+
+[15-Jan-19 01:38 PM] ComputerGenie 👴🏼📢#7004
+`the PoW just drives the overall diff up so high it cant work.`
+That's why each "mode" needs a "compensation diff" (for lack of a better term) to balance it out
+
+[15-Jan-19 01:39 PM] blackjok3r#3181
+Looks to be that it increases PoW .. .the PoS is supposed to be static... but it has to take into account the over all chain diff. 
+```mindiff.SetCompact(KOMODO_MINDIFF_NBITS,&fNegative,&fOverflow);
+    ratio = (mindiff / bnTarget);```
+
+[15-Jan-19 01:40 PM] blackjok3r#3181
+bNtarget is block nBits
+
+[15-Jan-19 01:42 PM] blackjok3r#3181
+```if ( nHeight < 100 )
+          coinage *= coinage;
+      else if ( nHeight < 200 )
+          coinage *= coinage/2;```
+I think here where I am hard coding this "compensation" by block height it may need some formula based on PoS % ... but even then it takes ~18-30s to just run the staking loop with ~3000 utxo, which isnt that many.
+
+[15-Jan-19 01:43 PM] ComputerGenie 👴🏼📢#7004
+```
+pseudo:
+if posperc = 50 and goal =50 then {
+    PoW_diff = diff
+    PoS_diff = diff
+} else if posperc = 49 and goal =50 then {
+    PoW_diff = diff + PoW_compensation _diff
+    PoS_diff = diff - PoS_compensation _diff
+} else if posperc = 51 and goal =50 then {
+    PoW_diff = diff - PoW_compensation _diff
+    PoS_diff = diff + PoS_compensation _diff
+} ```
+
+[15-Jan-19 01:44 PM] blackjok3r#3181
+I think it already does somethign close to that... the probl;em is they end up in long "runs" of like 20-30 blocks
+
+[15-Jan-19 01:44 PM] blackjok3r#3181
+trying to spread the PoS vs PoW over more blocks early chain so it has a chance to at least work
+
+[15-Jan-19 01:44 PM] ComputerGenie 👴🏼📢#7004
+if either side is doing runs that outpace the ability of the other side then adjust the adjustment
+
+[15-Jan-19 01:45 PM] blackjok3r#3181
+You cant
+
+[15-Jan-19 01:45 PM] blackjok3r#3181
+Using a static square root of utxo power still cant do anything... and what happens when those utxos are old...
+
+[15-Jan-19 01:46 PM] blackjok3r#3181
+I guess we cant know until this 200 blocks is over... then see what it does
+
+[15-Jan-19 01:46 PM] ComputerGenie 👴🏼📢#7004
+oh, you're looking at early new chain?
+
+[15-Jan-19 01:46 PM] blackjok3r#3181
+the poblem is the moving target of 100 blocks... the chain starts with 10 - 25 PoW blocks min.
+
+[15-Jan-19 01:46 PM] blackjok3r#3181
+yes ive started about 20 in the last 2 days
+
+[15-Jan-19 01:47 PM] ComputerGenie 👴🏼📢#7004
+For a new chain, I don't think you can do anything to "fix" it, ever, because there's just not enough data points for any formula to calculate
+
+[15-Jan-19 01:48 PM] blackjok3r#3181
+seems like this is a decent solution, but need to wait and see I guess. I dont think leaving the 5th block PoW for very long will be needed
+
+[15-Jan-19 01:53 PM] ComputerGenie 👴🏼📢#7004
+I don't think there's a "fair release" solution, I think one starting a new chain just needs to prep 100-200 blocks with 1 thread in "private" and then release params
+
+[15-Jan-19 02:03 PM] blackjok3r#3181
+yeah thats the only way to do it... This is height activated, just lets off the PoW slowly... seems to be working great...  only used 100k coins too for staking,. Likely an even better way to do it, is allow PoW only for a fair while and slowly introduce the staking % over a 10,000 blocks or something.
+
+[15-Jan-19 02:03 PM] jl777c#5810
+staking power is totally dependent on the utxo that are staking
+
+[15-Jan-19 02:03 PM] jl777c#5810
+this is also limited by total coinsupply
+
+[15-Jan-19 02:03 PM] blackjok3r#3181
+I know
+
+[15-Jan-19 02:03 PM] jl777c#5810
+and those two variables make it so there are orders of magnitude difference in staking power
+
+[15-Jan-19 02:03 PM] jl777c#5810
+to cover all cases is impossible
+
+[15-Jan-19 02:03 PM] blackjok3r#3181
+We have a very specific use case with very low supply chains using PoS ...
+
+[15-Jan-19 02:03 PM] jl777c#5810
+to make it converge to a decent state after 1000 blocks should be the goal
+
+{Reactions}
+👍 
+
+[15-Jan-19 02:35 PM] TonyL#3577
+Hmm starting to get ```ERROR: AcceptToMemoryPool: reject nonstandard transaction input``` on some point when broadcasting export transactions
+
+[15-Jan-19 02:38 PM] TonyL#3577
+But I'm trying to rebrodcast the same transaction after some sleep, maybe just have to generate transaction again in case of this error
+
+[15-Jan-19 02:39 PM] ComputerGenie 👴🏼📢#7004
+are you sure it's a result of *your* actions and not someone else's tx that you are rejecting?
+
+[15-Jan-19 02:39 PM] TonyL#3577
+I'm sure yeah
+
+[15-Jan-19 02:41 PM] TonyL#3577
+For now it looks like a one of 1/1000 export transaction created by my tools  is "spoiled" . Will try to collect more info on the next catch. Or just handle this exception :trollface:
+
+[15-Jan-19 02:46 PM] TonyL#3577
+Tricky fact: In Python threading slowing program in most of the cases because of the interpreter limitations. Reading about multiprocessing 😃
+https://medium.com/practo-engineering/threading-vs-multiprocessing-in-python-7b57f224eadb
+
+{Embed}
+https://medium.com/practo-engineering/threading-vs-multiprocessing-in-python-7b57f224eadb
+Threading vs Multiprocessing in Python – Practo Engineering – ...
+One of the hottest discussions amongst developers I have ever found other than the slow execution speed of Python is around problems with…
+
+{Reactions}
+rum 
+
+[15-Jan-19 03:11 PM] blackjok3r#3181
+in the bash script I just stopped it if the export tx was bad and made a new one.
+
+[15-Jan-19 03:12 PM] blackjok3r#3181
+Its because you use fundrawtransaction. seems it can choose the same utxos or make too many dependants.
+
+[15-Jan-19 03:12 PM] blackjok3r#3181
+as long as the export never sent, you can just make a new one. No funds are lost.
+
+[15-Jan-19 03:14 PM] TonyL#3577
+Yeah, did the same now and everything seems fine if I'm just recreating it
+
+{Reactions}
+👍 
+
+[15-Jan-19 04:32 PM] blackjok3r#3181
+figured out what it was...
+
+{Reactions}
+👍🏽 
+
+[15-Jan-19 04:34 PM] blackjok3r#3181
+```if ( m+n < 100 )
+        percPoS = (percPoS*100) / (m+n); // win do wactual PoS % at the start.```
+Was stuck at goal perc euntil block 100... PoS ended up too far in front than PoW got stuck on easy diff for 50+ blocks.
+
+[15-Jan-19 04:35 PM] blackjok3r#3181
+this means you only have the first 10 blocks top distribut coins, but with the scripts Im not seeing any issue with that, you can do enough utxos in block 2 that the chain works.
+
+{Reactions}
+🤕 
+
+[15-Jan-19 07:00 PM] TonyL#3577
+Yay, multi-threading version seems works:
+```Export transactions broadcasted: 3151
+Export transactions confirmed: 3065
+Import transactions created: 2560
+Import transactions completed on KMD chain: 2030
+Import transactions broadcasted: 2030
+Import transactions confirmed: 2030
+2111.6998744010925 seconds elapsed```
+
+I think it can keep speed around 1 migration per second and should be almost unkillable
+
+Have a bottleneck atm - can't prepare and broadcast more than ~1.5 export transactions per second. Maybe will be possible to speed up things if make it as concurrent process
+
+[15-Jan-19 07:08 PM] TonyL#3577
+https://github.com/tonymorony/PoS_scripts/blob/master/CC_scripts/migrations_python/threading_migrations_v0.0.000001
+
+{Embed}
+https://github.com/tonymorony/PoS_scripts/blob/master/CC_scripts/migrations_python/threading_migrations_v0.0.000001
+tonymorony/PoS_scripts
+various scripts we have developed on STAKED so far, none of these are perfect and some might not even work. use them as examples of what you can do. - tonymorony/PoS_scripts
+https://avatars1.githubusercontent.com/u/24797699?s=400&v=4
+
+{Reactions}
+😂 👍 
+
+[15-Jan-19 11:21 PM] Alright#0419
+@blackjok3r is it possible that staker is only ever selecting the largest UTXO in wallet?
+
+[15-Jan-19 11:21 PM] Alright#0419
+for VHT branch that is
+
+[15-Jan-19 11:21 PM] Alright#0419
+I noticed checking `getblocktemplate` the verification tx is always trying to use the same UTXO
+
+[15-Jan-19 11:22 PM] Alright#0419
+not sure i understand how `getblocktemplate` interacts with the POS verification tx though
+
+[16-Jan-19 12:10 AM] Alright#0419
+yep, just stakes the same UTXO over and over
+
+[16-Jan-19 01:22 AM] Mylo#8306
+Is there an easy chain migration script?
+
+[16-Jan-19 01:24 AM] Mylo#8306
+So I can include in a docker container?
+I’m going to test swapping the komodod created out of staked with an official binary to see if I can make something simple for windows users to participate as per convo in #ask-jl777 the other day
+
+[16-Jan-19 01:25 AM] Alright#0419
+https://github.com/tonymorony/PoS_scripts/blob/master/CC_scripts/migrations_python/migration_script_v2.py
+
+{Embed}
+https://github.com/tonymorony/PoS_scripts/blob/master/CC_scripts/migrations_python/migration_script_v2.py
+tonymorony/PoS_scripts
+various scripts we have developed on STAKED so far, none of these are perfect and some might not even work. use them as examples of what you can do. - tonymorony/PoS_scripts
+https://avatars1.githubusercontent.com/u/24797699?s=400&v=4
+
+[16-Jan-19 01:26 AM] Alright#0419
+or https://github.com/StakedChain/PoS_scripts/blob/master/CC_scripts/migrations_python/migration_script_v2.py
+
+{Embed}
+https://github.com/StakedChain/PoS_scripts/blob/master/CC_scripts/migrations_python/migration_script_v2.py
+StakedChain/PoS_scripts
+various scripts we have developed on STAKED so far, none of these are perfect and some might not even work. use them as examples of what you can do. - StakedChain/PoS_scripts
+https://avatars0.githubusercontent.com/u/42953759?s=400&v=4
+
+[16-Jan-19 01:26 AM] Mylo#8306
+Sweet!  🙏
+
+[16-Jan-19 01:26 AM] Alright#0419
+@Mylo you're going to try migrates with komodod from a packaged release?
+
+[16-Jan-19 01:27 AM] Alright#0419
+don't think it'll work, won't recognize our notaries' notarizations as valid
+
+[16-Jan-19 01:27 AM] Mylo#8306
+Nah swap komodod
+
+[16-Jan-19 01:27 AM] Mylo#8306
+compile on machine the copy to docker image overwriting official release
+
+[16-Jan-19 01:28 AM] Mylo#8306
+then
+
+[16-Jan-19 01:28 AM] Mylo#8306
+Will post new docker stuff tomorrow, have a comparison of kmd due tomorrow which is high prio
+
+[16-Jan-19 01:49 AM] blackjok3r#3181
+You need stakes komodod or it doesnt work yes.
+What do u mean @Alright .. It choosing the same utxo over and over?
+
+[16-Jan-19 01:50 AM] Alright#0419
+it's staking the same UTXO over and over
+
+[16-Jan-19 01:50 AM] blackjok3r#3181
+VHT branch may not be stable for equihash .. I haven't updated it with any changes in days
+
+[16-Jan-19 01:50 AM] Alright#0419
+chain is ac_staked=90 ac_algo=verushash
+
+[16-Jan-19 01:50 AM] blackjok3r#3181
+That isn't going to work
+
+[16-Jan-19 01:50 AM] Alright#0419
+tries to follow the instructions you posted above
+
+[16-Jan-19 01:50 AM] blackjok3r#3181
+I haven't updated it with changes
+
+[16-Jan-19 01:50 AM] blackjok3r#3181
+Taken 2 days to get something that kind of works
+
+[16-Jan-19 01:51 AM] blackjok3r#3181
+Haven't pushed it
+
+[16-Jan-19 01:51 AM] Alright#0419
+Ah, just let me know
+
+[16-Jan-19 01:51 AM] Alright#0419
+was looking for something to do 🤷
+
+[16-Jan-19 01:51 AM] blackjok3r#3181
+I just woke up
+
+[16-Jan-19 01:51 AM] blackjok3r#3181
+I'll check the chain I left going when I went to sleep
+
+[16-Jan-19 01:51 AM] blackjok3r#3181
+51/49
+
+[16-Jan-19 01:51 AM] blackjok3r#3181
+Pos% seemed good
+
+[16-Jan-19 01:52 AM] blackjok3r#3181
+But block times were ridiculous
+
+[16-Jan-19 01:52 AM] blackjok3r#3181
+Pos was 60s every 2nd block was pow.. At -32s
+
+[16-Jan-19 01:53 AM] blackjok3r#3181
+So 30s block times average... No idea really how to fix it... My guess is to pump the pos difficultly adjustment to the moon and just wait for the over all diff to rise high enough to slow it down to 1 min
+
+[16-Jan-19 01:55 AM] Alright#0419
+push code when you can please
+
+[16-Jan-19 01:55 AM] Alright#0419
+just want to look at it
+
+[16-Jan-19 01:55 AM] Alright#0419
+want to understand this as much as possible 😛
+
+[16-Jan-19 01:56 AM] Alright#0419
+latest stakedchain/komodo VHT branch does *kind of* work btw
+
+[16-Jan-19 01:56 AM] Alright#0419
+chain is moving at least
+
+[16-Jan-19 02:02 AM] blackjok3r#3181
+```block 584 : 6
+block 585 : 15
+block 586 : -42
+block 587 : 10
+block 588 : 58
+block 589 : -42
+block 590 : 56
+block 591 : -39
+block 592 : 59
+block 593 : 15
+block 594 : -41
+block 595 : 2
+block 596 : 382
+block 597 : 2
+block 598 : -42
+block 599 : 8
+block 600 : 63
+block 601 : -42
+block 602 : 58
+block 603 : -42
+block 604 : 65
+block 605 : -41
+block 606 : 58
+block 607 : -42
+block 608 : 2
+block 609 : 6
+block 610 : 14
+block 611 : 64
+block 612 : -42
+block 613 : 6
+block 614 : 1
+block 615 : 3
+block 616 : 2
+block 617 : 24
+block 618 : 4
+block 619 : 387
+block 620 : 9
+block 621 : 15
+block 622 : 396
+block 623 : -56
+block 624 : 59
+block 625 : 382
+block 626 : -45
+block 627 : 12
+block 628 : 58
+block 629 : -41
+block 630 : 388
+block 631 : 382
+block 632 : 2
+block 633 : 382
+block 634 : -51
+block 635 : 64
+block 636 : -34
+block 637 : 62
+block 638 : 15
+block 639 : 16
+block 640 : 15
+block 641 : -33
+block 642 : 38
+block 643 : -19
+block 644 : 16
+block 645 : 60
+block 646 : 15
+block 647 : 16
+block 648 : 16
+block 649 : -42
+block 650 : 10
+block 651 : 1
+block 652 : 382
+block 653 : 3
+block 654 : -42
+block 655 : 2
+```
+
+[16-Jan-19 02:02 AM] blackjok3r#3181
+sample of blocktimes
+
+[16-Jan-19 02:02 AM] blackjok3r#3181
+entire chain from 100 block to here average is 48s
+
+[16-Jan-19 02:02 AM] blackjok3r#3181
+but they are all over the place
+
+[16-Jan-19 02:05 AM] Alright#0419
+did you say you want to use this for 0BR chains?
+
+[16-Jan-19 02:06 AM] blackjok3r#3181
+that was the plan yeah.... beacuse 1 cpu can keep the cahin movig perfectly at any % PoS
+
+[16-Jan-19 02:07 AM] blackjok3r#3181
+`"difficulty": 6235395.442055208,` Like WTF lol 2 CPU cores... the staker doesnt appear to peg a core with this either
+
+[16-Jan-19 02:07 AM] Alright#0419
+what would happen in the event of huge hashrate spike
+
+[16-Jan-19 02:07 AM] Alright#0419
+let's say 1 CPU core was moving the chain along
+
+[16-Jan-19 02:07 AM] Alright#0419
+and some troll puts their FPGA on it
+
+[16-Jan-19 02:07 AM] blackjok3r#3181
+fuck all i assume because ifg the diff wall...
+

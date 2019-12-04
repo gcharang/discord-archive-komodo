@@ -1,0 +1,396 @@
+==============================================================
+Guild: Komodo
+Channel: kmdlabs
+Topic: Please read pinned messages
+Messages: 100
+Range: 
+==============================================================
+
+[09-Jan-19 01:41 PM] blackjok3r#3181
+Or this mutex is called inside a LOCK ... that wil be much ahrder to fix
+
+[09-Jan-19 01:42 PM] jl777c#5810
+the mutex and lock should operate independently
+
+[09-Jan-19 01:42 PM] blackjok3r#3181
+I'm dont know... the mutex is what stops it... not sure if thats 100% accurate but the backtrace is identical on every node that halted
+
+[09-Jan-19 01:43 PM] jl777c#5810
+then something inside the mutex is calling the same mutex
+
+[09-Jan-19 01:43 PM] jl777c#5810
+not good at all
+
+[09-Jan-19 01:44 PM] blackjok3r#3181
+ok... I have 8 threrads all waiting on cs_main those all say cs_main is held by this thread, and this thread stops on the mutex. By computer frozxe so I lost the debugger, guess I can just read some code for now and see fi I can find anything
+
+[09-Jan-19 03:36 PM] blackjok3r#3181
+testing possible fix now.
+
+[09-Jan-19 04:19 PM] blackjok3r#3181
+its looking good atm 😃
+
+[09-Jan-19 05:37 PM] blackjok3r#3181
+https://github.com/StakedChain/komodo/commit/9646dd709a04f1b444eb2b472f10a7ebb779580e
+
+{Embed}
+https://github.com/StakedChain/komodo/commit/9646dd709a04f1b444eb2b472f10a7ebb779580e
+revert changes to import priority. Re-try flat transaction fee. Ch...
+…e miner lock to something safer. Add lock cs_main to import validation when accepting to mempool.
+https://avatars1.githubusercontent.com/u/30971146?s=200&v=4
+
+[09-Jan-19 05:37 PM] blackjok3r#3181
+I think this fixes it all.. I will test it first to make sure adding transaction fee works.
+
+[09-Jan-19 05:37 PM] blackjok3r#3181
+Need to retest staker with these changes also.
+
+[09-Jan-19 07:24 PM] blackjok3r#3181
+@LabsAssistant  
+Sorry about this, but we also have an important update for StakedChain/komodo. This should fix all issues with migrates that were left. I have changed it so that we use the standard komodo transaction fee for imports of 0.0001 coins. This means you pay 2x this amount one for burn tx and one for import. There is nothing stopping you taking the fee out in the code, if you wish to do so, however blocks will only be maximum 2MB if everyone does this during the stress test.
+
+We also bring down all the major bug fixes from the last few days. These are mandatory to update in a day or two or you risk forking chains, including KMD. We need to create a PoS chain and test this... Although I might do this locally first so save wasting everyone's time if my fix is no good. Nothing bad can happen for PoW chains, infact they should work better than before. :)
+A simple start.sh was enough to update my notary. Staked repo nodes, will need to stop their daemons manually first. 
+Thanks for all of your patience. I think this is finally close to stable. Please report any strange behaviour you find.
+
+{Reactions}
+👌 (4) Komodo (3) 🆙 (2) 🇩 🎱 
+
+[09-Jan-19 08:20 PM] dukeleto#7326
+I want to throw KMD at somebody and they help me/Hush maintain the Hush insight explorer at https://explorer.myhush.org/ (which is down, luzl). I don't need a server, I need smart people to maintain insight, keep it updated, and help me make tiny changes to it, without breaking the world. Is this something that LABS can help with? If not LABS, who?
+
+{Reactions}
+👆 
+
+[09-Jan-19 10:28 PM] NutellaLicka#4241
+Why the need for a btcpubkey? I can't start the chains without one?
+
+[09-Jan-19 10:28 PM] NutellaLicka#4241
+Planned for a mining node
+
+[09-Jan-19 10:54 PM] ComputerGenie 👴🏼📢#7004
+@NutellaLicka your NN need pubkey to know to sign tx with that addy
+
+[09-Jan-19 10:54 PM] ComputerGenie 👴🏼📢#7004
+not needed for mining node
+
+[09-Jan-19 10:55 PM] NutellaLicka#4241
+Yeah I'm on the /staked/ repo and it is requiring a btc pub key to start the chains. I've added the kmd key in there
+
+[09-Jan-19 10:56 PM] ComputerGenie 👴🏼📢#7004
+```genie@StakedNotary:~$ cd StakedNotary
+genie@StakedNotary:~/StakedNotary$ ./listassetchainparams.py```
+will give you exactly the info you need to run mining node
+
+[09-Jan-19 10:57 PM] ComputerGenie 👴🏼📢#7004
+https://github.com/StakedChain/komodo <- that's the komodo to build to run the chains
+
+{Embed}
+https://github.com/StakedChain/komodo
+StakedChain/komodo
+Komodo. Contribute to StakedChain/komodo development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/42953759?s=400&v=4
+
+[10-Jan-19 12:32 AM] smk762 -  dracocanis ominator#7640
+@dukeleto I might be interested, but I also might not be available often enough 😦
+
+[10-Jan-19 12:32 AM] NutellaLicka#4241
+I'm using https://github.com/StakedChain/staked per CrisF's recommendation.
+
+{Embed}
+https://github.com/StakedChain/staked
+StakedChain/staked
+repo for using staked chains, for testing and production use - StakedChain/staked
+https://avatars0.githubusercontent.com/u/42953759?s=400&v=4
+
+[10-Jan-19 12:37 AM] ComputerGenie 👴🏼📢#7004
+Not sure why you'd want all that, but whatever works for ya (me I just use the daemon and go on)
+
+[10-Jan-19 12:48 AM] NutellaLicka#4241
+I'm not familiar with all facets of labs just yet, so went with what was recommended. I'll have to have a play around a bit more when I get home. I just read about komodos scaling solution and am excited to help with this test
+
+[10-Jan-19 01:39 AM] CrisF#3405
+The pubkey in the config.ini is the KMD pubkey. From the KMD address and priv key.  They are all the same address.
+
+[10-Jan-19 01:43 AM] CrisF#3405
+You can also use the noconfig version that Blackjok3r mentioned yesterday, or from staked/komodo/master `. /komodo-cli  - ac_name=CFEKX`
+
+{Reactions}
+👍 
+
+[10-Jan-19 01:44 AM] CrisF#3405
+@NutellaLicka
+
+[10-Jan-19 02:50 AM] blackjok3r#3181
+The readme had instructions to start the daemon without pub key
+
+[10-Jan-19 02:50 AM] blackjok3r#3181
+Sure its there
+
+[10-Jan-19 02:50 AM] blackjok3r#3181
+I use it for mining nodes
+
+[10-Jan-19 02:50 AM] blackjok3r#3181
+And explorer nodes
+
+[10-Jan-19 02:51 AM] blackjok3r#3181
+While genies solution is fine, when we start running multiple branches for different chains it will become a lot harder to manage.
+
+[10-Jan-19 04:07 AM] gt#2812
+what needs to be in the rpcport conf file for the migrate script
+
+[10-Jan-19 04:22 AM] blackjok3r#3181
+I havent used the py one yet.... 
+https://github.com/StakedChain/PoS_scripts/blob/master/CC_scripts/migrations_python/migration_script_v2.py
+This one should get them for you
+
+{Embed}
+https://github.com/StakedChain/PoS_scripts/blob/master/CC_scripts/migrations_python/migration_script_v2.py
+StakedChain/PoS_scripts
+various scripts we have developed on STAKED so far, none of these are perfect and some might not even work. use them as examples of what you can do. - StakedChain/PoS_scripts
+https://avatars0.githubusercontent.com/u/42953759?s=400&v=4
+
+[10-Jan-19 04:26 AM] gt#2812
+hmm i was using that one
+
+[10-Jan-19 04:26 AM] blackjok3r#3181
+Like I said I havent used it... What its doing it pulling them from the ~/.komodo/CFEKX/CFEKX.conf
+
+[10-Jan-19 04:27 AM] blackjok3r#3181
+The daemon generates that file automatically with everything needed.
+
+[10-Jan-19 04:27 AM] blackjok3r#3181
+for KMD it does not.... the buildkomodo.sh script does it
+
+[10-Jan-19 04:27 AM] gt#2812
+will look at again in a bit
+
+[10-Jan-19 04:39 AM] Alright#0419
+@gt what conf file do you mean?
+
+[10-Jan-19 05:18 AM] gt#2812
+```rpcport not in conf file, exiting
+check /home/gt/.komodo/komodo.conf
+```
+
+[10-Jan-19 05:18 AM] blackjok3r#3181
+ahhh
+
+[10-Jan-19 05:18 AM] blackjok3r#3181
+I dont think it is no
+
+[10-Jan-19 05:18 AM] blackjok3r#3181
+nice find
+
+[10-Jan-19 05:19 AM] blackjok3r#3181
+7771 is the port
+
+[10-Jan-19 05:22 AM] blackjok3r#3181
+https://github.com/StakedChain/PoS_scripts/commit/e26728eb34e0989f374d60d4c1e22fb087aa1502
+Try it with this comit... does it work now?
+
+{Embed}
+https://github.com/StakedChain/PoS_scripts/commit/e26728eb34e0989f374d60d4c1e22fb087aa1502
+default to 7771 rpc port for KMD · StakedChain/PoS_scripts@e26728e
+https://avatars1.githubusercontent.com/u/30971146?s=200&v=4
+
+{Reactions}
+👍 
+
+[10-Jan-19 05:31 AM] gt#2812
+yep seemed to have done the trick
+
+[10-Jan-19 05:31 AM] blackjok3r#3181
+great
+
+[10-Jan-19 06:16 AM] smk762 -  dracocanis ominator#7640
+I thought about pulling the ports from iguana/coins, but got lazy...
+
+[10-Jan-19 06:16 AM] smk762 -  dracocanis ominator#7640
+While on the subject of laziness...
+https://github.com/StakedChain/staked/pull/1
+
+{Embed}
+https://github.com/StakedChain/staked/pull/1
+set config.ini with minimal effort by smk762 · Pull Request #1 ·...
+Generates a new R address, wif and pubkey, and populates them into the config.ini file.
+https://avatars3.githubusercontent.com/u/35845239?s=400&v=4
+
+{Reactions}
+👌 
+
+[10-Jan-19 06:23 AM] blackjok3r#3181
+merged... you can use the `setpubkey` RPC now though... so the config.ini is kind of irellavent ... just havent got to changing it all over.
+
+[10-Jan-19 06:23 AM] blackjok3r#3181
+This works though.
+
+[10-Jan-19 06:39 AM] smk762 -  dracocanis ominator#7640
+man... I keep making stuff that's superseded by the time I get there. Pretty basic though...
+
+[10-Jan-19 06:41 AM] smk762 -  dracocanis ominator#7640
+work's offered to fund some courses for me to cover the hours I put in to the flir2qr project. any recommendations? Cant find anything I wouldnt be able to figure out on stack exchange etc.
+
+[10-Jan-19 06:41 AM] smk762 -  dracocanis ominator#7640
+and all the other courses I've done I tend to bail on after learning the bit I need for whatever project I'm on.
+
+[10-Jan-19 06:41 AM] smk762 -  dracocanis ominator#7640
+certification would be noice tho...
+
+[10-Jan-19 06:43 AM] smk762 -  dracocanis ominator#7640
+was looking at codeacademy for python but not sure I wont get bored and start doing my own thing
+
+[10-Jan-19 06:43 AM] smk762 -  dracocanis ominator#7640
+any decent C++ courses out there?
+
+[10-Jan-19 06:54 AM] blackjok3r#3181
+Yeah no idea... I never found courses to be any good either. When i did the cert 3 in IT at tafe... I used to go there 2H late every day to avoid the ticket collectors at the train station, and stay for like 1H then convince everyone to go to the pub ... Finished with 100% marks...  Did most of the work at home... Super easy and boring lol.
+
+[10-Jan-19 07:25 AM] smk762 -  dracocanis ominator#7640
+:3040_kingpeepo:
+
+[10-Jan-19 07:26 AM] smk762 -  dracocanis ominator#7640
+Yeah. Paint by numbers is boring as fuck.
+
+[10-Jan-19 07:26 AM] smk762 -  dracocanis ominator#7640
+Learn more here just trying things out
+
+[10-Jan-19 07:27 AM] blackjok3r#3181
+yep
+
+[10-Jan-19 07:58 AM] blackjok3r#3181
+I think I'm getting somewhere with this staker ... but 100,000 utxos is just too many for it 🤣
+
+[10-Jan-19 07:59 AM] blackjok3r#3181
+Need to start again
+
+[10-Jan-19 09:17 AM] smk762 -  dracocanis ominator#7640
+dog. gone. again.
+
+[10-Jan-19 09:17 AM] smk762 -  dracocanis ominator#7640
+gps. flat.
+
+[10-Jan-19 09:17 AM] smk762 -  dracocanis ominator#7640
+bastard!
+
+{Reactions}
+😫 (2) 
+
+[10-Jan-19 09:19 AM] Alright#0419
+😦
+
+[10-Jan-19 09:30 AM] smk762 -  dracocanis ominator#7640
+I'm waiting for a spare battery to arrive, tracking had it in sydney two days ago...
+
+[10-Jan-19 09:31 AM] smk762 -  dracocanis ominator#7640
+he's chipped and collar has my number on it, but he's not easy to catch. Should make it back when he's ready,just hope he stays off the roads
+
+{Reactions}
+🙏 (3) 
+
+[10-Jan-19 09:36 AM] blackjok3r#3181
+My dog has been doing that latley too... has no collar atm, but is chipped... Always came back, I think he just walks himself around the block though lol.. Not off on grand adventures like your dude. 😃
+
+[10-Jan-19 10:04 AM] smk762 -  dracocanis ominator#7640
+yeah tracking led me to where the battery went flat,  and he sure likes to range  a fair stretch. once he hits the river he's near impossible to find, but at least there's no cars. Not sure how he'd respond to snakes tho... dont think he'd chase them but you never know
+
+{Reactions}
+🤞 (2) 
+
+[10-Jan-19 10:58 AM] ComputerGenie 👴🏼📢#7004
+`While genies solution is fine, when we start running multiple branches for different chains it will become a lot harder to manage.`
+When a miner opts to mine such divergent things, s/he should know wtf s/he's after, imo
+
+[10-Jan-19 11:00 AM] ComputerGenie 👴🏼📢#7004
+As someone with just about 1TB of chain data, I can tell you that mining every chain just because they are there isn't all it's cracked up to  be
+
+{Reactions}
+trollface 
+
+[10-Jan-19 11:43 AM] smk762 -  dracocanis ominator#7640
+well, at least the lost dog forced me to implement  location based timzone offset via API. tracker went dead at 12:41pm, about 7 hrs ago 😦
+
+[10-Jan-19 12:03 PM] blackjok3r#3181
+Damn batteries.... maybe some thing that make power when you shake it so while he runnign around he carges up his prison. 😄
+
+[10-Jan-19 12:06 PM] blackjok3r#3181
+Just keep finding more bugs here ... I almost have the PoW flag setting... This will help preformance and allow the staking script to work a lot easier, and also deal with  PoW mined blocks, for its segid distribution.
+
+[10-Jan-19 12:07 PM] blackjok3r#3181
+There is also a wallet bug, that when you load the daemon it thinks transactions are expired and (either deletes them in our case, due to my wallet repair code) or does not load them to the runtime wallet.... which could lead to lost funds.
+
+[10-Jan-19 12:07 PM] blackjok3r#3181
+They are not gone.... but they appear gone.
+
+[10-Jan-19 12:08 PM] smk762 -  dracocanis ominator#7640
+yeah I had some crazy ideas of how to make the other pouch a power generator. efficiency is likely minimal, but better than nothing
+
+[10-Jan-19 12:08 PM] smk762 -  dracocanis ominator#7640
+and I have to balance the pouches anyways
+
+[10-Jan-19 12:09 PM] smk762 -  dracocanis ominator#7640
+do funds come baku?
+
+[10-Jan-19 12:09 PM] ComputerGenie 👴🏼📢#7004
+`which could lead to lost funds.`
+If it does, wouldn't a zap fix it?
+
+[10-Jan-19 12:09 PM] blackjok3r#3181
+BAHSHAHAHA when I fixed this... it hard forked my chain 😄 Well it looks liek this fix cant be pushed upstream... MGNX will die.... again 😂
+
+[10-Jan-19 12:10 PM] blackjok3r#3181
+I'm not sure Genie... I havet got there yet... its simple enough to change ... just add flag, that on wallet load it does not check for tx expirty from wallet.
+
+[10-Jan-19 12:10 PM] ComputerGenie 👴🏼📢#7004
+`MGNX will die.... again`
+And I just got my 600k staking right ☹
+
+[10-Jan-19 12:10 PM] jorian#4555
+muh mgnx!
+
+[10-Jan-19 12:11 PM] blackjok3r#3181
+I either did somethign wrong... or the code is horribly fucked ... I guess it might be me ... Where it was trying to set this flag I can never do so... .So I found where it actually checks PoW and tried to set the flag there... and now it does not sync. 😦
+
+[10-Jan-19 12:11 PM] ComputerGenie 👴🏼📢#7004
+`$ komodo-cli -ac_name=MGNX listunspent | jq 'length'
+12349
+`
+
+[10-Jan-19 12:12 PM] blackjok3r#3181
+I made 112,000 utxo earlier and tried to stake them with the ram staker ... maxed one core to 4.4Ghz and took more than 3 minuites to run the loop ... couldnt find a single block.
+
+[10-Jan-19 12:12 PM] blackjok3r#3181
+😂
+
+[10-Jan-19 12:13 PM] blackjok3r#3181
+I will start a new chain I guess and try again with this fix... the code seems right... its just that the PoS % was wrong before, because it couldnt count PoW blocks 🤷
+
+[10-Jan-19 12:19 PM] ComputerGenie 👴🏼📢#7004
+🤔 I could almost swear that someone has been saying that for months now....
+
+[10-Jan-19 12:27 PM] blackjok3r#3181
+Yeah I was sure that was all fixed in POSTEST
+
+[10-Jan-19 12:27 PM] blackjok3r#3181
+no matter at least I found it now
+
+[10-Jan-19 12:27 PM] blackjok3r#3181
+I wonder if my fix will work though lol
+
+[10-Jan-19 12:30 PM] smk762 -  dracocanis ominator#7640
+dog found!
+he cant get back in, stuck in a drainage easement
+had to help him dig a hole under the gate 😄
+
+{Reactions}
+👍🏽 (5) 
+
+[10-Jan-19 12:31 PM] smk762 -  dracocanis ominator#7640
+he';s pretty proud of himself... and stinks of river
+
+{Reactions}
+pirate (2) 
+
+[10-Jan-19 12:33 PM] CMaurice#1685
+hehe, good news
+

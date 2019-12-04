@@ -1,0 +1,366 @@
+==============================================================
+Guild: Komodo
+Channel: kmdlabs
+Topic: Please read pinned messages
+Messages: 100
+Range: 
+==============================================================
+
+[18-Nov-18 06:44 AM] TonyL#3577
+https://komodoplatform.com/wp-content/uploads/2018/05/2018-05-09-Komodo-White-Paper-Full.pdf some useful info regards notarization I saw in whitepaper
+
+{Reactions}
+🙏 
+
+[18-Nov-18 06:44 AM] CrisF#3405
+Bad timing if there's a problem!
+
+[18-Nov-18 06:45 AM] blackjok3r#3181
+I'm almost home, guess I should check out the testnet and start testing things
+
+[18-Nov-18 06:45 AM] TonyL#3577
+There is a `The Notarization Process` paragraph
+
+{Reactions}
+👌 
+
+[18-Nov-18 06:46 AM] blackjok3r#3181
+Need to merge FSM down, tried this morning but again multiple conflicts so stopped.. Once that's on we can do a ac script chain to pay to multisig address.
+
+[18-Nov-18 06:47 AM] blackjok3r#3181
+And merge maatertest to master and do one last migrate stress test.. Need to make 100% sure all chain s are being mined and staked, as when they stall out my VM dies totally and reslts are incorrectly reported
+
+{Reactions}
+👍 
+
+[18-Nov-18 10:07 AM] jl777c#5810
+you might want to change to jl777 from FSM. FSM is now in flux
+
+[18-Nov-18 10:08 AM] jl777c#5810
+jl777 was synced with FSM prior to the massive changes to FSM
+
+{Reactions}
+👍 
+
+[18-Nov-18 10:13 AM] CrisF#3405
+@gt How's it going with the migration?
+
+[18-Nov-18 10:19 AM] blackjok3r#3181
+I just merged the ac_script fixes to mastertest on staked before Verus was added in... so I htink we are ok there.
+
+[18-Nov-18 10:22 AM] blackjok3r#3181
+@jl777c  would the Verus Nothing at stake contract be able to be used with komodo PoS ?
+
+[18-Nov-18 10:22 AM] gt#2812
+@CrisF i haven’t done any today sorry
+
+[18-Nov-18 10:22 AM] jl777c#5810
+that CC is not integrated
+
+[18-Nov-18 10:24 AM] CrisF#3405
+No worries, @gt .  I'll give it a go.  Please let Blackjok3r and Alright know if anything shows up in the logs or there are any troubles.
+
+[18-Nov-18 10:29 AM] CrisF#3405
+`CFEK` might need mining.  100%PoSvs51% target.  My 4 cores aren't doing much.  2414522 dificulty.
+
+[18-Nov-18 10:44 AM] blackjok3r#3181
+Yeah.... we identified that issue ... It seems as though the main chain will NEED hash power, but also we know that it should have a fair bit of it, a single mini corrected the % easily... if all chains are progressing, migrates should be wokring, provided the notary nodes are working... I sitll have the 2 of them, and havent checked them in a while.
+
+[18-Nov-18 10:45 AM] CrisF#3405
+Yeah, my NN has been very stable too.
+
+[18-Nov-18 12:03 PM] blackjok3r#3181
+I think I just solved the wallet cleaner problem with a very simple solution... starting new code project at 8pm ... have to stop doing this LOL
+
+[18-Nov-18 12:04 PM] CrisF#3405
+💥  Good stuff!
+
+[18-Nov-18 01:51 PM] blackjok3r#3181
+```    {
+        // listunspent call... this gets us all the txids that are unspent, we search this list for the oldest tx,
+        vector<COutput> vecOutputs;
+        assert(pwalletMain != NULL);
+        pwalletMain->AvailableCoins(vecOutputs, false, NULL, true);
+        int32_t oldestTxDepth = 0;
+        BOOST_FOREACH(const COutput& out, vecOutputs)
+        {
+          if ( out.nDepth > oldestTxDepth )
+              oldestTxDepth = out.nDepth;
+        }
+        oldestTxDepth = oldestTxDepth + 1; // add extra block just for safety.
+
+        // then add all txs in the wallet before this block to the list to remove.
+        for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+        {
+            const CWalletTx& wtx = (*it).second;
+            if (wtx.GetDepthInMainChain() > oldestTxDepth)
+                TxToRemove.push_back(wtx.GetHash());
+        }
+    }
+
+    // erase txs
+    BOOST_FOREACH (uint256& hash, TxToRemove)
+    {
+        pwalletMain->EraseFromWallet(hash);
+        LogPrintf("ERASED spent Tx: %s\n",hash.ToString().c_str());
+    }```
+
+[18-Nov-18 01:51 PM] blackjok3r#3181
+works pefectly ... very fast and doesnt miss any txs or remove txs that are unspent.
+
+[18-Nov-18 03:09 PM] blackjok3r#3181
+Its merged into mastertest branch
+
+[18-Nov-18 03:09 PM] blackjok3r#3181
+Dont think I have anything really left needed... we are up to testing phase before launch of 10% blck reward and notaries to be chosen for mainnet.
+
+[18-Nov-18 03:10 PM] blackjok3r#3181
+@Alright  can you please test `mastertest` branch with your `ac_script` chain. to amke sure it works.
+
+[18-Nov-18 03:11 PM] blackjok3r#3181
+if thats confirmed I can merge mastertest to master tomorrow
+
+[18-Nov-18 03:14 PM] blackjok3r#3181
+RPC for wallet cleaner is : `cleanwallettransactions`
+
+[18-Nov-18 03:57 PM] Alright#0419
+need to test pos on ac_script, so I'll do FSM and staked at the same time
+
+[18-Nov-18 03:58 PM] jl777c#5810
+change to jl777 branch
+
+[18-Nov-18 03:58 PM] jl777c#5810
+FSM is having issues with all the latest changes
+
+[18-Nov-18 03:58 PM] Alright#0419
+👌
+
+[18-Nov-18 11:10 PM] kmdkrazy#8280
+Create a bash file for noobs....git pull ... start from scatch with new testname....you guys are killing the part time lovers.  
+
+AssetChain.sh
+
+[18-Nov-18 11:11 PM] kmdkrazy#8280
+Master and mastertest
+
+[18-Nov-18 11:46 PM] Alright#0419
+what?
+
+[18-Nov-18 11:46 PM] Alright#0419
+What is it you want us to do?
+
+[19-Nov-18 01:13 AM] blackjok3r#3181
+Staked repo does that @kmdkrazy
+
+[19-Nov-18 01:13 AM] blackjok3r#3181
+It starts all or a single chain with a so gle command
+
+[19-Nov-18 01:58 AM] kmdkrazy#8280
+I keep working on my business and keep coming back ....you guys change shit before i wake up..
+..please keep testing chains updated with some type of updated bash...so the newb 12 hours away can test.....
+
+[19-Nov-18 01:59 AM] kmdkrazy#8280
+Maybe im 2 weeks behind
+
+[19-Nov-18 02:00 AM] kmdkrazy#8280
+Stop progressing so dam fast !!
+
+[19-Nov-18 02:08 AM] Alright#0419
+the purpose of the test chains is testing, they aren't particularly important as we can just restart them if there is a problem. Mainnet will be much more consistent than the testnet
+
+[19-Nov-18 02:10 AM] kmdkrazy#8280
+Yeah...but changing to FSM and or from testnet needs a better stucture....i understand that you are in prototype.... but there should be a place to see these new changes without scrolling back
+
+[19-Nov-18 02:12 AM] kmdkrazy#8280
+If github has those
+
+[19-Nov-18 02:12 AM] blackjok3r#3181
+the staked repo will start a chain you specify from the correct branch with no user input required
+
+[19-Nov-18 02:13 AM] kmdkrazy#8280
+Fogive me
+
+[19-Nov-18 02:13 AM] blackjok3r#3181
+`./start.sh CFEK` for example
+
+[19-Nov-18 02:13 AM] blackjok3r#3181
+if you cant do a config.ini
+
+[19-Nov-18 02:13 AM] blackjok3r#3181
+I made it even easiuer
+
+[19-Nov-18 02:13 AM] blackjok3r#3181
+`./start.sh CFEK noconfig`
+
+[19-Nov-18 02:13 AM] kmdkrazy#8280
+Nice
+
+[19-Nov-18 02:13 AM] blackjok3r#3181
+yes it was needed
+
+[19-Nov-18 02:13 AM] blackjok3r#3181
+at the moment everything is in master branch anyway so its not really needed.
+
+[19-Nov-18 02:14 AM] blackjok3r#3181
+But I have bulk things to merge down, once we have verified everythiing in matsertest is working.
+
+[19-Nov-18 02:14 AM] kmdkrazy#8280
+Just change the komodod to staked 1375
+
+[19-Nov-18 02:14 AM] blackjok3r#3181
+Ideally everythig will be in master
+
+[19-Nov-18 02:14 AM] blackjok3r#3181
+I dont want to have to change things to often... likely the testnet will use a diffrent branch ...
+
+[19-Nov-18 02:15 AM] blackjok3r#3181
+but we dont expect everyone to actually run a testnet node.
+
+[19-Nov-18 02:15 AM] blackjok3r#3181
+its msotly for my testing, so I dont merge broken shit into the amin chain... that would eb very bad
+
+[19-Nov-18 02:16 AM] kmdkrazy#8280
+As a tester ...i need "komodod" to equal test chain  instead of the easier way you are operating
+
+[19-Nov-18 02:17 AM] kmdkrazy#8280
+When i kill komodod
+
+[19-Nov-18 02:17 AM] kmdkrazy#8280
+I want to know which one
+
+[19-Nov-18 02:17 AM] blackjok3r#3181
+you need a VM with this repo installed: https://github.com/StakedChain/staked
+
+{Embed}
+https://github.com/StakedChain/staked
+StakedChain/staked
+repo for using staked chains, for testing and production use - StakedChain/staked
+https://avatars0.githubusercontent.com/u/42953759?s=400&v=4
+
+[19-Nov-18 02:18 AM] blackjok3r#3181
+it cant get any easier than that...
+
+[19-Nov-18 02:18 AM] blackjok3r#3181
+or at least I cant make it any easier
+
+[19-Nov-18 02:18 AM] kmdkrazy#8280
+404 error on the link
+
+[19-Nov-18 02:18 AM] blackjok3r#3181
+yes the copy past fucked up
+
+[19-Nov-18 02:18 AM] blackjok3r#3181
+I just fixed it
+
+[19-Nov-18 02:18 AM] blackjok3r#3181
+still half a asleep lol
+
+[19-Nov-18 02:18 AM] kmdkrazy#8280
+And im going to bed
+
+[19-Nov-18 02:19 AM] kmdkrazy#8280
+Have a great night
+
+[19-Nov-18 02:19 AM] kmdkrazy#8280
+Day
+
+[19-Nov-18 02:19 AM] kmdkrazy#8280
+And ill sleep well
+
+[19-Nov-18 02:19 AM] kmdkrazy#8280
+Ill retest tomorrow....maybe
+
+[19-Nov-18 02:20 AM] kmdkrazy#8280
+You guys are monsters......i appreciate you
+
+[19-Nov-18 03:17 AM] Alright#0419
+@blackjok3r @webworker01 @CrisF @smk762 -  dracocanis ominator @jorian @TonyL @Deleted User @CHMEX @metaphilibert @jusoaresf @Mylo @gt @CMaurice @kmdkrazy @Bar_F1sh_Rel @zatJUM @Deleted User @dukeleto @gcharang @ComputerGenie 👴🏼📢 
+
+Please confirm the address and pubkey here are correct, and that you still own them. This is what is going into the source code. If there is a problem, send an email to stakechain@protonmail.com immediately . This is the only acceptable way to make sure you get your chance at being a notary. Discord messages easily get lost.
+
+{Reactions}
+👍 (8) 
+
+[19-Nov-18 03:18 AM] Alright#0419
+https://pastebin.com/smnYZ3r5
+
+{Embed}
+https://pastebin.com/smnYZ3r5
+{      {"blackjok3r", "021914947402d936a89fbdd1b12be49eb894a1568e5...
+https://pastebin.com/i/facebook.png
+
+[19-Nov-18 03:18 AM] Alright#0419
+@CMaurice please send the corresponding address to stakedchain@protonmail.com
+
+[19-Nov-18 03:19 AM] Alright#0419
+@ComputerGenie 👴🏼📢 we need a compressed pubkey
+
+[19-Nov-18 03:19 AM] Alright#0419
+@ca333 please send an email with pubkey and address to stakedchain@protonmail.com. You were in the list previously, but you were removed to accommodate someone
+
+[19-Nov-18 03:21 AM] ComputerGenie 👴🏼📢#7004
+if you need compressed, then I need to change addys 😛
+
+[19-Nov-18 03:21 AM] Alright#0419
+It's on you guys to verify. Don't assume I didn't make a mistake while creating that.
+
+[19-Nov-18 03:22 AM] blackjok3r#3181
+I will manually cross check it before adding to the ERA2 in the code ... and doing myt tests, I will check the email, Alright has given me access to it.
+
+[19-Nov-18 03:23 AM] blackjok3r#3181
+These are not mainnet pubkeys, but you can use them there aswell, if you like.
+
+[19-Nov-18 05:22 AM] CrisF#3405
+I'll send a new key in about 3 1/2 hours.
+
+[19-Nov-18 05:33 AM] smk762 -  dracocanis ominator#7640
+I have similar time frame for confirmation
+
+[19-Nov-18 05:45 AM] blackjok3r#3181
+No proiblem... decided not to do anything until much later on, so everyone can confirm.
+
+[19-Nov-18 06:33 AM] metaphilibert#0926
+Correct here
+
+[19-Nov-18 06:35 AM] gcharang#6833
+Mine is correct
+
+[19-Nov-18 07:11 AM] CrisF#3405
+It will take a while for the vanity generator to rollout `KMDLabsCrisF....`  ;)
+
+[19-Nov-18 07:48 AM] zatJUM#9924
+Is it ok if I generated it with the MGNX chain?
+
+[19-Nov-18 07:58 AM] Deleted User#0000
+Yup
+
+[19-Nov-18 08:11 AM] zatJUM#9924
+Thanks! I confirm my pubkey/address is ok
+
+[19-Nov-18 08:44 AM] smk762 -  dracocanis ominator#7640
+Radd/pubkey confirmed, etched into titanium, and buried in the outback 👌
+
+[19-Nov-18 08:48 AM] gt#2812
+all good
+
+[19-Nov-18 08:54 AM] CrisF#3405
+@Alright Radd/pubkey sent.
+
+[19-Nov-18 09:11 AM] blackjok3r#3181
+Will leave this another at least 4H before putting the keys into the code. then we can announce the activation time for era2 and launch of the 10% br chain.
+
+[19-Nov-18 09:12 AM] blackjok3r#3181
+everyone will have plenty of time to prepare a notary.
+
+[19-Nov-18 09:12 AM] blackjok3r#3181
+if they ahve not already done so.
+
+[19-Nov-18 09:47 AM] zatJUM#9924
+@blackjok3r everyone will have plenty of time to prepare a notary.
+
+[19-Nov-18 09:48 AM] zatJUM#9924
+Thank you for that!
+
+[19-Nov-18 09:48 AM] blackjok3r#3181
+it needs to be fair 😃
+

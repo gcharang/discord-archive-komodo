@@ -1,0 +1,389 @@
+==============================================================
+Guild: Komodo
+Channel: kmdlabs
+Topic: Please read pinned messages
+Messages: 100
+Range: 
+==============================================================
+
+[04-Mar-19 08:15 AM] blackjok3r#3181
+thankfully pretty much the entire problem is contained to a single function lol. And it just had to be the hardest one to understand 😂
+
+{Reactions}
+🇦🇺 
+
+[04-Mar-19 08:16 AM] CrisF#3405
+Good stuff!
+
+[04-Mar-19 08:21 AM] blackjok3r#3181
+I think the problem basically comes down to, if you go too fast with notarizations... then the range between each one, does not contain a MoM hash for the other chains. Thats it. So by making iguana skip a round of MoMoM is null... combined with using older notarizations, and a larger range... it just might work 🤞
+
+{Reactions}
+🤞 
+
+[04-Mar-19 08:22 AM] blackjok3r#3181
+fixing this seems actually quite easy if indeed it does work.
+
+{Reactions}
+😎 
+
+[04-Mar-19 08:25 AM] CrisF#3405
+I've just gotten back and have a couple things to get done before starting on migrations.  Should I work on setting that up, or should I hold off?
+
+[04-Mar-19 08:25 AM] blackjok3r#3181
+set it up but dont test it
+
+[04-Mar-19 08:25 AM] blackjok3r#3181
+I pushed some fixes to the script in PoS_Scripts repo for you last night
+
+[04-Mar-19 08:25 AM] CrisF#3405
+Cool, thanks.
+
+[04-Mar-19 08:26 AM] blackjok3r#3181
+if you test CFEK clustewr I will test LABS one... should have fix pushed out here in an hour or two unless i screwed it up .
+
+[04-Mar-19 08:27 AM] CrisF#3405
+OK.  Will it be ok if I send one or 2 to check if I've got the scripts set up right, or better to send nothing at all?
+
+[04-Mar-19 08:27 AM] blackjok3r#3181
+you can do them at the moment they are working... Its only when blocks stop being uniform when it all goes to shit.
+
+[04-Mar-19 08:28 AM] CrisF#3405
+Allright!  I'll get onto that shortly 😃
+
+[04-Mar-19 10:12 AM] blackjok3r#3181
+messing with masterbranch right now, plese dont update anything 😃
+
+[04-Mar-19 10:12 AM] CrisF#3405
+Ooosp , I'm just in the process of updating.  Might have just finished.
+
+[04-Mar-19 10:13 AM] blackjok3r#3181
+I think this solution is reasonable... but while workign this out I thaught of something else lol... The MoM hash that is submitted could under a rare circumstance not actually be correct due to reorgs.. Really the entire thing needs to drop back 1 notarization. I have written some functions that will make this possible, but I will need help to get some others to be able to use that....
+
+[04-Mar-19 10:14 AM] blackjok3r#3181
+Hopefully we get close here and @dimxy  will be able to help with the last of it, as the C++  being sued there is beyond me at thsi point in time.
+
+{Reactions}
+👍 (2) 
+
+[04-Mar-19 10:15 AM] blackjok3r#3181
+Really should not be that hard to offset all MoM hash by 1 notarization.... Once this is done, then even under harsh attack things should be safe all the time.
+
+[04-Mar-19 11:46 AM] blackjok3r#3181
+Ok, looks like I have something here... Its only working for LAB cluster right now... but its working. 
+I have a way for iguana to cancel a round if MoMoM is NULL.
+And it now uses a range of 3 notarizations for each MoMoM hash, to stop rare condition of 2 notarization in the same block of KMD meaning there is no MoMoM range.  I dont think this will cause any issues, but we will need to test it.. I don't think that anything consensus related is changed, definatly as long as no notaries resync the chain we should be safe for the time being.  
+The trick herre is to use notarized data, but chaging all this at once will be difficult.  So we need to start with simple things like this. If we can have overlapping MoMoM hashes and imports still work, then I think its totally possible to easily fix it. If overlapping MoMoM ahsh do not work, then welll... becomes a LOT harder.
+
+{Reactions}
+🤞 (2) 
+
+[04-Mar-19 11:52 AM] blackjok3r#3181
+@LabsAssistant  
+Please `./stop.sh` `./start.sh` You can just do start.sh, but due to iguana being updated, your iguana TV will move the the terminal you run start.sh in.  Migrates may not be working on CFEK cluster with this fix, I'm not really sure. Just need to test overlapping MoMoM hash.
+
+{Reactions}
+👍 (2) 
+
+[04-Mar-19 11:55 AM] blackjok3r#3181
+This fix will allow a chain to start but also never allow NULL MoMoM hash except the first 3 notarizations on the chain. From my testing, whenever an import failed, there was a NULL MoMoM hash on the target. This pevents this happening. So if it is gettin NULL for some exact reason, and it cannot be fixed just just skipping a notarization round. Notarizations will simply stop, hopefully allowing analysis of why its failing.
+
+[04-Mar-19 11:56 AM] zatJUM#9924
+```Fast-forward
+ peer_ips.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)```
+
+[04-Mar-19 11:56 AM] blackjok3r#3181
+thats genies IP
+
+[04-Mar-19 11:56 AM] blackjok3r#3181
+fixes ate all SuperNET repo and master branch of komodo
+
+[04-Mar-19 11:57 AM] zatJUM#9924
+ok ! I understand now why when you ask to restart I often don't have any change in StakedNotary...
+
+[04-Mar-19 11:58 AM] blackjok3r#3181
+yes... without the start scripts, fetching everything automatically and building it... these constant testing updates would be very time consuming.
+
+[04-Mar-19 11:58 AM] blackjok3r#3181
+thank god the build process is finally working 😅
+
+{Reactions}
+💯 
+
+[04-Mar-19 11:59 AM] zatJUM#9924
+not sure god is responsible for that... 😉
+
+{Reactions}
+👆🏽 
+
+[04-Mar-19 11:59 AM] ComputerGenie 👴🏼📢#7004
+all chains can mine on the master branch?
+
+[04-Mar-19 12:00 PM] blackjok3r#3181
+I think CFEK chains are only using some RPC diffrences ... I could merge them all. but Im messing with very low level stuff here, and dont want to break them. Its not consensus related as far as I can tell, as all the changed code is on a KMD RPC that iguana  and the migrate script uses.
+
+[04-Mar-19 12:01 PM] blackjok3r#3181
+Problem is that the 2 calls to this RPC return diffrent results sometimes... Need to force them to be equal under all circumstances, or fail so can be attempted later.
+
+[04-Mar-19 12:01 PM] ComputerGenie 👴🏼📢#7004
+there's only 2 RPCs that matter for mining :troll:
+
+[04-Mar-19 12:01 PM] blackjok3r#3181
+yes
+
+[04-Mar-19 12:04 PM] CrisF#3405
+Up and notarized
+
+[04-Mar-19 12:04 PM] CrisF#3405
+```bestk.18 4020f KMD height.23375 mod.0 VINI.3 myind.3 MINE.({"txid":"b85e5b30ae5a0ed26f29697e1918e70c50e7b00f7c23861703a227a1c6042a85","vout":4,"scriptSig":{"asm":"3044022021da4078a6ea5431e32af88c0fa488aefaedc5201ec76be7e448b9b1a71f216402205f0043640997f2bc6212f26d9237378d687c71a89081d708877c5d36adcf58a6[ALL]","hex":"473044022021da4078a6ea5431e32af88c0fa488aefaedc5201ec76be7e448b9b1a71f216402205f0043640997f2bc6212f26d9237378d687c71a89081d708877c5d36adcf58a601"},"sequence":4294967295}) j.3```
+
+[04-Mar-19 12:04 PM] ComputerGenie 👴🏼📢#7004
+updated and running here too
+
+{Reactions}
+2561_feelsevilman 
+
+[04-Mar-19 12:05 PM] blackjok3r#3181
+Yeah strangly, mine is still notarizing also... I have a feeling that with more chains in a cluster the MoMoM might be more reliable... Hopefully this fix is enough to get migrates working under perfect conditions wihtout slowing anything down. This was the goal... slowing it down only covers up the problem and means it could still happen, just less often.
+
+[04-Mar-19 12:09 PM] zatJUM#9924
+Node updated too
+
+{Reactions}
+2561_feelsevilman 
+
+[04-Mar-19 12:12 PM] smk762 -  dracocanis ominator#7640
+```-ASSET-          -BALANCE-  -UTXO-  -NOTR-  -BLOX-   -PCT-  -LAST-  -CNCT-        
+KMD               100.3469      43         1254100              1m      18        
+LABSTH           2213.6499      13     999   23386    4.3%     47m       8        
+CFEKDIMXY1          8.8718      13    1280   24414    5.2%      4m       7        
+CFEKDIMXY2          9.8748      20    1252   24523    5.1%     48m       9        
+LABSTH0             2.1873      18     472   10650    4.4%      1m       7        
+CFEKORKL      9975329.3622      10      78    2276    3.4%     21m      18    ```
+🙇
+
+[04-Mar-19 12:15 PM] ComputerGenie 👴🏼📢#7004
+_feels poor now with less than 10 CFEKORKL_
+
+[04-Mar-19 12:15 PM] smk762 -  dracocanis ominator#7640
+want some?
+
+[04-Mar-19 12:16 PM] ComputerGenie 👴🏼📢#7004
+lol nah, sadly I can't do anything yet; I still have a day or so of pool coding to do
+
+[04-Mar-19 12:18 PM] smk762 -  dracocanis ominator#7640
+I ewbf'd for a couple of minutes on chicken for dice yesterday, but new build after winfail didnt like mining while I was doing stuff. Need to config more. Or resurrect my dedicated rig.,,, been waiting for summer to pass first
+
+[04-Mar-19 12:18 PM] ComputerGenie 👴🏼📢#7004
+or you could just install debian and avoid all of that :troll:
+
+[04-Mar-19 12:21 PM] ComputerGenie 👴🏼📢#7004
+jokes aside, @smk762 -  dracocanis ominator, the best I've experienced on a box I was using was when I lowered the intensity
+
+[04-Mar-19 12:22 PM] smk762 -  dracocanis ominator#7640
+need more info... win rig had 2 x 1070, but took one out on rebuild.
+
+[04-Mar-19 12:22 PM] smk762 -  dracocanis ominator#7640
+other rig was using ethOS, so I didnt have to know anything
+
+[04-Mar-19 12:22 PM] ComputerGenie 👴🏼📢#7004
+` --templimit 80 --intensity 50`
+worked decent for me on win, but I need 
+` --templimit 80 --intensity 1`
+with debian
+
+[04-Mar-19 12:23 PM] smk762 -  dracocanis ominator#7640
+its been idle for a few months
+
+[04-Mar-19 12:23 PM] smk762 -  dracocanis ominator#7640
+yeah I did that, but still getting a bit too warm and shutting down some
+
+[04-Mar-19 12:25 PM] ComputerGenie 👴🏼📢#7004
+use afterburner and manually set fan curve?
+
+[04-Mar-19 12:25 PM] ComputerGenie 👴🏼📢#7004
+do you use 'Powermizer Switch' ?
+
+[04-Mar-19 12:26 PM] smk762 -  dracocanis ominator#7640
+```[common]
+cuda_devices 0
+intensity    1
+templimit    80
+pec          0
+boff         0
+eexit        0
+tempunits    c
+log          0
+logfile      miner.log
+api          127.0.0.1:42000
+```
+thats about as far as I got before getting back to work on other things
+
+[04-Mar-19 12:29 PM] smk762 -  dracocanis ominator#7640
+just kicked off again, doing ok around 76c 😃
+
+[04-Mar-19 12:30 PM] ComputerGenie 👴🏼📢#7004
+what are your fan speeds set at?
+
+[04-Mar-19 01:12 PM] smk762 -  dracocanis ominator#7640
+I think 80, I forget. Added cool-bits=4 last night, whatever that means lol
+
+[04-Mar-19 01:12 PM] smk762 -  dracocanis ominator#7640
+been mining ok for the last little while. no block rewards tho 😦
+
+[04-Mar-19 01:34 PM] blackjok3r#3181
+I had to reindex the target and source chains, but not KMD to get migrates working, but so far done a few without problems.
+
+{Reactions}
+🌄 
+
+[04-Mar-19 02:12 PM] hypocalese#3688
+Good morning.  I am looking for assistance with a stalled chain.  Theo suggested I reach out to someone in this channel.
+
+[04-Mar-19 02:13 PM] blackjok3r#3181
+sure what chain is it? I assume PoS of some kind?
+
+[04-Mar-19 02:13 PM] hypocalese#3688
+PTX coin and its 50/50 pow/pos
+
+[04-Mar-19 02:14 PM] hypocalese#3688
+I have 4 nodes and I normally mine it with one gpu.
+
+[04-Mar-19 02:14 PM] hypocalese#3688
+its been fine since Nov 17th.  But on Feb 27th it stalled.
+
+[04-Mar-19 02:15 PM] blackjok3r#3181
+thats fine.... do you know how many utxos are being staked? Does it have any block reward? how are you staking it?
+
+[04-Mar-19 02:15 PM] hypocalese#3688
+I dont know exactly.  block reward is 15. node wallets are doing the staking.
+
+[04-Mar-19 02:17 PM] blackjok3r#3181
+PoS 64 is very touchy if not staked properly... technically it should never stop.... but if all the utxos are under 100 blocks old then none are elegible... It will take many mega sol to PoW it over the 100 blocks to unstick it.
+
+[04-Mar-19 02:18 PM] blackjok3r#3181
+can I have chain params to sync it? Maybe its something obvious...
+
+[04-Mar-19 02:18 PM] hypocalese#3688
+ok
+
+[04-Mar-19 02:18 PM] hypocalese#3688
+one sec
+
+[04-Mar-19 02:20 PM] hypocalese#3688
+I can rent some hashpower to unstick it.  I tried to hit it with 250Ksol but that didnt do it.
+
+[04-Mar-19 02:20 PM] blackjok3r#3181
+It may be something else. will take a few mins to sync it here then will let you know
+
+[04-Mar-19 02:20 PM] hypocalese#3688
+ok
+
+[04-Mar-19 02:22 PM] hypocalese#3688
+i have a pool, but I do not have  dPoW yet.  I wanted to go public with it when I have completed development on my end and dPoW is enabled.
+
+[04-Mar-19 02:23 PM] hypocalese#3688
+I dont want to risk someone attemting to hijack the chain for fun.
+
+{Reactions}
+👌 
+
+[04-Mar-19 02:27 PM] hypocalese#3688
+@webworker01  When I go public with it, I will definitely hit you up.
+
+[04-Mar-19 02:28 PM] blackjok3r#3181
+not any more 😄
+
+[04-Mar-19 02:29 PM] blackjok3r#3181
+ah cool. its taking a while to sync here. hopefully not too much longer
+
+[04-Mar-19 02:35 PM] hypocalese#3688
+You guys are awesome
+
+[04-Mar-19 02:41 PM] smk762 -  dracocanis ominator#7640
+hi @hypocalese  👋 
+These scripts are worth a look for staking  - https://github.com/KMDLabs/pos64staker
+
+{Embed}
+https://github.com/KMDLabs/pos64staker
+KMDLabs/pos64staker
+Automated staker for PoS assetchains. Contribute to KMDLabs/pos64staker development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/42953759?s=400&v=4
+
+[04-Mar-19 02:43 PM] ComputerGenie 👴🏼📢#7004
+PTX has been public since at least Nov 19, 2018, or did you mean go public with pool?
+
+[04-Mar-19 02:43 PM] hypocalese#3688
+yeah public with pool
+
+[04-Mar-19 02:56 PM] blackjok3r#3181
+lol found another bug randomly.... 😆
+
+[04-Mar-19 02:57 PM] blackjok3r#3181
+`./komodo-cli -ac_name=LABSTH sendrawtransaction $(./komodo-cli migrate_completeimporttransaction $(./komodo-cli -ac_name=LABSTH0 migrate_createimporttransaction $(./komodo-cli -ac_name=LABSTH0 getrawtransaction 1dbcd2c16a591f22a74746ba45d4998559a1e9494b3d43e9155a1e71812c8d5c) 0100c817a8040000001976a914aebad0f6fd53cd96c0f04b453a7539a5e187e15388ac))`
+
+[04-Mar-19 02:57 PM] blackjok3r#3181
+` bad-txns-vout-negative`
+
+[04-Mar-19 02:57 PM] blackjok3r#3181
+that transaction is just massive.... too many vins seems to overflow it somehow
+
+[04-Mar-19 02:58 PM] blackjok3r#3181
+decoderawtransaction clearly says the vout is 200... so it must be inside the export tx in the OP_RETURN or something.... I think just limiting vins on export is the easiest fix.
+
+[04-Mar-19 02:59 PM] blackjok3r#3181
+weird it goes all the way to import stage to fail
+
+[04-Mar-19 03:05 PM] jl777c#5810
+could have been right at the max txsize and then being included in import made it too big
+
+[04-Mar-19 03:06 PM] blackjok3r#3181
+yes I think something like a limit on vin size will be fine. Cant see anything obvious thats doing it, I think this was known about before, but I thaught it failed on creating the export tx
+
+[04-Mar-19 03:08 PM] blackjok3r#3181
+156 vins on this tx
+
+[04-Mar-19 03:08 PM] blackjok3r#3181
+😄
+
+[04-Mar-19 03:08 PM] blackjok3r#3181
+maybe limit to 100 and retry it I guess
+
+[04-Mar-19 03:08 PM] Mylo#8306
+@smk762 -  dracocanis ominator 
+Exception Value:    
+local variable 'orcl_rows' referenced before assignment
+Created oracle fail on STH chain.
+
+[04-Mar-19 03:08 PM] Mylo#8306
+Django error
+
+[04-Mar-19 03:09 PM] smk762 -  dracocanis ominator#7640
+cheers
+
+{Reactions}
+📢 
+
+[04-Mar-19 03:11 PM] smk762 -  dracocanis ominator#7640
+wierd, just tried it and was ok. what values entered?
+
+[04-Mar-19 03:21 PM] smk762 -  dracocanis ominator#7640
+found where it might've been happening, should be good now.
+
+[04-Mar-19 04:15 PM] CHMEX#0686
+Looks like the chain is advancing
+
+[04-Mar-19 04:20 PM] ComputerGenie 👴🏼📢#7004
+or not
+```Latest Blocks
+Height     Age          Transactions     Mined by     Size
+142969     24 minutes ago     1                        1608```
+`http://ptx.explorer.dexstats.info/`
+
+[04-Mar-19 04:22 PM] blackjok3r#3181
+I synced it.... but forgot address index
+
+[04-Mar-19 04:22 PM] blackjok3r#3181
+its sitting on 52% PoS so unles ther eis a bug PoW should move it just fine
+

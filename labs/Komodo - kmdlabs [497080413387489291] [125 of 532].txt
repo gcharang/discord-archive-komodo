@@ -1,0 +1,387 @@
+==============================================================
+Guild: Komodo
+Channel: kmdlabs
+Topic: Please read pinned messages
+Messages: 100
+Range: 
+==============================================================
+
+[24-Nov-18 04:11 PM] jl777c#5810
+the issue was a test in IsInitialDownload() needs to be disabled
+
+[24-Nov-18 04:11 PM] jl777c#5810
+once we did that all nodes sync instantly
+
+[24-Nov-18 04:11 PM] blackjok3r#3181
+ahhh
+
+[24-Nov-18 04:11 PM] blackjok3r#3181
+that makes sense
+
+[24-Nov-18 04:11 PM] jl777c#5810
+if (0 && ptr->chainPower < CChainPower(ptr, bigZero, minWork))
+    {
+        fprintf(stderr,"chainpower insufficient in IsInitialDownload\n");
+        return true;
+    }
+
+[24-Nov-18 04:11 PM] blackjok3r#3181
+as I used that in the mempool fix and i found it not workiing
+
+[24-Nov-18 04:11 PM] jl777c#5810
+somehow that was always returning true, even after chain was in sync
+
+{Reactions}
+🤔 
+
+[24-Nov-18 04:12 PM] blackjok3r#3181
+was it some merge I did my mistake disabling when that was updated ?
+
+[24-Nov-18 04:12 PM] blackjok3r#3181
+:trollface:
+
+[24-Nov-18 04:13 PM] jl777c#5810
+no, that came in with the sapling merge
+
+[24-Nov-18 04:13 PM] blackjok3r#3181
+😅
+
+[24-Nov-18 04:13 PM] jl777c#5810
+I would disable it, as it is clearly messing things up
+
+[24-Nov-18 04:13 PM] blackjok3r#3181
+cool dude thank for head up
+
+[24-Nov-18 04:13 PM] jl777c#5810
+main.cpp: bool IsInitialBlockDownload()
+
+[24-Nov-18 04:14 PM] blackjok3r#3181
+got ya
+
+[24-Nov-18 04:14 PM] blackjok3r#3181
+```bool IsInitialBlockDownload()
+{
+    return false;
+    const CChainParams& chainParams = Params();
+    LOCK(cs_main);
+    if (fImporting || fReindex)
+    {
+        //fprintf(stderr,"IsInitialBlockDownload: fImporting %d || %d fReindex\n",(int32_t)fImporting,(int32_t)fReindex);
+        return true;
+    }
+    if (fCheckpointsEnabled && chainActive.Height() < Checkpoints::GetTotalBlocksEstimate(chainParams.Checkpoints()))
+    {
+        //fprintf(stderr,"IsInitialBlockDownload: checkpoint -> initialdownload\n");
+        return true;
+    }
+    static bool lockIBDState = false;
+    if (lockIBDState)
+    {
+        //fprintf(stderr,"lockIBDState true %d < %d\n",chainActive.Height(),pindexBestHeader->nHeight - 10);
+        return false;
+    }
+    bool state; CBlockIndex *ptr = chainActive.Tip();
+    if ( ptr == 0 )
+        ptr = pindexBestHeader;
+    else if ( pindexBestHeader != 0 && pindexBestHeader->nHeight > ptr->nHeight )
+        ptr = pindexBestHeader;
+    //if ( ASSETCHAINS_SYMBOL[0] == 0 )
+    state = ((chainActive.Height() < ptr->nHeight - 24*60) ||
+             ptr->GetBlockTime() < (GetTime() - chainParams.MaxTipAge()));
+    //else state = (chainActive.Height() < ptr->nHeight - 24*60);
+    //fprintf(stderr,"state.%d  ht.%d vs %d, t.%u %u\n",state,(int32_t)chainActive.Height(),(uint32_t)ptr->nHeight,(int32_t)ptr->GetBlockTime(),(uint32_t)(GetTime() - chainParams.MaxTipAge()));
+    if (!state)
+    {
+        lockIBDState = true;
+    }
+    return state;
+}```
+
+[24-Nov-18 04:14 PM] blackjok3r#3181
+easy
+
+[24-Nov-18 04:15 PM] blackjok3r#3181
+litterally LOLing.. is that right?
+
+[24-Nov-18 04:17 PM] blackjok3r#3181
+pushhed anyway
+
+[24-Nov-18 04:17 PM] blackjok3r#3181
+some one please confir m builds
+
+{Reactions}
+👍 
+
+[24-Nov-18 04:19 PM] CrisF#3405
+``` 1 file changed, 7 insertions(+), 4 deletions(-)
+```
+
+[24-Nov-18 04:19 PM] Alright#0419
+😩
+
+[24-Nov-18 04:19 PM] CrisF#3405
+staring now...
+
+[24-Nov-18 04:19 PM] Alright#0419
+don't push code you don't know will build or not to master
+
+[24-Nov-18 04:20 PM] blackjok3r#3181
+built here
+
+[24-Nov-18 04:21 PM] blackjok3r#3181
+https://i.imgur.com/9IHeXbN.png
+
+{Embed}
+https://imgur.com/9IHeXbN
+Screenshot
+https://i.imgur.com/9IHeXbN.jpg
+
+[24-Nov-18 04:22 PM] daemonfox#6136
+things are building... afk to go find wake up juice
+
+[24-Nov-18 04:22 PM] gcharang#6833
+Got built
+
+[24-Nov-18 04:23 PM] CrisF#3405
+Me too.
+
+[24-Nov-18 04:24 PM] blackjok3r#3181
+it worked
+
+[24-Nov-18 04:24 PM] blackjok3r#3181
+secon time
+
+[24-Nov-18 04:25 PM] blackjok3r#3181
+@daemonfox  beer
+
+[24-Nov-18 04:27 PM] blackjok3r#3181
+it still works as planned
+
+[24-Nov-18 04:27 PM] blackjok3r#3181
+mine resatred witou fail
+
+[24-Nov-18 04:30 PM] blackjok3r#3181
+https://www.youtube.com/watch?v=VVtD4qMy5Hc
+
+{Embed}
+Warner Bros. Records
+https://www.youtube.com/watch?v=VVtD4qMy5Hc
+The Living End - Prisoner Of Society (Video)
+© 2005 WMG Prisoner Of Society (Video)
+https://i.ytimg.com/vi/VVtD4qMy5Hc/hqdefault.jpg
+
+[24-Nov-18 04:38 PM] blackjok3r#3181
+!kmd tip 1
+
+[24-Nov-18 04:38 PM] blackjok3r#3181
+😦
+
+[24-Nov-18 04:39 PM] jl777c#5810
+that is pre-sapling merge version of IsInitialBlockdownload
+
+[24-Nov-18 04:39 PM] blackjok3r#3181
+wel yes
+
+[24-Nov-18 04:39 PM] blackjok3r#3181
+I said we wre not taking verus merge'
+
+[24-Nov-18 04:39 PM] blackjok3r#3181
+sorry
+
+[24-Nov-18 04:40 PM] blackjok3r#3181
+just not
+
+[24-Nov-18 04:40 PM] blackjok3r#3181
+it dosnt  have the nothing at stake fix ,.... what we need as a PoS chain
+
+[24-Nov-18 04:41 PM] blackjok3r#3181
+I willl merge it later ly self if need be
+
+[24-Nov-18 04:44 PM] Alright#0419
+is worth the time and effort to stay on par with KMD @blackjok3r
+
+[24-Nov-18 04:47 PM] dukeleto#7326
+@blackjok3r a small bit of Git advice: in your staked fork of KMD, i would keep all of James' branch names alone, such as FSM, and leave them as exact copies of upstream. Use your own branch name that is unique to this project. Then, when pulling in new changes from James, your life will be less complex.
+
+[24-Nov-18 04:48 PM] dukeleto#7326
+if your FSM is already different, it's not hard to just change the branch name and then put FSM back to it's upstream state. Then you can do diffs against James's upstream and your current tip, more easily
+
+[24-Nov-18 04:49 PM] blackjok3r#3181
+but I want the PoS fix?
+
+[24-Nov-18 04:49 PM] dukeleto#7326
+my suggestion is for the case of: "I merged some stuff into our FSM, but not others, and now it's a nightmare to tell what is only in upstream and what is in our branch/fork"
+
+[24-Nov-18 04:50 PM] blackjok3r#3181
+this isnnt about $ for me ... i dont think I need to say that again
+
+[24-Nov-18 04:50 PM] dukeleto#7326
+and also will make cherry-picking commits easier, potentially
+
+[24-Nov-18 04:50 PM] blackjok3r#3181
+you mkssing te pooint
+
+[24-Nov-18 04:51 PM] dukeleto#7326
+i am just giving general Git advice to make your life easier, I am not saying it fixes the particular issue you have right now
+
+{Reactions}
+abusedsmily 
+
+[24-Nov-18 04:51 PM] dukeleto#7326
+having an FSM with all your changes mixed with all upstream, and then trying to pull in more, well, you now know how painful that is
+
+[24-Nov-18 04:51 PM] blackjok3r#3181
+tbh .. abnd i hate that i am using that so much ... but
+
+[24-Nov-18 04:51 PM] blackjok3r#3181
+why
+
+[24-Nov-18 04:52 PM] blackjok3r#3181
+did u get a stake  notary up?
+
+[24-Nov-18 04:52 PM] dukeleto#7326
+have you been in this situation before, where somebody is coding like mad upstream?
+
+[24-Nov-18 04:52 PM] dukeleto#7326
+nope, I don't have time for a notary position, giving it up to another person who can focus on it
+
+{Reactions}
+rum 
+
+[24-Nov-18 04:53 PM] blackjok3r#3181
+love it
+
+[24-Nov-18 04:53 PM] blackjok3r#3181
+we realy want u on the team man
+
+[24-Nov-18 04:53 PM] dukeleto#7326
+i got too many things cooking already, and the fact that it needs yet another dedicated server, i just don't got the time to maintain that, in addition to normal notary and Hush stuff 😃
+
+[24-Nov-18 04:54 PM] blackjok3r#3181
+I dont tijkn u nned to be a notary
+
+[24-Nov-18 04:54 PM] blackjok3r#3181
+there are mmany ways to earn coins
+
+[24-Nov-18 04:54 PM] jl777c#5810
+dice
+
+[24-Nov-18 04:54 PM] blackjok3r#3181
+rime
+
+[24-Nov-18 04:54 PM] dukeleto#7326
+i am here as a resource, however I can help. Code review, bugfixes, bounties, etc...
+
+[24-Nov-18 04:55 PM] blackjok3r#3181
+titime = money don tover think it :"jl777"
+
+[24-Nov-18 04:55 PM] dukeleto#7326
+i thought i would have the time to be a notary, but i was spreading myself too thin
+
+[24-Nov-18 04:56 PM] blackjok3r#3181
+well .. bing a notary on staked/labs is powere
+
+[24-Nov-18 04:56 PM] blackjok3r#3181
+if u want tp ofogot that do so
+
+[24-Nov-18 04:56 PM] dukeleto#7326
+no comprendo
+
+[24-Nov-18 04:57 PM] blackjok3r#3181
+if u wantend to do that do so
+
+[24-Nov-18 05:04 PM] blackjok3r#3181
+https://www.youtube.com/watch?v=AkM4BqWdXHI
+
+{Embed}
+SlimDustyVEVO
+https://www.youtube.com/watch?v=AkM4BqWdXHI
+Slim Dusty - Looking Forward Looking Back
+Music video by Slim Dusty performing Looking Forward Looking Back.
+https://i.ytimg.com/vi/AkM4BqWdXHI/maxresdefault.jpg
+
+[24-Nov-18 05:43 PM] daemonfox#6136
+how many slots are left...
+
+[24-Nov-18 05:43 PM] daemonfox#6136
+I have to leave for a few hours and im not done yet... komodo just built correctly after three tries
+
+[24-Nov-18 05:49 PM] gt#2812
+3, there’s a pinned message too
+
+[24-Nov-18 06:06 PM] Alright#0419
+could be less, haven't checked it in ~hour
+
+[24-Nov-18 06:21 PM] Alright#0419
+still 17/20 as of a800ac9a97f596224bf87a80fb8f99a1a087c1bcead8a11326ef677f0fe342f7
+
+[24-Nov-18 06:37 PM] DrKush#8774
+hi
+
+[24-Nov-18 06:39 PM] Alright#0419
+HELLO
+
+[24-Nov-18 06:39 PM] Alright#0419
+what's up @DrKush
+
+[24-Nov-18 06:40 PM] DrKush#8774
+a white paper KMD traduct in french
+
+[24-Nov-18 06:40 PM] DrKush#8774
+:abusedsmily:
+
+[24-Nov-18 06:41 PM] DrKush#8774
+and u @Alright  ?
+
+[24-Nov-18 06:42 PM] Alright#0419
+Sorry, don't understand
+
+[24-Nov-18 06:43 PM] DrKush#8774
+lol is my accent !
+
+[24-Nov-18 06:45 PM] DrKush#8774
+@webworker01  yes bro 😉 its really hard beacause google translate is fucking language 😄
+
+{Reactions}
+👍 
+
+[24-Nov-18 06:46 PM] DrKush#8774
+& I learn spirit of KMD 😉
+
+[24-Nov-18 06:48 PM] DrKush#8774
+" focused in freedom " 😉  
+Yes @webworker01 but yes I do it and little by little, I will correct myself
+
+[24-Nov-18 06:51 PM] DrKush#8774
+@Alright whats is 17/20 ??
+
+[24-Nov-18 06:51 PM] Alright#0419
+We're determining who can be a mainnet LABS notary at the moment
+
+[24-Nov-18 06:51 PM] Alright#0419
+had 25 people sign up, but we're limiting it to 20 spots
+
+[24-Nov-18 06:52 PM] Alright#0419
+so first 20 people to notarize a testchain that launched earlier today get a mainnet spot
+
+[24-Nov-18 06:52 PM] Alright#0419
+3 spots left
+
+[24-Nov-18 06:53 PM] DrKush#8774
+I do not have enough knowledge to help you, at least not yet;)
+
+[24-Nov-18 06:59 PM] Alright#0419
+this is a great place to learn
+
+[24-Nov-18 07:00 PM] Alright#0419
+kind of the mission statement for kmdlabs
+
+[24-Nov-18 07:00 PM] Alright#0419
+Teach anyone showing willingness to learn
+
+[24-Nov-18 07:00 PM] Alright#0419
+no matter their skill level
+
+{Reactions}
+👍 
+

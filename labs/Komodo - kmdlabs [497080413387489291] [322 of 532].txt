@@ -1,0 +1,314 @@
+==============================================================
+Guild: Komodo
+Channel: kmdlabs
+Topic: Please read pinned messages
+Messages: 100
+Range: 
+==============================================================
+
+[05-Mar-19 08:09 AM] CrisF#3405
+```graph the change in coinsupply over time between the chains in cluster``` This would be very cool!
+
+[05-Mar-19 08:09 AM] smk762 -  dracocanis ominator#7640
+the oracle graph wouldnt be storing hashes for debug, but might indicate if/when something went wrong.
+
+[05-Mar-19 08:10 AM] smk762 -  dracocanis ominator#7640
+I'll have a look tommorow when I have a spare moment or two and see what I can come up with.
+
+[05-Mar-19 08:10 AM] blackjok3r#3181
+just something to track supply... I think I can make the script more reliaable... although the easies tid to justs do 24H at a time, the restart it manually.
+
+[05-Mar-19 08:12 AM] smk762 -  dracocanis ominator#7640
+I was thinking  hourly datapoints for each cc_id, with graph displaying last 24hrs
+
+{Reactions}
+👍 
+
+[05-Mar-19 08:14 AM] CrisF#3405
+Having tools like that that could be used as basic templates could prove very useful for new projects joining Labs.
+
+[05-Mar-19 08:16 AM] blackjok3r#3181
+@jl777c  thats not really possible to do, as the problem will only arise again, if a notarization on the target is lost, due to a reorg, and it not being mined again, which happens under Alrights stupid censorship attack which is a 150% attack effectivly...  I have already accounted for reorgs in MoM hash, range so that it will keep going back to the last notarized MoM height. Hoever the MoMoM itself can be seen, and then enable an import to happen, then be reorged out of the chain, making the chain not able to sync afterwards if the notarization with the matching MoMoM hash is lost. the only way to enforce the MoMoM is notarized into the chain, will be on the script/RPC side I think.
+
+[05-Mar-19 08:22 AM] jl777c#5810
+that is why I said 2 notarizations. when 2 deep, it cant be reorged as the notarization itself is notarized
+
+[05-Mar-19 08:22 AM] jl777c#5810
+yes, on the script side
+
+[05-Mar-19 08:23 AM] blackjok3r#3181
+yes Im jsut dont know how to implement that. The fix I used was to just include notarizaed notarizations in the MoMoM hash calculation to make sure if it was lost it was then added again on the next round, combined with not letting iguana notarize a NULL MoMoM hash.
+
+[05-Mar-19 08:24 AM] blackjok3r#3181
+seems to work, however you cannot make iguana use notarized notarizations
+
+[05-Mar-19 08:24 AM] blackjok3r#3181
+otherwise if KMD notarizations stop for any reason, gaps happen
+
+[05-Mar-19 08:25 AM] jl777c#5810
+as long as gaps means it takes longer and not lost migrates
+
+[05-Mar-19 08:25 AM] blackjok3r#3181
+gaps means it totally breaks
+
+[05-Mar-19 08:25 AM] blackjok3r#3181
+the fix to stop gaps is just to keepo increasing the range used further and further back, but how far can you go before it gets very very slow.
+
+[05-Mar-19 08:26 AM] blackjok3r#3181
+or starts to confuse things .
+
+[05-Mar-19 08:26 AM] jl777c#5810
+ouch. can we have a fallback that is very very slow to be used only rarely where most of the time it uses the normal (fast) way
+
+[05-Mar-19 08:27 AM] jl777c#5810
+i just have this feeling we need to have more than a single way to validate things
+
+[05-Mar-19 08:27 AM] blackjok3r#3181
+not really.. unfortunatly... iguana side is fetching data form KMD, which is usually reliable and doest not suffer reorgs... however... by usiung notarized height you need to use a very large range of assetchain notarizations. My first idea was to have some cut off, if there was no notarization for X blocks, just let it notarize anyway.
+
+[05-Mar-19 08:28 AM] blackjok3r#3181
+having a way to undo the export if it fails import is the only way to amke it perfect under all conditions.
+
+[05-Mar-19 08:28 AM] jl777c#5810
+yes, an undo!
+
+[05-Mar-19 08:29 AM] jl777c#5810
+if we can get it 99.9% reliable and then have an undo for the 0.1% case, that should be good
+
+[05-Mar-19 08:29 AM] jl777c#5810
+so we need to know for sure an import will fail and then use that as proof to get a refund (undo)
+
+[05-Mar-19 08:29 AM] blackjok3r#3181
+that is the best case, with the altest fix (and maybe increasing range 1 or 2 more nota) it would only fail under a severe attack or no KMD blocks happening for extreme amounts of time.
+
+[05-Mar-19 08:30 AM] jl777c#5810
+what is "extreme" here?
+
+[05-Mar-19 08:30 AM] jl777c#5810
+one hour, one day
+
+[05-Mar-19 08:30 AM] blackjok3r#3181
+an hour or more where notarization are lost
+
+[05-Mar-19 08:30 AM] jl777c#5810
+hour... sometimes blocks can take a long time
+
+[05-Mar-19 08:30 AM] blackjok3r#3181
+the issue is lsot notarizations... not sure why it happens as they have no expiry but they seems to be able to be lost with heavy reorgs.
+
+[05-Mar-19 08:31 AM] jl777c#5810
+ok, so under 150% attack, well all sorts of things can happen
+
+[05-Mar-19 08:31 AM] blackjok3r#3181
+A few people have reported the mempool not really propagating transactions for a while now.
+
+[05-Mar-19 08:31 AM] jl777c#5810
+yes, that is another bug needs to be fixed
+
+[05-Mar-19 08:31 AM] CrisF#3405
+Any way to detect those situations and somehow halt migrations?
+
+[05-Mar-19 08:31 AM] blackjok3r#3181
+yes.
+
+[05-Mar-19 08:31 AM] jl777c#5810
+can you determine for sure if a migrate will fail?
+
+[05-Mar-19 08:31 AM] blackjok3r#3181
+on the RPC/script side you just ait for notarizations... issue only ahppens if already exported during the attackl.
+
+[05-Mar-19 08:32 AM] jl777c#5810
+from the original chain side
+
+[05-Mar-19 08:32 AM] blackjok3r#3181
+doubtful
+
+[05-Mar-19 08:32 AM] jl777c#5810
+how to prevent a double refund, ie. they migrate and also refund
+
+[05-Mar-19 08:33 AM] blackjok3r#3181
+you need to verify the MoMoM hash has failed... maybe KMD could detect it somehow with some magical maths and its notarization DB.
+
+[05-Mar-19 08:33 AM] blackjok3r#3181
+but how then does KMD tell the source chain to refund?
+
+[05-Mar-19 08:33 AM] blackjok3r#3181
+current implemntation makes it very difficult to make an undo.
+
+[05-Mar-19 08:34 AM] jl777c#5810
+the source chain would submit a refund tx that somehow needs to be verified as valid and not migrated
+
+[05-Mar-19 08:35 AM] blackjok3r#3181
+maybe some speical reverse migrate would be needed?
+
+[05-Mar-19 08:35 AM] jl777c#5810
+we might need an entirely new dataset for this...
+
+[05-Mar-19 08:36 AM] blackjok3r#3181
+We were just going to build into the bounty fund and claim for lsot migrates... but that only works for LABS.
+
+[05-Mar-19 08:37 AM] jl777c#5810
+or... what if there was a special notary opreturn that marks a specific migrate as valid, regardess of MoMoM validation. it wouldnt have any effect if it was also validated as you can only use the burntxid once
+
+[05-Mar-19 08:38 AM] jl777c#5810
+so the MoMoM validation would check for a special notary approval. this punts the detection of failed migrates to the notaries, but at least there would be a way to handle the rare edge cases
+
+[05-Mar-19 08:38 AM] jl777c#5810
+seems better than refunding, which is quite difficult to do
+
+[05-Mar-19 08:38 AM] blackjok3r#3181
+that works, as its pretty much what we were going to do, but have the OPs manually check the migrate was invalid before paying out.
+
+[05-Mar-19 08:39 AM] jl777c#5810
+it wouldnt have any effect if it was valid (needs to be tested) so there is no need to validate it. in fact, the notaries could just validate all the migrates they see and it wouldnt affect anything other than allow the edge cases to confirm
+
+[05-Mar-19 08:40 AM] jl777c#5810
+so all that needs to be done by notaries is to verify that it was a valid burn
+
+[05-Mar-19 08:44 AM] blackjok3r#3181
+🤔  I wonder if its possible for notaries to check for missing MoMoM hash and just do an extra notarization containing it later on?
+
+[05-Mar-19 08:45 AM] blackjok3r#3181
+as long as its within 100 blocks, everything still works
+
+[05-Mar-19 08:45 AM] blackjok3r#3181
+Like they need to track X notarization txids, and if it is never confirmed, jsut make it again. Couldnt use the same tx as the inputs may have been spent, just use the same OP_RETURN
+
+[05-Mar-19 08:46 AM] jl777c#5810
+why is there a 100 blocks limit?
+
+[05-Mar-19 08:46 AM] blackjok3r#3181
+thats just how far it sledehammmer scans the notarizations DB for MoMoM hash
+
+[05-Mar-19 08:46 AM] jl777c#5810
+so it could be made a longer period?
+
+[05-Mar-19 08:47 AM] blackjok3r#3181
+it can be increased.... it was only put there for rare case of notarization confirmed out of order
+
+[05-Mar-19 08:47 AM] blackjok3r#3181
+only real downside to it, seems to be that it goes backwards then scan forwards, so it checks all the old incorrest not matchin MoMoM first...
+
+[05-Mar-19 08:47 AM] jl777c#5810
+well if the error can be automatically scanned for and corrected, that seems to solve the issue!
+
+[05-Mar-19 08:48 AM] jl777c#5810
+so an edge case detector that corrects things by resubmitting
+
+[05-Mar-19 08:48 AM] blackjok3r#3181
+I think it should only use this sledgehammer scan if the check for where the MoMoM is suppsoed to be fails.
+
+[05-Mar-19 08:48 AM] jl777c#5810
+yes
+
+[05-Mar-19 08:48 AM] blackjok3r#3181
+then the scan can be 1000 blocks no problem even more
+
+[05-Mar-19 08:48 AM] jl777c#5810
+then it can be made a much bigger than 100 blocks window
+
+[05-Mar-19 08:48 AM] jl777c#5810
+ok, so how reliable can the edge case detector be?
+
+[05-Mar-19 08:48 AM] blackjok3r#3181
+Not 100% sure, but it would need to be in iguana
+
+[05-Mar-19 08:49 AM] jl777c#5810
+and can all notaries reach consensus about this
+
+[05-Mar-19 08:49 AM] blackjok3r#3181
+I would think so yes. Becaus they all have the same chain.
+
+[05-Mar-19 08:49 AM] jl777c#5810
+so this is the solution.
+
+[05-Mar-19 08:49 AM] blackjok3r#3181
+all iguana needs to do, is spawn a thread that checks the last sent txid until the next notarization is confirmed.
+
+[05-Mar-19 08:50 AM] blackjok3r#3181
+once the txid is notarized...
+
+[05-Mar-19 08:50 AM] blackjok3r#3181
+then it kills the thread...
+
+[05-Mar-19 08:50 AM] jl777c#5810
+and if it doesnt, it adds to the list of edge cases
+
+[05-Mar-19 08:50 AM] blackjok3r#3181
+yes
+
+[05-Mar-19 08:50 AM] jl777c#5810
+so once per hour the edge cases can be dealt with
+
+[05-Mar-19 08:51 AM] jl777c#5810
+a list of edge cases is proposed, and if agreed to, the list is published onchain
+
+[05-Mar-19 08:51 AM] blackjok3r#3181
+not sure how hard that would be to implement, it sound simple enough... but it does require all notaries to create the same exact notarization again, but with new inputs.
+
+[05-Mar-19 08:53 AM] jl777c#5810
+will be a bit tricky...
+
+[05-Mar-19 08:53 AM] jl777c#5810
+maybe the approval of a specific burn txid via oracles  will be easier to implement as it wont need much interaction between notaries, they can independently post agreement to the claim
+
+[05-Mar-19 08:54 AM] jl777c#5810
+and a CC would require M such approvals to import the burntxid without MoMoM
+
+[05-Mar-19 08:54 AM] jl777c#5810
+or...
+
+[05-Mar-19 08:54 AM] jl777c#5810
+I think we are overcomplicating things!
+
+{Reactions}
+😂 
+
+[05-Mar-19 08:55 AM] jl777c#5810
+based on what you know, most of the time things should work pretty smoothly, right?
+
+[05-Mar-19 08:55 AM] jl777c#5810
+so we just need a way to solve the edge cases, which we assume will be rare
+
+[05-Mar-19 08:55 AM] blackjok3r#3181
+99.9999% I think. But I need plentyt of time and maybe some attacks to make sure.
+
+[05-Mar-19 08:55 AM] jl777c#5810
+so why not to directly post a txproof for the burn txid
+
+[05-Mar-19 08:56 AM] jl777c#5810
+if M notaries sign a txproof for a specific chain/burntx, then it is usable as proof of burn in the importcoins.
+
+[05-Mar-19 08:56 AM] jl777c#5810
+just requires a bit of alternate validation code, but @dimxy is already doing very similar things
+
+[05-Mar-19 08:57 AM] jl777c#5810
+it just needs to set the same tombstone as the normal import process
+
+[05-Mar-19 08:58 AM] jl777c#5810
+then a double import cant be done. so all the notaries would need to do is post a txproof from the burn chain onto the import chain
+
+[05-Mar-19 08:58 AM] blackjok3r#3181
+does this need to be done for every burn though? That could be a LOT of extra tx...
+
+[05-Mar-19 08:58 AM] blackjok3r#3181
+or only if it fails?
+
+[05-Mar-19 08:58 AM] jl777c#5810
+lets say, the one who wants to import has to post the txproof. now we get a txproof txid and the notaries can just independently post approval
+
+[05-Mar-19 08:58 AM] jl777c#5810
+this is only on failures
+
+[05-Mar-19 08:58 AM] jl777c#5810
+the backup mechanism
+
+[05-Mar-19 08:59 AM] jl777c#5810
+in case of MoMoM failure
+
+[05-Mar-19 08:59 AM] jl777c#5810
+just use a txproof for each tx
+
+[05-Mar-19 08:59 AM] blackjok3r#3181
+ahh like a CC? independant of iguana?
+

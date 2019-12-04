@@ -1,0 +1,408 @@
+==============================================================
+Guild: Komodo
+Channel: kmdlabs
+Topic: Please read pinned messages
+Messages: 100
+Range: 
+==============================================================
+
+[01-Mar-19 02:11 PM] jl777c#5810
+ok, sounds like you know what needs to be done
+
+[01-Mar-19 02:12 PM] jl777c#5810
+specific implementation details likely wont matter much as it isnt any large dataset it is dealing with
+
+[01-Mar-19 02:12 PM] blackjok3r#3181
+I just need to talk to someone about it, as I only kind of know what neds to be done, I still dont know exactly how ti all works
+
+[01-Mar-19 02:12 PM] jl777c#5810
+work with dimxy, he is close to that part of the codebase
+
+[01-Mar-19 02:12 PM] blackjok3r#3181
+yep cool. Hopefully he can help with impletation side of it, as he seems far more experianced than me at that.
+
+[01-Mar-19 02:13 PM] jl777c#5810
+he knows the C++
+
+[01-Mar-19 02:14 PM] blackjok3r#3181
+Ill try to get something hacky working, and work with him to improve it. As I dont think anyone else knows enough about iguana etc, to get it all playing nicely.
+
+[01-Mar-19 02:14 PM] jl777c#5810
+yes, good plan.
+
+{Reactions}
+👍 
+
+[01-Mar-19 02:15 PM] ComputerGenie 👴🏼📢#7004
+_barely knows how to operate iguana much less fiddle with the code_
+
+[01-Mar-19 02:15 PM] blackjok3r#3181
+*spent hundreds of hours readiing its code to try and work out why my notary node couldnt compete* ahh the days of $4 KMD 😄
+
+[01-Mar-19 02:17 PM] jorian#4555
+🔜
+
+[01-Mar-19 02:17 PM] ComputerGenie 👴🏼📢#7004
+™
+
+[01-Mar-19 02:17 PM] blackjok3r#3181
+🌕
+
+[01-Mar-19 02:33 PM] blackjok3r#3181
+```MoMoM fix:
+    `uint256 MoMoM = CalculateProofRoot(symbol, ccid, kmdheight, moms, destNotarisationTxid);`
+     must check that the first notarization it is using is itself notarized on KMD. 
+     lastnotarized height function will be safe enough (better still is to use DB and count back 2 nota of KMD, as this makes sure the nota is in the chain on resync)
+        notarized height is faster, DB slower, its safe to assume all notaries are online, and as such cannot reorg past the last notarized height. 
+
+need to add a bool falg to notarization class that sets and locks to true after 3 nota happened for an asset chain on the KMD daemon.  
+iguana needs an error from MoMoMdata RPC on KMD when MoMoM cannot be detemined from above. this enable nota round to bail out until needed data is there.
+    checking for last 2 nota made are confirmed and notarized and so cannot be reorged. we then use these 2 determinate data points to create MoMoM hash.
+    the first 3 notarizations must have a null MoMoM returned to iguana, and not the error, to make sure that enough MoM  hash exist to get a determinate MoMoM hash
+```
+
+{Reactions}
+🚀 (2) 
+
+[01-Mar-19 03:42 PM] blackjok3r#3181
+already written half of it 😂
+
+{Reactions}
+shexy 
+
+[01-Mar-19 03:43 PM] blackjok3r#3181
+making it actaully work is the ahrd part :troll_lol:
+
+{Reactions}
+🤣 
+
+[01-Mar-19 03:45 PM] Alright#0419
+"going out for tea" my ass
+
+[01-Mar-19 03:46 PM] blackjok3r#3181
+I did... my mum went directly to sleep after a single wine....
+
+[01-Mar-19 03:46 PM] blackjok3r#3181
+she leaves at 10am, I didnt think I would get away with working while she was here...
+
+[01-Mar-19 04:04 PM] blackjok3r#3181
+ok so I got all of it excpt the first 3 nota.
+
+[01-Mar-19 04:16 PM] blackjok3r#3181
+I think because we have chains that are alrady past that we can figure that out later on.
+
+[01-Mar-19 04:45 PM] blackjok3r#3181
+pushed fix for CFEKDIMXY not building thanks to @webworker01  😃
+
+[01-Mar-19 04:57 PM] blackjok3r#3181
+https://www.youtube.com/watch?v=Rd1nkdMPxQY
+
+{Embed}
+Matt McGuire
+https://www.youtube.com/watch?v=Rd1nkdMPxQY
+Pendulum - Voodoo People (Remix) x Blood Sugar | Matt McGuire Drum...
+Click Subscribe! http://www.facebook.com/mattmcguiredrums http://www.instagram.com/mattmcguiredrums SNAPCHAT: matt-drums Filmed by Trent Bell https://www.fac...
+https://i.ytimg.com/vi/Rd1nkdMPxQY/hqdefault.jpg
+
+[01-Mar-19 05:03 PM] blackjok3r#3181
+🕺
+
+[01-Mar-19 05:03 PM] blackjok3r#3181
+@Alright  I think it works.
+
+[01-Mar-19 05:09 PM] Alright#0419
+I'll be getting off for the day in a moment, is there anything you need me to test prior to this? @blackjok3r
+
+[01-Mar-19 05:09 PM] blackjok3r#3181
+im just updtig my notary now
+
+[01-Mar-19 05:10 PM] blackjok3r#3181
+I got the notarized notarization code to build iguana and komodod side
+
+[01-Mar-19 05:11 PM] blackjok3r#3181
+A chain cannot start yet... but if it already has notarizations then it should work, also doesnt need a reindex of KMD at this point
+
+[01-Mar-19 05:21 PM] blackjok3r#3181
+iguana build failed pushed fix
+
+[01-Mar-19 06:08 PM] jorian#4555
+to ping or not to ping 😛
+
+[01-Mar-19 06:08 PM] blackjok3r#3181
+I missed something
+
+[01-Mar-19 06:09 PM] blackjok3r#3181
+iguana always uses the tip height on KMD so my solutio can never return true
+
+[01-Mar-19 06:10 PM] blackjok3r#3181
+the RPC is good... but it needs the correct input to retrurn what is needed
+
+[01-Mar-19 06:20 PM] jorian#4555
+at least `./start.sh` works out of the box now
+
+[01-Mar-19 06:20 PM] blackjok3r#3181
+yeh seems good
+
+[01-Mar-19 06:24 PM] blackjok3r#3181
+looking good boys
+
+[01-Mar-19 06:24 PM] blackjok3r#3181
+```if ( (infojson= dpow_getinfo(myinfo,kmdcoin)) != 0 )
+            {
+                kmdheight = jint(infojson,"notarized");
+                free_json(infojson);
+            }```
+
+{Reactions}
+👍 (2) 
+
+[01-Mar-19 06:25 PM] jorian#4555
+wen LABS?
+
+[01-Mar-19 06:26 PM] blackjok3r#3181
+im not sure... for some reason im still notarizing using a diffrent kmd height 😂
+
+[01-Mar-19 06:26 PM] blackjok3r#3181
+shouldnt be possible
+
+[01-Mar-19 06:26 PM] jorian#4555
+interesting
+
+[01-Mar-19 06:27 PM] blackjok3r#3181
+just give it a few mins. then some ppl can update
+
+[01-Mar-19 06:28 PM] blackjok3r#3181
+its fine @LabsAssistant  update please
+
+[01-Mar-19 06:29 PM] blackjok3r#3181
+it can still determine MoMoM from a lower KMD height.. if notas didnt happen after that height
+
+[01-Mar-19 06:30 PM] blackjok3r#3181
+if they have then it bails
+
+[01-Mar-19 06:30 PM] blackjok3r#3181
+🚀
+
+[01-Mar-19 06:47 PM] jorian#4555
+how much ram is yours using?
+
+[01-Mar-19 06:47 PM] jorian#4555
+updated again just to be sure, works fine now
+
+[01-Mar-19 07:04 PM] blackjok3r#3181
+3.64GB ram used here
+
+[01-Mar-19 07:05 PM] blackjok3r#3181
+nota still happen sometimes with update
+
+[01-Mar-19 07:05 PM] blackjok3r#3181
+not often though... when everyoneupdates I thiink it will be perfect
+
+[01-Mar-19 07:06 PM] Bar_F1sh_Rel#0834
+Just waiting on KMD to  rewind blocks
+
+{Reactions}
+labs 
+
+[01-Mar-19 10:22 PM] CrisF#3405
+`start.sh` was very smooth.
+
+[02-Mar-19 02:25 AM] Nabob#5004
+chains are loading fine now 😃
+
+[02-Mar-19 03:38 AM] smk762 -  dracocanis ominator#7640
+```-ASSET-          -BALANCE-  -UTXO-  -NOTR-  -BLOX-   -PCT-  -LAST-  -CNCT-        
+KMD               100.4260      49         1250761              2m      19        
+LABSTH           1748.6684      17     814   20006    4.1%      2m       9        
+CFEKDIMXY1          8.8898      15    1101   21053    5.2%      4s       6        
+CFEKDIMXY2          9.8935      16    1065   21175    5.0%     19m       8        
+LABSTH0             2.1238      17     312    7250    4.3%     21m       7      ```
+😋
+
+[02-Mar-19 04:34 AM] blackjok3r#3181
+yeah its works.. but Im not sure that it will include all MoM's by using KMd notarized height rather than KMD height
+
+[02-Mar-19 04:35 AM] blackjok3r#3181
+testing it now.
+
+[02-Mar-19 04:38 AM] blackjok3r#3181
+There are no more NULL MoMoM but there are lots of dupes
+
+[02-Mar-19 04:53 AM] blackjok3r#3181
+Maybe rather than notarized height it just needs to do KMDheight-10 and just assume that it has been notarized. 🤔
+
+[02-Mar-19 04:54 AM] blackjok3r#3181
+Will try some migrates and see what happens I guess
+
+[02-Mar-19 06:51 AM] jl777c#5810
+or first KMDheight - 10+ that is notarized? meaning, scan backwards from KMDheight-10 until you find a notarized one
+
+[02-Mar-19 06:53 AM] blackjok3r#3181
+https://github.com/KMDLabs/SuperNET/blob/staked/iguana/dpow/dpow_rpc.c#L310
+
+{Embed}
+https://github.com/KMDLabs/SuperNET/blob/staked/iguana/dpow/dpow_rpc.c
+KMDLabs/SuperNET
+Contribute to KMDLabs/SuperNET development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/42953759?s=400&v=4
+
+[02-Mar-19 06:53 AM] blackjok3r#3181
+This line
+
+[02-Mar-19 06:55 AM] blackjok3r#3181
+The heigh iguana uses... I made the daemon only work with notarized heights... but that mean iguana will never fetch any MoMoM ... something like KMD height -5 or -10 would likely be enough to make it reliable... Will see what happens with the current setting. Right now, if there is a long gap onj KMD (already seedn 20 or 30 block gaps for some reason) then everyhting stops for quite some time.
+
+[02-Mar-19 06:55 AM] jl777c#5810
+not all notarization rounds succeed
+
+[02-Mar-19 06:55 AM] blackjok3r#3181
+I still dont understand how it determining the range it uses for MoM hashes
+
+[02-Mar-19 06:56 AM] blackjok3r#3181
+like does it know the last one it used? it seems that it does not/
+
+[02-Mar-19 06:57 AM] blackjok3r#3181
+it just scans back 2 notarizations from the given height... so if a MoM hash falls between this then it would be missed.
+
+[02-Mar-19 06:57 AM] jl777c#5810
+seems you need to remember the last notarization height you used
+
+[02-Mar-19 07:01 AM] blackjok3r#3181
+however it works.... right now it appesrs to be working... just slowed migrates down a LOT
+
+[02-Mar-19 09:00 AM] blackjok3r#3181
+@LabsAssistant 
+I think that what I tried didnt work, too agressive the other way,. Pushed fix to use just kmdheight -5 in iguana. 
+Due to the sledghammer MoMoM fix, we can delay MoMoM hashes and the target chain can still locate them. This is working currently, but if notarization on KMD are too far apart we are losing MoM hashes. Migrates still work, but the are extremely slow (like 1H each migrate). and I dot have time to wait to test this, seems to not work so we need to try something simpler.
+This is a very simple change, that makes some assumptions, but its far safer than what it was doing before.  If this proves stable we can work on making it make less assumptions. 
+
+I am updating my notary now with this fix and have to leave town for the night. It would be really helpful if you guys can update and then loop migrates to test and log import fails.  You are spcifically looking for the `sendrawtransaction` step to on the target chain (last step) to fail with `momom-check-fail` But give it a good hour at least of polling it before giving up and logging it as a fail. The script here is a good example and is what I am using with some small changes.  
+https://github.com/KMDLabs/PoS_scripts/blob/master/CC_scripts/MoMoM/migratecoin.sh
+https://github.com/KMDLabs/PoS_scripts/blob/master/CC_scripts/MoMoM/sequentialmigratecoin.sh
+
+{Embed}
+https://github.com/KMDLabs/PoS_scripts/blob/master/CC_scripts/MoMoM/migratecoin.sh
+KMDLabs/PoS_scripts
+various scripts we have developed on STAKED so far, none of these are perfect and some might not even work. use them as examples of what you can do. - KMDLabs/PoS_scripts
+https://avatars0.githubusercontent.com/u/42953759?s=400&v=4
+
+{Embed}
+https://github.com/KMDLabs/PoS_scripts/blob/master/CC_scripts/MoMoM/sequentialmigratecoin.sh
+KMDLabs/PoS_scripts
+various scripts we have developed on STAKED so far, none of these are perfect and some might not even work. use them as examples of what you can do. - KMDLabs/PoS_scripts
+https://avatars0.githubusercontent.com/u/42953759?s=400&v=4
+
+{Reactions}
+👍 (2) 👎 
+
+[02-Mar-19 09:21 AM] blackjok3r#3181
+sorry might be something wrong with it.. wait a few mins
+
+[02-Mar-19 09:29 AM] blackjok3r#3181
+lol. my msitake rushing to get this out in time.
+
+[02-Mar-19 09:29 AM] blackjok3r#3181
+@LabsAssistant  its fixed now.. debug print was active that broke MoM depth.
+
+{Reactions}
+👏 (2) 3040_kingpeepo 
+
+[02-Mar-19 09:30 AM] blackjok3r#3181
+if something is playing up just reindex the assechains. AShould be ok though
+
+[02-Mar-19 09:30 AM] blackjok3r#3181
+Need to leave or I will eb left behind
+
+{Reactions}
+👋 (3) 
+
+[02-Mar-19 09:52 AM] CrisF#3405
+Updated.  `start.sh` has been working very nicely for me.
+
+[02-Mar-19 10:56 AM] CrisF#3405
+Hi, I've been getting this when running `migratecoin.sh` ```./migratecoin.sh: line 17: komodo-cli: command not found
+./migratecoin.sh: line 18: komodo-cli: command not found
+...``` Tried with coins running both with `./assets-cli` and from `staked/komodo/master`
+Any hints on how to get it running?
+
+[02-Mar-19 10:56 AM] CrisF#3405
+Running script from ```~/PoS_scripts/CC_scripts/MoMoM```
+
+[02-Mar-19 11:18 AM] Alright#0419
+`sudo ln -sf /home/$USER/komodo/src/komodo-cli /usr/local/bin/komodo-cli
+sudo ln -sf /home/$USER/komodo/src/komodod /usr/local/bin/komodod`
+
+{Reactions}
+🙏 
+
+[02-Mar-19 11:18 AM] CrisF#3405
+Fixed - :abusedsmily: 🌴 seems I had stopped komodod on this node
+
+[02-Mar-19 11:19 AM] CrisF#3405
+Did the symlink too.
+
+[02-Mar-19 11:19 AM] CrisF#3405
+On to the next drama haha ...
+
+[02-Mar-19 12:42 PM] CMaurice#1685
+`Starting LABSTH Failed: help human! 
+[CFEKDIMXY1] : Waiting for CFEKDIMXY1 daemon to start...
+ Starting CFEKDIMXY1 Failed: help human! 
+[CFEKDIMXY2] : Waiting for CFEKDIMXY2 daemon to start...
+ Starting CFEKDIMXY2 Failed: help human! 
+[LABSTH0] : Waiting for LABSTH0 daemon to start...
+ Starting LABSTH0 Failed: help human! `
+
+[02-Mar-19 12:43 PM] CMaurice#1685
+with -reindex and deleting directories
+
+[02-Mar-19 01:13 PM] ComputerGenie 👴🏼📢#7004
+if you delete dirs then reindex is unnecessary, or did you do reindex 1st and get same result?
+
+[02-Mar-19 01:23 PM] CMaurice#1685
+tried both, nothing working atm
+
+[02-Mar-19 01:24 PM] CMaurice#1685
+oh, LABSTH didn't fail this time
+
+[02-Mar-19 01:25 PM] CMaurice#1685
+but the other three continue to
+
+[02-Mar-19 01:31 PM] Alright#0419
+@CMaurice try it again?
+
+[02-Mar-19 01:31 PM] Alright#0419
+same thing happened to me, just ran `start.sh` again and it worked fine
+
+[02-Mar-19 01:32 PM] CMaurice#1685
+seems to be working now... think it was an issue with komodod's still running in the background
+
+[02-Mar-19 01:32 PM] Alright#0419
+that shouldn't be a problem
+
+[02-Mar-19 01:32 PM] Alright#0419
+it will not do anything if they were started with latest commit
+
+[02-Mar-19 01:33 PM] Alright#0419
+if there was new commits, it rebuilds and restarts
+
+[02-Mar-19 01:33 PM] CMaurice#1685
+well, I found them running, killed 'em all, and now ./start.sh coming along fine
+
+[03-Mar-19 01:19 AM] Mylo#8306
+Got new server provisioned for labs stuff.  Should have a VPS set up on it later today.  Looking forward to learning the MoMoM stuff 😃
+
+{Reactions}
+labs (2) 
+
+[03-Mar-19 07:08 AM] smk762 -  dracocanis ominator#7640
+@Alright  @blackjok3r  I've got a chain ready for the next round of assetchains.json 
+`CFEKORKL`
+Let me know when next update, will post launch params and json
+
+{Reactions}
+treasure 
+
+[03-Mar-19 10:57 AM] blackjok3r#3181
+No worries. I'm back. Seems I left my notary on the broken commit., in my rush to leave. But the chains have been being notarized. After I've had tea, I will re-enable my MoMoM print locally here and checkfor NULL MoMoM hashes. From what the old commit was printing on notary when i checked it ebfore, it looks like tehre are no longer any NULL MoMoM hashes. Likely means that it is fixed, at least when the chain isnt being reorged.
+
