@@ -13,23 +13,7 @@ client.on('ready', () => {
     const myGuild = client.guilds.get(serverId);
     memberRole = myGuild.roles.find(role => role.name === "Member")
     let textChannels = {}
-    /*
-    myGuild.channels.forEach(channel => {
-        if (channel.type == 'text') {
-            console.log(channel.parent.name)
-            if (!textChannels[channel.parentID]) {
-                textChannels[channel.parentID] = {}
-                textChannels[channel.parentID].categoryName = channel.parent
-            }
-            textChannels[channel.parentID][channel.id].channelName = channel.name
-            textChannels[channel.parentID][channel.id].position = channel.position
 
-
-
-        } else {
-            return 0
-        }
-    });*/
     const categoryChannels = myGuild.channels.filter(channel => channel.type === "category");
 
     categoryChannels.forEach(categoryChannel => {
@@ -37,8 +21,6 @@ client.on('ready', () => {
         textChannels[categoryChannel.id] = {}
         textChannels[categoryChannel.id].name = categoryChannel.name
         textChannels[categoryChannel.id].position = categoryChannel.position
-
-
         textChannels[categoryChannel.id].channels = {}
         categoryChannel.children.forEach(channel => {
             if (channel.type == 'text' &&
@@ -47,18 +29,17 @@ client.on('ready', () => {
                 //textChannels[categoryChannel.id].channels[channel.id].name = channel.name
                 textChannels[categoryChannel.id].channels[channel.id] = channel.name
             }
-
-
-
-
-
-
         })
 
 
     })
+    for (let key in textChannels) {
+        if (Object.keys(textChannels[key].channels).length === 0 && textChannels[key].channels.constructor === Object) {
+            delete textChannels[key]
+        }
+    }
 
-    console.log(JSON.stringify(textChannels, null, 2))
+    //console.log(JSON.stringify(textChannels, null, 2))
 
     fs.writeFileSync('channels.json', JSON.stringify(textChannels, null, 2))
 })
