@@ -38,12 +38,15 @@ def cleanName(word):
 with open(os.path.join(dir_path, 'config.json')) as g:
     config = json.load(g)
     token = config['token']
+
 """
-
 file1 = 'Komodo - safespace [499123181609811968] (before 2019-12-05) [6 of 11].html'
-fileArr = re.findall(r"\[(.*?)\]", file1)
+fileArr = re.findall(r"\[(.*?)\]", file)
+newFile = fileArr[len(fileArr)-1].split()[0]+'.html'
 
-newFile = fileArr[1].split()[0]+'.html'
+
+
+
 
 
 firstPull(dir_path, "497080413387489291",
@@ -73,18 +76,20 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
                 for index, file in enumerate(files):
                     if outFormat == 'PlainText':
                         fileArr = re.findall(r"\[(.*?)\]", file)
-                        newFile = fileArr[-1].split()[0]+'.txt'
+                        newFile = fileArr[len(fileArr)-1].split()[0]+'.txt'
                     elif outFormat == 'HtmlDark':
                         fileArr = re.findall(r"\[(.*?)\]", file)
-                        newFile = fileArr[-1].split()[0]+'.html'
+                        newFile = fileArr[len(fileArr)-1].split()[0]+'.html'
                     elif outFormat == 'HtmlLight':
                         fileArr = re.findall(r"\[(.*?)\]", file)
-                        newFile = fileArr[-1].split()[0]+'.html'
+                        newFile = fileArr[len(fileArr)-1].split()[0]+'.html'
                     elif outFormat == 'Csv':
                         fileArr = re.findall(r"\[(.*?)\]", file)
-                        newFile = fileArr[-1].split()[0]+'.csv'
+                        newFile = fileArr[len(fileArr)-1].split()[0]+'.csv'
                     os.rename(os.path.join(exportPath, file),
                               os.path.join(exportPath, newFile))
+
+
 """
 with open(os.path.join(dir_path, 'channels.json')) as f:
     textChannels = json.load(f)
@@ -95,5 +100,5 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
             for channelId, channelName in category['channels'].items():
                 exportPath = os.path.join(
                     dirPathCreate, cleanName(channelName))
-                
+
 """
