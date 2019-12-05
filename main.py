@@ -38,21 +38,6 @@ with open(os.path.join(dir_path, 'config.json')) as g:
     config = json.load(g)
     token = config['token']
 
-"""
-file1 = 'Komodo - safespace [499123181609811968] (before 2019-12-05) [6 of 11].html'
-fileArr = re.findall(r"\[(.*?)\]", file)
-newFile = fileArr[len(fileArr)-1].split()[0]+'.html'
-
-firstPull(dir_path, "497080413387489291",
-          "./output/kmdlabs", utc_now, "HtmlDark", token)
-print(cleanName(
-    'Komodo - safespace [499123181609811968] (before 2019-12-05) [6 of 11].html'))
-path = './kmdlabs/text'
-files = os.listdir(path)
-for index, file in enumerate(files):
-    newFile = file.split()[4].lstrip('[')+'.txt'
-    os.rename(os.path.join(path, file), os.path.join(path, newFile))
-"""
 
 with open(os.path.join(dir_path, 'channels.json')) as f:
     textChannels = json.load(f)
@@ -82,17 +67,3 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
                         newFile = fileArr[len(fileArr)-1].split()[0]+'.csv'
                     os.rename(os.path.join(exportPath, file),
                               os.path.join(exportPath, newFile))
-
-
-"""
-with open(os.path.join(dir_path, 'channels.json')) as f:
-    textChannels = json.load(f)
-    for outFormat in outFormats:
-        for categoryId, category in textChannels.items():
-            dirPathCreate = os.path.join(
-                dir_path, 'output', outFormat.lower(), cleanName(category['name']))
-            for channelId, channelName in category['channels'].items():
-                exportPath = os.path.join(
-                    dirPathCreate, cleanName(channelName))
-
-"""
