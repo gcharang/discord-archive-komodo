@@ -72,15 +72,17 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
                 files = os.listdir(exportPath)
                 for index, file in enumerate(files):
                     if outFormat == 'PlainText':
-                        newFile = file.split()[4].lstrip('[')+'.txt'
+                        fileArr = re.findall(r"\[(.*?)\]", file)
+                        newFile = fileArr[1].split()[0]+'.txt'
                     elif outFormat == 'HtmlDark':
                         fileArr = re.findall(r"\[(.*?)\]", file)
-
                         newFile = fileArr[1].split()[0]+'.html'
                     elif outFormat == 'HtmlLight':
-                        newFile = file.split()[4].lstrip('[')+'.html'
+                        fileArr = re.findall(r"\[(.*?)\]", file)
+                        newFile = fileArr[1].split()[0]+'.html'
                     elif outFormat == 'Csv':
-                        newFile = file.split()[4].lstrip('[')+'.csv'
+                        fileArr = re.findall(r"\[(.*?)\]", file)
+                        newFile = fileArr[1].split()[0]+'.csv'
                     os.rename(os.path.join(exportPath, file),
                               os.path.join(exportPath, newFile))
 """
