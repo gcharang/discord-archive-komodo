@@ -16,10 +16,12 @@ outFormats = ['HtmlDark', 'HtmlLight', 'PlainText', 'Csv']
 
 def firstPull(channelId, path, dateNow, outFormat, token):
     try:
-        cmd = 'docker run --rm -v $(pwd):/app/out -u $(id -u):$(id -g) tyrrrz/discordchatexporter export -t ' + \
-            token + ' -b -c ' + channelId + ' -f ' + \
-            outFormat + ' -o ' + path + ' -p 100'
-        p = Popen(cmd, shell=True, executable="/bin/bash")
+        cmd = 'docker run --rm -v $(pwd):/app/out -u $(id -u):$(id -g) tyrrrz/discordchatexporter export -t "' + \
+            token + '" -b -c ' + channelId + ' -f ' + \
+            outFormat + ' -o "' + path + '" -p 100'
+        print(cmd)
+        p = Popen(cmd, shell=True, universal_newlines=True,
+                  executable="/bin/bash")
         p.wait()
     except:
         print("An exception occurred")
@@ -36,17 +38,17 @@ def cleanName(word):
 with open(os.path.join(dir_path, 'config.json')) as g:
     config = json.load(g)
     token = config['token']
-'''
+"""
 firstPull("497080413387489291",
-          "./output/kmdlabs", utc_now, "HtmlDark", token)
+          "/home/gcharang/gitrepos/discord-archive-komodo/output/kmdlabs", utc_now, "HtmlDark", token)
 
 path = './kmdlabs/text'
 files = os.listdir(path)
 for index, file in enumerate(files):
     newFile = file.split()[4].lstrip('[')+'.txt'
     os.rename(os.path.join(path, file), os.path.join(path, newFile))
-'''
-
+"""
+"""
 with open(os.path.join(dir_path, 'channels.json')) as f:
     textChannels = json.load(f)
     for outFormat in outFormats:
@@ -67,6 +69,7 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
             for channelId, channelName in category['channels'].items():
                 exportPath = os.path.join(
                     dirPathCreate, cleanName(channelName))
+                print(exportPath)
                 firstPull(channelId,
                           exportPath, utc_now, outFormat, token)
 
@@ -91,3 +94,4 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
                         newFile = file.split()[4].lstrip('[')+'.csv'
                     os.rename(os.path.join(exportPath, file),
                               os.path.join(exportPath, newFile))
+"""
