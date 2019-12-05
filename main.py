@@ -16,7 +16,7 @@ outFormats = ['HtmlDark', 'HtmlLight', 'PlainText', 'Csv']
 
 def firstPull(pwd, channelId, path, dateNow, outFormat, token):
     try:
-        cmd = 'docker run --rm -v '+pwd+':/app/out -u $(id -u):$(id -g) tyrrrz/discordchatexporter export -t "' + \
+        cmd = 'docker run --rm -v $(pwd):/app/out -u $(id -u):$(id -g) tyrrrz/discordchatexporter export -t "' + \
             token + '" -b -c ' + channelId + ' -f ' + \
             outFormat + ' --before ' + dateNow + ' -o "' + path + '" -p 100'
         print(cmd)
