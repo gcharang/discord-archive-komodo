@@ -11,6 +11,7 @@ const {
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
     const myGuild = client.guilds.get(serverId);
+    memberRole = myGuild.roles.find(role => role.name === "Member")
     let textChannels = {}
     /*
     myGuild.channels.forEach(channel => {
@@ -32,10 +33,32 @@ client.on('ready', () => {
     const categoryChannels = myGuild.channels.filter(channel => channel.type === "category");
 
     categoryChannels.forEach(categoryChannel => {
-        console.log(categoryChannel.name)
+
+        textChannels[categoryChannel.id] = {}
+        textChannels[categoryChannel.id].name = categoryChannel.name
+        textChannels[categoryChannel.id].position = categoryChannel.position
+
+
+        textChannels[categoryChannel.id].channels = {}
+        categoryChannel.children.forEach(channel => {
+            if (channel.type == 'text' &&
+                channel.permissionsFor(myGuild.me).has('VIEW_CHANNEL')) {
+                //textChannels[categoryChannel.id].channels[channel.id] = {}
+                //textChannels[categoryChannel.id].channels[channel.id].name = channel.name
+                textChannels[categoryChannel.id].channels[channel.id] = channel.name
+            }
+
+
+
+
+
+
+        })
+
+
     })
 
-    console.log(textChannels)
+    console.log(JSON.stringify(textChannels, null, 2))
 
     fs.writeFileSync('channels.json', JSON.stringify(textChannels, null, 2))
 })
