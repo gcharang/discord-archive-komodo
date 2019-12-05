@@ -16,7 +16,7 @@ outFormats = ['HtmlDark', 'HtmlLight', 'PlainText', 'Csv']
 
 def firstPull(pwd, channelId, path, dateNow, outFormat, token):
     try:
-        cmd = 'docker run --rm -v '+pwd+':/app/out tyrrrz/discordchatexporter export -t "' + \
+        cmd = 'docker run --rm -v '+pwd+':/app/out -u $(id -u):$(id -g) tyrrrz/discordchatexporter export -t "' + \
             token + '" -b -c ' + channelId + ' -f ' + \
             outFormat + ' --before ' + dateNow + ' -o "' + path + '" -p 100'
         print(cmd)
@@ -55,20 +55,6 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
         for categoryId, category in textChannels.items():
             dirPathCreate = os.path.join(
                 dir_path, 'output', outFormat.lower(), cleanName(category['name']))
-            if(not os.path.exists(dirPathCreate)):
-                try:
-                    original_umask = os.umask(0)
-                    os.makedirs(dirPathCreate)
-                except OSError:
-                    print("Creation of the directory %s failed" %
-                          dirPathCreate)
-                else:
-                    print("Successfully created the directory %s " %
-                          dirPathCreate)
-                finally:
-                    os.umask(original_umask)
-            else:
-                print("the dir already exists %s " % dirPathCreate)
             for channelId, channelName in category['channels'].items():
                 exportPath = os.path.join(
                     dirPathCreate, cleanName(channelName))
