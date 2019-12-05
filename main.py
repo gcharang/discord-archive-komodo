@@ -69,16 +69,6 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
                     dirPathCreate, cleanName(channelName))
                 firstPull(channelId,
                           exportPath, utc_now, outFormat, token)
-
-with open(os.path.join(dir_path, 'channels.json')) as f:
-    textChannels = json.load(f)
-    for outFormat in outFormats:
-        for categoryId, category in textChannels.items():
-            dirPathCreate = os.path.join(
-                dir_path, 'output', outFormat.lower(), cleanName(category['name']))
-            for channelId, channelName in category['channels'].items():
-                exportPath = os.path.join(
-                    dirPathCreate, cleanName(channelName))
                 files = os.listdir(exportPath)
                 for index, file in enumerate(files):
                     if outFormat == 'PlainText':
