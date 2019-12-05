@@ -19,7 +19,6 @@ def firstPull(pwd, channelId, path, dateNow, outFormat, token):
         cmd = 'docker run --rm -v $(pwd):/app/out -u $(id -u):$(id -g) tyrrrz/discordchatexporter export -t "' + \
             token + '" -b -c ' + channelId + ' -f ' + \
             outFormat + ' --before ' + dateNow + ' -o "' + path + '" -p 100'
-        print(cmd)
         p = Popen(cmd, shell=True, universal_newlines=True,
                   executable="/bin/bash")
         p.wait()
@@ -43,11 +42,6 @@ with open(os.path.join(dir_path, 'config.json')) as g:
 file1 = 'Komodo - safespace [499123181609811968] (before 2019-12-05) [6 of 11].html'
 fileArr = re.findall(r"\[(.*?)\]", file)
 newFile = fileArr[len(fileArr)-1].split()[0]+'.html'
-
-
-
-
-
 
 firstPull(dir_path, "497080413387489291",
           "./output/kmdlabs", utc_now, "HtmlDark", token)
