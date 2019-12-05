@@ -9,41 +9,36 @@ const {
 } = require("./config.json");
 
 client.on('ready', () => {
+    console.log(`Logged in as ${client.user.tag}!`);
     const myGuild = client.guilds.get(serverId);
-    let channelIds = myGuild.channels.map(channel => {
-        if (channel.type == 'text') {
-            return channel.id
-        } else {
-            return 0
-        }
-
-    });
     let textChannels = {}
+    /*
     myGuild.channels.forEach(channel => {
         if (channel.type == 'text') {
-            textChannels[channel.id] = channel.name
+            console.log(channel.parent.name)
+            if (!textChannels[channel.parentID]) {
+                textChannels[channel.parentID] = {}
+                textChannels[channel.parentID].categoryName = channel.parent
+            }
+            textChannels[channel.parentID][channel.id].channelName = channel.name
+            textChannels[channel.parentID][channel.id].position = channel.position
+
+
+
         } else {
             return 0
         }
-    });
+    });*/
+    const categoryChannels = myGuild.channels.filter(channel => channel.type === "category");
+
+    categoryChannels.forEach(categoryChannel => {
+        console.log(categoryChannel.name)
+    })
 
     console.log(textChannels)
 
-    fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+    fs.writeFileSync('channels.json', JSON.stringify(textChannels, null, 2))
 })
-
-client.on("message", message => {
-
-})
-
-function sleep(milliseconds) {
-    var start = new Date().getTime();
-    for (var i = 0; i < 1e7; i++) {
-        if ((new Date().getTime() - start) > milliseconds) {
-            break;
-        }
-    }
-}
 
 client.once("ready", () => {
     console.log("Ready!");
