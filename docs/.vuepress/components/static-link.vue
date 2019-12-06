@@ -1,25 +1,19 @@
 <template>
-  <form>
-    <h1 class="title is-1">{{form.formName}}</h1>
-
-    <div class="field">
-      <label class="label">Name</label>
-      <div class="control">
-        <input class="input" type="text" v-model="form.userName" />
-      </div>
-    </div>
-  </form>
+  <input v-model="message" />
   <div>
     <button>Go</button>
   </div>
-  <a
-    href="/before-2019-Dec-05/plaintext/ama-archive/antara-ama-july2019/1.txt"
-    target="_blank"
-  >/before-2019-Dec-05/plaintext/ama-archive/antara-ama-july2019/1.txt</a>
+  <p>{{message}}</p>
 </template>
 
 <script>
-export default {};
+export default {
+  data() {
+    return {
+      message: "Hello Vue!"
+    };
+  }
+};
 </script>
 
 <style lang="stylus">
