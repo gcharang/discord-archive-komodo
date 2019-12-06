@@ -1,4 +1,4 @@
-export default {
+var staticFileStructure = {
     "name": "public",
     "type": "directory",
     "children": [{
@@ -87290,3 +87290,4 @@ export default {
         "type": "file"
     }]
 };
+module.exports = staticFileStructure
