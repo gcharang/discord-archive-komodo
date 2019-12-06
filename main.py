@@ -51,13 +51,11 @@ def clean_file_names(path):
         if (len(fileList) == 1):
             print("renaming: "+fileList[0])
             newFile = '1.' + fileList[0].split('.')[1]
-            os.rename(os.path.join(dir_path, path, dirName, fileList[0]),
-                      os.path.join(dir_path, path, dirName, newFile))
+
+            os.rename(os.path.join(dirName, fileList[0]),
+                      os.path.join(dirName, newFile))
 
 
-clean_file_names('./docs/.vuepress/public')
-
-"""
 with open(os.path.join(dir_path, 'config.json')) as g:
     config = json.load(g)
     token = config['token']
@@ -92,12 +90,13 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
                     os.rename(os.path.join(exportPath, file),
                               os.path.join(exportPath, newFile))
 
+clean_file_names('./docs/.vuepress/public')
 
 with open('./docs/.vuepress/theme/dirStructure.js', 'w+') as outfile:
     outfile.write("export default ")
     json.dump(path_to_dict('./docs/.vuepress/public'), outfile)
     outfile.write(";")
-"""
+
 
 '''
 
