@@ -9,12 +9,13 @@ from subprocess import Popen, PIPE, check_output, CalledProcessError
 from datetime import datetime, timezone
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
-utc_now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-
+# utc_now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+# "%d %b, %Y"
+utc_now = datetime.now(timezone.utc).strftime("%Y-%b-%d")
 outFormats = ['HtmlDark', 'HtmlLight', 'PlainText', 'Csv']
 
 
-def firstPull(pwd, channelId, path, dateNow, outFormat, token):
+def firstPull(channelId, path, dateNow, outFormat, token):
     try:
         cmd = 'docker run --rm -v $(pwd):/app/out -u $(id -u):$(id -g) tyrrrz/discordchatexporter export -t "' + \
             token + '" -b -c ' + channelId + ' -f ' + \
@@ -43,13 +44,13 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
     textChannels = json.load(f)
     for outFormat in outFormats:
         for categoryId, category in textChannels.items():
-            dirPathCreate = os.path.join(
-                './output', outFormat.lower(), cleanName(category['name']))
+            dirPathCreate = os.path.join('./docs/.vuepress/public',
+                                         'before-'+utc_now, outFormat.lower(), cleanName(category['name']))
             for channelId, channelName in category['channels'].items():
                 exportPath = os.path.join(
                     dirPathCreate, cleanName(channelName))
                 print(exportPath)
-                firstPull(dir_path, channelId,
+                firstPull(channelId,
                           exportPath, utc_now, outFormat, token)
                 files = os.listdir(exportPath)
                 for index, file in enumerate(files):
@@ -70,6 +71,7 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
 
 
 '''
+
 For anyone else looking at the wget solution, I had to add a couple more flags (cygwin version, Windows) to get attached images to download:
 
 wget -x -k --mirror -H -Ddiscordapp.com,localhost,cdn.discordapp.com,cdnjs.cloudflare.com -e robots=off -U mozilla http://localhost/
