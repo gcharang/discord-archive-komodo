@@ -6,4 +6,4 @@ RUN mkdir -p /app/
 
 WORKDIR /app/
 
-ENTRYPOINT ./algolia-key.sh && yarn install && yarn docs:build
+ENTRYPOINT yarn install && yarn docs:build
