@@ -35,6 +35,17 @@ def cleanName(word):
     return word
 
 
+def path_to_dict(path):
+    d = {'name': os.path.basename(path)}
+    if os.path.isdir(path):
+        d['type'] = "directory"
+        d['children'] = [path_to_dict(os.path.join(path, x)) for x in os.listdir
+                         (path)]
+    else:
+        d['type'] = "file"
+    return d
+
+
 with open(os.path.join(dir_path, 'config.json')) as g:
     config = json.load(g)
     token = config['token']
@@ -69,6 +80,9 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
                     os.rename(os.path.join(exportPath, file),
                               os.path.join(exportPath, newFile))
 
+with open('./docs/.vuepress/public/dirStructure.js', 'w+') as outfile:
+    outfile.write("export default ")
+    json.dump(path_to_dict('./docs/.vuepress/public'), outfile)
 
 '''
 
