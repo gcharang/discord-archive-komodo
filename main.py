@@ -67,3 +67,15 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
                         newFile = fileArr[len(fileArr)-1].split()[0]+'.csv'
                     os.rename(os.path.join(exportPath, file),
                               os.path.join(exportPath, newFile))
+
+
+'''
+For anyone else looking at the wget solution, I had to add a couple more flags (cygwin version, Windows) to get attached images to download:
+
+wget -x -k --mirror -H -Ddiscordapp.com,localhost,cdn.discordapp.com,cdnjs.cloudflare.com -e robots=off -U mozilla http://localhost/
+
+(Easy hosting solution: python -m SimpleHTTPServer 80)
+
+I was getting a lot of robots.txt and no image files without the robots and user agent flags.
+https://github.com/Tyrrrz/DiscordChatExporter/issues/21#issuecomment-536213642
+'''
