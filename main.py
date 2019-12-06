@@ -80,10 +80,11 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
                     os.rename(os.path.join(exportPath, file),
                               os.path.join(exportPath, newFile))
 
-with open('./docs/.vuepress/public/dirStructure.js', 'w+') as outfile:
+
+with open('./docs/.vuepress/theme/dirStructure.js', 'w+') as outfile:
     outfile.write("export default ")
     json.dump(path_to_dict('./docs/.vuepress/public'), outfile)
-
+    outfile.write(";")
 '''
 
 For anyone else looking at the wget solution, I had to add a couple more flags (cygwin version, Windows) to get attached images to download:

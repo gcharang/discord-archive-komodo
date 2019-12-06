@@ -1,7 +1,4 @@
 module.exports = {
-  plugins: [
-    require('./plugins/staticFile-structure'),
-  ],
   head: [
     [
       "link",
