@@ -39,13 +39,25 @@ def path_to_dict(path):
     d = {'name': os.path.basename(path)}
     if os.path.isdir(path):
         d['type'] = "directory"
-        d['children'] = [path_to_dict(os.path.join(path, x)) for x in os.listdir
-                         (path)]
+        d['children'] = [path_to_dict(os.path.join(path, x))
+                         for x in os.listdir(path)]
     else:
         d['type'] = "file"
     return d
 
 
+def clean_file_names(path):
+    for dirName, subdirList, fileList in os.walk(path):
+        if (len(fileList) == 1):
+            print("renaming: "+fileList[0])
+            newFile = '1.' + fileList[0].split('.')[1]
+            os.rename(os.path.join(dir_path, path, dirName, fileList[0]),
+                      os.path.join(dir_path, path, dirName, newFile))
+
+
+clean_file_names('./docs/.vuepress/public')
+
+"""
 with open(os.path.join(dir_path, 'config.json')) as g:
     config = json.load(g)
     token = config['token']
@@ -85,6 +97,8 @@ with open('./docs/.vuepress/theme/dirStructure.js', 'w+') as outfile:
     outfile.write("export default ")
     json.dump(path_to_dict('./docs/.vuepress/public'), outfile)
     outfile.write(";")
+"""
+
 '''
 
 For anyone else looking at the wget solution, I had to add a couple more flags (cygwin version, Windows) to get attached images to download:

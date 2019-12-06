@@ -16,7 +16,7 @@
 
     <Home v-if="$page.frontmatter.home" />
 
-    <Page v-else :sidebar-items="sidebarItems" v-bind:data="directoryStructure">
+    <Page v-else :sidebar-items="sidebarItems" v-bind:staticFileStructure="directoryStructure">
       <slot name="page-top" #top />
       <slot name="page-bottom" #bottom />
     </Page>
