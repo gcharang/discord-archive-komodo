@@ -51,6 +51,23 @@ module.exports = {
     repoLabel: "Github",
     docsDir: "docs",
     editLinks: false,
-    logo: "/KMD_Horiz_White.svg"
+    logo: "/KMD_Horiz_White.svg",
+    nav: [{
+        text: "HTML Light",
+        link: "/format/htmllight.md"
+      },
+      {
+        text: "HTML Dark",
+        link: "/format/htmldark.md"
+      },
+      {
+        text: "Plain Text",
+        link: "/format/plaintext.md"
+      },
+      {
+        text: "CSV",
+        link: "/format/csv.md"
+      }
+    ]
   }
 };
