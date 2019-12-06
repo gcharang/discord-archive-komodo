@@ -1,0 +1,441 @@
+==============================================================
+Guild: Komodo
+Channel: dev-scalability
+Topic: Discussion about Komodo scalability. Komodo has demonstrated 20,000 TPS.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[31-May-18 10:48 AM] shossain#0000
+blackjok3r can you please confirm that we have same blocks?
+```
+$ ./assets-cli getinfo | grep "blocks"
+TXSCL -   "blocks": 5409,
+TXSCL000 -  "blocks": 11088,
+```
+
+[31-May-18 10:48 AM] blackjok3r#0000
+sure, give me few mins
+
+[31-May-18 10:48 AM] shossain#0000
+👍🏼
+
+[31-May-18 10:50 AM] blackjok3r#0000
+```TXSCL
+5412
+TXSCL000
+11091
+TXSCL001
+11102
+TXSCL002
+11097
+TXSCL003
+1379
+TXSCL004
+1379
+TXSCL005
+1380
+TXSCL006
+1383
+```
+
+[31-May-18 10:50 AM] shossain#0000
+```
+  "blocks": 5412,
+  "blocks": 11091,```
+
+[31-May-18 10:50 AM] shossain#0000
+looks like we are on the main chain.
+
+[31-May-18 10:51 AM] blackjok3r#0000
+yep, there is 2 nodes running the first 64. half mining on each one. They seem working fine from my end.
+
+[31-May-18 10:52 AM] blackjok3r#0000
+sweet thanks 😄
+
+[31-May-18 10:53 AM] shossain#0000
+cool. thanks for confirming
+
+[31-May-18 10:53 AM] shossain#0000
+i had only one notarization after starting.
+
+[31-May-18 10:55 AM] blackjok3r#0000
+Worked perfectly, starting it up again now.
+
+[31-May-18 11:05 AM] smk762#0000
+any chance you can change the json for total tx from string to int serverside?
+
+[31-May-18 11:05 AM] blackjok3r#0000
+I think so. So its working then?
+
+[31-May-18 11:07 AM] smk762#0000
+I saw a block event value, so copied it to get the formatting, though the value has not changed in a while or had other events added for a while
+
+[31-May-18 11:07 AM] smk762#0000
+got this though for the graph - https://www.highcharts.com/errors/14
+
+[31-May-18 11:08 AM] smk762#0000
+could type convert on client end, but would prefer not to
+
+[31-May-18 11:08 AM] blackjok3r#0000
+Its written in BASH so normally the variables are untyped. But maybe I can just do `let $totaltx = $totaltx`
+
+[31-May-18 11:08 AM] smk762#0000
+https://njeitldkqc.execute-api.ap-southeast-2.amazonaws.com/v0/blocknotify
+
+[31-May-18 11:09 AM] smk762#0000
+image.png
+
+{Attachments}
+https://cdn.discordapp.com/attachments/449949868904022036/451703753385574410/image.png
+
+[31-May-18 11:09 AM] smk762#0000
+are there quotes around the totaltx value on generation?
+
+[31-May-18 11:09 AM] blackjok3r#0000
+yeah thats the sample @Mylo put up. I just changed the JSON format to what he wanted.
+
+[31-May-18 11:10 AM] blackjok3r#0000
+ahhh... yeah I can easily remove the quotes I think. give me a few mins to try it.
+
+[31-May-18 11:10 AM] smk762#0000
+sweet, cheers
+
+[31-May-18 11:21 AM] shossain#0000
+for some reason, no new notarizations yet. will start iguana again
+
+[31-May-18 11:21 AM] shossain#0000
+another happened 🙂
+
+[31-May-18 11:32 AM] imylomylo#0000
+If not I can change in rest function
+
+[31-May-18 11:41 AM] blackjok3r#0000
+I got it
+
+[31-May-18 11:42 AM] blackjok3r#0000
+The -args option webworker gave was string only changed to --argsjson
+
+[31-May-18 11:42 AM] blackjok3r#0000
+now its just 5
+
+[31-May-18 11:42 AM] blackjok3r#0000
+Are we ready to test it again?
+
+[31-May-18 11:44 AM] blackjok3r#0000
+Interesting that it misses block 3. 🤔 Thats when marketmaker starts and importpriv key happen. Guess its not important as its an empty block.
+
+[31-May-18 11:46 AM] blackjok3r#0000
+and block 8, which is when blaster is tiriggered.
+
+[31-May-18 11:46 AM] blackjok3r#0000
+might need to put a sleep of 10s after these coneditions
+
+[31-May-18 11:46 AM] imylomylo#0000
+is this `blocknotify` not being triggered?
+
+[31-May-18 11:46 AM] blackjok3r#0000
+its triggered
+
+[31-May-18 11:46 AM] blackjok3r#0000
+but the stats dont happen
+
+[31-May-18 11:47 AM] blackjok3r#0000
+```#!/bin/bash
+amount=$AMOUNT          #Amount to send to blast script
+passphrase=$PASSPHRASE  #Passphrase to give marketmaker
+address=$ADDRESS        #Address of the above passphrase
+privkey=$PRIVATE_KEY    #Private key of miners pubkey
+chain=$ASSET_NAME       #Asset chain name
+rpcport=$ASSET_RPC_PORT #rpc port of this assetchain
+
+HEIGHT=$(komodo-cli -ac_name=$chain getblockcount) #current block height
+
+if [ "$HEIGHT" = "3" ]
+  then
+    komodo-cli -ac_name=$chain importprivkey $privkey
+    ./marketmaker "{\"gui\":\"nogui\",\"client\":1, \"userhome\":\"/${HOME#"/"}\", \"passphrase\":\""default"\", \"coins\":[{\"coin\":\"$chain\",\"asset\":\"$chain\",\"rpcport\":$rpcport}]}"
+fi
+
+if [ "$HEIGHT" = "5" ]
+  then
+    TXID=$(komodo-cli -ac_name=$chain sendtoaddress $address $amount)
+    echo "TXID=$TXID" > TXID
+fi
+
+if [ "$HEIGHT" = "8" ] && [ "$TXBLASTER" = "1" ]
+  then
+    ./TxBlast
+fi
+
+if [ "$STATS" = "1" ]
+  then
+    block=$(komodo-cli -ac_name=$chain getblock $HEIGHT)
+    testing=$(echo $block | jq '{size, height, time}')
+    totaltx=$(echo $block | jq '.tx | length')
+    JSON=$(echo $testing | jq --argjson totaltx $totaltx --arg chain $chain '. += {"totaltx":$totaltx, "ac":$chain}')
+    echo $JSON >> ~/stats/stats.txt
+    RESULT=$(echo $JSON | sed 's/\"/\\\"/g')
+    curl \
+    --verbose \
+    --request OPTIONS \
+    ${BLOCKNOTIFYURL} \
+    --header 'Origin: http://localhost:8000' \
+    --header 'Access-Control-Request-Headers: Origin, Accept, Content-Type' \
+    --header 'Access-Control-Request-Method: POST'
+    sleep 2
+    curl \
+    --verbose \
+    --header "Origin: http://localhost:8000" \
+    --request POST \
+    --data "${RESULT}" \
+    ${BLOCKNOTIFYURL}
+fi
+```
+
+[31-May-18 11:49 AM] blackjok3r#0000
+I mean its designed so the stats can go somewhere else, I can just change the miner node to `STATS = 1`
+
+[31-May-18 11:49 AM] blackjok3r#0000
+might avoid it
+
+[31-May-18 11:49 AM] blackjok3r#0000
+but they are both empty blocks so it doesn't really matter
+
+[31-May-18 11:50 AM] imylomylo#0000
+`BLOCKNOTIFYURL` definition seems accurate :trollface:
+
+[31-May-18 11:51 AM] imylomylo#0000
+😛
+
+[31-May-18 11:52 AM] imylomylo#0000
+blackjok3r ☝ (in case you are reading through script and didn't see last message)
+
+[31-May-18 11:53 AM] blackjok3r#0000
+I'm not sure what you mean lol
+
+[31-May-18 11:53 AM] imylomylo#0000
+you haven't sent `BLOCKNOTIFYURL`
+
+[31-May-18 11:53 AM] blackjok3r#0000
+```environment:
+      - ASSET_RPC_USER=kmdrpcus3R
+      - ASSET_RPC_PASSWORD=RPcp4ZZw0rD
+      - ASSET_RPC_WORKQUEUE=64
+      - ASSET_BIND=127.0.0.1
+      - ASSET_RPC_BIND=0.0.0.0
+      - ASSET_RPC_ALLOWIP=0.0.0.0/0
+      - ASSET_RPC_PORT=32200
+      - ASSET_NAME=TXSCL220
+      - AMOUNT=2000
+      - PASSPHRASE=testpassphraseforsmk702test
+      - ADDRESS=RSNWwEWTTFH13LzWVp4EoPscKNxsT5bazt
+      - PRIVATE_KEY=Ut1Xx8tAePPxJgTkEVAwj3ZhRvBZ7gY5gJ5ob4QAPiCDcyMJEYgH
+      - OUTPUTS=[{"RKV4MzePkH8H9N6K3RdC1JDDWBLbCE4H5p":0.0001}]
+      - TXBLASTER=1
+      - STATS=1
+      - BLOCKNOTIFYURL="https://njeitldkqc.execute-api.ap-southeast-2.amazonaws.com/v0/blocknotify"```
+
+[31-May-18 11:53 AM] imylomylo#0000
+d'oh
+
+[31-May-18 11:55 AM] blackjok3r#0000
+does it work? are you receiving data
+
+[31-May-18 11:55 AM] blackjok3r#0000
+?
+
+[31-May-18 11:55 AM] imylomylo#0000
+not receiving
+
+[31-May-18 11:55 AM] blackjok3r#0000
+hmmm ok
+
+[31-May-18 11:56 AM] blackjok3r#0000
+Need to debug it then.
+
+[31-May-18 12:03 PM] blackjok3r#0000
+the `$BLOCKNOTIFYURL` outputs `"https://njeitldkqc.execute-api.ap-southeast-2.amazonaws.com/v0/blocknotify"` from inside the container
+
+[31-May-18 12:03 PM] blackjok3r#0000
+🤔
+
+[31-May-18 12:04 PM] shossain#0000
+```
+-ASSET-     -NOTR- -UTXO-  -BLOX-    -BALANCE- -LAST- -CNCT-       
+TXSCL           60     90    5476  76.99215000     9m      5       
+TXSCL000        54     96   11165  76.99275000 11h14m      5
+```
+No notarization for TXSCL000 yet
+
+[31-May-18 12:07 PM] imylomylo#0000
+is curl installed?
+
+[31-May-18 12:09 PM] blackjok3r#0000
+thats running the script from my home pc
+
+[31-May-18 12:09 PM] imylomylo#0000
+hmmmm
+
+[31-May-18 12:10 PM] imylomylo#0000
+```SyntaxError: Unexpected token \```
+
+[31-May-18 12:10 PM] imylomylo#0000
+got an extra `\` in there somewhere
+
+[31-May-18 12:11 PM] imylomylo#0000
+what is in `echo $JSON >> ~/stats/stats.txt`?
+
+[31-May-18 12:11 PM] imylomylo#0000
+should just be json object, e.g. ```{ "key1": "value1", "key2": "value2" }```
+
+[31-May-18 12:12 PM] imylomylo#0000
+not ```"{ "key1": "value1", "key2": "value2" }"```
+
+[31-May-18 12:22 PM] imylomylo#0000
+k, redeploying with extra logging so i can see what is received.
+
+[31-May-18 12:22 PM] imylomylo#0000
+can you re-run easily?
+
+[31-May-18 12:22 PM] imylomylo#0000
+redeployed.
+
+[31-May-18 12:23 PM] blackjok3r#0000
+simple 😄
+
+[31-May-18 12:24 PM] imylomylo#0000
+do it again, redeployed - need more data 🙂
+
+[31-May-18 12:24 PM] imylomylo#0000
+received 'null'
+
+[31-May-18 12:25 PM] blackjok3r#0000
+its sending nothing?
+
+[31-May-18 12:26 PM] imylomylo#0000
+yeah it seems
+
+[31-May-18 12:27 PM] blackjok3r#0000
+🤔
+
+[31-May-18 12:27 PM] blackjok3r#0000
+ok I will add another print in my script and run it again locally.
+
+[31-May-18 12:27 PM] blackjok3r#0000
+strange
+
+[31-May-18 12:28 PM] imylomylo#0000
+can you send it to a different server easily?
+
+[31-May-18 12:30 PM] blackjok3r#0000
+yeah it takes liek 5mins to change anything a rebuild image
+
+[31-May-18 12:30 PM] blackjok3r#0000
+unless you rebuild komodod
+
+[31-May-18 12:30 PM] imylomylo#0000
+send it again...
+
+[31-May-18 12:30 PM] imylomylo#0000
+as is
+
+[31-May-18 12:31 PM] blackjok3r#0000
+thats from my local pc using a test block
+
+[31-May-18 12:33 PM] imylomylo#0000
+yeah that's all we need for now
+
+[31-May-18 12:33 PM] imylomylo#0000
+```body: '{ \\"size\\": 6027, \\"height\\": 858000, \\"time\\": 1527743831, \\"totaltx\\": 5, \\"ac\\": \\"TXSCL220\\" }'```
+
+[31-May-18 12:34 PM] imylomylo#0000
+too many `\` somehow
+
+[31-May-18 12:34 PM] blackjok3r#0000
+```#!/bin/bash
+HEIGHT=8
+TXBLASTER=0
+STATS=1
+chain="TXSCL220"
+BLOCKNOTIFYURL="https://njeitldkqc.execute-api.ap-southeast-2.amazonaws.com/v0/blocknotify>"
+
+if [ "$HEIGHT" = "8" ] && [ "$TXBLASTER" = "1" ]
+  then
+   echo "I am a blaster"
+fi
+
+if [ "$STATS" = "1" ]
+  then
+    block=$(cat block)
+    testing=$(echo $block > stats.txt
+    RESULT=$(echo $JSON | sed 's/\"/\\\"/g')
+    echo $RESULT >> stats.txt
+        curl \
+    --verbose \
+    --request OPTIONS \
+    ${BLOCKNOTIFYURL} \
+    --header 'Origin: http://localhost:8000' \
+    --header 'Access-Control-Request-Headers: Origin, Accept, Content-Type' \
+    --header 'Access-Control-Request-Method: POST'
+    sleep 2
+    curl \
+    --verbose \
+    --header "Origin: http://localhost:8000" \
+    --request POST \
+    --data "${RESULT}" \
+    ${BLOCKNOTIFYURL}
+fi
+```
+
+[31-May-18 12:34 PM] blackjok3r#0000
+stats.txt looks like this
+```{ "size": 6027, "height": 858000, "time": 1527743831, "totaltx": 5, "ac": "TXSCL220" }
+{ \"size\": 6027, \"height\": 858000, \"time\": 1527743831, \"totaltx\": 5, \"ac\": \"TXSCL220\" }
+```
+
+[31-May-18 12:35 PM] blackjok3r#0000
+maybe it doesn't need the '\' added?
+
+[31-May-18 12:36 PM] imylomylo#0000
+weird, maybe not.
+
+[31-May-18 12:36 PM] blackjok3r#0000
+one sec I will try without it
+
+[31-May-18 12:37 PM] blackjok3r#0000
+lol
+
+[31-May-18 12:39 PM] imylomylo#0000
+```body: '{\n  "size": 6027,\n  "height": 858000,\n  "time": 1527743831,\n  "totaltx": 5,\n  "ac": "TXSCL220"\n}',```
+
+[31-May-18 12:40 PM] blackjok3r#0000
+I got a return from it so it must have worked.
+
+[31-May-18 12:40 PM] blackjok3r#0000
+rebuilding docker now
+
+[31-May-18 12:41 PM] imylomylo#0000
+hehe so you did!
+
+[31-May-18 12:41 PM] imylomylo#0000
+https://njeitldkqc.execute-api.ap-southeast-2.amazonaws.com/v0/blocknotify
+
+[31-May-18 12:41 PM] imylomylo#0000
+2 records!
+
+[31-May-18 12:41 PM] smk762#0000
+💯
+
+[31-May-18 12:41 PM] imylomylo#0000
+k i'll clear the DB
+
+[31-May-18 12:41 PM] blackjok3r#0000
+👍
+
+[31-May-18 12:42 PM] smk762#0000
+how many records will it keep up in history
+
+[31-May-18 12:43 PM] smk762#0000
+is there a pagination limit?
+

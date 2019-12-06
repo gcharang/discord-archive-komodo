@@ -1,0 +1,413 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[25-Jul-19 01:39 PM] dukeleto#7326
+that error means "you did something wrong"
+
+[25-Jul-19 01:39 PM] dukeleto#7326
+something against consensus rules
+
+[25-Jul-19 01:39 PM] qqil#7977
+i will try same but with synced node, just to make sure
+
+[25-Jul-19 01:39 PM] dukeleto#7326
+try `decoderawtransaction`
+
+[25-Jul-19 01:39 PM] dukeleto#7326
+and see what it gives you
+
+[25-Jul-19 01:40 PM] dukeleto#7326
+how are you building the raw transaction?
+
+[25-Jul-19 01:42 PM] qqil#7977
+strange thing is that first signature went ok, but throws when i'm trying to sign with second keypair
+
+[25-Jul-19 01:43 PM] dukeleto#7326
+KMD `createrawtransaction` has various mods from BTC + ZEC
+
+[25-Jul-19 01:43 PM] dukeleto#7326
+maybe you found a bug, or maybe something is different from what you expect
+
+[25-Jul-19 01:43 PM] dukeleto#7326
+we need full raw xtn to tell
+
+[25-Jul-19 01:44 PM] dukeleto#7326
+make a github gist of `decoderawtransaction` and that will tell us something
+
+[25-Jul-19 01:48 PM] qqil#7977
+@dukeleto  https://gist.github.com/qqil/e6be47464bb613c08685800ff7ffc04e
+
+{Embed}
+https://gist.github.com/qqil/e6be47464bb613c08685800ff7ffc04e
+signtxdebug
+signtxdebug. GitHub Gist: instantly share code, notes, and snippets.
+https://github.githubassets.com/images/modules/gists/gist-og-image.png
+
+[25-Jul-19 01:50 PM] dukeleto#7326
+@qqil I would like to see the exact RPC command you are using, as well as the output of `decoderawtransaction` on the raw hex that you give to `createrawtransaction`
+
+[25-Jul-19 01:50 PM] dukeleto#7326
+createrawtransaction will gladly make garbage for you, that signrawtransaction will later tell you about, if you are lucky
+
+[25-Jul-19 01:50 PM] dukeleto#7326
+@qqil are you using CLI RPC or using the HTTP API via some language binding?
+
+[25-Jul-19 01:51 PM] qqil#7977
+http rpc call
+
+[25-Jul-19 01:51 PM] qqil#7977
+```
+node@e74ec8beaa14:~$ ./komodo-cli -rpcuser=user -rpcpassword=pass decoderawtransaction 0400008085202f89016954c74b0e42315a532c9ef030e276df70cccea4f6c3b9e05078bd0f2bfc22e40100000000ffffffff0210270000000000001976a91441eb946c5e6d0fa3f4c68448fcf645191b979b0e88acdd4e01000000000017a914e6290290da1832383aedc2a79fa62dc5873edff68700000000044116000000000000000000000000
+{
+  "txid": "6d0eaaa2c855b6a4e2be838e368ba782f78e1ad413ff7e62df18dc81d671d000",
+  "overwintered": true,
+  "version": 4,
+  "versiongroupid": "892f2085",
+  "locktime": 0,
+  "expiryheight": 1458436,
+  "vin": [
+    {
+      "txid": "e422fc2b0fbd7850e0b9c3f6a4cecc70df76e230f09e2c535a31420e4bc75469",
+      "vout": 1,
+      "scriptSig": {
+        "asm": "",
+        "hex": ""
+      },
+      "sequence": 4294967295
+    }
+  ],
+  "vout": [
+    {
+      "value": 0.00010000,
+      "valueZat": 10000,
+      "n": 0,
+      "scriptPubKey": {
+        "asm": "OP_DUP OP_HASH160 41eb946c5e6d0fa3f4c68448fcf645191b979b0e OP_EQUALVERIFY OP_CHECKSIG",
+        "hex": "76a91441eb946c5e6d0fa3f4c68448fcf645191b979b0e88ac",
+        "reqSigs": 1,
+        "type": "pubkeyhash",
+        "addresses": [
+          "RFHkDMYWk4PWTWxfByWoAGzsxcZwCyZVuT"
+        ]
+      }
+    },
+    {
+      "value": 0.00085725,
+      "valueZat": 85725,
+      "n": 1,
+      "scriptPubKey": {
+        "asm": "OP_HASH160 e6290290da1832383aedc2a79fa62dc5873edff6 OP_EQUAL",
+        "hex": "a914e6290290da1832383aedc2a79fa62dc5873edff687",
+        "reqSigs": 1,
+        "type": "scripthash",
+        "addresses": [
+          "bZiFEn5iQ6LRhmrYKUj3xAJHn9YSRjdjP2"
+        ]
+      }
+    }
+  ],
+  "vjoinsplit": [
+  ],
+  "valueBalance": 0.00000000,
+  "vShieldedSpend": [
+  ],
+  "vShieldedOutput": [
+  ]
+}```
+
+[25-Jul-19 01:52 PM] qqil#7977
+it is result of createrawtransaction
+
+[25-Jul-19 01:52 PM] qqil#7977
+and i'm trying to sign first input with two wifs, that were involved (their pubkeys) in multisig address generation
+
+[25-Jul-19 01:53 PM] dukeleto#7326
+that is what I wanted in the gist 😅
+
+[25-Jul-19 01:53 PM] dukeleto#7326
+it's ok
+
+[25-Jul-19 01:54 PM] dukeleto#7326
+@qqil exactly which commit of KMD are you using? There were some recent changes to createrawtransaction
+
+[25-Jul-19 01:55 PM] dukeleto#7326
+@Decker your expansive raw transaction knowledge may be called upon soon
+
+[25-Jul-19 01:55 PM] qqil#7977
+https://github.com/KomodoPlatform/komodo/releases/download/dev-multios-0.4.0a-alpha/linux_0.4.0a.tar.gz
+
+[25-Jul-19 01:55 PM] qqil#7977
+this one
+
+[25-Jul-19 01:55 PM] dukeleto#7326
+ok, June 10th
+
+[25-Jul-19 01:55 PM] dukeleto#7326
+I don't think that has @Decker 's most recent changes, which makes me think this bug is on your side, not on KMD side
+
+[25-Jul-19 01:56 PM] dukeleto#7326
+@qqil can you show the exact full RPC command used to create the hex?
+
+[25-Jul-19 01:56 PM] dukeleto#7326
+if you use `komodo-cli` you won't need to deal with user/pass stuff
+
+[25-Jul-19 01:56 PM] dukeleto#7326
+`komodo-cli -ac_name=MYCOIN createrawtransaction ...`
+
+[25-Jul-19 01:57 PM] qqil#7977
+rly? i'm playing on mainnet
+
+[25-Jul-19 01:57 PM] qqil#7977
+```
+}
+node@e74ec8beaa14:~$ ./komodo-cli decoderawtransaction 0400008085202f89016954c74b0e42315a532c9ef030e276df70cccea4f6c3b9e05078bd0f2bfc22e40100000000ffffffff0210270000000000001976a91441eb946c5e6d0fa3f4c68448fcf645191b979b0e88acdd4e01000000000017a914e6290290da1832383aedc2a79fa62dc5873edff68700000000044116000000000000000000000000
+error: Could not locate RPC credentials. No authentication cookie could be found,
+and no rpcpassword is set in the configuration file (/home/node/.komodo/komodo.conf).```
+
+[25-Jul-19 01:57 PM] dukeleto#7326
+interesting, are you running kmd inside of docker or something?
+
+[25-Jul-19 01:57 PM] qqil#7977
+yes
+
+[25-Jul-19 01:57 PM] dukeleto#7326
+lulz
+
+[25-Jul-19 01:57 PM] qqil#7977
+i have huge setup with online node, offline node for multisig, external signer endpoint
+
+[25-Jul-19 01:57 PM] qqil#7977
+etc..
+
+[25-Jul-19 01:57 PM] dukeleto#7326
+very interesting
+
+[25-Jul-19 01:58 PM] qqil#7977
+electrumx also
+
+[25-Jul-19 01:58 PM] dukeleto#7326
+which user does komodod run as?
+
+[25-Jul-19 01:58 PM] dukeleto#7326
+you need to have ~/.komodo/komodo.conf exist and be valid
+
+[25-Jul-19 01:58 PM] dukeleto#7326
+looks like your unix user setup is preventing that
+
+[25-Jul-19 01:58 PM] qqil#7977
+it exists, but it empty
+
+[25-Jul-19 01:58 PM] qqil#7977
+but currently it is not the point of discuss, i'm ok with passing user/pass
+
+[25-Jul-19 01:59 PM] qqil#7977
+instead of holding it inside .conf
+
+[25-Jul-19 01:59 PM] dukeleto#7326
+ok
+
+[25-Jul-19 01:59 PM] dukeleto#7326
+using `-rpcuser`/etc is fine, that is what the regtest test suite does
+
+[25-Jul-19 02:00 PM] dukeleto#7326
+what exact `createrawtransaction` command are you using?
+
+[25-Jul-19 02:01 PM] dukeleto#7326
+I haven't done a lot of multisig/raw transaction stuff, and using the RPCs is definitely very "picky". They are very particular about getting input values in a certain way
+
+[25-Jul-19 02:02 PM] qqil#7977
+yeah, i will try to debug more.. i will comeback with result a bit later..
+
+[25-Jul-19 02:03 PM] qqil#7977
+main pain is that different coins use different method to sign/create tx
+
+[25-Jul-19 02:03 PM] qqil#7977
+some use signrawtransactions... some use signrawtransactionwithkey...
+
+[25-Jul-19 02:03 PM] qqil#7977
+i'm already tired of integrating that utxo zoo
+
+[25-Jul-19 02:06 PM] gcharang#6833
+@qqil see if this works for your purpose: https://docs.komodoplatform.com/gui/agama/create-multisig-address.html
+https://github.com/VerusCoin/Agama/releases/tag/v0.5.7-4
+
+[25-Jul-19 02:09 PM] qqil#7977
+i will try to check if it will produce same address as my js wallet for multisig address
+
+[25-Jul-19 02:12 PM] gcharang#6833
+@qqil it has signature function too
+https://docs.komodoplatform.com/gui/agama/sign-multisig-transaction.html
+
+[25-Jul-19 02:13 PM] qqil#7977
+cool, thank you
+
+[25-Jul-19 02:16 PM] dukeleto#7326
+@qqil as a general rule to understand KMD, you can understand that ZEC (and KMD) forked from BTC 0.11.2 and have changed very few internals to taddrs since then
+
+[25-Jul-19 02:16 PM] dukeleto#7326
+So latest BTC docs might not apply, you might want to look how things were done in BTC 0.11
+
+[25-Jul-19 02:16 PM] dukeleto#7326
+and then, we have all our tweaks/additions, but I don't think we make backward-incompat changes to createrawtransaction
+
+[25-Jul-19 02:17 PM] dukeleto#7326
+@qqil make sure that `validateaddress` on the addresses in your xtn says that the addrs are actually in your wallet
+
+[25-Jul-19 02:17 PM] dukeleto#7326
+do not use "accounts"
+
+[25-Jul-19 02:17 PM] dukeleto#7326
+It will make many things break
+
+[25-Jul-19 02:18 PM] qqil#7977
+what do you mean in 'your wallet'?
+
+[25-Jul-19 02:18 PM] qqil#7977
+i'm not using wallet mode for node
+
+[25-Jul-19 02:18 PM] qqil#7977
+i'm just passing private keys (wifs)
+
+[25-Jul-19 02:28 PM] dukeleto#7326
+@qqil you have `disablewallet=1` ?
+
+[25-Jul-19 02:28 PM] dukeleto#7326
+or whatever it's called
+
+[25-Jul-19 02:28 PM] dukeleto#7326
+i need to see full config and/or CLI flags used to start komodod
+
+[25-Jul-19 04:28 PM] qqil#7977
+@dukeleto yes, i will post a bit later when i will be near pc
+
+[25-Jul-19 04:28 PM] qqil#7977
+disablewallet is working ok for other coins, btw
+
+[25-Jul-19 04:31 PM] dukeleto#7326
+@qqil disablewallet is incompatible with DPoW and therefore KMD and all KMD asset chains
+
+[25-Jul-19 04:32 PM] dukeleto#7326
+unless you don't want DPoW, i guess you could use it on a non-dpow chain, but it still won't work
+
+[25-Jul-19 04:32 PM] dukeleto#7326
+it's not tested much and very few people ever used it
+
+[25-Jul-19 04:33 PM] dukeleto#7326
+When HUSH converted to a KMD asset chain, one mining pool reported a bug about disablewallet not working anymore, nobody else noticed
+
+[25-Jul-19 04:33 PM] dukeleto#7326
+disablewallet probably works in ZEC, tho I don't see anybody testing it much. I think they have regtests for it, inherited from btc
+
+[25-Jul-19 04:34 PM] dukeleto#7326
+Pretty sure `disablewallet` is considered unsupported in KMD world, @jl777c can you verify?
+
+[25-Jul-19 04:34 PM] dukeleto#7326
+@qqil not having a wallet is most likely causing your problems
+
+[25-Jul-19 04:35 PM] jl777c#5810
+it is not one of the mandatory test points from what i can remember. too many things assume a wallet
+
+[25-Jul-19 04:36 PM] dukeleto#7326
+somebody could probably make it work in some cases, maybe @qqil can hack it together. But some things will never work, such as dpow, and nSPV needs dpow
+
+[25-Jul-19 04:38 PM] dukeleto#7326
+@qqil KMD also turns on txindex=1 by default and others. We don't subscribe to various BTC beliefs about nodes not having full indexes. Various reasons come together and make `disablewallet` a real pain, and it's not extensively used. So it was thrown under the bus, basically. It might be possible to revive, but nobody seems to care
+
+[25-Jul-19 04:38 PM] dukeleto#7326
+Maybe you are the person that cares 😃
+
+[25-Jul-19 04:42 PM] qqil#7977
+also i did not tried yet to sign multisig twice with synced node, because i have like wallet that works with synced node and external signer api that simply sign input using offline node... and first call signrawtransaction to synced node went ok.
+
+[28-Jul-19 06:09 PM] dukeleto#7326
+Is anybody using an M.2 SSD they can recommend?
+
+[28-Jul-19 06:27 PM] SHossain#0007
+Samsung 970 PRO M.2
+
+{Reactions}
+👍 (4) 
+
+[29-Jul-19 05:32 AM] grewalsatinder#9653
++2 for Samsung
+
+[29-Jul-19 08:22 AM] Sir Seven#7158
++3 Samsung
+You might also check Kingston A1000
+
+[29-Jul-19 03:01 PM] Oszy#5734
+is it possible to generate the seed for a native address i already have ?
+
+[29-Jul-19 03:02 PM] Oszy#5734
+i have the wif can that be converted?
+
+[29-Jul-19 03:54 PM] KomodoWorld#8282
+found this new research about Fraud Proofs: https://ethresear.ch/t/compact-fraud-proofs-for-utxo-chains-without-intermediate-state-serialization/5885
+
+and this other one "Double spend proofs": https://github.com/imaginaryusername/specs_n_stuff/blob/master/dsproof/dsproof.md
+
+[29-Jul-19 06:54 PM] PTYX#6840
+
+{Attachments}
+https://cdn.discordapp.com/attachments/463445317136809984/605473185294581770/photo_2019-07-29_13-25-29.jpg
+
+[29-Jul-19 07:43 PM] vbhvsth#7915
+https://github.com/KomodoPlatform/komodo/releases
+One is unfinished and other is pre-release
+
+what's this thinking... Which one should the exchange adopt?
+
+{Embed}
+https://github.com/KomodoPlatform/komodo/releases
+KomodoPlatform/komodo
+Komodo. Contribute to KomodoPlatform/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[29-Jul-19 07:46 PM] TonyL#3577
+https://github.com/KomodoPlatform/komodo/releases/tag/dev-multios-0.4.0a-alpha @vbhvsth
+
+{Embed}
+https://github.com/KomodoPlatform/komodo/releases/tag/dev-multios-0.4.0a-alpha
+KomodoPlatform/komodo
+Komodo. Contribute to KomodoPlatform/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[29-Jul-19 07:50 PM] vbhvsth#7915
+This is written on the link that you provided @TonyL
+
+"This is experimental and unfinished software. Use at your own risk! No warranty for any kind of damage!"
+
+🤔 I don't think it will be safe for the exchange to start using it or is there any change made recently?
+
+[29-Jul-19 07:51 PM] vbhvsth#7915
+@TonyL
+
+[29-Jul-19 07:55 PM] TonyL#3577
+It's standart disclaimer, all software in the crypto industry by nature experimental and unfinished
+
+[29-Jul-19 07:56 PM] TonyL#3577
+This release passed trough a lot of QA tests and code security reviewing/auditing
+
+[29-Jul-19 07:57 PM] TonyL#3577
+If you have concerns about some specific changes since last release or specific part of the code feel free to open github issue or pull request
+
+[29-Jul-19 09:55 PM] phm87#7395
+I don't know if it is the right channel to report a small issue:
+Using jl777/komodo beta branch, I launch one kmd instance without issue with one user
+I create a new user, I compiled again kmd, download a bootstrap and launch it with default komodo.conf
+I realized that I forgot to change the rpcport (there is already one instance of kmd running on the default rpcport launched by the first user) : the error displayed is correct but there is a technical error at the end:
+```Error: Unable to start HTTP server. See debug log for details.
+komodod: scheduler.cpp:45: CScheduler::~CScheduler(): Assertion `nThreadsServicingQueue == 0' failed.```
+
+[29-Jul-19 10:03 PM] phm87#7395
+and about running my second instance, I had to do this:
+```bind=127.0.0.1:7772
+rpcport=12345
+p2pport=7773```
+7770 and 7771 are already used by the first instance
+

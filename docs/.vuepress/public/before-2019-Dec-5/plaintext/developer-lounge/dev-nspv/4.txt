@@ -1,0 +1,414 @@
+==============================================================
+Guild: Komodo
+Channel: dev-nspv
+Topic: ./komodod -nSPV=1 -ac_reward=100000000  -ac_name=NSPV -ac_supply=10000000000 -ac_cc=2 -addressindex=1 -spentindex=1 -connect=5.9.102.210 &
+./komodod -nSPV=1 -addnode=5.9.253.195 &
+https://drive.google.com/drive/folders/1ZvzrhNBQgroejTKPl0kCOTJ8h7XMnO2M?usp=sharing
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[03-Jul-19 06:41 PM] Slyris#2880
+With which compiler are you compiling ?
+
+[03-Jul-19 06:41 PM] jl777c#5810
+this is meant to be a reference version, not worried about efficiency so much
+
+[03-Jul-19 06:41 PM] jl777c#5810
+just using gcc or clang
+
+[03-Jul-19 06:43 PM] Slyris#2880
+May be, when the efficiency will be important we can add unlikely attribute
+
+[03-Jul-19 06:43 PM] Slyris#2880
+what do you think ?
+
+[03-Jul-19 06:44 PM] jl777c#5810
+for reference version, i dont see so much need
+
+[03-Jul-19 06:44 PM] jl777c#5810
+though i guess the fullnode side will likely be the production version...
+
+[03-Jul-19 06:44 PM] jl777c#5810
+for now, i am not worried about optimizations, more just getting it to work so it can be used as a spec
+
+[03-Jul-19 06:44 PM] Slyris#2880
+Ok !
+
+[03-Jul-19 06:44 PM] Slyris#2880
+No problem
+
+[03-Jul-19 06:45 PM] Slyris#2880
+i will check the rest of the code and ask you if i dont undesrtand something
+
+[03-Jul-19 06:45 PM] jl777c#5810
+thanks, not worried about small stuff, just that it makes sense and works
+
+[03-Jul-19 06:46 PM] Slyris#2880
+to be honest i trust you on the behavior, because it's your idea, and if the tests are going well, i dont worry
+
+[03-Jul-19 06:46 PM] Slyris#2880
+I was thinking that performance was mandatory for you that's why i tell you that minor things
+
+[03-Jul-19 06:46 PM] Slyris#2880
+i will focus on the behavior and critical error if i find
+
+[03-Jul-19 06:47 PM] jl777c#5810
+most concerned i forgot some field in some structures in the (de)serialization
+
+[03-Jul-19 06:47 PM] jl777c#5810
+or forgot to initialize some variable before using it
+
+[03-Jul-19 06:48 PM] Slyris#2880
+still one vector here: https://github.com/jl777/komodo/blob/nSPV/src/komodo_nSPV.h#L798
+
+{Embed}
+https://github.com/jl777/komodo/blob/nSPV/src/komodo_nSPV.h
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[03-Jul-19 06:49 PM] jl777c#5810
+yes for the interface functions, there will be c++ stuff as it is interfacing to c++ code
+
+[03-Jul-19 06:49 PM] jl777c#5810
+i did minimize it a lot though, so a pure C implementation wont be too much changes, but it didnt make sense to convert the C++ interface to the c++ code to C
+
+[03-Jul-19 06:50 PM] Slyris#2880
+i think for future pure C implementation we can think about something like ceeds to make our life easier
+
+[03-Jul-19 06:50 PM] Slyris#2880
+So it's will be more pleaseant to write
+
+[03-Jul-19 06:50 PM] jl777c#5810
+it only took a day to get it all in place, i just didnt want to spend time getting familiar with some new tools
+
+[03-Jul-19 06:51 PM] Slyris#2880
+i understand you
+
+[03-Jul-19 06:51 PM] jl777c#5810
+on a strict schedule. today was to get the fullnode side as close to code complete as possible
+
+[03-Jul-19 06:51 PM] Slyris#2880
+Perfectly understandable
+
+[03-Jul-19 06:51 PM] jl777c#5810
+tomorrow is to get the client side done
+
+[03-Jul-19 06:51 PM] jl777c#5810
+so that last function will be totally redone anyway
+
+[03-Jul-19 06:52 PM] jl777c#5810
+i am finding that a 12000 utxo address is taking fraction of a second, so i can change the client side model to being a single threaded one
+
+[03-Jul-19 06:53 PM] jl777c#5810
+which will simplify the logic a lot and still i think the transaction can be constructed and sent within a few seconds, though for many vin tx i will need to rethink the one request per second limitation on proof queries
+
+[03-Jul-19 06:55 PM] jl777c#5810
+anyway, i will think on how to make the client side easy to understand and flexible
+
+[04-Jul-19 02:29 AM] TonyL#3577
+@jl777c rebuilding to test connection with latest changes
+
+[04-Jul-19 02:49 AM] TonyL#3577
+Not connecting on latest:
+
+prints on client side:
+```
+236 236 236 nonz.3 ccenables[]
+perc 0.0777% ac_pub=[02713b...] acsize.0
+ERA0: end.0 reward.1478310502 halving.525600 decay.0 notarypay.0
+MAX_MONEY 11562981097404846 115629810.97404847
+02713bd85e054db923694b6b7a85306264edf4d6bd6d331814f2b40af444b3ebbc0000000000000000663a1d580000000020050800000000000000000000000000842f01005d2a0000feffffffffffffffffffffffffffffffffffffffffffffffffffffffffefffff extralen.105 crc0.5530402a
+call komodo_args.(./komodod) NOTARY_PUBKEY.()
+>>>>>>>>>> ZEXO: p2p.33969 rpc.33970 magic.13043f5d 319045469 100000000 coins
+initialized ZEXO at 1562208485
+recv: version peer=1
+request address @��N
+recv: verack peer=1
+recv: ping peer=1
+recv: pong peer=1
+recv: nSPV peer=1
+got info response 1562208487 size.145
+```
+
+prints on server side:
+```getaddressutxos.(@��N) slen.0
+implement NSPV_getnotarization_txid
+free(): invalid next size (fast)
+```
+
+[04-Jul-19 04:22 AM] jl777c#5810
+you need -pubkey=0.... for now
+
+[04-Jul-19 04:55 AM] TonyL#3577
+on both server and client?
+
+[04-Jul-19 04:55 AM] jl777c#5810
+just the client
+
+{Reactions}
+👍 
+
+[04-Jul-19 04:56 AM] jl777c#5810
+this will change with next version
+
+[04-Jul-19 04:56 AM] jl777c#5810
+just needed a hardcoded address
+
+[04-Jul-19 04:57 AM] jl777c#5810
+invalid free could be an independent bug, but i should be able to make things more reliable once i get client side way to invoke messages
+
+[04-Jul-19 04:57 AM] TonyL#3577
+ok, I can just wait for the next version I think
+
+[04-Jul-19 05:01 AM] jl777c#5810
+yes, that will have client side rpc, much easier to use
+
+[04-Jul-19 02:37 PM] jl777c#5810
+@TonyL next version has half a dozen nspv_* rpc calls, help will show them. ILN is the best chain to use, very short and notarized. -addnode=5.9.102.210 and it should connect to 1 or more fullnodes ready to go. there is a one message per second limit per peer, for each specific type of message. now that the low level messages appear to be working, the next step is to put it all together to allow it to send funds. at first without 100% validation, as that gets it to the same level as API wallets, and as more and more is validated, it becomes the near native level security.
+
+there is the concept of "login", which is passed in a valid wif. for the following 60 seconds, transactions using vins with that privkey will be signed. that is the plan. after 60 seconds, it is scrubbed from RAM.
+
+still need to implement an efficient way to find the notarization transaction txid, once that is there, all the data needed for validation will be back to the nSPV client. more peers are 5.9.253.200 to 204
+
+[04-Jul-19 02:41 PM] TonyL#3577
+sounds great! will go ahead with testing when wake up
+
+[04-Jul-19 10:53 PM] daemonfox#6136
+I have synced an ILN node with the latest nSPV branch to try and help if I can.
+
+[04-Jul-19 10:54 PM] daemonfox#6136
+75.11.62.221 dedicated IP
+
+[04-Jul-19 10:54 PM] daemonfox#6136
+"blocks": 2668,
+  "longestchain": 2668,
+  "timeoffset": 0,
+  "tiptime": 1562233138,
+  "connections": 8,
+
+[05-Jul-19 02:41 AM] TonyL#3577
+Aha @daemonfox , so this node is your nSPV server - now you can connect client/s to it. In your client daemon start  params just use your server IP in `addnode` and add `-nSPV=1`
+
+[05-Jul-19 02:42 AM] TonyL#3577
+https://github.com/tonymorony/komodo-cctools-python/blob/master/scripts/nspv_clients_spawn.py have simple script to spawn multiply clients on single PC in case if you will want to test loading on your server, just chain params needs to be changed to ILN
+
+{Embed}
+https://github.com/tonymorony/komodo-cctools-python/blob/master/scripts/nspv_clients_spawn.py
+tonymorony/komodo-cctools-python
+Python libs and interfaces for Komodo cryptoconditions consensus modules - tonymorony/komodo-cctools-python
+https://repository-images.githubusercontent.com/151382224/5007df00-6c99-11e9-8f36-dfd6d7e8d715
+
+[05-Jul-19 02:44 AM] TonyL#3577
+```./komodo-cli -ac_name=ILN nspv_getinfo
+{
+  "result": "success",
+  "height": 2668,
+  "chaintip": "0551057bfd0fe25e49a6b2a7aad27dcb2e75d36d66a764cf6d9f0eb8c96ef35e",
+  "notarization": {
+    "notarized_height": 2664,
+    "notarized_blockhash": "01ff20ae26b2ad4ff3bc4993bdd12caa9a6e1e7f0739df356705d58293434558",
+    "notarization_txid": "0000000000000000000000000000000000000000000000000000000000000000",
+    "notarization_txidheight": 0,
+    "notarization_desttxid": "c4ff3370392c3ca2ac61331bec98e91225a23297f2ded150c23e80d0c22913f7"
+  }
+}
+``` thats awesome really
+
+[05-Jul-19 02:45 AM] TonyL#3577
+```./komodo-cli -ac_name=ILN nspv_proof 10 2664
+error code: -32601
+error message:
+Method not found
+``` hmm but have it in help
+
+[05-Jul-19 02:47 AM] TonyL#3577
+nspv_login
+```{
+  "result": "success",
+  "status": "wif will expire in 60 seconds",
+  "address": "RQ1mvCUcziWzRwE8Ugtex29VjoFjRzxQJT",
+  "pubkey": "03aa464529c190398d44017c3d7a71a854ad195a9d396bf84182679c242bb60085",
+  "wifprefix": 188,
+  "compressed": 1
+}
+```
+
+[05-Jul-19 02:47 AM] TonyL#3577
+but nspv_listunspent not return utxos. UPD oh it's because it's ILN chain and I actually dont have any txs on it lol
+```./komodo-cli -ac_name=ILN nspv_listunspent RQ1mvCUcziWzRwE8Ugtex29VjoFjRzxQJT
+{
+  "result": "error",
+  "error": "no utxos result"
+}
+```
+
+[05-Jul-19 03:03 AM] TonyL#3577
+```./komodo-cli -ac_name=ILN nspv_spentinfo bf18a4809fd8218c5096c901e6520ab82a9a04cef6bf5a4e7be33a9800d7d1d9 0
+got spentinfo response 1562295728 size.12557
+{
+  "result": "success",
+  "txid": "bf18a4809fd8218c5096c901e6520ab82a9a04cef6bf5a4e7be33a9800d7d1d9",
+  "vout": 0,
+  "spentheight": 791,
+  "spenttxid": "eefcf8e2397c56cc3e323b1e15826b348132fce977a0f05e49007f9c1dcb5ab4",
+  "spentvini": 92,
+  "spenttxlen": 10886,
+  "spenttxprooflen": 1590
+}
+```
+
+[05-Jul-19 03:03 AM] TonyL#3577
+```./komodo-cli -ac_name=ILN nspv_txproof bf18a4809fd8218c5096c901e6520ab82a9a04cef6bf5a4e7be33a9800d7d1d9 777
+got txproof response 1562295801 size.1718
+{
+  "txid": "bf18a4809fd8218c5096c901e6520ab82a9a04cef6bf5a4e7be33a9800d7d1d9",
+  "height": 777,
+  "txlen": 119,
+  "txprooflen": 1558
+}
+```
+
+[05-Jul-19 03:03 AM] daemonfox#6136
+oh man... this looks awesome... but im working on another thing right now so it has to wait
+
+[05-Jul-19 03:03 AM] daemonfox#6136
+but i will play with this soon
+
+[05-Jul-19 03:03 AM] TonyL#3577
+calls seems work fine, just need some addy with balance to check listunspent
+
+[05-Jul-19 03:04 AM] daemonfox#6136
+and try some nSPV commands
+
+[05-Jul-19 03:04 AM] daemonfox#6136
+is there a testnet coin we can get some funds on that will work with this? I think i have BEER and PIZZA left but IDK which will work with this
+
+[05-Jul-19 03:06 AM] TonyL#3577
+in general you can make full node for any chain you want
+
+[05-Jul-19 03:07 AM] TonyL#3577
+just for huge chains syncing with `-addressindex=1 -spentindex=1 ` is long
+
+[05-Jul-19 03:07 AM] TonyL#3577
+only clue is that this chain should be notarized
+
+[05-Jul-19 03:11 AM] TonyL#3577
+ah, and if you want to connect many clients to server - server you should start with `-maxconnections=somebignumber`, forgot to mention that
+
+[05-Jul-19 03:19 AM] TonyL#3577
+`  "connections": 191,` connected few clients from laptop
+
+[05-Jul-19 04:30 AM] TonyL#3577
+`"connections": 790,` somewhere around this number server starting to drop connections, it feels like there is 777 nSPV clients limitation 😅 (other few clients - initial non nSPV connections)
+
+[05-Jul-19 04:31 AM] TonyL#3577
+`"connections": 835` oh just passed trough - 1000 is close
+
+[05-Jul-19 04:32 AM] TonyL#3577
+resources usage on server with almost 1000 connections
+
+{Attachments}
+https://cdn.discordapp.com/attachments/594906735467036682/596558953765273611/unknown.png
+
+[05-Jul-19 04:34 AM] TonyL#3577
+looks like it's possible to make nSPV server on microwave
+
+[05-Jul-19 04:51 AM] TonyL#3577
+Can't pass trough `"connections": 873,`, have few thousand clients
+tried to restart server but it reaching this number and not connecting more, nothing helpful in prints/logs
+
+[05-Jul-19 04:52 AM] TonyL#3577
+and new clients I'm connecting receiving `got info response 1562302296 size.145 height.2668` but connections amount on server doesn't grow
+
+[05-Jul-19 05:06 AM] jl777c#5810
+typo in help, nspv_hdrsproof
+
+[05-Jul-19 05:07 AM] daemonfox#6136
+wow
+
+[05-Jul-19 05:07 AM] daemonfox#6136
+im almost done with my PoS64 setup and want to mess with this lol
+
+[05-Jul-19 05:07 AM] jl777c#5810
+you shouldnt need to spin up any fullnodes, i have 10 of them and i think there is enough remote data calls now to put together a wallet function
+
+[05-Jul-19 05:08 AM] jl777c#5810
+i just need to implement the DB query for finding the notarization. its been a long grind, but finally coming together
+
+[05-Jul-19 05:10 AM] daemonfox#6136
+so then i think i technically do not have a full node running... that IP I set is my VM static but I launchd and left my daemon with one of your addnode IPs and -nSPV=1 from the start
+
+[05-Jul-19 05:10 AM] daemonfox#6136
+I should be able to make an nSPV call from here but i have no coins lol
+
+[05-Jul-19 05:10 AM] daemonfox#6136
+WTB ILN?
+
+[05-Jul-19 05:18 AM] jl777c#5810
+post your address i will send some test amounts
+
+[05-Jul-19 05:19 AM] jl777c#5810
+@TonyL pretty sure i fixed that invalid free() crash, but we really need to stress test the fullnodes as the support for it goes into all the fullnodes and any bug could cause the entire network to be messed up
+
+[05-Jul-19 05:21 AM] TonyL#3577
+Oh, ok will attack with ` -addnode=5.9.102.210 ` param so
+
+[05-Jul-19 05:21 AM] TonyL#3577
+`RMjy5VkHFJkXTJDTJ3XX1zVzukP48sKyva`
+
+[05-Jul-19 05:22 AM] jl777c#5810
+or -connect so it will just try to kill that node
+
+[05-Jul-19 05:23 AM] jl777c#5810
+i will send funds later today
+
+[05-Jul-19 05:27 AM] daemonfox#6136
+RW8kWgnvAzYgGTrD66P7ZSpUJxDGzj5KRa
+
+[05-Jul-19 05:34 AM] daemonfox#6136
+ok without my local node running without nSPV, i cant get the rigth info
+
+[05-Jul-19 05:34 AM] daemonfox#6136
+nspv calls come back 0 blocks
+
+[05-Jul-19 05:35 AM] daemonfox#6136
+so how would I launch a simple nspv command to one of the published nodes?
+
+[05-Jul-19 05:35 AM] jl777c#5810
+you need to build nSPV branch
+
+[05-Jul-19 05:35 AM] daemonfox#6136
+i have it
+
+[05-Jul-19 05:35 AM] jl777c#5810
+launch with -nSPV=1
+
+[05-Jul-19 05:36 AM] jl777c#5810
+now it is an nSPV node and other than the nspv_* rpc calls, maybe they will work, maybe not
+
+[05-Jul-19 05:36 AM] jl777c#5810
+the normal wallet is disabled
+
+[05-Jul-19 05:36 AM] daemonfox#6136
+just komodod -ac_name=ILN -addnode=5.9.102.210 -nSPV=1
+
+[05-Jul-19 05:36 AM] jl777c#5810
+as long as you have 1 nSPV full node, you can issue nSPV messages and the nspv rpc calls will work
+
+[05-Jul-19 05:37 AM] jl777c#5810
+if you see a "got info response... " prints you are in contact with the fullnode
+
+[05-Jul-19 05:37 AM] TonyL#3577
+`-ac_name=ILN  -ac_supply=10000000000 -ac_cc=2 -addnode=5.9.102.210 -nSPV=1`
+
+[05-Jul-19 05:37 AM] daemonfox#6136
+^^
+
+[05-Jul-19 05:37 AM] daemonfox#6136
+When i run that with that last flag added...
+
+[05-Jul-19 05:37 AM] daemonfox#6136
+I get calls with only zero values
+

@@ -1,0 +1,372 @@
+==============================================================
+Guild: Komodo
+Channel: kmdice
+Topic: ./komodod -ac_name=KMDICE -ac_supply=10500000 -ac_reward=2500000000 -ac_halving=210000 -ac_cc=2 -addressindex=1 -spentindex=1 -addnode=144.76.217.232 &
+https://kmdice.pool-mining.xyz/ <- pool
+https://pool.forkwitch.com/  <- another pool
+https://minerpond.com <- another pool
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[26-Oct-18 03:51 PM] ComputerGenie 👴🏼📢#7004
+or he's hexing us right now 😲
+
+{Reactions}
+😆 rum 
+
+[26-Oct-18 03:57 PM] siu - Chainmakers#3920
+Decker's abilities are impressive indeed
+
+{Reactions}
+👏🏽 👆🏽 shexy (3) 
+
+[26-Oct-18 06:30 PM] jl777c#5810
+these "fork" issues from what I have heard is that your own node loses sync with the mainchain, but no other node is affected
+
+[26-Oct-18 06:30 PM] jl777c#5810
+maybe this is disincentive for the spamming?
+
+[26-Oct-18 06:30 PM] jl777c#5810
+I think I know why getblocktemplate is not putting in all the tx from mempool
+
+[26-Oct-18 06:31 PM] jl777c#5810
+with many dicebets using mempool utxo, depending on the order you add tx to a block, it might not allow all the mempool tx to be mined. the issue is in miner.cpp where it creates a block. I think fixing that would make things a lot better as it would recycle bets that much better, but still eventually utxo will run out
+
+[26-Oct-18 07:05 PM] Oszy#5734
+i think it's something like that. when it didn't work i was always behind a few blocks
+
+[26-Oct-18 07:11 PM] siu - Chainmakers#3920
+i got the fork today... i was not spamming
+
+[26-Oct-18 07:11 PM] siu - Chainmakers#3920
+playing, but no spamming
+
+[26-Oct-18 07:11 PM] jl777c#5810
+ok, so the behavior is making bets can cause a node to lose sync...
+
+[26-Oct-18 07:11 PM] jl777c#5810
+this seems to indicate some sort of mempool based consensus issue
+
+[26-Oct-18 07:13 PM] siu - Chainmakers#3920
+yes, definitively something is up.
+
+[26-Oct-18 07:13 PM] jl777c#5810
+yes
+
+[26-Oct-18 07:13 PM] jl777c#5810
+we need this isolated and understood so we can fix it
+
+[26-Oct-18 07:13 PM] siu - Chainmakers#3920
+It was working quite well all day... 99% of the bets went through smoothly
+
+[26-Oct-18 07:14 PM] siu - Chainmakers#3920
+but suddenly i got a bet still pending and when i checked getinfo it was forked.
+
+[26-Oct-18 07:15 PM] siu - Chainmakers#3920
+It could be that 2 bets select the same utxo in the house and when the first one confirms, the second one gets orphaned
+
+[26-Oct-18 07:15 PM] siu - Chainmakers#3920
+?
+
+[26-Oct-18 07:16 PM] jl777c#5810
+it could be it ends up in your mempool, but not in the real mempool that gets mined
+
+[26-Oct-18 07:16 PM] jl777c#5810
+so your node thinks you did a bet, but really it didnt happen
+
+[26-Oct-18 07:17 PM] jl777c#5810
+yes, this feels like what is happening from the reported behavior
+
+[26-Oct-18 07:18 PM] ComputerGenie 👴🏼📢#7004
+`ok, so the behavior is making bets can cause a node to lose sync..`
+It has to be a little more than *just* that; I've been running my autoplay off and on for 2 days and during "the big lock up" was the only time I experienced the fork
+
+[26-Oct-18 07:19 PM] siu - Chainmakers#3920
+now i reindexed the chain and getting this all the time ```CCduration no hashBlock for txid 6b6f204b8c6e2a4b6a574704d20fbb129721d90821f575c05d71cd047f00c501
+```
+
+[26-Oct-18 07:19 PM] ComputerGenie 👴🏼📢#7004
+👆🏼 that I still haven't figured out
+
+[26-Oct-18 07:19 PM] jl777c#5810
+what i mean is that the mempool must be affecting the consensus. maybe it is simply due to being orphaned
+
+[26-Oct-18 07:19 PM] jl777c#5810
+6b6f204b8c6e2a4b6a574704d20fbb129721d90821f575c05d71cd047f00c501
+
+[26-Oct-18 07:20 PM] jl777c#5810
+is not in the explorer
+
+[26-Oct-18 07:20 PM] jl777c#5810
+was orphaned
+
+[26-Oct-18 07:20 PM] jl777c#5810
+so if you clear that tx from the wallet, it should fix things
+
+[26-Oct-18 07:20 PM] siu - Chainmakers#3920
+that would mean a resync?
+
+[26-Oct-18 07:21 PM] jl777c#5810
+i think there is a way to cancel a tx from wallet
+
+[26-Oct-18 07:21 PM] jl777c#5810
+via rpc call
+
+[26-Oct-18 07:21 PM] ComputerGenie 👴🏼📢#7004
+@jl777c it doesn't seem that mempool/consensus is even an issue with that as I get it even with same node as my pool
+
+[26-Oct-18 07:21 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=KMDICE resendwallettransactions
+[
+  "6b6f204b8c6e2a4b6a574704d20fbb129721d90821f575c05d71cd047f00c501"
+]
+```
+
+[26-Oct-18 07:21 PM] ComputerGenie 👴🏼📢#7004
+if a consensus thing, then it has to be consensus ruleset
+
+[26-Oct-18 07:22 PM] jl777c#5810
+there is the whole realtime mempool response aspect...
+
+[26-Oct-18 07:22 PM] jl777c#5810
+i think the dicebet rpc needs to check for the bet being orphaned
+
+[26-Oct-18 07:22 PM] jl777c#5810
+or dicestatus
+
+[26-Oct-18 07:24 PM] jl777c#5810
+I guess a new rpc needs to be made to delete an orphaned txid from the wallet, but I thought it did that automatically
+
+[26-Oct-18 07:24 PM] siu - Chainmakers#3920
+`resendwallettransactions` solved it for me
+
+[26-Oct-18 07:24 PM] siu - Chainmakers#3920
+no i can bet
+
+[26-Oct-18 07:25 PM] ComputerGenie 👴🏼📢#7004
+my halfassed workaround was to just self restart the script if pending was the result after 3x 5 second trys and a 90 second wait
+
+[26-Oct-18 07:25 PM] siu - Chainmakers#3920
+```./dicebet 0.1 2
+ _  ____  __ ____ ___ ____ _____ 
+| |/ /  \/  |  _ \_ _/ ___| ____|
+| ' /| |\/| | | | | | |   |  _|  
+| . \| |  | | |_| | | |___| |___ 
+|_|\_\_|  |_|____/___\____|_____|
+                                 
+Wallet balance: 867.55865
+85483a3d8c40c2d5b4e7c12cad82617aa0b974f9ec3731475c1057385715639a
+Waiting bet tx to confirm
+  ___   _____ 
+ / _ \ |___ / 
+| | | |  |_ \ 
+| |_| | ___) |
+ \___(_)____/ 
+              
+          _       
+__      _(_)_ __  
+\ \ /\ / / | '_ \ 
+ \ V  V /| | | | |
+  \_/\_/ |_|_| |_|
+                  
+```
+
+[26-Oct-18 07:26 PM] siu - Chainmakers#3920
+WOOOOO
+
+[26-Oct-18 07:26 PM] ComputerGenie 👴🏼📢#7004
+`resendwallettransactions ` works some times, some times no
+
+[26-Oct-18 07:26 PM] siu - Chainmakers#3920
+im gonna be rich!!! :trollface:
+
+{Reactions}
+👍🏼 
+
+[26-Oct-18 07:26 PM] Llama#1330
+selling kmdice at whatever price.
+
+[26-Oct-18 07:26 PM] siu - Chainmakers#3920
+you need to keep doing it until the tx gets eliminated
+
+[26-Oct-18 07:27 PM] siu - Chainmakers#3920
+0.05??? @Llama ?
+
+[26-Oct-18 07:27 PM] siu - Chainmakers#3920
+lol
+
+[26-Oct-18 07:27 PM] Llama#1330
+but only if anyone wanted it right now
+
+[26-Oct-18 07:27 PM] siu - Chainmakers#3920
+ok... not at whatever price then :p
+
+[26-Oct-18 07:27 PM] Llama#1330
+it's whatever 😛
+
+[26-Oct-18 07:28 PM] ComputerGenie 👴🏼📢#7004
+`LlamaToday at 2:26 PM
+selling kmdice at whatever price.`
+I'll give you a total of 50 KMD for every KMDICE you have
+
+[26-Oct-18 07:29 PM] siu - Chainmakers#3920
+i can give 100KMD
+
+[26-Oct-18 07:29 PM] ComputerGenie 👴🏼📢#7004
+100.0000001
+
+[26-Oct-18 07:29 PM] ComputerGenie 👴🏼📢#7004
+:trollface:
+
+[26-Oct-18 07:30 PM] siu - Chainmakers#3920
+101KMD
+
+[26-Oct-18 07:31 PM] ComputerGenie 👴🏼📢#7004
+_has been outbid 😦_
+
+[26-Oct-18 07:35 PM] siu - Chainmakers#3920
+@Llama
+
+[26-Oct-18 07:36 PM] Llama#1330
+nah
+
+[26-Oct-18 07:36 PM] ComputerGenie 👴🏼📢#7004
+dafuq you mean 'nah'? What kind of dink offers a trade and then backs out?
+
+[26-Oct-18 07:37 PM] siu - Chainmakers#3920
+@ComputerGenie 👴🏼📢 be polite
+
+[26-Oct-18 07:37 PM] Llama#1330
+i blocked him anyways lol
+
+[26-Oct-18 07:37 PM] Llama#1330
+a while ago
+
+[26-Oct-18 07:37 PM] siu - Chainmakers#3920
+you blocked him?
+
+[26-Oct-18 07:38 PM] jl777c#5810
+resendwallettransactions is a good workaround for now
+
+[26-Oct-18 07:38 PM] jl777c#5810
+so i think dicestatus needs to check for orphaned tx and maybe this can be fixed automatic
+
+[26-Oct-18 07:41 PM] phideas#8309
+could you tip me a little kmdice to play? i will tip you back if i win.
+
+[26-Oct-18 07:42 PM] siu - Chainmakers#3920
+post address
+
+[26-Oct-18 07:42 PM] phideas#8309
+RG6B648SQBEyu8EKY32VQsGacqvozs6esS
+
+[26-Oct-18 07:42 PM] Llama#1330
+sent 10k
+
+{Reactions}
+coolpirate (2) 
+
+[26-Oct-18 07:42 PM] siu - Chainmakers#3920
+9748868d4c2787f75ef1437b265557e7cebbba71e4bd10319663ebe0818b7fdc
+
+{Reactions}
+👍 
+
+[26-Oct-18 07:48 PM] ComputerGenie 👴🏼📢#7004
+fwiw
+I just got fork and the differing output is:
+`CC Eval EVAL_DICE Invalid: always should find vin.0, but didnt for wlt spending tx 65eabffc17b8972a62109065e80eb67d49db801b25abb717e23884cf8fece68f`
+
+[26-Oct-18 07:48 PM] siu - Chainmakers#3920
+i forked too
+
+[26-Oct-18 07:49 PM] siu - Chainmakers#3920
+```CC Eval EVAL_DICE Invalid: always should find vin.0, but didnt for wlt spending tx 65eabffc17b8972a62109065e80eb67d49db801b25abb717e23884cf8fece68f
+```
+
+[26-Oct-18 07:49 PM] siu - Chainmakers#3920
+the same here
+
+[26-Oct-18 07:49 PM] siu - Chainmakers#3920
+@jl777c
+
+[26-Oct-18 07:50 PM] jl777c#5810
+that seems confirmed... so maybe there are two (or more) issues
+
+[26-Oct-18 07:50 PM] siu - Chainmakers#3920
+http://kmdice.explorer.dexstats.info/tx/65eabffc17b8972a62109065e80eb67d49db801b25abb717e23884cf8fece68f
+
+[26-Oct-18 07:50 PM] phideas#8309
+!kmdtip @siu - Chainmakers  0.1
+
+[26-Oct-18 07:50 PM] KMD TipBot#0077
+
+{Embed}
+TipBot
+@phideas (phideas#8309)
+You tipped @siu - Chainmakers **0.1 KMD**
+
+[26-Oct-18 07:51 PM] siu - Chainmakers#3920
+@phideas thanks!
+
+[26-Oct-18 08:04 PM] siu - Chainmakers#3920
+@phideas what are you using, linux or windows?
+
+[26-Oct-18 08:04 PM] siu - Chainmakers#3920
+https://github.com/DeckerSU/kmdice-gui
+
+{Embed}
+https://github.com/DeckerSU/kmdice-gui
+DeckerSU/kmdice-gui
+KMDICE Remote GUI. Contribute to DeckerSU/kmdice-gui development by creating an account on GitHub.
+https://avatars3.githubusercontent.com/u/22120003?s=400&v=4
+
+[26-Oct-18 08:04 PM] siu - Chainmakers#3920
+here is deckers gui
+
+[26-Oct-18 08:05 PM] phideas#8309
+no windows. i am trying out your tui dicebet.
+
+[26-Oct-18 08:05 PM] siu - Chainmakers#3920
+with bash in windows?
+
+[26-Oct-18 08:05 PM] siu - Chainmakers#3920
+nice!
+
+[26-Oct-18 08:05 PM] phideas#8309
+i am on ubuntu. figured it out, just setting up komodo-cli
+
+[26-Oct-18 08:06 PM] phideas#8309
+thanks. will post result. if i win...
+
+[26-Oct-18 08:06 PM] siu - Chainmakers#3920
+awesome!
+
+[26-Oct-18 08:07 PM] siu - Chainmakers#3920
+you need to install figlet to get the big fonts, if not, replace figlet with echo
+
+[26-Oct-18 08:39 PM] ComputerGenie 👴🏼📢#7004
+heh as the saying goes, "easy come, easy go"
+`wins: 19 losses: 107 --> -1696.0`
+@TonyL
+
+[26-Oct-18 08:43 PM] siu - Chainmakers#3920
+😬
+
+[26-Oct-18 09:07 PM] TonyL#3577
+@ComputerGenie 👴🏼📢 On which odds?
+
+[26-Oct-18 09:08 PM] ComputerGenie 👴🏼📢#7004
+3.4
+
+[26-Oct-18 09:08 PM] TonyL#3577
+3 and 4  combined?
+
+[26-Oct-18 09:08 PM] ComputerGenie 👴🏼📢#7004
+0.1 less than three and one half
+
+[26-Oct-18 09:11 PM] TonyL#3577
+If you have an average odds of your bets 3.4  it assumes ~22,7% average wins
+You have  17,7% so a little bit unlucky ☹
+

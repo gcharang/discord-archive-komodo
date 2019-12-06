@@ -1,0 +1,270 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"455741312273219595";"jl777c#5810";"19-Apr-19 09:16 PM";"that is what the code says";"";"";
+"272003866906722306";"TonyL#3577";"19-Apr-19 09:16 PM";"Things which we need so far:
+1) Test mode with price lock after 3 blocks instead of 24 hours
+2) Synthetic print in `pricesinfo`
+3)  getprice rpc call where you can pass in a synthetic string and height and get price
+4) ""blocks_until_costbasis_lock"" indicator in `pricesinfo`
+@dimxy";"";"👍 (1)";
+"455741312273219595";"jl777c#5810";"19-Apr-19 09:16 PM";"did you look at ContextualCheckCoinbaseTransaction";"";"";
+"405011811511828481";"Alright#0419";"19-Apr-19 09:18 PM";"no, sorry, I see it now";"";"";
+"405011811511828481";"Alright#0419";"19-Apr-19 09:18 PM";"where I should have been looking in the first place >.<";"";"";
+"507209916449292303";"dimxy#2587";"20-Apr-19 07:28 AM";"@TonyL  did you downloaded my last prices update (I corrected the costbasis calculation - seems  the prints above indicate there are no the last changes)?";"";"";
+"272003866906722306";"TonyL#3577";"20-Apr-19 09:02 AM";"@dimxy yes, costbasis in prints following last price";"";"";
+"455741312273219595";"jl777c#5810";"20-Apr-19 09:02 AM";"always? it should be MAX of all prices during 24hrs";"";"";
+"272003866906722306";"TonyL#3577";"20-Apr-19 09:18 AM";"Let me track more carefully to see if it MAX or follow on declines";"";"";
+"507209916449292303";"dimxy#2587";"20-Apr-19 09:37 AM";"No, the last changes are probably there.
+The issue with this call /komodo-cli -ac_name=REKT0 pricesinfo 909291ca7715b14d502899012c8fe797230091deae3ae47c08626657f8a02ba7
+was that the sample size was actually only 1 block == 2397. So obviously costbasis == lastprice in this case.
+I can see the difference with the firstprice value. It is because firstprice is calculated differently from the costbasis and lastprice, with no minmax calculation, just the smoothed value.";"";"";
+"272003866906722306";"TonyL#3577";"20-Apr-19 10:13 AM";"```./komodo-cli -ac_name=REKT0 pricesinfo 909291ca7715b14d502899012c8fe797230091deae3ae47c08626657f8a02ba7
+{
+  ""rekt"": 0,
+  ""batontxid"": ""909291ca7715b14d502899012c8fe797230091deae3ae47c08626657f8a02ba7"",
+  ""profits"": 1586419989.47820000,
+  ""costbasis"": 5222.06330000,
+  ""positionsize"": 1.00000000,
+  ""equity"": 1586419990.47820000,
+  ""addedbets"": 0.00000000,
+  ""leverage"": -100,
+  ""firstheight"": 2397,
+  ""firstprice"": 5267.76816620,
+  ""lastprice"": 5267.09330000,
+  ""height"": 2484
+}
+```
+Yep, it's definetly not a ` it should be MAX of all prices during 24hrs` atm";"";"";
+"272003866906722306";"TonyL#3577";"20-Apr-19 10:13 AM";"And not match `lastprices` atm as well hmm";"";"";
+"272003866906722306";"TonyL#3577";"20-Apr-19 10:14 AM";"I'm on this commit:
+```git log -1
+commit 500ce685197e621320e96a0b9c88848e3ab6191c (HEAD -> prices-rpc, origin/prices-rpc)
+Author: dimxy <dimxy@komodoplatform.com>
+Date:   Fri Apr 19 22:51:49 2019 +0500
+
+    corr calc profits refheight
+```";"";"";
+"272003866906722306";"TonyL#3577";"20-Apr-19 10:16 AM";"```./komodo-cli -ac_name=REKT0 prices 1
+{
+  ""firstheight"": 2193,
+  ""timestamps"": [
+    1555754038
+  ],
+  ""pricefeeds"": [
+    {
+      ""name"": ""BTC_USD"",
+      ""prices"": [
+        [
+          5337.28500000,
+          5285.30320000,
+          5272.87894827
+        ]
+```";"";"";
+"272003866906722306";"TonyL#3577";"20-Apr-19 10:17 AM";"Atm `lastprice` and `costbasis` in this position not matching any of values from last prices";"";"";
+"507209916449292303";"dimxy#2587";"20-Apr-19 10:22 AM";"firstprice is the smoothed value from the firstheight block=2397
+costbasis is the min (if lev < ) of correlated and smoothed  valuues from the period from firstheight till the height which is passed as pricesinfo param 
+(and if its is omitted then lastblock) or 24h  - whatever first";"";"";
+"455741312273219595";"jl777c#5810";"20-Apr-19 10:38 AM";"if negative leverage, it is the MIN[]";"";"";
+"272003866906722306";"TonyL#3577";"20-Apr-19 10:50 AM";"Negative leverage bets profit if price is falling, positive leverage if rising";"";"";
+"272003866906722306";"TonyL#3577";"20-Apr-19 10:51 AM";"So profits calculation should be different too for negative leverage (if it the same now)";"";"";
+"455741312273219595";"jl777c#5810";"20-Apr-19 10:51 AM";"profits calc multiplies by leverage";"";"";
+"455741312273219595";"jl777c#5810";"20-Apr-19 10:51 AM";"so if it would have made money as a long trade, it loses as a short";"";"";
+"417671530642931713";"Andersen#8337";"20-Apr-19 12:15 PM";"Profit and loss in LONG and SHORT non linear in bitmex , due  all contracts  settlement in BTC .  And you can choose isolated margin or cross (all in).";"";"";
+"417671530642931713";"Andersen#8337";"20-Apr-19 12:15 PM";"https://www.bitmex.com/app/exchangeGuide";"";"";
+"417671530642931713";"Andersen#8337";"20-Apr-19 12:16 PM";"In Deribit its always cross - but user can regulate leverage by  order value  - up to 100x";"";"";
+"417671530642931713";"Andersen#8337";"20-Apr-19 12:17 PM";"In bitmex when user go to SHORT  - he is in synthetic fiat $";"";"";
+"272003866906722306";"TonyL#3577";"20-Apr-19 09:17 PM";"prototyping in progress 😃";"https://cdn.discordapp.com/attachments/560714286369079299/569270564628201492/unknown.png";"";
+"272003866906722306";"TonyL#3577";"20-Apr-19 09:20 PM";"Plan to make some comfy to use constructor for synthetic but not  decided yet how it should looks like - maybe set of dropdowns (up to 3 symbols to choose and operators to choose )";"";"";
+"272003866906722306";"TonyL#3577";"20-Apr-19 09:28 PM";"On ""Active positions"" tab will be table with active positions with option to add funding";"";"";
+"405011811511828481";"Alright#0419";"20-Apr-19 09:28 PM";":shexy:";"";"shexy (2)";
+"405011811511828481";"Alright#0419";"20-Apr-19 09:28 PM";"I don't quite understand it yet";"";"";
+"405011811511828481";"Alright#0419";"20-Apr-19 09:28 PM";"but :shexy: nonetheless";"";"";
+"272003866906722306";"TonyL#3577";"20-Apr-19 09:38 PM";"At the moment `priceslist` returns list of all bets on chain what is not very useful. I think it will be great if there will be separation between pending and finished bets and also `mypriceslist` to get list of user bets (similar to rogue)
+[@jl777c @dimxy]";"";"👌 (1)";
+"272003866906722306";"TonyL#3577";"20-Apr-19 09:42 PM";"`I don't quite understand it yet` - same so far because need to wait 24 hours to start game 😃";"";"";
+"272003866906722306";"TonyL#3577";"20-Apr-19 09:43 PM";"Oh, btw 24 hours passed since my yesterdays positions opening";"";"";
+"272003866906722306";"TonyL#3577";"20-Apr-19 09:44 PM";"``` ./komodo-cli -ac_name=REKT0 pricesinfo 15e0df4e9a45cf202557e589d106056f8583926f4fa093d2f39bd67783953ef4
+{
+  ""rekt"": 1,
+  ""rektfee"": 200000,
+  ""rektheight"": 2484,
+  ""batontxid"": ""bfc041193a11b34b8de01d83dd328e894b212ed62f2478f8a8612427a137eb44"",
+  ""profits"": -1.12000000,
+  ""costbasis"": 5332.32660000,
+  ""positionsize"": 1.00000000,
+  ""equity"": -0.11999999,
+  ""addedbets"": 0.00000001,
+  ""leverage"": 100,
+  ""firstheight"": 2349,
+  ""firstprice"": 5293.97990000,
+  ""lastprice"": 5272.73100000,
+  ""height"": 2563
+}
+```
+Looks like I'm rekt on long 😃
+Not sure why loss on profits more that positionsize because I added only 1 satoshi to `addedbets`";"";"";
+"272003866906722306";"TonyL#3577";"20-Apr-19 09:46 PM";"Something not ok with short:
+```
+./komodo-cli -ac_name=REKT0 pricesinfo 909291ca7715b14d502899012c8fe797230091deae3ae47c08626657f8a02ba7
+{
+  ""rekt"": 0,
+  ""batontxid"": ""909291ca7715b14d502899012c8fe797230091deae3ae47c08626657f8a02ba7"",
+  ""profits"": 2361183240.15360000,
+  ""costbasis"": 5222.06330000,
+  ""positionsize"": 1.00000000,
+  ""equity"": 2361183241.15360000,
+  ""addedbets"": 0.00000000,
+  ""leverage"": -100,
+  ""firstheight"": 2397,
+  ""firstprice"": 5267.76816620,
+  ""lastprice"": 5288.91170000,
+  ""height"": 2565
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"20-Apr-19 09:47 PM";"`  ""profits"": 2361183240.15360000,` - looks like overflow and looks like I can became very very rich if try to close it";"";"😂 (1)";
+"272003866906722306";"TonyL#3577";"21-Apr-19 12:58 AM";"Yay, first position opened via browser 😂
+Will display tables with active and closed positions when there will be some mechanism to filter it (if needed can scan vin/vouts for each)";"https://cdn.discordapp.com/attachments/560714286369079299/569326061280559123/unknown.png";"";
+"455741312273219595";"jl777c#5810";"21-Apr-19 05:56 AM";"the short position profit looks reasonable, but maybe it is off by 1";"";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 06:11 AM";"Ah, it's in satoshis, not coins";"";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 06:11 AM";"If in satoshis it might be fine";"";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 06:16 AM";"But I should be in loss in this short, not profit - last price is higher than both firstprice and cost basis";"";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 06:17 AM";"So not sure why it looks reasonable tbh";"";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 06:19 AM";"If costbasis representing my position its less than 1% profit so shohld be not more than 100% profit with 100 leverage";"";"";
+"455741312273219595";"jl777c#5810";"21-Apr-19 06:24 AM";"sorry i meant the long position";"";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 06:27 AM";"Rekt on long looks reasonable yup";"";"";
+"455741312273219595";"jl777c#5810";"21-Apr-19 06:30 AM";"it is down by about 1.2%, so it is indeed rekt and without any rekt miners it was able to live past its death. but for such positions, it would be able to be rekt using the first block that it was rekt and shouldnt be able to be cashed out";"";"";
+"455741312273219595";"jl777c#5810";"21-Apr-19 06:30 AM";"however if it goes back into profit before someone rekts it, then i guess a cashout would be possible";"";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 06:32 AM";"Aha, so some ""rektbot"" scanner is needed";"";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 06:33 AM";"Like a anybody can initiate rekt for someone position if `rekt: 1` but only opener can initiate close not into rekt?";"";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 06:34 AM";"If needed I can start simple scanner which will check positions for ""rekt 1"" and close it";"";"";
+"455741312273219595";"jl777c#5810";"21-Apr-19 06:48 AM";"only people that want to earn money from generating rekt transactions should be scanning";"";"👌 (1)";
+"507209916449292303";"dimxy#2587";"21-Apr-19 07:45 AM";"I corrected issue with this call
+./komodo-cli -ac_name=REKT0 pricesinfo 909291ca7715b14d502899012c8fe797230091deae3ae47c08626657f8a02ba7
+(I was not an overflow but incorrect cast of the operands to unsigned) - in my repo";"";"";
+"455741312273219595";"jl777c#5810";"21-Apr-19 07:50 AM";"this is why i like to use int64_t instead of uint64_t";"";"";
+"455741312273219595";"jl777c#5810";"21-Apr-19 07:50 AM";"one less bit of capacity but avoids all these type of issues";"";"";
+"507209916449292303";"dimxy#2587";"21-Apr-19 07:52 AM";"not the first time I saw this,
+sometimes txfee is uint64_t and strange results might be if to calculate in64_t amount - uint64_t txfee 😀";"";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 08:04 AM";"Oh made scanner for priceslist, but it's crashing now on position which I created with leverage 0";"";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 08:04 AM";"```./komodo-cli -ac_name=REKT0 pricesinfo 48194bab8d377a7fa0e62d5e908474dae906675395753f09969d4c4bea4a7518
+prices_costbasis() no costbasis txid found
+prices_syntheticprice i=0 price=0 value=1 depth=0
+prices_syntheticprice pricedata[0]=6681315026233878571 pricedata[1]=524941330000 pricedata[2]=524383219931
+pricestack[depth=1]=139700403146728
+prices_syntheticprice i=1 price=0 value=1 depth=1
+pricestack[depth=0]=524383219931
+prices_syntheticprice price=524383219931 den=1
+prices_syntheticprofits() unchanged costbasis=0 price=524383210000 leverage=0
+prices_syntheticprofits() test value1 (price/PRICES_NORMFACTOR * SATOSHIDEN)=5243832100000000
+prices_syntheticprofits() test value2 (price/PRICES_NORMFACTOR * SATOSHIDEN)/costbasis=error: couldn't connect to server: EOF reached (code 1)
+(make sure server is running and you are connecting to the correct RPC port)
+[1]+  Floating point exception(core dumped) ```";"";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 08:04 AM";"In general can add exception for this txid on scanner side";"";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 08:05 AM";"Because it's not possible now to create positions with zero leverage and it's very unique one 😃";"";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 08:10 AM";"```./komodo-cli -ac_name=REKT0 pricesinfo 909291ca7715b14d502899012c8fe797230091deae3ae47c08626657f8a02ba7
+{
+  ""rekt"": 1,
+  ""rektfee"": 200000,
+  ""rektheight"": 2493,
+  ""batontxid"": ""909291ca7715b14d502899012c8fe797230091deae3ae47c08626657f8a02ba7"",
+  ""profits"": -1.01000000,
+  ""costbasis"": 5222.06330000,
+  ""positionsize"": 1.00000000,
+  ""equity"": -0.01000000,
+  ""addedbets"": 0.00000000,
+  ""leverage"": -100,
+  ""firstheight"": 2397,
+  ""firstprice"": 5267.76816620,
+  ""lastprice"": 5274.89310000,
+  ""height"": 2623
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 08:10 AM";"Short is rekt on latest 👍";"";"";
+"455741312273219595";"jl777c#5810";"21-Apr-19 08:13 AM";"so you made both a long and short position and both got rekt!";"";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 08:14 AM";"With leverage 100 it was  easy quest to get rekt";"";"";
+"507209916449292303";"dimxy#2587";"21-Apr-19 08:15 AM";"I already did a check for zero-division but seems there is yet  another case
+updated the code";"";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 08:23 AM";"Very raw positions displayer 😃 (displaying all positions on chain atm)";"https://cdn.discordapp.com/attachments/560714286369079299/569437972118896670/unknown.png";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 08:25 AM";"No positions with positive profit at all so far";"https://cdn.discordapp.com/attachments/560714286369079299/569438477146521612/unknown.png";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 08:26 AM";"With test mode will able to test it propertlly";"";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 08:28 AM";"Have to add ""Close position"" and ""Add funding"" features to this table and interface will be quite ugly but feature complete actually (for current RPC calls) and all other will be just UI/UX enchancement";"";"";
+"272003866906722306";"TonyL#3577";"21-Apr-19 08:32 AM";"Table content saving to local CSV file  and reading from there - so this CSV user will able to reuse lets say if needed open in Excel";"";"";
+"272003866906722306";"TonyL#3577";"22-Apr-19 09:22 PM";"@dimxy not sure if you still working on it - went ahead and picked version with `mypriceslist` call 😃 . Returning empty list on my side";"https://cdn.discordapp.com/attachments/560714286369079299/569996500503887912/unknown.png";"";
+"507209916449292303";"dimxy#2587";"23-Apr-19 03:14 AM";"@TonyL mypriceslist filters out txns with -pubkey param in the oprets
+Did you use the same -pubkey param while calling mypubkeylist  as the one that created bets?";"";"";
+"272003866906722306";"TonyL#3577";"23-Apr-19 03:36 AM";"@dimxy yes, I opened few bets from this node with same pubkey set before and after update";"";"";
+"507209916449292303";"dimxy#2587";"23-Apr-19 06:43 AM";"@TonyL   I added some debug logging to output pubkeys in oprets and from -pubkey";"";"👍 (1)";
+"272003866906722306";"TonyL#3577";"23-Apr-19 11:00 AM";"Aha, according to debug logging one position opened from this node: https://paste.ubuntu.com/p/Gb4dCxKNM4/ (but I'm on fork now and some yesterdays positions not included into it)";"";"";
+"272003866906722306";"TonyL#3577";"23-Apr-19 11:00 AM";"So list seems to work correct, will try to open more now";"";"👍 (1)";
+"272003866906722306";"TonyL#3577";"23-Apr-19 11:03 AM";"New opened position was added to mypositionslist:
+```[
+  ""02d161b021fbeebd2257db135ab2463f0da4887377a9ea0526a4fa5807bc897a"",
+  ""1f0b824781052355029f1a59d8047679eb1a0237368fc92c1c2a4d28deea0eba""
+]
+```";"";"";
+"272003866906722306";"TonyL#3577";"23-Apr-19 11:05 AM";"@dimxy What is correct way to make daemon with TESTMODE?";"";"";
+"507209916449292303";"dimxy#2587";"23-Apr-19 11:06 AM";"I added  
+export CONFIGURE_FLAGS='CPPFLAGS=-DTESTMODE' 
+to .profile";"";"";
+"507209916449292303";"dimxy#2587";"23-Apr-19 11:07 AM";"and  full rebuild with make clean";"";"";
+"272003866906722306";"TonyL#3577";"23-Apr-19 11:07 AM";"Oh, it's same flag which using for gateways and channels, got it";"";"";
+"507209916449292303";"dimxy#2587";"23-Apr-19 11:08 AM";"yes,
+we might change it if any conflicts";"";"";
+"272003866906722306";"TonyL#3577";"23-Apr-19 11:16 AM";"```{
+  ""rekt"": 0,
+  ""batontxid"": ""02d161b021fbeebd2257db135ab2463f0da4887377a9ea0526a4fa5807bc897a"",
+  ""profits"": -0.00020000,
+  ""costbasis"": 5292.43850000,
+  ""positionsize"": 1.00000000,
+  ""equity"": 0.99980000,
+  ""addedbets"": 0.00000000,
+  ""leverage"": 1,
+  ""firstheight"": 2826,
+  ""firstprice"": 5292.43855034,
+  ""lastprice"": 5291.89610000,
+  ""height"": 2923,
+  ""test_daywindow"": 3
+}
+```
+
+  ""test_daywindow"": 3  - was added 👍";"";"";
+"272003866906722306";"TonyL#3577";"23-Apr-19 11:18 AM";"@dimxy Could you please add synthetic to pricesinfo ouput when you have time?";"";"👌 (1)";
+"272003866906722306";"TonyL#3577";"23-Apr-19 11:23 AM";"```./komodo-cli -ac_name=REKT0 prices 725
+error code: -8
+error message:
+daywindow is too small
+```";"";"";
+"272003866906722306";"TonyL#3577";"23-Apr-19 11:24 AM";"```./komodo-cli -ac_name=REKT0 prices 1
+error code: -8
+error message:
+daywindow is too small
+```";"";"";
+"272003866906722306";"TonyL#3577";"23-Apr-19 11:24 AM";"Looks like I can't get prices at all with such flag";"";"";
+"507209916449292303";"dimxy#2587";"23-Apr-19 11:32 AM";"aha, checking...";"";"";
+"507209916449292303";"dimxy#2587";"23-Apr-19 11:34 AM";"yes there is day_window >= 7 limit,
+I think I can adjust my test windows to this?";"";"";
+"272003866906722306";"TonyL#3577";"23-Apr-19 11:37 AM";"`  ""test_daywindow"": 3` - in general is 3 a blocks amount?";"";"";
+"507209916449292303";"dimxy#2587";"23-Apr-19 11:41 AM";"yes block num (I remember  3 was the requirement for test window)";"";"👍 (1)";
+"507209916449292303";"dimxy#2587";"23-Apr-19 11:48 AM";"updated the repo for win=7";"";"👍 (1)";
+"272003866906722306";"TonyL#3577";"23-Apr-19 11:55 AM";"@dimxy There are some conflicts in latest updates:
+```~/dimxy_repo/komodo# git pull
+Auto-merging src/wallet/rpcwallet.cpp
+CONFLICT (content): Merge conflict in src/wallet/rpcwallet.cpp
+Auto-merging src/rpc/server.h
+CONFLICT (content): Merge conflict in src/rpc/server.h
+Auto-merging src/rpc/server.cpp
+Auto-merging src/komodo_gateway.h
+Auto-merging src/komodo_defs.h
+CONFLICT (content): Merge conflict in src/komodo_defs.h
+Auto-merging src/cc/prices.cpp
+CONFLICT (content): Merge conflict in src/cc/prices.cpp
+Auto-merging src/cc/CCinclude.h
+CONFLICT (content): Merge conflict in src/cc/CCinclude.h
+Automatic merge failed; fix conflicts and then commit the result.
+```";"";"";
+"507209916449292303";"dimxy#2587";"23-Apr-19 11:58 AM";"I did rebase recently onto FSM";"";"";
+"507209916449292303";"dimxy#2587";"23-Apr-19 11:58 AM";"I suggest pull to a new repo, sorry";"";"";
+"272003866906722306";"TonyL#3577";"23-Apr-19 12:05 PM";"Sure, can I do something from my side? Not a git ninja at all 😃";"";"";
+"507209916449292303";"dimxy#2587";"23-Apr-19 12:07 PM";"clone my repo to a new directory and rebuild (or just remove old dir)";"";"👌 (1)";
+"272003866906722306";"TonyL#3577";"23-Apr-19 12:07 PM";"Got it";"";"👍 (1)";
+"272003866906722306";"TonyL#3577";"23-Apr-19 12:43 PM";"`prices` call working now and can see `""test_daywindow"": 7` in pricesinfo";"";"";
+"272003866906722306";"TonyL#3577";"23-Apr-19 01:07 PM";"Switched table to `mypriceslist`, selector seems work - a little left 😃";"https://cdn.discordapp.com/attachments/560714286369079299/570234214436438019/unknown.png";"";

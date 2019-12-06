@@ -1,0 +1,433 @@
+==============================================================
+Guild: Komodo
+Channel: dev-students
+Topic: A channel for students and academics to talk.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[25-Jan-19 08:24 AM] Alright#0419
+my guess is that they are connected properly and neither started mining
+
+{Reactions}
+👍 
+
+[26-Jan-19 02:24 AM] SuSC135#6248
+I am able to ping to to my other system but if I run **getpeerinfo** I am getting an empty array. I am using same asset chain name on both systems . Where do you think I am going wrong @Alright
+
+[26-Jan-19 02:32 AM] blackjok3r#3181
+port is open?
+
+[26-Jan-19 02:32 AM] blackjok3r#3181
+instead of ping try `telnet <ip> <port>`
+
+[26-Jan-19 02:32 AM] blackjok3r#3181
+port is p2p port and is shown in getinfo
+
+[26-Jan-19 02:51 AM] SuSC135#6248
+oh yes I think port is not getting connected
+
+[26-Jan-19 04:32 AM] jl777c#5810
+firewall?
+
+[26-Jan-19 07:33 AM] SuSC135#6248
+I dont think its firewall issue. I checked the firewall. Is it because telnet is not installed in my system?
+
+[26-Jan-19 10:56 AM] blackjok3r#3181
+Telnet is on every system, o e of your nodes must be behind Nat
+
+[26-Jan-19 01:37 PM] dukeleto#7326
+@SuSC135 if you can ping, but not other things, you probably have those TCP ports filtered by a firewall or one of the nodes itself
+
+[26-Jan-19 01:38 PM] dukeleto#7326
+you must open up the p2p ports on both nodes, and allow that port on any firewwall between them, too
+
+[26-Jan-19 01:38 PM] dukeleto#7326
+rpc port is usually only needed on localhost
+
+[26-Jan-19 01:41 PM] dukeleto#7326
+ping uses ICMP, which is often not filtered by firewalls
+
+[26-Jan-19 05:58 PM] SuSC135#6248
+My port is 12562 and i have allowed it on both nodes
+
+[26-Jan-19 05:58 PM] SuSC135#6248
+**Status: active
+
+To                         Action      From
+--                         ------      ----
+12562                      ALLOW       Anywhere                  
+12562/tcp                  ALLOW       Anywhere                  
+12562 (v6)                 ALLOW       Anywhere (v6)             
+12562/tcp (v6)             ALLOW       Anywhere (v6)**
+
+[26-Jan-19 06:00 PM] SuSC135#6248
+And when I run the netsat it shows the port is not bound to any ip address
+
+[26-Jan-19 06:03 PM] SuSC135#6248
+```sudo netstat -tulpn
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+tcp        0      0 0.0.0.0:12562           0.0.0.0:*               LISTEN      2775/./komodod      
+tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      9011/systemd-resolv 
+tcp        0      0 127.0.0.1:631           0.0.0.0:*               LISTEN      24441/cupsd         
+tcp6       0      0 :::12562                :::*                    LISTEN      2775/./komodod      
+tcp6       0      0 :::12563                :::*                    LISTEN      2775/./komodod      
+tcp6       0      0 ::1:631                 :::*                    LISTEN      24441/cupsd ```
+
+[26-Jan-19 06:31 PM] TonyL#3577
+I think for issue isolation you may totally disable firewall / allow all traffic in your local network rules - if it works it means issue is here and you can setup it proper then from scratch. If no - have to find problem somewhere else.
+
+[26-Jan-19 06:36 PM] TonyL#3577
+There are a lot of tools to check connectivity / network configuration such as proposed above `telnet` or let's say `traceroute` (possible to provide port as param to traceroute as well - so you'll see where traffic is not pass / blocked), `tcpdump` is very powerful as well
+
+[27-Jan-19 03:08 PM] dukeleto#7326
+@SuSC135 it's easy to use `curl` to verify a certain port is open
+
+[27-Jan-19 03:08 PM] dukeleto#7326
+curl will give different errors, based on whether the port is blocked, versus doing an invalid HTTP request against a p2p full node port
+
+[27-Jan-19 03:08 PM] dukeleto#7326
+use `curl -v`
+
+[27-Jan-19 03:09 PM] dukeleto#7326
+also make sure you are using the p2p port number, not the rpc port
+
+[28-Jan-19 04:07 AM] SuSC135#6248
+I did both traceroute and curl. It seems that the port 12562 is not bound to the ip address of the node.  its rather bound to 0.0.0.0:12562. Is there any way to change this?
+
+[28-Jan-19 05:44 AM] cipi#4502
+0.0.0.0 is OK, since it means it listens to all IPs that the node has... does the node have a public IP and not some private IPs? What is the IP of this node? `sudo ifconfig`
+
+[28-Jan-19 05:57 AM] SuSC135#6248
+I am running two VM in the same system and the IP address is 192.168.56.1
+
+[28-Jan-19 06:01 AM] cipi#4502
+ok, that is another story... seems the 2 VMs can't see each other because the host system does not route traffic from one VM to the other... but i am not familiar with VMs and how the host system must be configured to do that, since i don't use VMs
+
+[28-Jan-19 06:05 AM] cipi#4502
+i would google for something like "virtual switch VM"
+
+[28-Jan-19 06:10 AM] cipi#4502
+so basically both VMs must be in the same network, e.g. 192.168.x.x and be connected to the same "virtual switch"
+
+[28-Jan-19 06:12 AM] blackjok3r#3181
+Fopr VMs I use a bridged adapter.... let your router give each VM its own IP...
+
+[28-Jan-19 06:12 AM] blackjok3r#3181
+this then works every time... and you can Port Forward a port to internet to let outside nodes conenct aswell.
+
+[28-Jan-19 06:13 AM] blackjok3r#3181
+With VirtualBox this is pretty easy, just chagne netowrk adapter to Bridged. Using QEMU its a bit tricky.
+
+[28-Jan-19 01:16 PM] dukeleto#7326
+@SuSC135 yeah, if you have VMs, you need to do extra work to allow them to get traffic
+
+[28-Jan-19 01:17 PM] dukeleto#7326
+i used vagrant in the past, and in the Vagrantfile, you can specify mapping a host port to a VM port
+
+[28-Jan-19 01:17 PM] dukeleto#7326
+it's the safest default for VMs to not be able to access the outside world, so that is usually the default
+
+[29-Jan-19 08:41 AM] Mylo#8306
+Alternatively there will be a docker series of tutorials to test this or next week able to create two nodes on the one machine https://komodoplatform.com/tt2019-5-peer-to-peer-orderbooks-first-atomic-swap/
+
+Last section
+
+{Embed}
+https://komodoplatform.com/tt2019-5-peer-to-peer-orderbooks-first-atomic-swap/
+Tech Tuesday Development Update - 2019 Week 5: Peer to peer orderb...
+Komodo Platform is starting a weekly briefing on the progress the Komodo Dev Team is making. It's called Tech Tuesday Update. Here's another update!
+https://komodoplatform.com/wp-content/uploads/2018/09/tech-tuesday-update.jpg
+
+{Reactions}
+rum 
+
+[29-Jan-19 08:41 AM] Mylo#8306
+The article mentions these networking issues I have faced with @Bryan_Beus in various testing scenarios
+
+[29-Jan-19 08:43 AM] Mylo#8306
+And tbh docker provides the least networking headaches in exchange for some docker tool fundamentals.
+
+Networking is a layer too far down for most devs learning dev stuff, compared to a devops tool which is closer to a new dev workflow
+
+[02-Feb-19 04:27 PM] at#4177
+any tips for acclerating my js skills??
+
+[02-Feb-19 04:28 PM] at#4177
+New to coding but not to web i learned the basica already in a few weeks
+
+[02-Feb-19 04:29 PM] at#4177
+Just keep building little projects of interest??
+
+[02-Feb-19 04:54 PM] Alright#0419
+stop by #kmdlabs we're trying to foster a learning environment.  Most of us use python, but we can definitely teach you how the daemon and CCs work
+
+[02-Feb-19 05:33 PM] at#4177
+Cool
+
+[06-Feb-19 06:02 PM] FishyGuts#5085
+Coding for beginners.   Where to start? - I don't even know where to start.  Saw a book on Python beginner coding yesterday.   So intrigued and jealous of what you crazy bastards can do.
+
+[06-Feb-19 06:03 PM] FishyGuts#5085
+Only about 20 pages into Mastering Bitcoin but dedicated to getting through it.  
+
+*>hello world* seems like a jumping off point.  
+
+Should I buy a book or use something like KahnAcademy?  
+TYIA.
+
+[06-Feb-19 06:09 PM] blackjok3r#3181
+Trial and error and stak exchange, and lots and lots of time. 😉
+
+[06-Feb-19 06:09 PM] blackjok3r#3181
+Something like python is very good. I also learnt a lot by just reading code...
+
+{Reactions}
+💯 (2) 
+
+[06-Feb-19 06:10 PM] blackjok3r#3181
+and seeing how problem were solved elswhere
+
+[06-Feb-19 06:10 PM] FishyGuts#5085
+I'm very inspired by you all.
+
+[06-Feb-19 06:12 PM] FishyGuts#5085
+I thank you sir.
+
+[06-Feb-19 06:12 PM] FishyGuts#5085
+Here have some ARRR to play our new lottery!
+
+{Reactions}
+👍 
+
+[06-Feb-19 06:13 PM] FishyGuts#5085
+!arrrtip @Deleted User 10.0001
+
+[06-Feb-19 06:13 PM] ARRR TipBot#1743
+
+{Embed}
+TipBot
+@FishyGuts (FishyGuts#5085)
+You tipped @Unknown **10 ARRR**
+A network fee of 0.0001 ARRR was deducted from the amount.
+This operation is pending. You will be notified when when it has finished.
+
+[06-Feb-19 06:13 PM] FishyGuts#5085
+Use !arrrtip buytickets (amount) to buy tickets 😃
+
+[08-Feb-19 06:24 AM] Mylo#8306
+!arrrtip buytickets (55)
+
+[08-Feb-19 06:24 AM] ARRR TipBot#1743
+
+{Embed}
+TipBot
+Cannot tip with entered amount.
+
+[20-Feb-19 10:32 PM] if(!destiny){return slave}#0736
+#include <iostream>
+
+
+template <class fleecejohnson>
+fleecejohnson longlifeld(fleecejohnson b, fleecejohnson c)
+{
+    return b + c;
+}
+
+
+int main(){
+    
+    double z = 12.33;
+    int  x = 36;
+    int fleeced =  longlifeld(z ,x);
+    std::cout << fleeced << std::endl;
+}
+
+[20-Feb-19 10:32 PM] if(!destiny){return slave}#0736
+anybody know why this doesnt compile lol
+
+[20-Feb-19 11:57 PM] walrus#8604
+just a quick question:
+
+[20-Feb-19 11:57 PM] walrus#8604
+I have set up an asset chain...on a remote aws node
+say, that node is node 1
+other nodes are joining in.....to that asset chain
+previously node 1 was able to transfer coins to other nodes...but now whenever node 1 sends coins to other nodes....on other nodes logs it shows: ERROR: AcceptToMemoryPool: tx inputs not found
+Transactions from other nodes are going through fine
+But coin transfers from node 1 is not being accepted.
+any idea what could be the reason?
+
+[20-Feb-19 11:59 PM] walrus#8604
+From node-1's wallet, coins are being deducted...but on recipient's end it says: ERROR: AcceptToMemoryPool: tx inputs not found
+
+[21-Feb-19 04:35 AM] PTYX#6840
+Have you tried restarting node 1's daemon?
+
+[21-Feb-19 08:44 AM] TonyL#3577
+Problem was resolved in #dev-general
+@walrus Next time please post your problem in some single channel - no need to duplicate 😃
+
+[26-Feb-19 02:20 AM] Heacox#5029
+!help
+
+[26-Feb-19 02:20 AM] InviteManager#3907
+
+{Embed}
+This is a list of commands you can use. You can get more info about a specific command by using \`!help <command>\` (e.g. \`!help add-ranks\`)
+
+Arguments are listed after the command. Parentheses \`()\` indicate an **optional** argument. (e.g. \`(reason)\` means the \`reason\` is optional)
+Invites
+`addInvites`, `clearInvites`, `createInvite`, `fake`, `info`, `inviteCodes`, `inviteDetails`, `invites`, `leaderboard`, `removeInvites`, `restoreInvites`, `subtractFakes`, `subtractLeaves`
+Ranks
+`addRank`, `ranks`, `removeRank`
+Config
+`config`, `interactiveConfig`, `inviteCodeConfig`, `memberConfig`, `permissions`
+Info
+`botInfo`, `credits`, `getBot`, `help`, `members`, `ping`, `prefix`, `setup`, `support`
+Premium
+`export`, `premium`, `tryPremium`
+Moderation
+`ban`, `caseDelete`, `caseView`, `check`, `clean`, `cleanShort`, `cleanText`, `kick`, `mute`, `punishmentConfig`, `purgeUntil`, `softBan`, `strike`, `strikeConfig`, `unban`, `unhoist`, `unmute`, `warn`
+Other
+`graph`, `makeMentionable`, `mentionRole`
+Links
+[Support Discord](https://discord.gg/Am6p2Hs) | [Add bot to your server](https://invitemanager.co/add-bot/) | [Bot website](https://andreasgassmann.github.io/discord-invite-manager/) | [Patreon](https://www.patreon.com/invitemanager)
+InviteManager
+
+[04-Mar-19 05:03 AM] Hollowman9000#3344
+Hello
+
+[04-Mar-19 05:04 AM] Hollowman9000#3344
+#learntocode
+
+[04-Mar-19 05:05 AM] Hollowman9000#3344
+There a bootcamp or something I should sign up for?
+
+[04-Mar-19 07:45 AM] jl777c#5810
+https://docs.komodoplatform.com/
+
+{Reactions}
+👍 (4) 
+
+[04-Mar-19 10:59 AM] Hollowman9000#3344
+Thanks
+
+[23-Mar-19 06:24 AM] jl777c#5810
+for those that recommend C++ over C, please make sure to understand these issues: https://medium.com/@cscalfani/goodbye-object-oriented-programming-a59cda4c0e53
+
+{Embed}
+https://medium.com/@cscalfani/goodbye-object-oriented-programming-a59cda4c0e53
+Goodbye, Object Oriented Programming
+I’ve been programming in Object Oriented languages for decades. The first OO language I used was C++ and then Smalltalk and finally .NET…
+https://cdn-images-1.medium.com/max/1200/1*cBFSQ9Ytv_D0jwGtpuL5WA.png
+
+{Reactions}
+❤ (5) 
+
+[12-Apr-19 03:31 AM] grewalsatinder#9653
+@Hollowman9000 we are allowed to ask questions here mate
+
+[12-Apr-19 03:32 AM] Hollowman9000#3344
+I understand, see trading comments
+
+[12-Apr-19 03:32 AM] grewalsatinder#9653
+yep, read already.
+
+[12-Apr-19 03:32 AM] grewalsatinder#9653
+it's not restricted to collage students as I understand
+
+[12-Apr-19 03:33 AM] Hollowman9000#3344
+Didn’t want to scare anyone away :abusedsmily:
+
+[12-Apr-19 03:33 AM] Hollowman9000#3344
+When code wrenches start flying
+
+[12-Apr-19 03:43 AM] grewalsatinder#9653
+😅
+
+[12-Apr-19 03:43 AM] grewalsatinder#9653
+don't hold yourself back if need help
+
+[12-Apr-19 05:31 AM] jl777c#5810
+start with C, not C++
+
+[12-Apr-19 05:31 AM] jl777c#5810
+I am still learning C++
+
+[12-Apr-19 05:31 AM] jl777c#5810
+C I mastered a while ago
+
+{Reactions}
+💯 (2) 
+
+[12-Apr-19 02:35 PM] Lance#9742
+🤔 I started to learn c++ beginning this year but now paused a litttle bit, lazy
+
+[12-Apr-19 02:36 PM] Lance#9742
+I would also like to learn Rust later but I need more motivation to learn c++ first
+
+[13-Apr-19 01:02 AM] Hollowman9000#3344
+My objective is in c++ so that is my path
+
+[13-Apr-19 01:02 AM] Hollowman9000#3344
+For better or worse
+
+[28-Apr-19 07:21 PM] CryptoFoxGaming#5228
+C and C++ are so hard to read. Go is the way to go... At least for me.
+
+[29-Apr-19 10:07 AM] dukeleto#7326
+The particular language you learn doesn't matter. Understanding data structures and algorithms is what really matters
+
+[29-Apr-19 10:07 AM] jl777c#5810
+knowing how to test and debug
+
+[29-Apr-19 10:08 AM] jl777c#5810
+how to redefine a very difficult problem into something just a little bit easier
+
+[29-Apr-19 10:08 AM] jl777c#5810
+once you can do that, then you can iterate and decompose any problem into a set of not so hard to implement subproblems
+
+[29-Apr-19 10:08 AM] jl777c#5810
+much easier said than done
+
+{Reactions}
+abusedsmily (2) 
+
+[29-Apr-19 10:08 AM] jl777c#5810
+and likely just takes experience to develop such a skill
+
+{Reactions}
+🖖 
+
+[29-Apr-19 10:11 AM] dukeleto#7326
+This is deep wisdom. And it is why Computer Science professors often can't code at all. You can't practice swimming by reading books
+
+[29-Apr-19 10:11 AM] dukeleto#7326
+I hope other students have better experiences than I did, but I had to immediately switch out of my CS major in college, because the department only considered C++ and Java as languages you could submit assignments in
+
+[29-Apr-19 10:12 AM] dukeleto#7326
+This did not go over well with me, and I switched to be a math major instead
+
+{Reactions}
+🆒 
+
+[07-May-19 06:09 PM] Lance#9742
+I just changed my mind, dropped c++ and started to learn Rust lol
+
+{Reactions}
+👍 (2) 
+
+[08-May-19 06:15 AM] jorian#4555
+Prepare yourself for war with the compiler
+
+{Reactions}
+😄 🔥 
+
+[08-May-19 12:21 PM] FlyingDutchman#5213
+what would you say about the future of blockchain with Python
+
+[08-May-19 12:21 PM] FlyingDutchman#5213
+i have virtually no coding experience and Python seems a lot less daunting than C/C++
+

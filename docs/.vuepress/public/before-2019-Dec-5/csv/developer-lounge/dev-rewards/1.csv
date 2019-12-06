@@ -1,0 +1,207 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"455741312273219595";"jl777c#5810";"19-Oct-18 11:56 AM";"lukechildsToday at 00:08
+would be good to get a channel anyway to keep everything in one place, I'll probs come back with regular questions regarding the reward claiming
+we hit a little road block with the app, it turns out the current official KMD app implements BTC consensus rule checks on the TX before signing
+and having an output amount larger than the input amount violates this and causes the Ledger to throw an error
+You can see the function here: https://github.com/LedgerHQ/ledger-app-btc/blob/master/src/btchip_transaction.c#L48-L71
+
+For more context it's called from here: https://github.com/LedgerHQ/ledger-app-btc/blob/master/src/main.c#L1987
+GitHub
+LedgerHQ/ledger-app-btc
+Bitcoin wallet application for Ledger Blue and Nano S - LedgerHQ/ledger-app-btc
+
+GitHub
+LedgerHQ/ledger-app-btc
+Bitcoin wallet application for Ledger Blue and Nano S - LedgerHQ/ledger-app-btc
+
+I've ""fixed"" this with a pretty simple hack here: https://github.com/lukechilds/ledger-app-btc/commit/e2ebcada593710faf8f438bd26d21a170a3b60d4
+GitHub
+Allow Ledger to sign Komodo reward claim transactions · lukechild...
+
+it works, and bypasses the check for KMD
+However the txfee amounts shown to the user now overflow for reward claim transactions
+I wanted to implement the reward amount calculations on the device but:
+1) It is completely incompatible with the current BTC protocol coin codebase
+2) I'm almost certain Ledger won't accept a PR with all that code";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 11:56 AM";"The device has no concept of UTXO height or current block height, it just knows about inputs and outputs and signs them. So we'd need to completely fork the BTC app, add support for passing block height info to the Ledger, implement all the KMD interest consensus rules on the device, and then fork their API client and add the block height support to that too. :/
+so the current solution is preferable to that
+just force allowing any output amount
+Just wanted your opinion on if this change is ok, I don't think it should have any negative effects
+The only down side I can see is, if the outputs are larger than the inputs the txfee value overflows so it displays the txfee as like a bazillion KMD
+but that would only ever happen if the output amount is larger than the input amount
+e.g with an reward claim TX
+normal TXs will show up fine
+so no normal software is likely to encounter this
+worst case scenario possible, someone accidentally crafts a TX that has way more outputs than inputs and sends it to the ledger to sign, the Ledger signs it without error, then they broadcast it to the network and it gets rejected instantly
+no loss of funds
+it will just sign TXs that break the consensus rules in the single scenario that the outputs are too large
+I think
+but yeah, I'm a little out of my depth, I'm not very familiar with C at all
+so would be great to get your opinion on that
+and also if you or anyone else can see an obvious way to not make the txfee overflow so we can show negative fees like on explorers rather that ridiculously high numbers that would be great too";"";"";
+"412323938782150658";"SHossain#0007";"19-Oct-18 12:30 PM";"Great work @lukechilds 😃";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 12:35 PM";"maybe one way is to have two different claim functions? one for old rule utxo and one for new?";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 12:35 PM";"or it could try the oldrules and if error, then use the new rules";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 12:36 PM";"as far as how GUI displays negative numbers,that seems up to the GUI side of things";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 12:41 PM";"sorry, should have been more clear, regarding calculating the claim amounts, that all happens in the web app, the Ledger device has nothing to do with that.
+
+It's not the GUI displaying a negative number, it's the actual Ledger device itself. It overflows negative numbers as their store as an `unsigned char`:  https://github.com/LedgerHQ/ledger-app-btc/blob/master/src/btchip_transaction.c#L48-L71";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 12:41 PM";"KMD Fee over flow (should be -1 KMD)";"https://cdn.discordapp.com/attachments/502811530002300939/502823612911452182/Screen_Shot_2018-10-19_at_7.38.45_pm.png";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 12:41 PM";"you can see in that example ☝";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 12:41 PM";"that is a bit distressing";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 12:42 PM";"lol";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 12:42 PM";"The input amount is 15 KDM and the output amount is 16 KMD";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 12:42 PM";"so it should be -1 KMD";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 12:42 PM";"but overflows to that huge number";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 12:42 PM";"but the sum of inputs is really less than sum of outputs, so it is a negative fee using normal rules";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 12:42 PM";"but if it works ok and the explorer shows it, maybe its a feature?";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 12:43 PM";"when you see big giant txfee, that means you claimed!";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 12:43 PM";"Yeah, they can check out output amounts on the device";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 12:43 PM";"so as long as those are correct, the user can safely ignore the txfee";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 12:43 PM";"only thing I'm worried about is Ledger not being happy about that and not accepting our PR";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 12:44 PM";"but this would never happen with a normal TX using Ledger's KMD wallet";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 12:44 PM";"so they might not notice";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 12:44 PM";"can your pull request change their display code too?";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 12:44 PM";"but they likely wont notice";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 12:45 PM";"and i doubt users would complain if it is explained to them so they dont get a heart attack";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 12:47 PM";"Yeah definitely, but I'm worried if I change to much, they also won't accept the PR. Not sure if your familiar with the codebase but BTC and all BTC style coins use a shared codebase with some if checks for different alts.
+
+So if we had a few lines wrapped in an if check for KMD, (like it is now) they'll likely accept. If we go and rewrite large portions of the codebase that effects all currencies (the tx fee display) just to fix a bug in a very specific use case for one alt coin, I think they're much less likely to accept.";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 12:47 PM";"so I'd rather try and sneak this in first";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 12:47 PM";"if they have an issue, then we can look at fixing it and see if they're open to accepting it";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 12:48 PM";"yes, i doubt they will care if the display shows overflow, they dont really seem to care much at all";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 01:01 PM";"but regarding fixing that bug, i'm pretty far out of my comfort zone with all this C stuff, do you have any ideas?
+
+It's the function that calculates the txfee here: https://github.com/LedgerHQ/ledger-app-btc/blob/master/src/btchip_transaction.c#L48-L71
+The first argument `target` is the txfee. It's an `unsigned char` which seems confusing to me as it's a number. After some reading it seems an `unsigned char` is an ascii character AKA a number in the range 0...255 AKA an 8-bit integer.
+
+So I'm not sure how it's getting interpreted as that huge number. I tried changing into a `signed char` which I thought might allow negative numbers but got the same issue. Maybe because `255` is hardcoded into the calculations as they're expecting it to be limited to 0...255?";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 01:03 PM";"its doing a long subtract one char at a time";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 01:03 PM";"pointer to unsigned char, ie. array of them";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 01:04 PM";"it is overflowing into a negative number 0xf... which becomes 186...";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 01:05 PM";"the math is correct";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 01:05 PM";"the problem is the display of the negative number";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 01:05 PM";"well, maybe the math isnt correct, it is a bit tricky, but regardless negative fee will be a binary with MSB set";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 01:06 PM";"if you can do an if ""KMD"" and txfee is negative then display ""reward claimed""";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 01:06 PM";"but of course that is a dream";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 01:06 PM";"i think it is ok as it is, certainly much better than what we have now!";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 01:07 PM";"That's a good idea actually";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 01:07 PM";"but yeah, not sure they'll go for that";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 01:07 PM";"that could be a good option if they have an issue with the negative fees though";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 01:08 PM";"but ok, what you say makes sense, I'll have a look into the display code and see if I can fiddle with anything there";"";"";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 01:08 PM";"thanks 👍";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 01:15 PM";"for the first pull request, just ignore the overflow, it seems harmless";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 01:15 PM";"and ledger wont notice or care";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 01:16 PM";"it only happens to KMD, which they actively ignore for a year and thousands of customer requests";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 01:16 PM";"i doubt they value the sanctity of their positve txfee display";"";"💯 (2)";
+"360402743543988225";"lukechilds#2707";"19-Oct-18 01:21 PM";"My thoughts too";"";"";
+"403229823834521616";"pbca26#5430";"19-Oct-18 05:46 PM";"i submitted explorer change pr a year ago
+still not merged
+fingers crossed they will accept kmd claim fix pr, five years after";"";"";
+"412323938782150658";"SHossain#0007";"19-Oct-18 06:08 PM";"i have also notified them to change kpx.io to https://kmdexplorer.io few months ago";"";"";
+"455741312273219595";"jl777c#5810";"19-Oct-18 06:53 PM";"@lukechilds just want to make sure you are using integer math and truncating the numbers in the calcs. Agama had a bug due to using floating point and the fractional amount multiplied out bigger than allowed";"";"";
+"367790733501136899";"Vertigo#0439";"20-Oct-18 01:34 AM";"Sup guys noob question again.... Where does the 5.1% rewards come from?";"";"";
+"347922216429813760";"grewalsatinder#9653";"20-Oct-18 01:43 AM";"The supply which is not out yet";"";"";
+"347922216429813760";"grewalsatinder#9653";"20-Oct-18 01:43 AM";"Total ever going to be around 200mil";"";"";
+"347922216429813760";"grewalsatinder#9653";"20-Oct-18 01:44 AM";"Current circulation is around 102mill?? Something like that";"";"";
+"347922216429813760";"grewalsatinder#9653";"20-Oct-18 01:44 AM";"It is mined and the majority of that goes to 5.1 rewards";"";"";
+"367790733501136899";"Vertigo#0439";"20-Oct-18 02:08 AM";"Ty.";"";"";
+"360402743543988225";"lukechilds#2707";"22-Oct-18 04:59 AM";"@jl777c thanks for the heads up, all numbers are floating point by default in JS. I will write a comprehensive test suite to ensure all calculations are correct. Is there an accurate JS implementation of the reward calculations in Agama I can use for reference?";"";"";
+"459844460625526824";"hyperDEX#6586";"22-Oct-18 06:18 AM";"@pbca26 may know";"";"";
+"403229823834521616";"pbca26#5430";"22-Oct-18 08:08 AM";"https://github.com/pbca26/agama-wallet-lib/blob/dev/src/komodo-interest.js";"";"";
+"360402743543988225";"lukechilds#2707";"22-Oct-18 08:39 AM";"Thanks!";"";"";
+"360402743543988225";"lukechilds#2707";"22-Oct-18 08:39 AM";"@pbca26 is the hardcoded 777 needed on this line: https://github.com/pbca26/agama-wallet-lib/blob/dev/src/komodo-interest.js#L6";"";"";
+"360402743543988225";"lukechilds#2707";"22-Oct-18 08:39 AM";"I can't see it in the komodod version";"";"";
+"403229823834521616";"pbca26#5430";"22-Oct-18 08:45 AM";"i'm not sure if it's still needed, better ask jl";"";"";
+"360402743543988225";"lukechilds#2707";"22-Oct-18 08:52 AM";"Thanks.
+
+@jl777c can I omit that? I don't see it here https://github.com/jl777/komodo/blob/dev/src/komodo_interest.h";"";"";
+"360402743543988225";"lukechilds#2707";"22-Oct-18 08:55 AM";"oh and same question regarding the `-= 59` here: https://github.com/pbca26/agama-wallet-lib/blob/dev/src/komodo-interest.js#L32";"";"";
+"455741312273219595";"jl777c#5810";"22-Oct-18 08:57 AM";"-= 59 is needed";"";"";
+"455741312273219595";"jl777c#5810";"22-Oct-18 08:58 AM";"calcs need to use exact values from C code to be exact";"";"";
+"360402743543988225";"lukechilds#2707";"22-Oct-18 09:04 AM";"right, but there's no 777 in the C code and the `-= 59` is wrapped in a conditional in the C version";"";"";
+"360402743543988225";"lukechilds#2707";"22-Oct-18 09:07 AM";"Also, I had assumed the calculations would consider time as 1 block equals 1 minute, regardless of what the real world time difference is.
+
+The JS code is using the system clock. Is that correct? I'm not too sure about the C code, I'm not too familiar with C";"";"";
+"455741312273219595";"jl777c#5810";"22-Oct-18 09:15 AM";"time() is the unixtime from system clock";"";"";
+"455741312273219595";"jl777c#5810";"22-Oct-18 09:15 AM";"not sure the question about the 777, if the C code doesnt have it and you do, then it would claim slightly less";"";"";
+"455741312273219595";"jl777c#5810";"22-Oct-18 09:16 AM";"which is pretty harmless and provides a buffer for any small calc differences";"";"";
+"360402743543988225";"lukechilds#2707";"22-Oct-18 09:42 AM";"as far as I can see, `time()` isn't used anywhere in the interest calculations";"";"";
+"360402743543988225";"lukechilds#2707";"22-Oct-18 09:42 AM";"so it's using block height as time, is that correct?";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 10:16 AM";"@jl777c I'v got my Ledger to sign this reward claim TX with the modifications to the Ledger app discussed above. However I can't seem to broadcast it, I get this error:
+
+```
+$ komodo-cli sendrawtransaction 010000000108f001c2247ae95820eb43c2be34c43fd64811907d64561d683115b08a829553000000006a473044022022047c84f9dc59d57d54022b3a9aa61db2f78bea8edd513befacfb55439e560b02202d5b74c539b17a1785b10084556249fc9882778b8cf593a1eaaece6e6e2cc7e5012103e595e6e348e8d8571eef291a2bda3f4d5ee9c7be1d36991108a9815e86b9ed26ffffffff0140717759000000001976a91489c53a986872ed85152facda1b3f306061c8234288ac0000000009030000
+error code: -26
+error message:
+16: mandatory-script-verify-flag-failed (Script failed an OP_EQUALVERIFY operation)
+```
+
+I'm not quite sure what the error means, does it mean the signature is invalid?";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 10:16 AM";"Does anything look obviously wrong to you?
+
+```
+$ komodo-cli decoderawtransaction 010000000108f001c2247ae95820eb43c2be34c43fd64811907d64561d683115b08a829553000000006a473044022022047c84f9dc59d57d54022b3a9aa61db2f78bea8edd513befacfb55439e560b02202d5b74c539b17a1785b10084556249fc9882778b8cf593a1eaaece6e6e2cc7e5012103e595e6e348e8d8571eef291a2bda3f4d5ee9c7be1d36991108a9815e86b9ed26ffffffff0140717759000000001976a91489c53a986872ed85152facda1b3f306061c8234288ac0000000009030000
+{
+  ""txid"": ""07973a1c8ce543285727ac1a5b8021d59cd4ddb2ee4740c4dc74a39953adce00"",
+  ""size"": 191,
+  ""version"": 1,
+  ""locktime"": 0,
+  ""vin"": [
+    {
+      ""txid"": ""5395828ab01531681d56647d901148d63fc434bec243eb2058e97a24c201f008"",
+      ""vout"": 0,
+      ""scriptSig"": {
+        ""asm"": ""3044022022047c84f9dc59d57d54022b3a9aa61db2f78bea8edd513befacfb55439e560b02202d5b74c539b17a1785b10084556249fc9882778b8cf593a1eaaece6e6e2cc7e501 03e595e6e348e8d8571eef291a2bda3f4d5ee9c7be1d36991108a9815e86b9ed26"",
+        ""hex"": ""473044022022047c84f9dc59d57d54022b3a9aa61db2f78bea8edd513befacfb55439e560b02202d5b74c539b17a1785b10084556249fc9882778b8cf593a1eaaece6e6e2cc7e5012103e595e6e348e8d8571eef291a2bda3f4d5ee9c7be1d36991108a9815e86b9ed26""
+      },
+      ""sequence"": 4294967295
+    }
+  ],
+  ""vout"": [
+    {
+      ""value"": 15.01000000,
+      ""valueSat"": 1501000000,
+      ""n"": 0,
+      ""scriptPubKey"": {
+        ""asm"": ""OP_DUP OP_HASH160 89c53a986872ed85152facda1b3f306061c82342 OP_EQUALVERIFY OP_CHECKSIG"",
+        ""hex"": ""76a91489c53a986872ed85152facda1b3f306061c8234288ac"",
+        ""reqSigs"": 1,
+        ""type"": ""pubkeyhash"",
+        ""addresses"": [
+          ""RMqevVxyUkgJdSqYEKj5CK4XcX5UvqFsyj""
+        ]
+      }
+    }
+  ],
+  ""vjoinsplit"": [
+  ]
+}
+```";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 10:18 AM";"(the input is 15KMD and has been sat there for ~1 month)";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 10:24 AM";"Script failed an OP_EQUALVERIFY operation -> OP_DUP OP_HASH160 89c53a986872ed85152facda1b3f306061c82342 OP_EQUALVERIFY OP_CHECKSIG failed when comparing the OP_HASH160";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 10:24 AM";"03e595e6e348e8d8571eef291a2bda3f4d5ee9c7be1d36991108a9815e86b9ed26";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 10:24 AM";"with the scriptPubKey 20 bytes rmd160";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 10:39 AM";"so does that mean the signature is invalid?";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 10:44 AM";"dont know, it aborted after it saw that the RMD160 mismatched. well I guess since that is the case, there is no way the signature was valid";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 10:45 AM";"what is the pubkey for RMqevVxyUkgJdSqYEKj5CK4XcX5UvqFsyj";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 10:46 AM";"maybe you can test with p2pk vout? that has less to go wrong";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 10:46 AM";"just the signature is needed";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 10:49 AM";"There's no way to sign a P2PK tx with the Ledger";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 10:49 AM";"at least not with the lib I'm using";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 10:49 AM";"2 secs, let me find the pubkey";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 10:50 AM";"address: `RMqevVxyUkgJdSqYEKj5CK4XcX5UvqFsyj `
+pubkey: `02e4f4b2a6fc1b0b04ae652a961658802c94ffdbe5203ff45466b583c2ac6ec4eb `";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 10:50 AM";"why did you put 03e595e6e348e8d8571eef291a2bda3f4d5ee9c7be1d36991108a9815e86b9ed26 in the scriptSig?";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 11:01 AM";"I didn't, that's generated by the Ledger library, I pass it the previous transaction and the output index for the UTXO I'm spending.  The the BIP 44 derivation path for the privkey. And the output script. The library forms the transaction and sends it to the device to be signed.";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 11:13 AM";"do you know the pubkey for: RQm8BNygniNVqVPRYXEosznRZ7uEiooqSm";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 11:21 AM";"I own that address so yeah, I can find it, however if you're thinking maybe I'm using the wrong output I don't think that's it. There are two outputs and I'm using `0` which I'm confident is the correct one. I just tried changing it to `1` to quickly test and then I get:
+
+```
+18: bad-txns-inputs-spent. Code:-26
+```";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 11:21 AM";"(when trying to broadcast)";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 11:31 AM";"Interestingly, the pubkey that this website derives: https://iancoleman.io/bip39/ is different to the pubkey the Ledger pib is giving me";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 11:31 AM";"That website says: `02e4f4b2a6fc1b0b04ae652a961658802c94ffdbe5203ff45466b583c2ac6ec4eb`";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 11:32 AM";"Ledger lib says: `04e4f4b2a6fc1b0b04ae652a961658802c94ffdbe5203ff45466b583c2ac6ec4eb56aaf9d686b1f2035f9f45e63fa156a1bea03cdd67bf20d1735a9cb36c3632c8 `";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 11:32 AM";"assuming they are just different formats, one's compressed?";"";"";

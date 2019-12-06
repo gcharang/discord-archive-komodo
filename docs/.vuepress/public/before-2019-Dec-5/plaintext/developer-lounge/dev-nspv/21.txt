@@ -1,0 +1,349 @@
+==============================================================
+Guild: Komodo
+Channel: dev-nspv
+Topic: ./komodod -nSPV=1 -ac_reward=100000000  -ac_name=NSPV -ac_supply=10000000000 -ac_cc=2 -addressindex=1 -spentindex=1 -connect=5.9.102.210 &
+./komodod -nSPV=1 -addnode=5.9.253.195 &
+https://drive.google.com/drive/folders/1ZvzrhNBQgroejTKPl0kCOTJ8h7XMnO2M?usp=sharing
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[20-Jul-19 02:35 PM] Slyris#2880
+Ah yeah
+
+[20-Jul-19 02:35 PM] jl777c#5810
+maybe sometimes i used an int32_t temporarily
+
+[20-Jul-19 02:35 PM] jl777c#5810
+i would use bitfields but those seem to cause cross platform issues
+
+[20-Jul-19 02:36 PM] Doom#9021
+Yep I saw a few `uint32_t`s that could be `bool`s
+
+[20-Jul-19 02:36 PM] Doom#9021
+Also, I think using the plain `bool` type would be easier on the eyes than using `uint8_t` :p
+
+[20-Jul-19 02:36 PM] jl777c#5810
+for now, style and minor stack usage issues are not critical, bugs like i == vs i = are!
+
+[20-Jul-19 02:37 PM] Doom#9021
+Sure !
+
+[20-Jul-19 02:37 PM] Slyris#2880
+https://github.com/jl777/libnspv/blob/jl777/src/tools/nSPV_utils.h#L190 str can be const here
+
+{Embed}
+https://github.com/jl777/libnspv/blob/jl777/src/tools/nSPV_utils.h
+jl777/libnspv
+Tiny Bitcoin Library written in C, with nSPV added - jl777/libnspv
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[20-Jul-19 02:38 PM] Slyris#2880
+but not critical too
+
+[20-Jul-19 02:38 PM] jl777c#5810
+i have historically had many compiler battles with const and large codebases
+
+[20-Jul-19 02:38 PM] jl777c#5810
+i tend to not use const, even though readonly property is indeed very valuable to reduce memory overwrites
+
+[20-Jul-19 02:38 PM] jl777c#5810
+my solution is to not have any memory overwrite bugs 😃
+
+[20-Jul-19 02:38 PM] Slyris#2880
+Since is not critical ^^'
+
+[20-Jul-19 02:39 PM] Slyris#2880
+im supposing for function like: https://github.com/jl777/libnspv/blob/jl777/src/tools/nSPV_utils.h#L169
+
+you dont want to use `alnum()`
+
+{Embed}
+https://github.com/jl777/libnspv/blob/jl777/src/tools/nSPV_utils.h
+jl777/libnspv
+Tiny Bitcoin Library written in C, with nSPV added - jl777/libnspv
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[20-Jul-19 02:39 PM] Slyris#2880
+Because you dont want any extra include
+
+[20-Jul-19 02:40 PM] Slyris#2880
+that can increase compile time ?
+
+[20-Jul-19 02:40 PM] jl777c#5810
+the fewer external code the better
+
+[20-Jul-19 02:40 PM] jl777c#5810
+especially for simple things that are easy to just write from scratch
+
+[20-Jul-19 02:41 PM] jl777c#5810
+100% compatibility and no chance of ending up on a system that doesnt have it and having to then support dual ways of doing it
+
+[20-Jul-19 02:41 PM] Slyris#2880
+okok, i try to spot critical things so now
+
+[20-Jul-19 02:42 PM] jl777c#5810
+this is just 2 days old, so still very early in the cycle
+
+[20-Jul-19 07:30 PM] grewalsatinder#9653
+Thanks for tagging me James 😃
+
+[20-Jul-19 07:30 PM] grewalsatinder#9653
+I woild like to use this as a lib and make a golang wrapper around this lib, and use those in my go code.
+
+[20-Jul-19 07:31 PM] grewalsatinder#9653
+Will be cimeing here for help as I progress.  Been already keeping eye on git commits. Very exciting! 😀
+
+[22-Jul-19 05:41 AM] jl777c#5810
+got spend api working, along with notarization validation. just need to add the merkleproof check and it will be feature complete. as fast as the komodo nSPV=1 was, ./nspv is faster. it is instant to boot, login and you can spend within a few seconds
+
+[22-Jul-19 05:45 AM] jl777c#5810
+at the bottom of nSPV_superlite.h is the api parser where you can get the naming of all the JSON fields, the testvectors has examples of most all of them. even the mempool functions seem to work, so that means you can get realtime indications
+
+[22-Jul-19 05:45 AM] jl777c#5810
+it still uses a single threaded model, but all commands other than spend are pretty fast
+
+[22-Jul-19 05:46 AM] jl777c#5810
+during this port to libnspv, found several bugs which i also fixed on the komodo nSPV side
+
+[22-Jul-19 05:47 AM] jl777c#5810
+so we now have 2 nSPV superlite clients, one via nSPV=1 with komodod and one with ./nspv (KMD, ILN, NSPV)
+
+[22-Jul-19 05:48 AM] jl777c#5810
+i will add a way to get more coins than the fixed list supported later this week. would be nice to get a list of bugs to fix in both the nSPV clients. it feels almost beta quality already, but really needs others testing it than me. also osx and windows builds, they might even work
+
+[22-Jul-19 05:50 AM] jl777c#5810
+plz make issues in libnspv branch for any issue, even for the nSPV=1 mode in komodod
+
+[22-Jul-19 05:53 AM] jl777c#5810
+you should be able to run all the differnet ./nspv COIN in parallel. i dont have rpcport customization yet, but will also add that so you can run many nodes for the same coin on a single node. code size bloated to 300kb
+
+[22-Jul-19 05:55 AM] jl777c#5810
+time from git clone to autogen.sh, ./configure, make is about a minute
+
+[22-Jul-19 06:11 AM] jl777c#5810
+i have the 10 fullnodes running for KMD, ILN and NSPV. will be offline rest of the day
+
+{Reactions}
+👍 (3) 🆒 (2) KMD (3) 
+
+[22-Jul-19 09:49 AM] dukeleto#7326
+Latest FSM merged into HUSH3 and it seems happy with all nSPV changes. I know that it's not enabled, but it's still a nice very light test of the nspv code
+
+[22-Jul-19 09:49 AM] dukeleto#7326
+`nLocalServices 70000005 1, 1`
+
+[22-Jul-19 09:50 AM] dukeleto#7326
+@jl777c i can't prove it, but i saw a few tiny changes to ccenable in the latest FSM merge, and I wonder if that had something to do with my sync issues before. In any case, everything is happy and HUSH3 is in sync with latest FSM
+
+[22-Jul-19 10:27 AM] jl777c#5810
+FSM has relatively recent nSPV, so it is active and nSPV clients would be able to work
+
+[22-Jul-19 05:44 PM] jl777c#5810
+@gcharang can you document the api calls for libnspv in superlite mode? most should be self explanatory, just clone my libnspv repo, automake.sh, configure, make, ./nspv KMD
+
+[22-Jul-19 05:44 PM] jl777c#5810
+README.md has some info at the bottom of page
+
+[22-Jul-19 05:53 PM] jl777c#5810
+@grewalsatinder can you run nspv on your computer and test to see if you can issue commands via browser
+
+[22-Jul-19 05:54 PM] jl777c#5810
+i think http://127.0.0.1:port/?{"method":"getinfo"}
+
+[22-Jul-19 05:54 PM] jl777c#5810
+it might work
+
+[23-Jul-19 03:09 AM] gcharang#6833
+@jl777c on it
+
+[23-Jul-19 04:45 AM] grewalsatinder#9653
+@jl777c awesome! will test and be back 🙂 👍
+
+[23-Jul-19 04:48 AM] grewalsatinder#9653
+on Mac it failed to compile
+
+[23-Jul-19 04:49 AM] grewalsatinder#9653
+@jl777c https://pastebin.com/Y0DZysu9
+
+{Embed}
+https://pastebin.com/Y0DZysu9
+Satinders-MBP:libnspv satinder$ ls -lh  total 272  -rw-r--r--   1 ...
+https://pastebin.com/i/facebook.png
+
+[23-Jul-19 04:49 AM] grewalsatinder#9653
+Mac compile log
+
+[23-Jul-19 04:49 AM] grewalsatinder#9653
+will test on linux in a bit
+
+[23-Jul-19 05:32 AM] gcharang#6833
+@jl777c @TonyL 
+how to specify userpass to the nspv binary?
+
+[23-Jul-19 06:18 AM] grewalsatinder#9653
+@jl777c tested on linux. getinfo command worked perfect! 😃
+
+[23-Jul-19 06:25 AM] grewalsatinder#9653
+tested login with wif, works.... still testing
+
+[23-Jul-19 07:37 AM] jl777c#5810
+install libsodium
+
+[23-Jul-19 07:37 AM] jl777c#5810
+that is what the error says
+
+[23-Jul-19 07:37 AM] jl777c#5810
+userpass is not implemented yet
+
+[23-Jul-19 07:38 AM] jl777c#5810
+so from browser you can issue commands?
+
+[23-Jul-19 07:38 AM] jl777c#5810
+i guess a simple test page with forms and buttons is possible?
+
+[23-Jul-19 07:39 AM] jl777c#5810
+i can then return that content from http://127.0.0.1:1233
+
+[23-Jul-19 07:39 AM] jl777c#5810
+or whatever the port is
+
+{Reactions}
+✅ 💯 
+
+[23-Jul-19 12:54 PM] grewalsatinder#9653
+@jl777c which branch should I be using on Mac?
+
+[23-Jul-19 12:54 PM] grewalsatinder#9653
+jl777 branch or beta ?
+
+[23-Jul-19 12:55 PM] jl777c#5810
+maybe we do things in dev?
+
+[23-Jul-19 12:55 PM] grewalsatinder#9653
+no, I'm trying to just compile libnspv on Mac again
+
+[23-Jul-19 12:55 PM] grewalsatinder#9653
+installed libsodium
+
+[23-Jul-19 12:56 PM] jl777c#5810
+all branches are pretty much in sync
+
+[23-Jul-19 12:57 PM] grewalsatinder#9653
+okay
+
+[23-Jul-19 12:57 PM] jl777c#5810
+jl777 is bleeding edge
+
+[23-Jul-19 12:57 PM] grewalsatinder#9653
+gonna try compiling dev branch
+
+[23-Jul-19 12:57 PM] jl777c#5810
+the others are snapshots of what seems to be stable
+
+[23-Jul-19 01:00 PM] grewalsatinder#9653
+cool! yes, it works perfectly fine on Mac as well. compiled dev branch and issued getinfo command  for KMD to confirm it works fine.
+
+[23-Jul-19 01:00 PM] grewalsatinder#9653
+will continue in the morning.
+
+[23-Jul-19 01:01 PM] grewalsatinder#9653
+thanks for help 🙂 👍
+
+[23-Jul-19 01:07 PM] jl777c#5810
+can anybody try to build on windows?
+
+[23-Jul-19 01:26 PM] dukeleto#7326
+Can somebody explain how an existing chain like HUSH3 can start to use/test nSPV stuff? Is there a newbie guide? I have been trying to keep up, but I have failed
+
+[23-Jul-19 01:30 PM] jl777c#5810
+start with the README.md
+
+[23-Jul-19 01:30 PM] dukeleto#7326
+in which repo? :abusedsmily:
+
+[23-Jul-19 01:31 PM] jl777c#5810
+it should have all info needed to bootstrap a new nSPV nodes
+
+[23-Jul-19 01:31 PM] jl777c#5810
+libnspv repo
+
+[23-Jul-19 01:31 PM] dukeleto#7326
+https://github.com/jl777/libnspv
+
+{Embed}
+https://github.com/jl777/libnspv
+jl777/libnspv
+Tiny Bitcoin Library written in C, with nSPV added - jl777/libnspv
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[23-Jul-19 01:31 PM] jl777c#5810
+@grewalsatinder please rebuild osx version with latest dev branch, i tried to fix all the warnings
+
+[23-Jul-19 01:33 PM] dukeleto#7326
+is enabling nSPV on an existing mainnet a consensus change?
+
+[23-Jul-19 01:34 PM] jl777c#5810
+no
+
+[23-Jul-19 01:34 PM] jl777c#5810
+you need at least one nSPV fullnode
+
+[23-Jul-19 01:34 PM] jl777c#5810
+you can use that one as a seednode
+
+[23-Jul-19 01:34 PM] jl777c#5810
+update the coins file appropriately and then ./nspv HUSH3 will be a superlite client
+
+[23-Jul-19 01:35 PM] jl777c#5810
+~/src/tools/testvectors shows how to submit api requests
+
+[23-Jul-19 01:35 PM] jl777c#5810
+it is quite a simple model: login, spend, broadcast
+
+[23-Jul-19 01:36 PM] jl777c#5810
+with getinfo, listunpent being useful
+
+[23-Jul-19 01:36 PM] jl777c#5810
+also getnewaddress
+
+[23-Jul-19 01:43 PM] dukeleto#7326
+@jl777c thank you, that explains a lot. Very excited for HUSH to spread the good word of nSPV
+
+[23-Jul-19 01:44 PM] dukeleto#7326
+I think it's pretty amazing that it's not a consensus change, and that means adoption will come very fast
+
+{Reactions}
+💪 
+
+[23-Jul-19 01:50 PM] jl777c#5810
+just run a few nodes with FSM branch, use them as the "nSPV":"<ipaddr>, ..." in the coins file
+
+[23-Jul-19 01:51 PM] jl777c#5810
+then nSPV client can "login" and spend funds in seconds
+
+[23-Jul-19 01:51 PM] jl777c#5810
+you can even make requests via http://127.0.0.1:port/?{"method":"getinfo"}
+
+[23-Jul-19 01:51 PM] jl777c#5810
+in the browser
+
+[24-Jul-19 07:10 AM] gcharang#6833
+as port 20267 was used in the testvectors file, I thought that was the default port
+started it like this to make it work with that port
+```
+./nspv KMD -p 20267
+```
+
+[24-Jul-19 07:10 AM] jl777c#5810
+the port is whatever the port is
+
+[24-Jul-19 07:11 AM] jl777c#5810
+each coin has a default rpc port
+
+[24-Jul-19 07:11 AM] jl777c#5810
+the testvectors are mostly for NSPV chain, some for ILN
+
+[24-Jul-19 07:11 AM] jl777c#5810
+use 7771 for KMD
+

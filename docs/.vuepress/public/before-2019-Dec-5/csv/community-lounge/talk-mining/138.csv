@@ -1,0 +1,163 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"352488299077566475";"zawy#5864";"03-Aug-19 01:37 PM";"I haven't looked at your code yet.  What's frakenstein?  mixing  e^x on one side and SMAs on the other?    Yes that's a bit frakenstein, but it could work because e^x at small x is approximately 1+x so the linearity of the SMAs could be mathematically very close to the needed e^x functions.   So it may be that we need several EMAs on the  other side.  But I want to work out the symmetrical SMAs on both sides.
+
+The path I've described above is a postulate. I'll eventualy do modelling to check the theory.   Trying different things by modelling until they work is a risky path. I have  used modelling only to refine constants because my estimates of the probabilities have some error.";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 01:45 PM";"ZAWY7 will have e^x on one side and 4blocks < T/2 on the other side (ZAWY5) and the 3/7/12 SMA on both sides";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 01:47 PM";"the idea is the e^x and 4x <T/2 deals with large changes and the 4/7/12 SMA deal with midrange";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 01:50 PM";"i am hoping that anybody that raises the hashrate will very quickly drive up the diff and without worry about being stranded, with ZAWY6, it only took 20 blocks for the diff to reduce from 22000 to 6, but 100 to go to 15k. i guess the e^x + SMA makes it adjust pretty well, and reasonably smoothly";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 01:52 PM";"Let me first try to determine the ""divisors"" you need on the high side (they will be multipliers)";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 01:59 PM";"For example, for N=4, it's either 10 or 13.6....there's a statstics thing I haven't figured out yet....that means the divisir is about 0.35, or about 3 as a multiplier.";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 02:01 PM";"Oh, wait I'm thinking in terms of difficulty......a lot of my divisor discussion was a multipler in terms of target";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 02:03 PM";"```
+bnTarget =min(bnTarget, sum(past 4 targets)*T/(nTime-B[-4].nTime)/5, sum(past7 targets)*T/(nTime-B[-7].nTime)/3, sum(past12 targets)*T/(nTime-B[-12].nTime)/2);
+```
+The above is wrong.......that's difficulty instead of target and if it's in difficulty the min should be a max";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 02:03 PM";"Corrected:";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 02:06 PM";"strange as it worked as expected, where the min made it harder and max made it easier";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 02:06 PM";"i only work with bnTarget";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 02:07 PM";"maybe that is why it was slow though!";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 02:07 PM";"```
+bnTarget = min(bnTarget, avg(past 4 targets)*avg(nTime-B[-4].nTime)*5/T, avg(past7 targets)*avg(nTime-B[-7].nTime)*3/T, avg(past12 targets)*avg(nTime-B[-12].nTime)*2/T);
+```";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 02:08 PM";"oh the T went from numerator to denominator";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 02:11 PM";"But I'm working on N=2, 4, 8, 16 for symmetically  high and low triggers.";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 02:11 PM";"N=1 for the low side will not work.";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 02:12 PM";"But it will not be a problem losing that case on the high side.";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 02:12 PM";"ok, but good to fix the MA target calc: https://github.com/jl777/komodo/blob/nSPV/src/pow.cpp##L45";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 02:13 PM";"its fixed now, and explains the worse than expected behavior when the numerator was used as a divisor";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 02:29 PM";"you might need an SMA function that allows you to   send   timestamp vector and  target vector (if they're not ""globally"" available) and  pass N and a float or 2 integers for a fraction that is close to the float value  that will determine  the ""divisor"".   I think there should be a global variable that determines the aggresiveness of these modifications that new coins can choose. It will will adjust the float or fraction before passing it because it's invertde depending on if it's on the high side or low side.  Perfectly happy coins can effictively cancel this modification.
+```
+k = aggressiveness factor
+bnTarget = max( SMA(N, divisor*k) for N=2, 4, 8 16 & their divisors,  min( SMA(N, divisor/k) foreach N and divisor, Digishield ));
+```";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 02:40 PM";"what are the typical aggressiveness factors ?";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 02:45 PM";"k = 1  could be what we think will be the fastest response while safe.  lower  k  in what I have above would be to make it less aggressive.";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 02:45 PM";"if k is an integer, it is already configurable between 1 and 126";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 02:46 PM";"You could scale the divisor to 1/10 if you want k=10 to be our default";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 02:46 PM";"By 1/10 i mean of the values I'm trying to determine now";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 02:47 PM";"ok, i will wait for the modeling results, dont worry about implementation side, just the magic formula";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 02:48 PM";"i have all this data readily available, so just need to clearly understand what the algo needs to calculate";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 02:48 PM";"OK, if you're going to do an SMA function like this, post it here for me to check.";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 02:49 PM";"Since I messed up your last test with my formula above";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 02:49 PM";"This will also help me speak in your terminology";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 02:55 PM";"My take on it
+```
+SMA ( numerator, denominator, N)  {
+    return   (sumNtargets/N*
+              (nTime-timestamps[-N+1])*
+              numerator/denominator)/N/T;
+}
+```";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 02:55 PM";"To do away with floats";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 02:57 PM";"So....
+```
+k = aggressiveness factor
+bnTarget = max( SMA(numerator, denominator*k, N) for N=2, 4, 8 16 & their divisors,  min( SMA(numerator*k, denominator, N)  foreach N and divisor, Digishield ));
+```";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:02 PM";"Actually, I'm about to edit that to invert the use of the integer k where k=1 is    our aggressiveness ,and they can't be more aggressive, but they can be less aggressive.";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:02 PM";"that way I also don't have to scale my divisor = numerator/denominator";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 03:13 PM";"ok, i think i understand, i will code this and post it here.";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:22 PM";"I have have aggressiveness factor inverted, and I can do away with denominator....just a sec";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 03:29 PM";"ZAWY10 did the best so far, it is super aggressive on the rapid rise, i just 4x, 7x, and 12x the diff if 4,7 or 12 blocks come in T/3, T/2, T";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 03:29 PM";"otherwise it does the symmettric (and exponential)";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 03:30 PM";"the actual diff ends up being harder than the stated diff and the ASIC is slowed down. instead of 100 blocks in a minute, it is at 70 blocks after 10 minutes, diff got to 5000 within 50 blocks, but even at 2000 had an effective diff of 10000+ at times";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:34 PM";"```
+k = aggressiveness factor = 100 default
+bnTarget = max( SMA(numerator*k, 10000, N) for N=2, 4, 8 16 & their divisors,  min( SMA(numerator, k, N)  foreach N and divisor, Digishield ));
+
+SMA ( numerator, denominator, N)  {
+    return   (sumNtargets/N*
+              (nTime-timestamps[-N+1])*
+              numerator/denominator)/N/T;
+}
+```";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:36 PM";"images not allowwed here?";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 03:36 PM";"not directly";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:36 PM";"N    numerator
+fast solves    2    190
+min()    4    490
+    8    240
+    16    165
+    32    131
+slow solves    2    20
+max()    4    29
+    8    51
+    16    62
+    32    71";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:37 PM";"sent to our PM";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 03:39 PM";"what are the divisors values?";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:40 PM";"when there are fast solves:  N=2, 4, 8, 16, 32:   19, 4.9, 2.4, 1.65, 1,31.......ompare this to my previous N=4, 7, 12:   5, 3, 2";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:42 PM";"Now I'll test these fast solves to see if stability and speed of response is what I expect from the math.";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:42 PM";"I'll PM you an image of 10000x attacks to make sure we see the same thing";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 03:42 PM";"ok, i will start coding this";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 03:44 PM";"i assume factor goes from 100 down to 1, where 1 is the most aggressive?";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:52 PM";"no, i fixed that so that k>100 is more aggressive and highly discouraged";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:52 PM";"k can't be 0";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:52 PM";"So k=1 should disable it";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 03:52 PM";"ok, so what range should the chain be able to be tuned with?";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 03:53 PM";"k 1 to 100?";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:53 PM";"k=100 is my defaul setting, being as aggressive as possible while usually being safe";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:54 PM";"My target audience is the most desperate small coins, but to make it tolerable for big coins";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 03:54 PM";"ok, then it seems no need to have ability to tune it as it needs to be done at chain creation";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:54 PM";"without modification";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:55 PM";"when you fork this, existing coins can't change k?";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 03:55 PM";"not without a hardfork";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 03:55 PM";"but we create chains left and right during the testing process. when it is all happy, then we make it into a mainchain";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 03:55 PM";"we can always do a hardfork to change, as with any coin";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:56 PM";"OK, then k is still useful for final tweeking....assuming this current path is going to work";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 03:56 PM";"that is why we are up to ZAWY10, ie. 10 different chains so far";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 03:56 PM";"yes i will just make it so k is based on -ac_adaptivepow=<value>";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:57 PM";"I'll PM you the results";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 03:57 PM";"fro rising only";"";"";
+"412323938782150658";"SHossain#0007";"03-Aug-19 06:35 PM";"```
+19:12:30 - Diff 14167 at block 79 by Z9 Mini.
+
+19:28:08 - Diff 2.56 at block 93 by CPU
+```
+This is crazy improvement. In 12 minutes the diff is brought down completely. Now, let's get a Msol test and abuse the chain as you like. This is the 12th ZAWY chain we landed on excluding the initial test chain ADAPT.
+
+```
+./komodod -ac_name=ZAWY12 -ac_adaptivepow=1 -ac_supply=1000000 -ac_reward=10000000000 -ac_cc=2 -addnode=5.9.109.210 -addnode=178.159.11.114 &
+```
+**Pool:** 
+Port 3033 maxdiff set to 16 for normal ASIC.
+```
+stratum+tcp://178.159.11.114:3033
+```
+Port 3034 maxdiff set to 292 for NH
+```
+stratum+tcp://178.159.11.114:3034
+```
+Any hash is welcome for this test. If you want an co-ordinated attack please point your miner at the above pool at 20:00 UTC.
+CC: @kolo @Decker @mrlynch @ComputerGenie 👴🏼📢 @Alright";"";"";
+"412323938782150658";"SHossain#0007";"03-Aug-19 06:37 PM";"Special thanks to @zawy @jl777c";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 06:38 PM";"It's possible @jl777c are close to completing it.    It's a tremendous advancement in DAs for 3 reasons.  First, I'm happy someone like JL was familar with my work on changing difficulty during the block. This idea goes back to a medium article by Andrew Stone (BTC Unlimited).   This was  the only way to unstick  1E6 hashrate increase problems.  1E6 required a lot more than a linear downward adjustment for long solvetimes. So JL was trying N^2.  But that decreases too quickly.  I knew to use 2^x aka e^x aka 3^x.   But like I was saying, things need to be symmetric which means we need to be able to rise as fast as we fall or a big attacker can get too many blocks way too quickly with persistent oscillations.  The 2^x function  can resolve enormous jumps in only 30 or so bocks.  I thought of small-window SMAs thought could do it without causing other problems.  I spent a lot of time in the past on these kind of increases  So we can rise and fall in response to any size hash attack in about 30 blocks, apparently being pretty symmetrica (30 blocks to rise, 30 blocks to fall) .  By any size I mean a 1 billion times increase in hashrate takes 50 blocks to fix whereas Zcash's default digishiled (that this still uses for normal hashrates) takes 500 blocks to address a 1000x increase.    It's nice working with JL because I didn't have to look at the code.";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 06:40 PM";"actually i didnt know about any of the prior work, when i first came up with my N^2 solution, it was similar to something i did with PoS to adjust stakeweight on chain with supply ranges of billions and active stake amounts unknown";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 06:41 PM";"i was of course aware of your work, but with so much data, my response to changing DAA used to be to not mess with them as  i saw how complex and easy to break it is";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 06:42 PM";"a billion times stranding, even that is recoverable now!";"";"";
+"458262320775430155";"kolo#1111";"03-Aug-19 06:43 PM";"Will do";"";"👍🏽 (1)";
+"352488299077566475";"zawy#5864";"03-Aug-19 06:45 PM";"By prior work I mean changing the difficulty during the block which I think you said was my idea (that I got from Andrew).";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 06:45 PM";"yes, i discovered the TSA when you mentioned it, and then realized this was all done before, the concept of changing diff during the block";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 06:47 PM";"what that does is makes the effective diff harder than the stated diff, sometimes significantly. not sure that matters much, but in reality the effective diff is rising faster than the 30 blocks";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 06:49 PM";"The main thing is that it gets the chain unstuck.   I'm not aware of any other coin with an ""active"" difficulty like this.  I got XCG to do it, but they messed up otehr parts of their code and is now defunct.";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 06:52 PM";"now all the 100% PoW chains will be able to add this, after october it will be the default for new chains and all the small chains definitely need this. for now just 12 ZAWY coins, in the future, likely to be thousands";"";"";
+"412323938782150658";"SHossain#0007";"03-Aug-19 06:56 PM";"where are the mienrs at?";"";"";
+"412323938782150658";"SHossain#0007";"03-Aug-19 06:56 PM";"4 mins to go for the attack";"";"";
+"458262320775430155";"kolo#1111";"03-Aug-19 06:57 PM";"Seems I’m alone. But I only have 90-100ksol. If you warned me at least couple of hours prior - I can load nicehash";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"03-Aug-19 06:57 PM";"`where are the mienrs at?`
+most of them are enjoying their Saturday, because they have a life :troll_lol:";"";"😂 (1)";
+"458262320775430155";"kolo#1111";"03-Aug-19 06:59 PM";"Loading now?";"";"";
+"458262320775430155";"kolo#1111";"03-Aug-19 07:00 PM";"@SHossain ?";"";"";
+"412323938782150658";"SHossain#0007";"03-Aug-19 07:01 PM";"yes please";"";"";
+"412323938782150658";"SHossain#0007";"03-Aug-19 07:01 PM";"i'm putting my mini too";"";"";
+"458262320775430155";"kolo#1111";"03-Aug-19 07:01 PM";"Loaded";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 07:01 PM";"Can you run a script to turn the CPU mining off and on for 1 solve per second?";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 07:02 PM";"probably would need to make a custom miner that does one solve per second";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 07:02 PM";"What is the CPU solve rate?";"";"";
+"412323938782150658";"SHossain#0007";"03-Aug-19 07:02 PM";"@ComputerGenie 👴🏼📢 no remote access to your miners? :abused_smiley:";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 07:02 PM";"each CPU gets about 2 sols";"";"";
+"412323938782150658";"SHossain#0007";"03-Aug-19 07:02 PM";"diff rising";"";"";
+"412323938782150658";"SHossain#0007";"03-Aug-19 07:03 PM";"@kolo 's miner found block";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 07:03 PM";"ht 177: diff 630";"";"";
+"352488299077566475";"zawy#5864";"03-Aug-19 07:03 PM";"If IP address != CPU then multiply target by 10000";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 07:04 PM";"178: 1056";"";"";

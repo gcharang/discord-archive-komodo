@@ -1,0 +1,280 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"396753788150611968";"B. Gültekin Çetiner#0626";"11-Aug-18 04:54 AM";"Anyone is working on mobile version of Hyperdex or Barterdex? It would be great. A mobile DEX Similar to Shapeshift or much easier  to use would be very nice.";"";"";
+"347922216429813760";"grewalsatinder#9653";"11-Aug-18 08:31 AM";"Would be possible after mm2.0";"";"";
+"405380797537976320";"Cryptoon#3362";"11-Aug-18 08:52 AM";"MM2.0 is planned for Q1 2019, mobile dex Q2 was the last I saw";"";"";
+"369608312955731968";"Bryan_Beus#6442";"12-Aug-18 03:16 PM";"Working on a Komodo-related personal project, and am spinning my wheels trying to query the database for properties on every item.
+
+Anyone have time to help?
+
+I described the problem in full detail here:
+
+https://stackoverflow.com/questions/51810083/how-to-query-almost-the-entire-postgresql-database-for-a-property-on-every-item";"";"";
+"209024368968204288";"artemciy_dice#0049";"12-Aug-18 10:50 PM";"@Bryan_Beus , consider making MCVE of your database structre in http://sqlfiddle.com/, we could then fiddle with it to see if it will work with recursive queries.
+You could also use the user-defined functions (https://www.postgresql.org/docs/9.6/static/xfunc-c.html) to cut on the network roundtrips. I've good experience with C ones, but JavaScript as well is an option (https://plv8.github.io/).";"";"👍 (1)";
+"369608312955731968";"Bryan_Beus#6442";"13-Aug-18 06:00 AM";"Thank you. Taking a look at these suggestions.";"";"";
+"365714438864633856";"dukeleto#7326";"13-Aug-18 06:33 AM";"@webworker01 z_sendmany in Zcash does not allow the same address to appear multiple times as receiver, i.e. prevents duplicated vouts, but you are talking about something different. My guess is that a similar check is being done, but I am not sure. what error do you get?";"";"";
+"365714438864633856";"dukeleto#7326";"13-Aug-18 06:34 AM";"Hush *does* allow duplicate receivers and so you can effectively send much more data in a memo field with one transaction. Zcash decided not to take the patch. In case anybody wanted to know.";"";"";
+"365714438864633856";"dukeleto#7326";"13-Aug-18 06:35 AM";"oh gosh, not very helpful error";"";"";
+"365714438864633856";"dukeleto#7326";"13-Aug-18 06:35 AM";"that means you broke a consensus rule";"";"";
+"365714438864633856";"dukeleto#7326";"13-Aug-18 06:35 AM";"but no idea which one. There may be a consensus rule about duplicate vouts";"";"";
+"365714438864633856";"dukeleto#7326";"13-Aug-18 06:36 AM";"which backend electrum server are you talking to?";"";"";
+"365714438864633856";"dukeleto#7326";"13-Aug-18 06:37 AM";"i am looking at the electrumX source code, and that error happens when `sendrawtransaction` throws an error";"";"";
+"365714438864633856";"dukeleto#7326";"13-Aug-18 06:38 AM";"```    async def transaction_broadcast(self, raw_tx):
+        '''Broadcast a raw transaction to the network.
+
+        raw_tx: the raw transaction as a hexadecimal string'''
+        # This returns errors as JSON RPC errors, as is natural
+        try:
+            tx_hash = await self.daemon.sendrawtransaction([raw_tx])
+            self.txs_sent += 1
+            self.logger.info('sent tx: {}'.format(tx_hash))
+            self.controller.sent_tx(tx_hash)
+            return tx_hash
+        except DaemonError as e:
+            error, = e.args
+            message = error['message']
+            self.logger.info('sendrawtransaction: {}'.format(message))
+            raise RPCError(BAD_REQUEST, 'the transaction was rejected by '
+                           f'network rules.\n\n{message}\n[{raw_tx}]')```";"";"";
+"365714438864633856";"dukeleto#7326";"13-Aug-18 06:39 AM";"good to know, electrumx 2.x has changed a lot";"";"";
+"365714438864633856";"dukeleto#7326";"13-Aug-18 06:40 AM";"I have never seen the same address multiple times as a vout in an explorer, my guess is sendrawtransaction checks for that";"";"";
+"365714438864633856";"dukeleto#7326";"13-Aug-18 06:40 AM";"may I ask what you are trying to do?";"";"";
+"365714438864633856";"dukeleto#7326";"13-Aug-18 06:45 AM";"@webworker01 it looks like this error is generated from `AcceptToMemoryPool` failing, if that helps";"";"";
+"365714438864633856";"dukeleto#7326";"13-Aug-18 06:45 AM";"```        if (!AcceptToMemoryPool(mempool, state, tx, false, &fMissingInputs, !fOverrideFees)) {
+            if (state.IsInvalid()) {
+                throw JSONRPCError(RPC_TRANSACTION_REJECTED, strprintf(""%i: %s"", state.GetRejectCode(), state.GetRejectReason()));
+            } else {```";"";"";
+"365714438864633856";"dukeleto#7326";"13-Aug-18 06:46 AM";"from src/rpcrawtransaction.cpp in KMD";"";"";
+"365714438864633856";"dukeleto#7326";"13-Aug-18 06:47 AM";"@webworker01 if this only happens sometimes, it's not the duplicate address, it sounds like you have utxos going in and out of the mempool and something isn't ready maybe?";"";"";
+"365714438864633856";"dukeleto#7326";"13-Aug-18 06:47 AM";"@webworker01 perhaps just do a retry in your code? maybe with a small sleep";"";"";
+"365714438864633856";"dukeleto#7326";"13-Aug-18 07:19 AM";"👍";"";"";
+"455741312273219595";"jl777c#5810";"13-Aug-18 08:46 AM";"I changed sendmany to allow duplicate addresses";"";"";
+"455741312273219595";"jl777c#5810";"13-Aug-18 08:46 AM";"this was a few months ago when I tried to use it and it gave me a silly error";"";"shexy (1),👍 (1)";
+"369608312955731968";"Bryan_Beus#6442";"13-Aug-18 12:57 PM";"@Mylo @artemciy_dice 
+Thanks for the suggestions.
+
+I found a good-enough fix for now. It's not recursive, but it'll do.
+
+The problem turned out to be deriving from the asynchronous nature of the calls to the database. I was getting the final `callback` event called multiple times.
+
+Used something that I've never used before, called a semaphore -- a variable where teh value goes up with each call, and goes down once the data is processed. Final event can only call if the semaphore's value has return to zero.
+
+Almost done with this project! Thank you for the help.";"";"Komodo (3)";
+"455741312273219595";"jl777c#5810";"13-Aug-18 02:51 PM";"electrum has sendrawtransaction so if you create the transaction the network will accept it";"";"";
+"455741312273219595";"jl777c#5810";"13-Aug-18 02:55 PM";"notary splitfunds are sendmany with the same destination";"";"";
+"455741312273219595";"jl777c#5810";"13-Aug-18 02:59 PM";"iguana or marketmaker does it";"";"";
+"430818734530101248";"KomodoWorld#8282";"13-Aug-18 06:51 PM";"https://vitalik.ca/general/2018/08/07/99_fault_tolerant.html";"";"";
+"455741312273219595";"jl777c#5810";"13-Aug-18 07:42 PM";"no need for it";"";"👌 (1)";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 06:48 AM";"Another question. 
+
+Using Sequelize.js as middleware for PostgreSQL, I'm able to perform an `INSERT INTO` command to create an item in a table when I'm using my development database.
+
+However, once I switch to my test database, I receive an error that the table doesn't exits.
+
+I wrote out a more detailed description here:
+
+https://stackoverflow.com/questions/51835172/sequelize-error-relation-does-not-exist
+
+Anyone have any ideas why this isn't working?";"";"";
+"371114647052615681";"Mylo#8306";"14-Aug-18 07:01 AM";"hey @Bryan_Beus , 
+Things to check are:
+ - same version of postgres and compat with sequalize lib
+ - manually create the table on test db from the schema on dev, maybe you went from dev mode of ""drop & create tables"" in a sequelize setting, to ""do nothing"" on restart of your app at some stage whilst you were deving because you didn't want to keep inserting test data, `grep -ril ""sequalize.sync"" *` from your src root re: https://stackoverflow.com/questions/50761914/sequelize-migration-recreate-table";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:03 AM";"ok, will take a look at those soon. Thank you.";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:04 AM";"Do you mean to say, @Mylo, that the two databases could be based on different version of postgres?";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:04 AM";"I've dropped and re-migrated the tables multiple times.";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:04 AM";"`sequelize db:migrate:undo:all && sequelize db:migrate:undo:all --env test`";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:04 AM";"and then";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:04 AM";"`sequelize db:migrate && sequelize db:migrate --env test`";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:05 AM";"And I can log in to the `komodo-resources-test` database and see `Trees`";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:05 AM";"It's empty";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:05 AM";"Which it should be.";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:05 AM";"Should only fill up during testing.";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:06 AM";"And then I can switch to the `komodo-resources-dev` database and see whatever's there, including when there's something supposed to be there.";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:06 AM";"weird that it would work on dev but not on test...";"";"";
+"371114647052615681";"Mylo#8306";"14-Aug-18 07:08 AM";"can you do the `insert into trees...` query from command line on the test db?";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:08 AM";"Also, I'm not seeing any issues pop up with the `PrimaryTopics` table during the test, so the issue is isolated to test";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:08 AM";"I'll try real quick";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:08 AM";"one sec";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:15 AM";"```
+komodo-resources-test=# SELECT * FROM ""Trees"";
+ id | title | content | createdAt | updatedAt 
+----+-------+---------+-----------+-----------
+(0 rows)
+
+komodo-resources-test=# INSERT INTO ""Trees"" (id, title, content, createdAt, updatedAt) VALUES (DEFAULT, ""Test"", ""testing more"", '2018', '2018');                                                                                                                                      ERROR:  column ""createdat"" of relation ""Trees"" does not exist
+LINE 1: INSERT INTO ""Trees"" (id, title, content, createdAt, updatedA...
+                                                 ^
+komodo-resources-test=# INSERT INTO ""Trees"" (id, title, content, createdAt, updatedAt) VALUES (DEFAULT, ""Test"", ""testing more"", TIMESTAMP '2013-03-13 19:06:00', TIMESTAMP '2013-03-13 19:06:00');
+ERROR:  column ""createdat"" of relation ""Trees"" does not exist
+LINE 1: INSERT INTO ""Trees"" (id, title, content, createdAt, updatedA...
+                                                 ^
+```";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:41 AM";"I tried mimicking the `INSERT INTO...` command that I can see in the error output when I run the test. 
+
+I get an interesting error:
+
+```
+komodo-resources-test=# INSERT INTO ""Trees"" (""id"",""title"",""content"",""createdAt"",""updatedAt"") VALUES (DEFAULT,\'topicTree\',\'[{""title"":""Title: Hello World"",""id"":1,""secondaryTopics"":[]},{""title"":""Title: New Primary Topic"",""id"":2,""secondaryTopics"":[]}]\',\'2018-08-14 07:38:33.732 +00:00\',\'2018-08-14 07:38:33.732 +00:00\');
+Invalid command \'topicTree. Try \? for help.
+```";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:41 AM";"it shouldn't be doing a command....";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:47 AM";"I think the error is somehow related to the way I'm putting strings into the database.";"";"";
+"371114647052615681";"Mylo#8306";"14-Aug-18 07:51 AM";"`createdat` vs `createdAt` is postgres case sensitive for column names in queries.  `ERROR:  column ""createdat"" of relation ""Trees"" does not exist`";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:53 AM";"I've tried it both ways, but will try again.
+
+I type it `createdAt` and postgres makes it `createdat` in the error output.";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:54 AM";"```
+komodo-resources-test=# INSERT INTO ""Trees"" (""id"",""title"",""content"",""createdAt"",""updatedAt"") VALUES (DEFAULT,""Title: Hello World"",""<p>Content: Hello World</p>"",""2018-08-14 07:49:08.289 +00:00"",""2018-08-14 07:49:08.289 +00:00"");
+ERROR:  column ""Title: Hello World"" does not exist
+LINE 1: ...content"",""createdAt"",""updatedAt"") VALUES (DEFAULT,""Title: He...
+```";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 07:55 AM";"On another note, I'm getting this error where the values I put into postgres are getting interpreted as calls for columns.";"";"";
+"371114647052615681";"Mylo#8306";"14-Aug-18 07:57 AM";"Check your use of double quotes for column name, single quotes for values inserted.  I've not used postgres for 10 years but an example from a tutorial site just has `INSERT INTO link (url, name)
+VALUES
+ ('http://www.oreilly.com','O''Reilly Media');`";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 08:02 AM";"Finally able to do it.";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 08:02 AM";"```
+komodo-resources-test=# INSERT INTO ""Trees"" (id, title, content, ""createdAt"", ""updatedAt"") VALUES (1, 'test', 'testing', '2018-08-14 07:49:08.289 +00:00', '2018-08-14 07:49:08.289 +00:00');
+INSERT 0 1
+komodo-resources-test=# SELECT * FROM ""Trees"";
+ id | title | content |         createdAt          |         updatedAt          
+----+-------+---------+----------------------------+----------------------------
+  1 | test  | testing | 2018-08-13 23:49:08.289-08 | 2018-08-13 23:49:08.289-08
+(1 row)
+
+komodo-resources-test=# 
+```";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 08:02 AM";"So, yes, I can add stuff...";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 08:02 AM";"amazing how difficult that turned out to be...";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 08:03 AM";"It's because `Sequelize.js` changes some of the column methods.";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 08:04 AM";"Let's see, if I turn off `.sync({ force: true })`, and leave the database as is, we might be able to get something out of this...";"";"";
+"369608312955731968";"Bryan_Beus#6442";"14-Aug-18 08:24 AM";"Alright, I figured out what was wrong.
+
+I had a function in my controllers that I had removed from the top portion of my code, but not from the `module.exports` stuff. 
+
+Once I removed those, it was relatively easy to get everything else doen.
+
+This is one of the challenges of using this setup: you get errors that point in the wrong direction sometimes.";"";"";
+"371114647052615681";"Mylo#8306";"14-Aug-18 04:14 PM";"there's 60 wallet rpc functions.  thanks goodness for search and replace!!";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 09:40 AM";"@Mylo Let me know when you get back. I'm poking around with the python stuff now.";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 09:40 AM";"I'm on Python 2.7";"";"";
+"371114647052615681";"Mylo#8306";"15-Aug-18 10:52 AM";"I'm back";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 11:07 AM";"great, I'm back too.";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 11:07 AM";"😃";"";"";
+"371114647052615681";"Mylo#8306";"15-Aug-18 11:08 AM";"what's your system?";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 11:08 AM";"I need to get this python build thing up and running. 
+
+When I try to do `pip install sphinx sphinx-autobuild`, I get this error:
+
+Traceback (most recent call last):
+  File ""/usr/bin/pip"", line 9, in <module>
+    from pip import main
+ImportError: cannot import name main";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 11:08 AM";"ubuntu 18.04";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 11:09 AM";"It looks like python 2.7 is installed by default";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 11:09 AM";"I read up on it, and it seems that doing a non-default upgrade can lead to some issues in compatibility. Maybe it's nothing to worry about, though.";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 11:10 AM";"Seems like it would install two separate instances of python -- one for personal use, and one for the system. Just have to always use `python3` instead of `python` in the terminal.";"";"";
+"371114647052615681";"Mylo#8306";"15-Aug-18 11:13 AM";"ok i always fumble my way through python and there's two ways to go that i know of.  1, set up `virtualenv` so you can run multiple python versions and hop between them; or, 2, install a particular version of pip that will work.  i went for 2 last time i mucked aroudn with this doc stuff.  i'll see if it's still in my history";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 11:13 AM";"I can go for 2 as well";"";"";
+"371114647052615681";"Mylo#8306";"15-Aug-18 11:16 AM";"```
+ history | grep pip
+  834  pip install --upgrade pip
+  835  pip install sphinx sphinx-autobuild
+  836  pip install --user sphinx_rtd_theme
+  837  pip --version
+  838  apt-get remove python-pip
+  839  pip install --user sphinx_rtd_theme
+  840  apt-get install python-pip
+  841  pip install --user sphinx_rtd_theme
+  842  pip install --upgrade pip==9.0.3
+  844  python3 -m pip uninstall pip
+  845  apt install python3-pip --reinstall
+  846  python3 -m pip
+  847  pip install --user sphinx_rtd_theme
+  848  python3 -m pip uninstall pip
+  850  python3 -m pip uninstall pip
+  851  apt-get remove python-pip
+  853  apt-get install python-pip
+  854  pip --version
+  856  pip --help
+  857  python3 -m pip --version
+  858  python3 -m pip --upgrade pip==9.0.3
+  859  python3 -m pip upgrade pip==9.0.3
+  861  python3 -m pip -h
+  862  python3 -m pip install 
+  863  python3 -m pip install --upgrade pip==9.0.3
+  864  python3 -m pip install sphinx sphinx-autobuild
+  865  python3 -m pip install setuptoo
+  866  python3 -m pip install sphinx sphinx-autobuild
+  867  python3 -m pip install --user sphinx_rtd_theme
+  881  python3 -m pip install sphinx_rtd_them
+  882  python3 -m pip install --user sphinx_rtd_theme
+  990  python3 -m pip install sphinxjp.themes.bizstyle
+ 1009  python3 -m pip install sphinxjp.themes.nature
+ 1010  python3 -m pip install sphinxjp.themes.pyramid
+ 1012  python3 -m pip install sphinxjp.themes
+ 1013  python3 -m pip install sphinxjp.themes.agogo
+ 1014  python3 -m pip install sphinxjp.themes.scrolls
+ 1015  python3 -m pip install sphinxjp.themes.alabaster
+ 1016  python3 -m pip install sphinxjp.themes.traditional
+ 1017  python3 -m pip install sphinxjp.themes.dotted
+ 1198  python3 -m pip install awscli --upgrade --user
+ 1201  python3 -m pip install awscli --upgrade 
+ 1203  python3 -m pip install awscli --upgrade --user
+```
+awesome, just a matter of finding the right combo 🎉";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 11:17 AM";"Getting this error trying to get `easy_install pip` on the machine first. Not sure if it's necessary.
+
+```
+Traceback (most recent call last):
+  File ""/usr/bin/easy_install"", line 11, in <module>
+    load_entry_point('setuptools==36.2.7', 'console_scripts', 'easy_install')()
+  File ""/home/siddhartha/.local/lib/python2.7/site-packages/pkg_resources/__init__.py"", line 479, in load_entry_point
+    return get_distribution(dist).load_entry_point(group, name)
+  File ""/home/siddhartha/.local/lib/python2.7/site-packages/pkg_resources/__init__.py"", line 2703, in load_entry_point
+    return ep.load()
+  File ""/home/siddhartha/.local/lib/python2.7/site-packages/pkg_resources/__init__.py"", line 2321, in load
+    return self.resolve()
+  File ""/home/siddhartha/.local/lib/python2.7/site-packages/pkg_resources/__init__.py"", line 2327, in resolve
+    module = __import__(self.module_name, fromlist=['__name__'], level=0)
+  File ""/usr/lib/python2.7/dist-packages/setuptools/command/easy_install.py"", line 51, in <module>
+    from setuptools.archive_util import unpack_archive
+  File ""/usr/lib/python2.7/dist-packages/setuptools/archive_util.py"", line 11, in <module>
+    from pkg_resources import ensure_directory, ContextualZipFile
+ImportError: cannot import name ContextualZipFile
+```";"";"";
+"371114647052615681";"Mylo#8306";"15-Aug-18 11:17 AM";"lmfind python history";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 11:18 AM";"so, do all of these?";"";"";
+"371114647052615681";"Mylo#8306";"15-Aug-18 11:18 AM";"no hold on.";"";"";
+"371114647052615681";"Mylo#8306";"15-Aug-18 11:18 AM";"`pip --version` have you got pip installed?";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 11:19 AM";"hmm, maybe not";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 11:19 AM";"thought I did";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 11:19 AM";"```
+Traceback (most recent call last):
+  File ""/usr/bin/pip"", line 9, in <module>
+    from pip import main
+ImportError: cannot import name main
+siddhartha@aang:~/Documents/01-Studio/0
+```";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 11:19 AM";"I tried to do that `easy_install pip` command, but got the same traceback error";"";"";
+"371114647052615681";"Mylo#8306";"15-Aug-18 11:19 AM";"ok what about `python` then ctrl-d to get out of interactive mode";"";"";
+"371114647052615681";"Mylo#8306";"15-Aug-18 11:19 AM";"what version";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 11:19 AM";"2.7.14";"";"";
+"371114647052615681";"Mylo#8306";"15-Aug-18 11:20 AM";"ah cool me too!";"";"";
+"371114647052615681";"Mylo#8306";"15-Aug-18 11:20 AM";"2.7.x";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 11:20 AM";"```
+$ sudo apt-get install python-pip python-dev build-essential
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+build-essential is already the newest version (12.4ubuntu1).
+python-dev is already the newest version (2.7.14-2ubuntu1).
+python-pip is already the newest version (9.0.1-2).
+0 upgraded, 0 newly installed, 0 to remove and 1 not upgraded.
+```";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 11:21 AM";"It says pip is installed, but it doesn't respond when I try anything else.";"";"";
+"371114647052615681";"Mylo#8306";"15-Aug-18 11:21 AM";"np";"";"";
+"369608312955731968";"Bryan_Beus#6442";"15-Aug-18 11:21 AM";"g2k the version of python isn't the issue";"";"";
+"371114647052615681";"Mylo#8306";"15-Aug-18 11:21 AM";"`python3 -m pip install --upgrade pip==9.0.3`";"";"";
+"371114647052615681";"Mylo#8306";"15-Aug-18 11:21 AM";"try that";"";"";

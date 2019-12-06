@@ -1,0 +1,597 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[04-Sep-18 08:32 PM] jl777c#5810
+keep in mind the data needs to fit the format
+
+{Reactions}
+👌 
+
+[04-Sep-18 08:32 PM] jl777c#5810
+but yes, as long as it is encoded properly, that should work
+
+[04-Sep-18 08:33 PM] jl777c#5810
+there is format 's', which is a string less than 256 bytes long
+
+[04-Sep-18 08:33 PM] jl777c#5810
+but it all needs to be converted to hex so the oraclesdata just gets a hexstring blob
+
+[04-Sep-18 08:35 PM] TonyL#3577
+Is the 'S' have principal differences over 's' except of length size?
+
+[04-Sep-18 08:40 PM] jl777c#5810
+'S' is for strings longer than 256 bytes
+
+[04-Sep-18 08:40 PM] jl777c#5810
+i need to know how many length bytes there will be in the hexstring
+
+[04-Sep-18 08:40 PM] jl777c#5810
+you need to put the little endian length first, then the exact number of chars for the string
+
+[04-Sep-18 08:41 PM] jl777c#5810
+also, oraclesinfo will show a batontxid, that should be the most recent (confirmed) data point. so it starts from there and goes backwards
+
+[04-Sep-18 08:47 PM] TonyL#3577
+Aha, so most recent batontxid like a hook/state to jump into this oracle data, in current batontxid hashed previous one and so on?
+
+[04-Sep-18 08:48 PM] jl777c#5810
+each data tx has the previous batontxid
+
+[04-Sep-18 08:48 PM] jl777c#5810
+yes, it creates a backwards linked list
+
+[04-Sep-18 08:49 PM] jl777c#5810
+oraclessamples traverses this list
+
+[04-Sep-18 08:49 PM] TonyL#3577
+More clear now how it's work, thanks 👍
+
+[04-Sep-18 09:55 PM] Alright#0419 (pinned)
+`./komodod -ac_cc=1 -ac_name=ORCL -addressindex=1 -spentindex=1 -ac_supply=1000 -ac_reward=10000000000000 -addnode=195.201.20.230 -addnode=195.201.137.5`
+build from FSM branch
+
+[04-Sep-18 09:55 PM] Alright#0419
+@TonyL
+
+[04-Sep-18 09:55 PM] Alright#0419
+Pinned a message.
+
+[05-Sep-18 05:56 AM] jl777c#5810
+oraclefeed.c now works, you do need to customize it a bit:
+#define ORACLETXID "4895f631316a649e216153aee7a574bd281686265dc4e8d37597f72353facac3"
+#define MYPUBKEY "02ebc786cb83de8dc3922ab83c21f3f8a2f3216940c3bf9da43ce39e2a3a882c92"
+
+[05-Sep-18 05:56 AM] jl777c#5810
+it gets the bitcoin price and writes it out
+
+[05-Sep-18 05:56 AM] jl777c#5810
+format of "L"
+
+[05-Sep-18 05:57 AM] jl777c#5810
+yo have to manually create an oracle txid, register and subscribe
+
+[05-Sep-18 05:57 AM] jl777c#5810
+then it just loops every minute. it might get an error if the prior one isnt confirmed
+
+[05-Sep-18 05:59 AM] jl777c#5810
+FSM branch
+
+[05-Sep-18 07:15 AM] TonyL#3577
+Thanks @Alright ! 
+@jl777c Will test this one after basic calls test and text data I/O test
+
+[05-Sep-18 07:40 AM] TonyL#3577
+```
+root@ubuntu-16gb-nbg1-1 ~/fsm_branch/komodo/src # ./komodo-cli -ac_name=ORCL oraclesinfo 4a1173676264ba5ee0803fd2a076f916075221fcdae3bee053438af226956ecf
+{
+  "result": "success",
+  "txid": "4a1173676264ba5ee0803fd2a076f916075221fcdae3bee053438af226956ecf",
+  "name": "Oracle1",
+  "description": "testing oracle",
+  "format": "s",
+  "marker": "RYDQVjt3XR4EW8uqDpKZ28pTAjmhFouZ3m",
+  "registered": [
+    {
+      "provider": "02a6fccee9503330091a2a2d92741cea93fa0157688406e2c755cbcce7e96b30e7",
+      "baton": "RSHvgCPCPMwJbH7SmzRPWUoDrBtufjyvKQ",
+      "batontxid": "d81df6fb18e3e19bbae27b3b97775e7243a2277aaffddafbcab702984f04625f",
+      "lifetime": "0.00000000",
+      "funds": "0.00000000",
+      "datafee": "0.00000001"
+    }
+  ]
+}
+```
+```
+./komodo-cli -ac_name=ORCL oraclesdata 4a1173676264ba5ee0803fd2a076f916075221fcdae3bee053438af226956ecf 4B6F6D6F646F20726F636B73
+{
+  "result": "error",
+  "error": "couldnt publish data with oracle txid"
+}
+```
+```
+commit 912c8a4d3ded45fe080ddcc38afe1546ca921667 (HEAD -> FSM, origin/FSM)
+Author: jl777 <jameslee777@yahoo.com>
+Date:   Tue Sep 4 18:59:05 2018 -1100
+
+    -print
+```
+Nothing in daemon logs @jl777c
+
+[05-Sep-18 07:42 AM] jl777c#5810
+"funds": "0.00000000",
+
+[05-Sep-18 07:42 AM] jl777c#5810
+without funds from subscriber, no data
+
+[05-Sep-18 07:42 AM] TonyL#3577
+Ohh
+
+[05-Sep-18 07:43 AM] TonyL#3577
+So only option to top-up it for creator is subscribe on itself plan with some payment?
+
+[05-Sep-18 08:01 AM] TonyL#3577
+@jl777c  After ```./komodo-cli -ac_name=ORCL oraclessubscribe 4a1173676264ba5ee0803fd2a076f916075221fcdae3bee053438af226956ecf 02a6fccee9503330091a2a2d92741cea93fa0157688406e2c755cbcce7e96b30e7 100```
+
+I can generate hex for:
+```
+./komodo-cli -ac_name=ORCL oraclesdata 4a1173676264ba5ee0803fd2a076f916075221fcdae3bee053438af226956ecf 4B6F6D6F646F20726F636B73{
+  "result": "success",
+  "hex": "0100000003b4b52688cf8633926ec3a22d2f84342bef7c580771286856d66a3ffd101665f7020000004847304402200a03a293181c2ac50d4bc92f2ba3a560eacac7e7242128a8a671d345db540d91022001ddb311cc81bcd873045e809e20337fe094783e2eb448d9d542e08246b33fd101ffffffff5f62044f9802b7cafbdafdaf7a27a243725e77973b7be2ba9be1e318fbf61dd8010000007b4c79a276a072a26ba067a5658021032fb43bcd5a6b1589dc8f58128decc2785e3d89f16faade72402425c8cc5860078140feb2edfa9de8880f1c4dd6d2cb9fbc8ff1df8dbdfa8c308e7e0be3d3fd6875f207fde8e1100708b0949c7a8691c07b618a7a4e4e3864b6dceebb040da2486aa7a100af038001eca10001ffffffffb4b52688cf8633926ec3a22d2f84342bef7c580771286856d66a3ffd101665f7000000007b4c79a276a072a26ba067a565802102a6fccee9503330091a2a2d92741cea93fa0157688406e2c755cbcce7e96b30e7814057bc2dbd37f492406f4b06b2c3842b62912dd69c9f56daaad1ad20ba9370c9803b64fc5517545bdd5341caf751b46cc5cf54a8f6cf2c593b9fdce06f986cb8f9a100af038001eca10001ffffffff05ffe30b5402000000302ea22c80202e544ca5c4202011efa857eca6df079eb098e336608bd1022f1102f4d7430df48103120c008203000401cc1027000000000000302ea22c802071bd0bc7052c1159d0b54369ff284e9f5757ffa3dec19454c5edb3cd548812f78103120c008203000401cc0100000000000000232102a6fccee9503330091a2a2d92741cea93fa0157688406e2c755cbcce7e96b30e7ac808365fa15090000232102a6fccee9503330091a2a2d92741cea93fa0157688406e2c755cbcce7e96b30e7ac0000000000000000746a4c71ec44cf6e9526f28a4353e0bee3dafc21520716f976a0d23f80e05eba64626773114a5f62044f9802b7cafbdafdaf7a27a243725e77973b7be2ba9be1e318fbf61dd82102a6fccee9503330091a2a2d92741cea93fa0157688406e2c755cbcce7e96b30e70c4b6f6d6f646f20726f636b7300000000"
+}
+```
+
+[05-Sep-18 08:02 AM] TonyL#3577
+But then:
+```
+./komodo-cli -ac_name=ORCL sendrawtransaction 0100000003b4b52688cf8633926ec3a22d2f84342bef7c580771286856d66a3ffd101665f7020000004847304402200a03a293181c2ac50d4bc92f2ba3a560eacac7e7242128a8a671d345db540d91022001ddb311cc81bcd873045e809e20337fe094783e2eb448d9d542e08246b33fd101ffffffff5f62044f9802b7cafbdafdaf7a27a243725e77973b7be2ba9be1e318fbf61dd8010000007b4c79a276a072a26ba067a5658021032fb43bcd5a6b1589dc8f58128decc2785e3d89f16faade72402425c8cc5860078140feb2edfa9de8880f1c4dd6d2cb9fbc8ff1df8dbdfa8c308e7e0be3d3fd6875f207fde8e1100708b0949c7a8691c07b618a7a4e4e3864b6dceebb040da2486aa7a100af038001eca10001ffffffffb4b52688cf8633926ec3a22d2f84342bef7c580771286856d66a3ffd101665f7000000007b4c79a276a072a26ba067a565802102a6fccee9503330091a2a2d92741cea93fa0157688406e2c755cbcce7e96b30e7814057bc2dbd37f492406f4b06b2c3842b62912dd69c9f56daaad1ad20ba9370c9803b64fc5517545bdd5341caf751b46cc5cf54a8f6cf2c593b9fdce06f986cb8f9a100af038001eca10001ffffffff05ffe30b5402000000302ea22c80202e544ca5c4202011efa857eca6df079eb098e336608bd1022f1102f4d7430df48103120c008203000401cc1027000000000000302ea22c802071bd0bc7052c1159d0b54369ff284e9f5757ffa3dec19454c5edb3cd548812f78103120c008203000401cc0100000000000000232102a6fccee9503330091a2a2d92741cea93fa0157688406e2c755cbcce7e96b30e7ac808365fa15090000232102a6fccee9503330091a2a2d92741cea93fa0157688406e2c755cbcce7e96b30e7ac0000000000000000746a4c71ec44cf6e9526f28a4353e0bee3dafc21520716f976a0d23f80e05eba64626773114a5f62044f9802b7cafbdafdaf7a27a243725e77973b7be2ba9be1e318fbf61dd82102a6fccee9503330091a2a2d92741cea93fa0157688406e2c755cbcce7e96b30e70c4b6f6d6f646f20726f636b7300000000
+error code: -26
+error message:
+64: dust
+```
+
+```
+2018-09-05 07:59:41 ERROR: AcceptToMemoryPool: nonstandard transaction: dust
+```
+
+[05-Sep-18 08:02 AM] jl777c#5810
+"datafee": "0.00000001"
+too small
+
+[05-Sep-18 08:03 AM] jl777c#5810
+I will add error check to prevent too low datafee
+
+[05-Sep-18 08:03 AM] TonyL#3577
+Have to set > than tx fee?
+
+[05-Sep-18 08:04 AM] jl777c#5810
+>= yes
+
+{Reactions}
+👌 
+
+[05-Sep-18 08:24 AM] TonyL#3577
+@jl777c  Registered same oracle again with more datafee:
+```
+./komodo-cli -ac_name=ORCL oraclesinfo 4a1173676264ba5ee0803fd2a076f916075221fcdae3bee053438af226956ecf
+{
+  "result": "success",
+  "txid": "4a1173676264ba5ee0803fd2a076f916075221fcdae3bee053438af226956ecf",
+  "name": "Oracle1",
+  "description": "testing oracle",
+  "format": "s",
+  "marker": "RYDQVjt3XR4EW8uqDpKZ28pTAjmhFouZ3m",
+  "registered": [
+    {
+      "provider": "02a6fccee9503330091a2a2d92741cea93fa0157688406e2c755cbcce7e96b30e7",
+      "baton": "RSHvgCPCPMwJbH7SmzRPWUoDrBtufjyvKQ",
+      "batontxid": "be4c58176abb92a2b0b0e12ce2ca0a34937e8af65947e0ec3d23d67762f568f1",
+      "lifetime": "100.00000000",
+      "funds": "99.99000000",
+      "datafee": "0.00000001"
+    },
+    {
+      "provider": "02a6fccee9503330091a2a2d92741cea93fa0157688406e2c755cbcce7e96b30e7",
+      "baton": "RSHvgCPCPMwJbH7SmzRPWUoDrBtufjyvKQ",
+      "batontxid": "be4c58176abb92a2b0b0e12ce2ca0a34937e8af65947e0ec3d23d67762f568f1",
+      "lifetime": "100.00000000",
+      "funds": "99.99000000",
+      "datafee": "0.00000001",
+      "provider": "02a6fccee9503330091a2a2d92741cea93fa0157688406e2c755cbcce7e96b30e7",
+      "baton": "RSHvgCPCPMwJbH7SmzRPWUoDrBtufjyvKQ",
+      "batontxid": "be4c58176abb92a2b0b0e12ce2ca0a34937e8af65947e0ec3d23d67762f568f1",
+      "lifetime": "100.00000000",
+      "funds": "99.99000000",
+      "datafee": "0.01000000"
+    }
+  ]
+}
+```
+Published this data:
+```./komodo-cli -ac_name=ORCL oraclesdata 4a1173676264ba5ee0803fd2a076f916075221fcdae3bee053438af226956ecf 4B6F6D6F646F20726F636B73```
+
+Receiving empty data for batonid of data published above:
+```
+./komodo-cli -ac_name=ORCL oraclessamples 4a1173676264ba5ee0803fd2a076f916075221fcdae3bee053438af226956ecf be4c58176abb92a2b0b0e12ce2ca0a34937e8af65947e0ec3d23d67762f568f1 100
+{
+  "result": "success",
+  "samples": [
+    [
+    ]
+  ]
+}
+```
+
+[05-Sep-18 08:27 AM] jl777c#5810
+be4c58176abb92a2b0b0e12ce2ca0a34937e8af65947e0ec3d23d67762f568f1 is the original register txid, which has no data
+
+[05-Sep-18 08:27 AM] jl777c#5810
+the batontxid should change to the txid of the oraclesdata
+
+[05-Sep-18 08:27 AM] TonyL#3577
+No, it's changed, I just used above output of oraclesinfo after data publishing
+
+[05-Sep-18 08:28 AM] TonyL#3577
+It's changed on txid which I've received after data publishing rawtransaction broadcast
+
+[05-Sep-18 08:29 AM] TonyL#3577
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/486815113186115584/unknown.png
+
+[05-Sep-18 08:30 AM] jl777c#5810
+until it confirms, it doesnt change in oraclesinfo
+
+[05-Sep-18 08:30 AM] jl777c#5810
+do oraclesinfo, it should update to latest CONFIRMED oraclesdata txid
+
+[05-Sep-18 08:30 AM] jl777c#5810
+use that for the oraclessamples
+
+[05-Sep-18 08:31 AM] TonyL#3577
+Thats what I did
+
+[05-Sep-18 08:31 AM] TonyL#3577
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/486815628007571456/unknown.png
+
+[05-Sep-18 08:32 AM] jl777c#5810
+format of 's' makes data of 4B6F6D6F646F20726F636B73 invalid
+
+[05-Sep-18 08:32 AM] jl777c#5810
+first byte needs to be length of string, that means 0x4B chars needed
+
+[05-Sep-18 08:32 AM] jl777c#5810
+when I said you cant make mistakes with the rpc calls, this is what I meant
+
+[05-Sep-18 08:32 AM] jl777c#5810
+hexstring for oraclesdata MUST match the format exactly
+
+[05-Sep-18 08:36 AM] TonyL#3577
+In `oracles.cpp` format described just as a ` 's' -> <256 char string`
+Confused a little bit with what actually I have to input. Will read the doc and your posts above carefully again and back to it.
+
+[05-Sep-18 08:37 AM] jl777c#5810
+0440404040 would be a string of length 4, repeating ASCII value 64
+
+[05-Sep-18 08:38 AM] jl777c#5810
+first byte is length, the next bytes is the string.
+
+[05-Sep-18 08:38 AM] TonyL#3577
+Oh, thanks got it
+
+[05-Sep-18 10:33 AM] TonyL#3577
+Still receive only empty data from `oraclessamples`. Tried `0440404040` from your example or some simple like a `011`
+```./komodo-cli -ac_name=ORCL oraclesdata e322fd9cf98e15f7a243fc4021875289f2cfd42a1b2125c1ee35bd6b48e08d25 011 <- hex```
+
+```sendrawtransaction hex <- 00de8780cadf011f80df88b84aa182b004988544550bf4a9f4dffbf8eec01993```
+```getrawmempool <- []```
+```./komodo-cli -ac_name=ORCL oraclesinfo e322fd9cf98e15f7a243fc4021875289f2cfd42a1b2125c1ee35bd6b48e08d25 <-
+{
+  "result": "success",
+  "txid": "e322fd9cf98e15f7a243fc4021875289f2cfd42a1b2125c1ee35bd6b48e08d25",
+  "name": "Oracle2",
+  "description": "testing oracle two",
+  "format": "s",
+  "marker": "RFtWpBCymm7XaxJvaKhoNeaCF5b6jHp3PE",
+  "registered": [
+    {
+      "provider": "02a6fccee9503330091a2a2d92741cea93fa0157688406e2c755cbcce7e96b30e7",
+      "baton": "RSHvgCPCPMwJbH7SmzRPWUoDrBtufjyvKQ",
+      "batontxid": "00de8780cadf011f80df88b84aa182b004988544550bf4a9f4dffbf8eec01993",
+      "lifetime": "0.00000000",
+      "funds": "99.65000000",
+      "datafee": "0.10000000"
+    }
+  ]
+}
+```
+
+```
+./komodo-cli -ac_name=ORCL oraclessamples e322fd9cf98e15f7a243fc4021875289f2cfd42a1b2125c1ee35bd6b48e08d25 00de8780cadf011f80df88b84aa182b004988544550bf4a9f4dffbf8eec01993 10
+{
+  "result": "success",
+  "samples": [
+    [
+    ],
+    [
+    ],
+    [
+    ]
+  ]
+}
+```
+
+[05-Sep-18 12:03 PM] jl777c#5810
+it could be a bug with 's' type, see if 'L' works for you, or the other numerical types
+
+[05-Sep-18 12:27 PM] siu - Chainmakers#3920
+damn... i dont think i get this format thing or how do i convert data to the format intended.
+
+[05-Sep-18 12:27 PM] siu - Chainmakers#3920
+also just tried to compile latest and it failed
+
+[05-Sep-18 12:27 PM] siu - Chainmakers#3920
+```                                                      ^
+At global scope:
+cc1plus: error: unrecognized command line option ‘-Wno-builtin-declaration-mismatch’ [-Werror]
+cc1plus: all warnings being treated as errors
+Makefile:3091: recipe for target 'cc/libbitcoin_server_a-oracles.o' failed
+make[2]: *** [cc/libbitcoin_server_a-oracles.o] Error 1
+make[2]: *** Waiting for unfinished jobs....
+mv -f cc/.deps/libbitcoin_server_a-prices.Tpo cc/.deps/libbitcoin_server_a-prices.Po
+make[2]: Leaving directory '/home/siu/komodo/src'
+Makefile:4634: recipe for target 'all-recursive' failed
+make[1]: *** [all-recursive] Error 1
+make[1]: Leaving directory '/home/siu/komodo/src'
+Makefile:659: recipe for target 'all-recursive' failed
+make: *** [all-recursive] Error 1
+```
+
+[05-Sep-18 12:29 PM] siu - Chainmakers#3920
+my guess is that jl777 is working on it
+
+[05-Sep-18 12:45 PM] jl777c#5810
+fixed
+
+[05-Sep-18 01:55 PM] siu - Chainmakers#3920
+publisher is the same as provider?
+
+[05-Sep-18 01:55 PM] siu - Chainmakers#3920
+`oraclessubscribe oracletxid publisher amount`
+
+[05-Sep-18 01:55 PM] siu - Chainmakers#3920
+oracle subscribe asks for a `publisher` parameter
+
+[05-Sep-18 01:56 PM] siu - Chainmakers#3920
+but on the oraclesinfo output i only find `provider`
+
+[05-Sep-18 02:10 PM] jl777c#5810
+sorry, yes they are the same
+
+[05-Sep-18 02:11 PM] jl777c#5810
+pushed fix
+
+[05-Sep-18 02:11 PM] jl777c#5810
+but it just changed the field name
+
+[05-Sep-18 02:20 PM] siu - Chainmakers#3920
+ok
+
+[05-Sep-18 02:24 PM] siu - Chainmakers#3920
+Also i guess that in `oraclessamples oracletxid batonutxo num`, `batonutxo` refers to `batontxid`
+
+[05-Sep-18 02:25 PM] siu - Chainmakers#3920
+I  subscribed to ```./komodo-cli -ac_name=ORCL oraclesinfo e322fd9cf98e15f7a243fc4021875289f2cfd42a1b2125c1ee35bd6b48e08d25
+{
+  "result": "success",
+  "txid": "e322fd9cf98e15f7a243fc4021875289f2cfd42a1b2125c1ee35bd6b48e08d25",
+  "name": "Oracle2",
+  "description": "testing oracle two",
+  "format": "s",
+  "marker": "RFtWpBCymm7XaxJvaKhoNeaCF5b6jHp3PE",
+  "registered": [
+    {
+      "provider": "02a6fccee9503330091a2a2d92741cea93fa0157688406e2c755cbcce7e96b30e7",
+      "baton": "RSHvgCPCPMwJbH7SmzRPWUoDrBtufjyvKQ",
+      "batontxid": "1824a83a2b81992f792bb7f19cb678741eb4d1f038e7803e645579f29c30fa25",
+      "lifetime": "0.00000000",
+      "funds": "100.45000000",
+      "datafee": "0.10000000"
+    }
+  ]
+}
+```
+
+[05-Sep-18 02:26 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=ORCL sendrawtransaction 01000000013e1a9da64c8841772b99e20715319e9cf41c2c8d80d999539fd5ef2ec16c758f0000000049483045022100aa124ed0cd41a556acf645236507b737de7aed1b66d113a6439d598a5c7a573a02204704cf22af1aaa80cc819151a0535ea64dd64fe329ca9925cef1ce0cce828de301ffffffff0400e1f50500000000302ea22c80202e544ca5c4202011efa857eca6df079eb098e336608bd1022f1102f4d7430df48103120c008203000401cc1027000000000000232102258de0486bbd35eec125211b2ad4cff28952872140fc43a2f7158ef99cfd22e3ace0707c481809000023210229919363523629835e13a1be644fbdace5e75a9b18728d998440f0366c44d60dac00000000000000004f6a4c4cec53258de0486bbd35eec125211b2ad4cff28952872140fc43a2f7158ef99cfd22e3210229919363523629835e13a1be644fbdace5e75a9b18728d998440f0366c44d60d00e1f5050000000000000000
+1fc561b4484e022e083daff5293ed642b0e4d3980c86a3fb59c5a5531c637456
+```
+
+[05-Sep-18 02:26 PM] siu - Chainmakers#3920
+oracle samples prints this: ```./komodo-cli -ac_name=ORCL oraclessamples e322fd9cf98e15f7a243fc4021875289f2cfd42a1b2125c1ee35bd6b48e08d25 1824a83a2b81992f792bb7f19cb678741eb4d1f038e7803e645579f29c30fa25 1
+{
+  "result": "success",
+  "samples": [
+    [
+    ]
+  ]
+}
+```
+
+[05-Sep-18 02:26 PM] siu - Chainmakers#3920
+am i doing this right?
+
+[05-Sep-18 02:27 PM] siu - Chainmakers#3920
+there is no data in the feed, hence it prints blank?
+
+[05-Sep-18 02:27 PM] jl777c#5810
+if there is no data, it would be blank
+
+[05-Sep-18 02:27 PM] jl777c#5810
+there might be a problem with format of s
+
+[05-Sep-18 03:42 PM] TonyL#3577
+@jl777c Is it a hardforking fix for 's' type?
+
+[05-Sep-18 03:43 PM] Alright#0419
+if there are any hard forks for ORCL please ping me
+
+{Reactions}
+👌 
+
+[05-Sep-18 04:19 PM] jl777c#5810
+i didnt fix the s bug, havent had a chance to duplicate it.
+
+[05-Sep-18 04:19 PM] jl777c#5810
+i want to make sure it works with L field for others
+
+[05-Sep-18 04:19 PM] jl777c#5810
+depends on the bug if it is a hardforking change or not
+
+[05-Sep-18 04:19 PM] TonyL#3577
+Ok, I'll check with 'L' type now, just reached PC
+
+[05-Sep-18 05:00 PM] TonyL#3577
+@jl777c latest FSM not building:
+```rpcblockchain.cpp: In function ‘UniValue getblockchaininfo(const UniValue&, bool)’:
+rpcblockchain.cpp:1302:59: error: ‘chainParams’ was not declared in this scope
+         progress = Checkpoints::GuessVerificationProgress(chainParams.Checkpoints(), chainActive.LastTip());
+                                                           ^~~~~~~~~~~
+rpcblockchain.cpp:1302:59: note: suggested alternative: ‘CChainParams’
+         progress = Checkpoints::GuessVerificationProgress(chainParams.Checkpoints(), chainActive.LastTip());
+                                                           ^~~~~~~~~~~
+                                                           CChainParams
+rpcblockchain.cpp:1304:29: error: ‘komodo_longestchain’ was not declared in this scope
+      int32_t longestchain = komodo_longestchain();
+                             ^~~~~~~~~~~~~~~~~~~
+rpcblockchain.cpp:1304:29: note: suggested alternative: ‘longestchain’
+      int32_t longestchain = komodo_longestchain();
+                             ^~~~~~~~~~~~~~~~~~~
+                             longestchain
+Makefile:3497: recipe for target 'libbitcoin_server_a-rpcblockchain.o' failed
+make[2]: *** [libbitcoin_server_a-rpcblockchain.o] Error 1
+make[2]: *** Waiting for unfinished jobs....
+mv -f .deps/libbitcoin_server_a-rest.Tpo .deps/libbitcoin_server_a-rest.Po
+mv -f .deps/libbitcoin_server_a-main.Tpo .deps/libbitcoin_server_a-main.Po
+mv -f .deps/libbitcoin_server_a-rpccrosschain.Tpo .deps/libbitcoin_server_a-rpccrosschain.Po
+make[2]: Leaving directory '/home/rigdirector/fsm_branch/komodo/src'
+Makefile:4634: recipe for target 'all-recursive' failed
+make[1]: *** [all-recursive] Error 1
+make[1]: Leaving directory '/home/rigdirector/fsm_branch/komodo/src'
+Makefile:659: recipe for target 'all-recursive' failed
+make: *** [all-recursive] Error 1
+```
+
+[05-Sep-18 05:02 PM] jl777c#5810
+fixing
+
+[05-Sep-18 05:06 PM] jl777c#5810
+fixe
+
+[05-Sep-18 05:06 PM] jl777c#5810
+fixed
+
+[05-Sep-18 05:49 PM] TonyL#3577
+builded now
+
+[05-Sep-18 06:36 PM] TonyL#3577
+```./komodo-cli -ac_name=ORCL oraclesinfo eb79c3b6ec1cde314c19e8fbb2f9627ad7d8469d8536335794286c4eb68c9fbf
+{
+  "result": "success",
+  "txid": "eb79c3b6ec1cde314c19e8fbb2f9627ad7d8469d8536335794286c4eb68c9fbf",
+  "name": "OracleL",
+  "description": "testing oracle",
+  "format": "L",
+  "marker": "RJtXpavwX2tWdkvrj9pyrbfG8QudqW9ha2",
+  "registered": [
+    {
+      "publisher": "03885cc6bccd8da41e202da6f8184fd4cb821c3377fcb6fdcbe5e9927ff16fe959",
+      "baton": "RXWoWDffBLsBPBS2WupwgDVJMYhDdf4qLN",
+      "batontxid": "e44a10d291abe43ea1ddffba257eea0fb3e73e28a48fe6bf651576d0b69e68cb",
+      "lifetime": "10000.00000000",
+      "funds": "9999.80000000",
+      "datafee": "0.10000000"
+    }
+  ]
+}
+```
+
+``` ./komodo-cli -ac_name=ORCL oraclesdata eb79c3b6ec1cde314c19e8fbb2f9627ad7d8469d8536335794286c4eb68c9fbf 0x41
+{
+  "result": "success",
+  "hex": "hex..."
+}
+```
+
+```./komodo-cli -ac_name=ORCL sendrawtransaction hex
+e7525ec4f97207a809fb76303398bef8f3989655fb9e8a7e7c9b6f5f4eb9bba0```
+
+```./komodo-cli -ac_name=ORCL oraclessamples eb79c3b6ec1cde314c19e8fbb2f9627ad7d8469d8536335794286c4eb68c9fbf e7525ec4f97207a809fb76303398bef8f3989655fb9e8a7e7c9b6f5f4eb9bba0 1
+{
+  "result": "success",
+  "samples": [
+    [
+    ]
+  ]
+}
+```
+
+[05-Sep-18 06:38 PM] TonyL#3577
+Get an empty value "L" oracle after `0x41` data input. Am I input data correct way for this format @jl777c ?
+
+[05-Sep-18 06:43 PM] jl777c#5810
+did you look at dapps/oraclefeed.c
+
+[05-Sep-18 06:43 PM] jl777c#5810
+oraclesdata 4895f631316a649e216153aee7a574bd281686265dc4e8d37597f72353facac3 000000ff00000000
+
+[05-Sep-18 06:43 PM] jl777c#5810
+hexstring needs to be a string of just hex
+
+[05-Sep-18 06:44 PM] jl777c#5810
+0x41 is not a purehex string
+
+[05-Sep-18 06:44 PM] jl777c#5810
+41 would be
+
+[05-Sep-18 06:45 PM] jl777c#5810
+but L means it needs 8 bytes
+
+[05-Sep-18 06:45 PM] jl777c#5810
+so 8 bytes of hex
+
+[05-Sep-18 06:52 PM] TonyL#3577
+Ouch I've used 8 bits numbers not 8 bytes 
+```
+./komodo-cli -ac_name=ORCL oraclessamples eb79c3b6ec1cde314c19e8fbb2f9627ad7d8469d8536335794286c4eb68c9fbf 9a2dc1e3b28bd089662fa3a6e4e854bfcf038c0864c80550884cb232cb10e48e 2
+{
+  "result": "success",
+  "samples": [
+    [
+    ],
+    [
+      "4278190080"
+    ]
+  ]
+}
+```
+Finally have output. Thank you for your patience @jl777c :/
+
+[05-Sep-18 06:54 PM] jl777c#5810
+plz test the other numerical sizes
+
+[05-Sep-18 06:54 PM] jl777c#5810
+4 bytes means half the length of 8
+
+{Reactions}
+trollface 
+

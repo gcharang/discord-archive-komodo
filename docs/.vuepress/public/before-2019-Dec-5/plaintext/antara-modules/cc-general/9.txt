@@ -1,0 +1,542 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[25-Jul-18 02:34 PM] siu - Chainmakers#3920
+and locked coins give you voting capacity
+
+[25-Jul-18 02:34 PM] jl777c#5810
+please read the description of what the rewards CC does before concluding if it is or isnt adequate
+
+[25-Jul-18 02:34 PM] jl777c#5810
+The rewards CC contract is initially for OOT, which needs this functionality. However, many of the attributes can be parameterized to allow different rewards programs to run. Multiple rewards plans could even run on the same blockchain, though the user would need to choose which one to lock funds into.
+ 
+ At the high level, the user would lock funds for some amount of time and at the end of it, would get all the locked funds back with an additional reward. So there needs to be a lock funds and unlock funds ability. Additionally, the rewards need to come from somewhere, so similar to the faucet, there would be a way to fund the reward.
+ 
+ Additional requirements are for the user to be able to lock funds via SPV. This requirement in turns forces the creation of a way for anybody to be able to unlock the funds as that operation requires a native daemon running and cant be done over SPV. The idea is to allow anybody to run a script that would unlock all funds that are matured. As far as the user is concerned, he locks his funds via SPV and after some time it comes back with an extra reward.
+ 
+ In reality, the funds are locked into a CC address that is unspendable, except for some special conditions and it needs to come back to the address that funded the lock. In order to implement this, several things are clear.
+
+[25-Jul-18 02:34 PM] jl777c#5810
+1) each locked CC utxo needs to be linked to a specific rewards plan
+ 2) each locked CC utxo needs to know the only address that it can be unlocked into
+ 3) SPV requirement means the lock transaction needs to be able to be created without any CC signing
+ 
+ The opreturn will be used to store the name of the rewards plan and all funding and locked funds with the same plan will use the same pool of rewards. plan names will be limited to 8 chars and encoded into a uint64_t.
+ 
+ The initial funding transaction will have all the parameters for the rewards plan encoded in the vouts. Additional fundings will just increase the available CC utxo for the rewards.
+ 
+ Locks wont have any CC vins, but will send to the RewardsCCaddress, with the plan stringbits in the opreturn. vout1 will have the unlock address and no other destination is valid.
+ 
+ Unlock does a CC spend to the vout1 address
+
+[25-Jul-18 02:35 PM] jl777c#5810
+######
+
+[25-Jul-18 02:35 PM] jl777c#5810
+a voting CC that uses coins locked by a different CC would get voting, but voting on what? need details
+
+[25-Jul-18 02:36 PM] siu - Chainmakers#3920
+aah, so a masternode can just be a different rewards plan
+
+[25-Jul-18 02:36 PM] siu - Chainmakers#3920
+clever
+
+[25-Jul-18 02:37 PM] jl777c#5810
+so all the craze over masternodes are just locking coins to get rewards?
+
+[25-Jul-18 02:37 PM] siu - Chainmakers#3920
+and voting
+
+[25-Jul-18 02:37 PM] jl777c#5810
+like the 5% APR
+
+[25-Jul-18 02:37 PM] jl777c#5810
+voting on what?
+
+[25-Jul-18 02:37 PM] siu - Chainmakers#3920
+on project proposals submitted
+
+[25-Jul-18 02:38 PM] siu - Chainmakers#3920
+im not sure how this is implemented though
+
+[25-Jul-18 02:39 PM] siu - Chainmakers#3920
+@SHossain i placed another bid
+
+[25-Jul-18 02:39 PM] SHossain#0007
+filling 😃
+
+[25-Jul-18 02:39 PM] SHossain#0007
+```
+$ ./komodo-cli -ac_name=ATEST tokenfillbid c5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b59 45b3f7874fc4a2699729a9792bc7679f6b5f11035a29ad9f661425b19534dd1d 10
+recvunitprice 1.0000000000000000 >= 1.0000000000000000 unitprice, new unitprice 1.0000000000000000
+remaining 990 -> origpubkey
+{
+  "result": "success",
+  "hex": "0100000003b46fb06b731e7b68bbcfaa2e90035389e92e48abd595c18a9d4e65274d2dac880200000049483045022100901abdad137d43201e5596104f8a3ad6ca28d92f4259a74ad1228ec94d5469a002206cf992359449faef3acde1b7f44612c16983c25dd5e90a71640797bac022652501ffffffff1ddd3495b12514669fad295a03115f6b9f67c72b79a9299769a2c44f87f7b345000000007b4c79a276a072a26ba067a565802102adf84e0e075cf90868bd4e3d34a03420e034719649c41f371fc70d8e33aa270281404ce4d9aa9de47f31eecd0efff2674587875aab9f2071068b72fd9cc12ea8d6a578b736c63054bb631524f1780dce45d102933f3ed58f476ef8315d3360faefa2a100af038001e3a10001fffffffffcec3f8b7e76d87fdf4f962876ce68a3a0e2e440d7d722ad59073201325a09cc000000007b4c79a276a072a26ba067a565802103fe754763c176e1339a3f62ee6b9484720e17ee4646b65a119e9f6370c7004abc8140de7e99512b11a402657aabd537db822a1d7fe4ae2f1fb843565a56effab5b0de4816f028e24d60877bfeeb8b066805cc89926be05cccbf02c42441c32b0134c0a100af038001e3a10001ffffffff06001edc0c17000000302ea22c80201ab400e039122028345520ba041ac3e6ec81ad28d8415e78d760d55f41097dd58103120c008203000401cc00ca9a3b00000000232103fe754763c176e1339a3f62ee6b9484720e17ee4646b65a119e9f6370c7004abcac0a00000000000000302ea22c80204f037064a29eb9cb7476eb8d0fbabbaa366c617f95fb4353658e84a493962eb38103120c008203000401cc9586010000000000302ea22c8020bc485b86ffd067abe520c078b74961f6b25e4efca6388c6bfd599ca3f53d8dae8103120c008203000401cc1892486cb2430000232103fe754763c176e1339a3f62ee6b9484720e17ee4646b65a119e9f6370c7004abcac00000000000000004f6a4c4ce342c5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b59de0300000000000021028bb4ae66aa4f1960a4aa822907e800eb688d9ab2605c8067a34b421748c67e2700000000"
+}
+```
+
+[25-Jul-18 02:40 PM] SHossain#0007
+sendrawtransaction output:
+```
+AssetValidate (B)
+vin2 99999, vout2 10, vout3 99989, Got 1000.00000000 to origaddr.(RKVF6bHNo9w83ZJtM1RCEj4mb1HUsEYDUJ)
+ValidateAssetRemainder: totalunits 1000 != 10 (remaining_price 0 + 10 paidunits)
+CC Eval EVAL_ASSETS Invalid: mismatched remainder for fillbuy spending tx 45b3f7874fc4a2699729a9792bc7679f6b5f11035a29ad9f661425b19534dd1d
+AssetValidate (B)
+vin2 99999, vout2 10, vout3 99989, Got 1000.00000000 to origaddr.(RKVF6bHNo9w83ZJtM1RCEj4mb1HUsEYDUJ)
+ValidateAssetRemainder: totalunits 1000 != 10 (remaining_price 0 + 10 paidunits)
+CC Eval EVAL_ASSETS Invalid: mismatched remainder for fillbuy spending tx 45b3f7874fc4a2699729a9792bc7679f6b5f11035a29ad9f661425b19534dd1d
+error code: -26
+error message:
+16: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)
+```
+
+[25-Jul-18 02:42 PM] jl777c#5810
+thank's! duplicated
+
+[25-Jul-18 02:42 PM] jl777c#5810
+see how easy it is to find and report bugs
+
+[25-Jul-18 02:42 PM] jl777c#5810
+this is what we need. this is all brand new untested code in complex logic
+
+[25-Jul-18 02:42 PM] jl777c#5810
+investigating
+
+[25-Jul-18 02:42 PM] SHossain#0007
+cool!
+
+[25-Jul-18 02:42 PM] siu - Chainmakers#3920
+nice
+
+[25-Jul-18 02:43 PM] SHossain#0007
+@siu - Chainmakers we are back in business 😎
+
+{Reactions}
+😎 
+
+[25-Jul-18 02:43 PM] siu - Chainmakers#3920
+nice
+
+[25-Jul-18 02:43 PM] siu - Chainmakers#3920
+i do think a call to get the tokenid of the tokens i have balance of is needed
+
+[25-Jul-18 02:44 PM] siu - Chainmakers#3920
+maybe instead of `tokenbalance` we also need `tokenbalances`
+
+[25-Jul-18 02:44 PM] jl777c#5810
+what is needed is a way to get all the assets ever created
+
+[25-Jul-18 02:45 PM] jl777c#5810
+then for each one you can check your balance
+
+[25-Jul-18 02:45 PM] jl777c#5810
+for now plz dont forget the assets you created
+
+[25-Jul-18 02:45 PM] siu - Chainmakers#3920
+ok
+
+[25-Jul-18 02:49 PM] SHossain#0007
+i'll keep a list of created tokens by me as well
+
+[25-Jul-18 02:52 PM] SHossain#0007
+here if you created a token with this new source and testing, please post it here or comment in this spreadsheet. i'll add them up and keep the list updated
+https://docs.google.com/spreadsheets/d/1mggY4TfDxaj1HnabPFeMxwkPTxZQENMjx2yowiy441g/edit?usp=sharing
+
+{Embed}
+https://docs.google.com/spreadsheets/d/1mggY4TfDxaj1HnabPFeMxwkPTxZQENMjx2yowiy441g/edit?usp=sharing
+Token List
+Sheet1
+
+
+ User, Token ID
+ Siu, c5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b59
+ SHossain, e4895451cae47f8f10303c3594888b739f044f7c778623318d877e8df365cc66
+
+[25-Jul-18 02:52 PM] siu - Chainmakers#3920
+thanks
+
+[25-Jul-18 02:54 PM] jl777c#5810
+pushed fix
+
+[25-Jul-18 02:55 PM] SHossain#0007
+`./komodo-cli -ac_name=ATEST tokenorders`  & `./komodo-cli -ac_name=ATEST tokenorders c5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b59` giving me same result. according to my understanding the latter should display orders for only c5b... token
+
+[25-Jul-18 02:56 PM] SHossain#0007
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/471692100556029955/Screenshot_from_2018-07-25_15-55-35.png
+
+[25-Jul-18 02:57 PM] SHossain#0007
+this output is from the command `tokenorders [tokenid]`
+
+[25-Jul-18 02:57 PM] siu - Chainmakers#3920
+rebuilding
+
+[25-Jul-18 02:58 PM] SHossain#0007
+@jl777c is the fix in jl777 branch?
+
+[25-Jul-18 02:58 PM] SHossain#0007
+i was using dev
+
+[25-Jul-18 02:58 PM] jl777c#5810
+duplicated tokenorders bug. you are on a roll!
+
+[25-Jul-18 02:58 PM] jl777c#5810
+yes, only updating jl777 as you are finding a bug an hour
+
+[25-Jul-18 02:59 PM] SHossain#0007
+ok. switching
+
+[25-Jul-18 03:01 PM] jl777c#5810
+pushed fix for tokenorders <assetid>
+
+[25-Jul-18 03:02 PM] SHossain#0007
+haha. look like your previous fix worked
+```
+$ ./komodo-cli -ac_name=ATEST tokenfillbid c5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b59 9dabd8c01bb7d59455b64fe100617149c20cb4520d266183686aa4986fd3021d 10
+recvunitprice 1.0000000000000000 >= 1.0000000000000000 unitprice, new unitprice 1.0000000000000000
+remaining 90 -> origpubkey
+{
+  "result": "success",
+  "hex": "0100000003b46fb06b731e7b68bbcfaa2e90035389e92e48abd595c18a9d4e65274d2dac880200000049483045022100ccd98db21b5c1c22caaf20aa6ed1c89f60f2af3caa4bceb53f6269376173d9a902201c9ad4fa6584d2c22dae440df4f512b01087187ab50d0c77952e0feeb3cb058b01ffffffff1d02d36f98a46a688361260d52b40cc249716100e14fb65594d5b71bc0d8ab9d000000007b4c79a276a072a26ba067a565802102adf84e0e075cf90868bd4e3d34a03420e034719649c41f371fc70d8e33aa27028140fdf06f2d696df4c6baeeb15c801b12e6ca8390b97b6f5c9be57297460799bf547366923a16d6066cb49d8181d270ab304e2280e97fe5ec1abcc0aa3eaebf72eda100af038001e3a10001fffffffffcec3f8b7e76d87fdf4f962876ce68a3a0e2e440d7d722ad59073201325a09cc000000007b4c79a276a072a26ba067a565802103fe754763c176e1339a3f62ee6b9484720e17ee4646b65a119e9f6370c7004abc81400b2c4920e2bf716403a6e38361be586be3356457e291ac976a5c6ff1fadfd2ba0f3dd7c10319ad0d9143d9ee503c4c42f2b88626107b0275725e5d6ac919eab7a100af038001e3a10001ffffffff06001a711802000000302ea22c80201ab400e039122028345520ba041ac3e6ec81ad28d8415e78d760d55f41097dd58103120c008203000401cc00ca9a3b00000000232103fe754763c176e1339a3f62ee6b9484720e17ee4646b65a119e9f6370c7004abcac0a00000000000000302ea22c80204f037064a29eb9cb7476eb8d0fbabbaa366c617f95fb4353658e84a493962eb38103120c008203000401cc9586010000000000302ea22c8020bc485b86ffd067abe520c078b74961f6b25e4efca6388c6bfd599ca3f53d8dae8103120c008203000401cc1892486cb2430000232103fe754763c176e1339a3f62ee6b9484720e17ee4646b65a119e9f6370c7004abcac00000000000000004f6a4c4ce342c5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b595a0000000000000021028bb4ae66aa4f1960a4aa822907e800eb688d9ab2605c8067a34b421748c67e2700000000"
+}
+```
+
+[25-Jul-18 03:03 PM] SHossain#0007
+sendrawtransaction output:
+```
+AssetValidate (B)
+vin2 99999, vout2 10, vout3 99989, Got 100.00000000 to origaddr.(RKVF6bHNo9w83ZJtM1RCEj4mb1HUsEYDUJ)
+recvunitprice 1.0000000000000000 >= 1.0000000000000000 unitprice, new unitprice 1.0000000000000000
+fillbuy validated
+2ecc3f6867d1eb20adda4424bee768d7b9bb0b8e104f4d16f76e9387e104f5f9
+```
+
+[25-Jul-18 03:03 PM] SHossain#0007
+@siu - Chainmakers can you please confirm if it was your order?
+
+[25-Jul-18 03:03 PM] SHossain#0007
+in the meantime, i'll update to the latest source
+
+[25-Jul-18 03:05 PM] siu - Chainmakers#3920
+dit it confirm?
+
+[25-Jul-18 03:06 PM] jl777c#5810
+it wont confirm until the mining node updates
+
+[25-Jul-18 03:06 PM] siu - Chainmakers#3920
+im restarting tonew version
+
+[25-Jul-18 03:06 PM] SHossain#0007
+@jl777c shall i post `decoderawtransaction` output as well?
+
+[25-Jul-18 03:07 PM] jl777c#5810
+for what?
+
+[25-Jul-18 03:07 PM] jl777c#5810
+given raw hex I can decode it
+
+[25-Jul-18 03:07 PM] SHossain#0007
+ok. fair enough
+
+[25-Jul-18 03:08 PM] jl777c#5810
+so if I have the rpc command and the rawhex, I can troubleshoot and usually immediately reproduce the error
+
+[25-Jul-18 03:08 PM] jl777c#5810
+given a report "xyz didnt work" that gives me no data
+
+[25-Jul-18 03:09 PM] SHossain#0007
+my balance is showing 0 now
+
+[25-Jul-18 03:10 PM] SHossain#0007
+this was displayed during the startup call
+```
+AssetValidate (B)
+vin2 99999, vout2 10, vout3 99989, Got 100.00000000 to origaddr.(RKVF6bHNo9w83ZJtM1RCEj4mb1HUsEYDUJ)
+recvunitprice 1.0000000000000000 >= 1.0000000000000000 unitprice, new unitprice 1.0000000000000000
+```
+
+[25-Jul-18 03:10 PM] siu - Chainmakers#3920
+i dont see a change in balance on my side
+
+[25-Jul-18 03:11 PM] siu - Chainmakers#3920
+```{
+    "funcid": "b",
+    "txid": "9dabd8c01bb7d59455b64fe100617149c20cb4520d266183686aa4986fd3021d",
+    "vout": 0,
+    "amount": 100,
+    "bidamount": 100,
+    "origaddress": "RQymbXA8FfWw2AaHv7oC8JRKo9W5HkFVMm",
+    "tokenid": "c5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b59",
+    "totalrequired": 100,
+    "price": 1
+  },
+```
+
+[25-Jul-18 03:11 PM] siu - Chainmakers#3920
+also order seems to still be live
+
+[25-Jul-18 03:11 PM] SHossain#0007
+token order now showing data for specific tokenid
+```
+$ ./komodo-cli -ac_name=ATEST tokenorders c5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b59
+[
+  {
+    "funcid": "B",
+    "txid": "b9d305e9b6a82e715efce9b6244cc15fef131baf1893a7eb45b199c23b3fb806",
+    "vout": 0,
+    "amount": 0,
+    "bidamount": 0,
+    "origaddress": "RQymbXA8FfWw2AaHv7oC8JRKo9W5HkFVMm",
+    "tokenid": "c5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b59"
+  },
+  {
+    "funcid": "b",
+    "txid": "9dabd8c01bb7d59455b64fe100617149c20cb4520d266183686aa4986fd3021d",
+    "vout": 0,
+    "amount": 100,
+    "bidamount": 100,
+    "origaddress": "RQymbXA8FfWw2AaHv7oC8JRKo9W5HkFVMm",
+    "tokenid": "c5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b59",
+    "totalrequired": 100,
+    "price": 1
+  },
+  {
+    "funcid": "b",
+    "txid": "45b3f7874fc4a2699729a9792bc7679f6b5f11035a29ad9f661425b19534dd1d",
+    "vout": 0,
+    "amount": 1000,
+    "bidamount": 1000,
+    "origaddress": "RQymbXA8FfWw2AaHv7oC8JRKo9W5HkFVMm",
+    "tokenid": "c5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b59",
+    "totalrequired": 1000,
+    "price": 1
+  },
+  {
+    "funcid": "b",
+    "txid": "a8d60a3ce429ccb885ad445e7a4534130a35d2424d1883c6513d0f4da2fe9a92",
+    "vout": 0,
+    "amount": 150,
+    "bidamount": 150,
+    "origaddress": "RQymbXA8FfWw2AaHv7oC8JRKo9W5HkFVMm",
+    "tokenid": "c5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b59",
+    "totalrequired": 100,
+    "price": 1.5
+  }
+]
+```
+
+[25-Jul-18 03:12 PM] SHossain#0007
+time to update https://github.com/himu007/KMD-CC-Token-Test-Guide/blob/master/rpc/tokenorders.md#show-orders-for-specific-token
+
+{Embed}
+https://github.com/himu007/KMD-CC-Token-Test-Guide/blob/master/rpc/tokenorders.md
+himu007/KMD-CC-Token-Test-Guide
+KMD-CC-Token-Test-Guide - Komodo CC Token testing description, setup & how-to
+https://avatars2.githubusercontent.com/u/8881040?s=400&v=4
+
+[25-Jul-18 03:12 PM] jl777c#5810
+did the 'B' transaction confirm?
+
+[25-Jul-18 03:13 PM] siu - Chainmakers#3920
+i have no transactions regarding this swap
+
+[25-Jul-18 03:15 PM] SHossain#0007
+```
+  {
+    "account": "",
+    "address": "RANyPgfZZLhSjQB9jrzztSw66zMMYDZuxQ",
+    "category": "receive",
+    "amount": 10.00000000,
+    "vout": 1,
+    "confirmations": 0,
+    "txid": "2ecc3f6867d1eb20adda4424bee768d7b9bb0b8e104f4d16f76e9387e104f5f9",
+    "walletconflicts": [
+    ],
+    "time": 1532530945,
+    "timereceived": 1532530945,
+    "vjoinsplit": [
+    ],
+    "size": 799
+  },
+```
+
+[25-Jul-18 03:16 PM] SHossain#0007
+0 confirmation still
+
+[25-Jul-18 03:17 PM] jl777c#5810
+until it is confirmed, it isnt confirmed
+
+[25-Jul-18 03:17 PM] jl777c#5810
+i hope that makes sense
+
+[25-Jul-18 03:17 PM] jl777c#5810
+balances wont change until confirmed
+
+[25-Jul-18 03:18 PM] SHossain#0007
+right. this is the reason, i have 0 balance
+```
+  {
+    "account": "",
+    "address": "RANyPgfZZLhSjQB9jrzztSw66zMMYDZuxQ",
+    "category": "send",
+    "amount": -744335.99935000,
+    "vout": 4,
+    "fee": 100.00089999,
+    "confirmations": 0,
+    "txid": "2ecc3f6867d1eb20adda4424bee768d7b9bb0b8e104f4d16f76e9387e104f5f9",
+    "walletconflicts": [
+    ],
+    "time": 1532530945,
+    "timereceived": 1532530945,
+    "vjoinsplit": [
+    ],
+    "size": 799
+  }
+```
+
+[25-Jul-18 03:19 PM] siu - Chainmakers#3920
+ill setgenerate true
+
+[25-Jul-18 03:22 PM] SHossain#0007
+blocks are being generated fine
+
+[25-Jul-18 03:22 PM] siu - Chainmakers#3920
+still unconfirmed?
+
+[25-Jul-18 03:23 PM] SHossain#0007
+yes
+
+[25-Jul-18 03:23 PM] SHossain#0007
+still 0
+
+[25-Jul-18 03:23 PM] jl777c#5810
+mining node needs to be updated
+
+[25-Jul-18 03:23 PM] siu - Chainmakers#3920
+mine is mining and is in latest
+
+[25-Jul-18 03:24 PM] jl777c#5810
+is the txid in the mempool
+
+[25-Jul-18 03:24 PM] jl777c#5810
+if not broadcastit again
+
+[25-Jul-18 03:24 PM] SHossain#0007
+$ ./komodo-cli -ac_name=ATEST getmempoolinfo
+{
+  "size": 1,
+  "bytes": 799,
+  "usage": 2000
+}
+
+[25-Jul-18 03:24 PM] jl777c#5810
+getrawmempool
+
+[25-Jul-18 03:25 PM] siu - Chainmakers#3920
+./komodo-cli -ac_name=ATEST getrawmempool
+[
+]
+
+[25-Jul-18 03:25 PM] SHossain#0007
+$ ./komodo-cli -ac_name=ATEST getrawmempool
+[
+  "2ecc3f6867d1eb20adda4424bee768d7b9bb0b8e104f4d16f76e9387e104f5f9"
+]
+
+[25-Jul-18 03:25 PM] SHossain#0007
+re-broadcasting
+
+[25-Jul-18 03:25 PM] jl777c#5810
+it needs to be in the mempool of the mining node
+
+[25-Jul-18 03:27 PM] siu - Chainmakers#3920
+i see new updates, will rebuild
+
+[25-Jul-18 03:27 PM] SHossain#0007
+if i use `setgenerate true 1` in the same node, any possibility to be mined by my node?
+
+[25-Jul-18 03:32 PM] jl777c#5810
+of course, that should work
+
+[25-Jul-18 03:34 PM] SHossain#0007
+started mining
+
+[25-Jul-18 03:36 PM] SHossain#0007
+@siu - Chainmakers please check now. it is no longer in my mempool
+
+[25-Jul-18 03:37 PM] siu - Chainmakers#3920
+no change yet
+
+[25-Jul-18 03:37 PM] SHossain#0007
+tx is confirmed. my balance came back
+
+[25-Jul-18 03:38 PM] SHossain#0007
+```
+  {
+    "account": "",
+    "address": "RQymbXA8FfWw2AaHv7oC8JRKo9W5HkFVMm",
+    "category": "send",
+    "amount": -0.00000010,
+    "vout": 2,
+    "fee": 100.00089999,
+    "confirmations": 3,
+    "blockhash": "0087ab76aefcc3049572f9c52ff027abfbbc7def63e44a4531b6cee86991d876",
+    "blockindex": 1,
+    "blocktime": 1532533028,
+    "expiryheight": 0,
+    "txid": "2ecc3f6867d1eb20adda4424bee768d7b9bb0b8e104f4d16f76e9387e104f5f9",
+    "walletconflicts": [
+    ],
+    "time": 1532530945,
+    "timereceived": 1532530945,
+    "vjoinsplit": [
+    ],
+    "size": 799
+  },```
+
+[25-Jul-18 03:38 PM] siu - Chainmakers#3920
+```AssetValidate (B)
+vin2 99999, vout2 10, vout3 99989, Got 100.00000000 to origaddr.(RKVF6bHNo9w83ZJtM1RCEj4mb1HUsEYDUJ)
+ValidateAssetRemainder: totalunits 100 != 10 (remaining_price 0 + 10 paidunits)
+CC Eval EVAL_ASSETS Invalid: mismatched remainder for fillbuy spending tx 9dabd8c01bb7d59455b64fe100617149c20cb4520d266183686aa4986fd3021d
+AssetValidate (B)
+vin2 99999, vout2 10, vout3 99989, Got 100.00000000 to origaddr.(RKVF6bHNo9w83ZJtM1RCEj4mb1HUsEYDUJ)
+ValidateAssetRemainder: totalunits 100 != 10 (remaining_price 0 + 10 paidunits)
+CC Eval EVAL_ASSETS Invalid: mismatched remainder for fillbuy spending tx 9dabd8c01bb7d59455b64fe100617149c20cb4520d266183686aa4986fd3021d
+AssetValidate (B)
+vin2 99999, vout2 10, vout3 99989, Got 100.00000000 to origaddr.(RKVF6bHNo9w83ZJtM1RCEj4mb1HUsEYDUJ)
+ValidateAssetRemainder: totalunits 100 != 10 (remaining_price 0 + 10 paidunits)
+CC Eval EVAL_ASSETS Invalid: mismatched remainder for fillbuy spending tx 9dabd8c01bb7d59455b64fe100617149c20cb4520d266183686aa4986fd3021d
+```
+
+[25-Jul-18 03:38 PM] siu - Chainmakers#3920
+```AssetValidate (B)
+vin2 99999, vout2 10, vout3 99989, Got 100.00000000 to origaddr.(RKVF6bHNo9w83ZJtM1RCEj4mb1HUsEYDUJ)
+ValidateAssetRemainder: totalunits 100 != 10 (remaining_price 0 + 10 paidunits)
+CC Eval EVAL_ASSETS Invalid: mismatched remainder for fillbuy spending tx 9dabd8c01bb7d59455b64fe100617149c20cb4520d266183686aa4986fd3021d
+AssetValidate (B)
+vin2 99999, vout2 10, vout3 99989, Got 100.00000000 to origaddr.(RKVF6bHNo9w83ZJtM1RCEj4mb1HUsEYDUJ)
+ValidateAssetRemainder: totalunits 100 != 10 (remaining_price 0 + 10 paidunits)
+CC Eval EVAL_ASSETS Invalid: mismatched remainder for fillbuy spending tx 9dabd8c01bb7d59455b64fe100617149c20cb4520d266183686aa4986fd3021d
+AssetValidate (B)
+vin2 99999, vout2 10, vout3 99989, Got 100.00000000 to origaddr.(RKVF6bHNo9w83ZJtM1RCEj4mb1HUsEYDUJ)
+ValidateAssetRemainder: totalunits 100 != 10 (remaining_price 0 + 10 paidunits)
+CC Eval EVAL_ASSETS Invalid: mismatched remainder for fillbuy spending tx 9dabd8c01bb7d59455b64fe100617149c20cb4520d266183686aa4986fd3021d
+AssetValidate (B)
+AssetValidate (B)
+vin2 99999, vout2 10, vout3 99989, Got 100.00000000 to origaddr.(RKVF6bHNo9w83ZJtM1RCEj4mb1HUsEYDUJ)
+```
+
+[25-Jul-18 03:40 PM] SHossain#0007
+re-broadcasting the same hex shwos me `transaction already in block chain`
+

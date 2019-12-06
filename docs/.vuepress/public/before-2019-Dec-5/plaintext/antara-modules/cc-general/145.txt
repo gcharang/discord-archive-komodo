@@ -1,0 +1,470 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[07-Dec-18 12:12 PM] jl777c#5810
+though it really shouldnt be possible for the baton to not exist...
+
+[07-Dec-18 12:18 PM] Mihailo#5902
+This part should find the latest baton as I understand...
+
+[07-Dec-18 12:18 PM] Mihailo#5902
+And it goes into infinite loop
+
+[07-Dec-18 12:19 PM] jl777c#5810
+likely with batontxid being all 0, so first is to break out of the loop if that happens
+
+[07-Dec-18 12:19 PM] jl777c#5810
+if course finding out how it returns all 0s is needed too
+
+[07-Dec-18 12:19 PM] Mihailo#5902
+No it is not 0
+
+[07-Dec-18 12:19 PM] Mihailo#5902
+It stays on one txid
+```
+b11e9774b68a63e781be9e34084ab27e544d6b639843b4aaf58e81f9a3abb322
+b11e9774b68a63e781be9e34084ab27e544d6b639843b4aaf58e81f9a3abb322
+b11e9774b68a63e781be9e34084ab27e544d6b639843b4aaf58e81f9a3abb322
+b11e9774b68a63e781be9e34084ab27e544d6b639843b4aaf58e81f9a3abb322
+b11e9774b68a63e781be9e34084ab27e544d6b639843b4aaf58e81f9a3abb322
+b11e9774b68a63e781be9e34084ab27e544d6b639843b4aaf58e81f9a3abb322
+b11e9774b68a63e781be9e34084ab27e544d6b639843b4aaf58e81f9a3abb322
+b11e9774b68a63e781be9e34084ab27e544d6b639843b4aaf58e81f9a3abb322
+b11e9774b68a63e781be9e34084ab27e544d6b639843b4aaf58e81f9a3abb322
+b11e9774b68a63e781be9e34084ab27e544d6b639843b4aaf58e81f9a3abb322
+b11e9774b68a63e781be9e34084ab27e544d6b639843b4aaf58e81f9a3abb322
+b11e9774b68a63e781be9e34084ab27e544d6b639843b4aaf58e81f9a3abb322
+b11e9774b68a63e781be9e34084ab27e544d6b639843b4aaf58e81f9a3abb322
+...
+```
+
+[07-Dec-18 12:25 PM] jl777c#5810
+i guess need to check for that case too, if the same txid comes back. cant be your own vin
+
+[07-Dec-18 12:25 PM] Mihailo#5902
+So I think the problem is here:
+```cpp
+BOOST_FOREACH(const CTxMemPoolEntry &e,mempool.mapTx)
+    {
+        const CTransaction &tx = e.GetTx();
+        if ( tx.vout.size() > 0 && tx.vin.size() > 1 && batontxid == tx.vin[1].prevout.hash && batonvout == tx.vin[1].prevout.n )
+        {
+            const uint256 &txid = tx.GetHash();
+            //char str[65]; fprintf(stderr,"found baton spent in mempool %s\n",uint256_str(str,txid));
+            return(txid);
+        }
+    }
+    return(batontxid);
+```
+Some how the if does not get satisfied in whole mempool and it returns same batontxid.
+
+[07-Dec-18 12:25 PM] jl777c#5810
+yes. maybe it was confirmed?
+
+[07-Dec-18 12:25 PM] Mihailo#5902
+Maybe this: `batonvout == tx.vin[1].prevout.n`
+
+[07-Dec-18 12:26 PM] jl777c#5810
+i guess you could find out what it should be, given the state of the mempool
+
+[07-Dec-18 12:26 PM] Mihailo#5902
+Yeah, maybe it is the reordering of vins that creates the problem
+
+[07-Dec-18 12:27 PM] jl777c#5810
+true! i guess the batonvout needs to be set properly, i think it might be a constant in the calling function
+
+[07-Dec-18 12:30 PM] Mihailo#5902
+I have to check this from beginning. I see that baton is not on index 1 so that is the problem...
+
+[07-Dec-18 12:30 PM] Mihailo#5902
+But reordering should prevent this.
+
+[07-Dec-18 12:45 PM] Mihailo#5902
+There was a copy/paste error in previous fix. Now it should work.
+
+[07-Dec-18 12:45 PM] Mihailo#5902
+https://github.com/jl777/komodo/pull/1043
+
+{Embed}
+https://github.com/jl777/komodo/pull/1043
+Fix hanging of oracles by Mixa84 · Pull Request #1043 · jl777/komodo
+https://avatars3.githubusercontent.com/u/39563265?s=400&v=4
+
+[07-Dec-18 12:48 PM] TonyL#3577
+Rebuilding
+
+[07-Dec-18 12:48 PM] jl777c#5810
+updated
+
+[07-Dec-18 12:56 PM] TonyL#3577
+Not hangs anymore on my side
+
+[07-Dec-18 12:58 PM] TonyL#3577
+Published 100 oraclesdata without issues
+
+[07-Dec-18 01:28 PM] Alright#0419
+Have a couple weird observations, not sure they really matter though
+
+[07-Dec-18 01:28 PM] Alright#0419
+```
+check faucetget txid 00652a730d7efd405f86ad50566b89e309e9397dc41a67885db8daecb589ec00 00/00
+faucetget validated
+check faucetget txid 00652a730d7efd405f86ad50566b89e309e9397dc41a67885db8daecb589ec00 00/00
+faucetget validated
+check faucetget txid 00652a730d7efd405f86ad50566b89e309e9397dc41a67885db8daecb589ec00 00/00
+faucetget validated
+check faucetget txid 00652a730d7efd405f86ad50566b89e309e9397dc41a67885db8daecb589ec00 00/00
+faucetget validated
+check faucetget txid 00652a730d7efd405f86ad50566b89e309e9397dc41a67885db8daecb589ec00 00/00
+faucetget validated
+check faucetget txid 00652a730d7efd405f86ad50566b89e309e9397dc41a67885db8daecb589ec00 00/00
+faucetget validated
+```
+stdout of all nodes prints that too many times
+
+[07-Dec-18 01:29 PM] Alright#0419
+then things like this happening as well after broadcasting cc txs
+```
+2018-12-07 13:12:17 UpdateTip: new best=01808fc5d3777ad455247db79720752687e92f1ba436030c53cd77704ec08b2b  height=89  log2_work=11.616549  log2_stake=-inf  tx=96  date=2018-12-07 13:11:53 progress=1.059524  cache=0.0MiB(12tx)
+2018-12-07 13:12:17 AddToWallet 3d840f064c16e85f32f46861358136624d24d8ff9d72289197fba4c4b1387787  
+2018-12-07 13:13:28 connect() to 185.64.105.111:29476 failed after select(): No route to host (113)
+2018-12-07 13:13:32 AddToWallet d377ca2f63223733435b1db4cd105c73a8477e35b3f312a899130cda86bb85e4  new
+2018-12-07 13:13:56 AddToWallet 3d840f064c16e85f32f46861358136624d24d8ff9d72289197fba4c4b1387787  
+2018-12-07 13:13:56 AddToWallet d377ca2f63223733435b1db4cd105c73a8477e35b3f312a899130cda86bb85e4  
+2018-12-07 13:13:56 AddToWallet 3d840f064c16e85f32f46861358136624d24d8ff9d72289197fba4c4b1387787  
+2018-12-07 13:13:56 AddToWallet d377ca2f63223733435b1db4cd105c73a8477e35b3f312a899130cda86bb85e4  
+2018-12-07 13:13:56 AddToWallet 3d840f064c16e85f32f46861358136624d24d8ff9d72289197fba4c4b1387787  
+2018-12-07 13:13:56 AddToWallet d377ca2f63223733435b1db4cd105c73a8477e35b3f312a899130cda86bb85e4  
+2018-12-07 13:13:56 UpdateTip: new best=00ecadfcbb797b503dc68c7817677ae8f11aca43754af484d49f1052ad50c5c1  height=90  log2_work=11.649705  log2_stake=-inf  tx=98  date=2018-12-07 13:13:20 progress=1.071429  cache=0.0MiB(16tx)
+2018-12-07 13:13:56 AddToWallet 3d840f064c16e85f32f46861358136624d24d8ff9d72289197fba4c4b1387787  update
+2018-12-07 13:13:56 AddToWallet d377ca2f63223733435b1db4cd105c73a8477e35b3f312a899130cda86bb85e4  
+2018-12-07 13:14:53 AddToWallet d377ca2f63223733435b1db4cd105c73a8477e35b3f312a899130cda86bb85e4  
+2018-12-07 13:14:53 AddToWallet d377ca2f63223733435b1db4cd105c73a8477e35b3f312a899130cda86bb85e4  
+2018-12-07 13:14:53 AddToWallet d377ca2f63223733435b1db4cd105c73a8477e35b3f312a899130cda86bb85e4
+```
+
+[07-Dec-18 01:29 PM] Alright#0419
+this is pre-activation FSM branch
+
+[07-Dec-18 01:31 PM] TonyL#3577
+I saw such `faucetget validated` print on blockchain synchronisation stage - so thought it's ok since there were some faucet transaction on chain which I've synced. Do you see it on any transaction broadcast as daemon output? @Alright
+
+[07-Dec-18 01:32 PM] TonyL#3577
+There are a lot of new validations and printouts, especially in lets say assets
+
+[07-Dec-18 01:33 PM] Alright#0419
+the print is normal, but it printing so many times is not
+
+[07-Dec-18 01:34 PM] Alright#0419
+like I said, not sure it matters, just thought maybe it was an indication of something else that could be messed up
+
+[07-Dec-18 01:42 PM] Alright#0419
+prints once when the node first sees the faucetget tx
+
+[07-Dec-18 01:42 PM] Alright#0419
+then prints it many more times after the tx is put into a block
+
+[07-Dec-18 04:53 PM] TonyL#3577
+@dukeleto https://github.com/tonymorony/komodo/commit/601820af97063a863f59787a08452c8363933171 made working version of external non regtest nodes/chains testing
+At the moment as a demonstration I've implemented such option in dice testing :```
+PYTHON_DEBUG=1  qa/pull-tester/rpc-tests.sh cryptoconditions_dice --tracerpc --remoteserver
+=== Running testscript cryptoconditions_dice.py ===
+Setting up network...
+connecting to http://user3343335094:pass4b2b726002e7945ab3d323fdf0d32a83a6c2800b217918f79775367af0c6beeee2@127.0.0.1:41372
+created proxy
+connecting to http://user1250842895:passbf15df11779835ad933bbc4f9a8d4774c525bcff0cdd91e56c69c0723dbc8e72ce@159.69.201.122:41372
+created proxy
+```
+Test itself will fail because of assumptions of balances made for fresh regtest chain with known block reward. 
+But in general it's more for future tests and more interesting/complicated cases in real environments - actually now we can connect to our framework any amount of nodes, located anywhere, with different software versions and so on. So now we are not limited by regtest and local node in our tests ideas.
+
+{Embed}
+https://github.com/tonymorony/komodo/commit/601820af97063a863f59787a08452c8363933171
+external nodes test working example · tonymorony/komodo@601820a
+https://avatars3.githubusercontent.com/u/24797699?s=200&v=4
+
+{Reactions}
+👍 
+
+[07-Dec-18 05:00 PM] TonyL#3577
+Universal `generate` 😃  https://github.com/tonymorony/komodo/blob/FSM/qa/rpc-tests/cryptoconditions_dice.py#L95
+Before PR I'll test more that this stuff not broke everything made before + will try to make a little bit more OOP
+
+{Embed}
+https://github.com/tonymorony/komodo/blob/FSM/qa/rpc-tests/cryptoconditions_dice.py
+tonymorony/komodo
+Komodo. Contribute to tonymorony/komodo development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/24797699?s=400&v=4
+
+[07-Dec-18 06:41 PM] SHossain#0007
+@Mihailo TXSCLCC chain is being notarized with latest FSM source
+
+[07-Dec-18 06:41 PM] SHossain#0007
+and latest iguana source
+
+[07-Dec-18 06:42 PM] SHossain#0007
+anyone wants to mine TXSCLCC test chain, let me know and i'll give you start command
+
+[09-Dec-18 08:01 PM] siu - Chainmakers#3920
+SPLTEST died right?
+
+[09-Dec-18 08:01 PM] siu - Chainmakers#3920
+what is the new chain?
+
+[09-Dec-18 08:44 PM] SHossain#0007
+SPLTEST is not dead
+
+[09-Dec-18 08:44 PM] SHossain#0007
+it is running on few systems
+
+[09-Dec-18 08:44 PM] SHossain#0007
+my nodes are still mining it
+
+[09-Dec-18 08:50 PM] siu - Chainmakers#3920
+mine gets stuck at block 60
+
+[09-Dec-18 08:50 PM] siu - Chainmakers#3920
+with current FSM from piratenetwork
+
+[09-Dec-18 08:50 PM] SHossain#0007
+that will not work
+
+[09-Dec-18 08:51 PM] SHossain#0007
+edit `~/komodo/src/komodo_defs.h` file with the following timestamp and compile
+```
+#define KOMODO_SAPLING_ACTIVATION 1543073054 // Sat, 24 Nov 2018 15:24:14 GMT
+#define KOMODO_SAPLING_DEADLINE 1543593600 // Fri, 30 Nov 2018 16:00:00 GMT
+```
+chain start:
+```
+./komodod -ac_name=SPLTEST -ac_supply=5555555 -ac_reward=10000000000000 -ac_cc=2 -addressindex=1 -spentindex=1 -addnode=54.36.126.42 -addnode=94.130.224.11 &
+```
+
+[09-Dec-18 08:52 PM] SHossain#0007
+@siu - Chainmakers
+
+[09-Dec-18 08:52 PM] SHossain#0007
+you can use jl777/komodo repo now
+
+[09-Dec-18 08:52 PM] siu - Chainmakers#3920
+ok
+
+[09-Dec-18 08:53 PM] SHossain#0007
+PirateNetwork repo was used for a different testing with different timestamp
+
+[09-Dec-18 08:56 PM] siu - Chainmakers#3920
+ok
+
+[10-Dec-18 02:24 PM] siu - Chainmakers#3920
+```./coqui-cli channelspayment 3b804d984b7853c8e0766b80f50cfc95e9feb2a8a498bd3765c266892fa2846c 1
+```
+
+[10-Dec-18 02:24 PM] siu - Chainmakers#3920
+im testing channels cc in COQUI
+
+[10-Dec-18 02:24 PM] siu - Chainmakers#3920
+opened a channel of 4 payments of 1 satoshi
+
+[10-Dec-18 02:24 PM] siu - Chainmakers#3920
+```01000000032cf0a8aa728938a7721afb2a9e36ddec7615162a92316295981d751b6bfe15270200000049483045022100d69b49fb888e9e5659c62d3972e6057349cf9ea323dddde92d568f474fdbb45002201d7db9b790030a03fdb88e517842825662c8af078365a6588776e25fe02e28f601ffffffff6c84a22f8966c26537bd98a4a8b2fee995fc0cf5806b76e0c853784b984d803b00000000a74ca5a281a1a0819ca28194a067a565802103b0dabc5bfd2c2d1c3f5a29c3fd5527f200d0e424dcea08d78e38eb0fe0b34f48814045a68311f94947044da5c57f7c5884e85dee9804b583eb792ed33ede665dd67f356c36e779999488afce547d2c5aa336b9c6462c943801e44bda899cb11cf71ea129a5278020a13b6832b5c696b88f043719506a8281bc17d042fd60a09d868b29392cb7971c8103020000af038001eba10001ffffffff6c84a22f8966c26537bd98a4a8b2fee995fc0cf5806b76e0c853784b984d803b010000007b4c79a276a072a26ba067a565802103b0dabc5bfd2c2d1c3f5a29c3fd5527f200d0e424dcea08d78e38eb0fe0b34f488140d8e98c29303f5ad3aa8ff3b78c0c481ceb3de7370fa13f281e8ba73c7390bb467ad6e2d53a4c8b739d3ea49bd3e341e9fe685882fff5982bcfef3f353ff933d8a100af038001eba10001ffffffff060300000000000000302ea22c802091deb91c6e5dd0a149f5eb5a9abf38ac7e24a0725554b6d391c963c33793ba3a81031210008203000401cc1027000000000000302ea22c802085c9d33d54ccb32a73aa36804c8712c6700d309e27d0179618adaa2a1484ce198103120c008203000401cc1027000000000000302ea22c8020b28be6c1b45e274bd64245ab3bcfbaabd1971e81d06011af8bf379f5fda890bc8103120c008203000401cc010000000000000023210276c6d1c65abc64c8559710b8aff4b9e33787072d3dda4ec9a47b30da0725f57aac8038010000000000232103b0dabc5bfd2c2d1c3f5a29c3fd5527f200d0e424dcea08d78e38eb0fe0b34f48ac0000000000000000956a4c92eb506c84a22f8966c26537bd98a4a8b2fee995fc0cf5806b76e0c853784b984d803b2103b0dabc5bfd2c2d1c3f5a29c3fd5527f200d0e424dcea08d78e38eb0fe0b34f48210276c6d1c65abc64c8559710b8aff4b9e33787072d3dda4ec9a47b30da0725f57a030000000100000000000000e5c0edd925ed68b4532bc434e04323108a587d1c88572d94e1c9e49ba647b0b700000000
+error code: -26
+error message:
+64: dust```
+
+[10-Dec-18 02:25 PM] siu - Chainmakers#3920
+```01000000032cf0a8aa728938a7721afb2a9e36ddec7615162a92316295981d751b6bfe15270200000049483045022100d69b49fb888e9e5659c62d3972e6057349cf9ea323dddde92d568f474fdbb45002201d7db9b790030a03fdb88e517842825662c8af078365a6588776e25fe02e28f601ffffffff6c84a22f8966c26537bd98a4a8b2fee995fc0cf5806b76e0c853784b984d803b00000000a74ca5a281a1a0819ca28194a067a565802103b0dabc5bfd2c2d1c3f5a29c3fd5527f200d0e424dcea08d78e38eb0fe0b34f48814045a68311f94947044da5c57f7c5884e85dee9804b583eb792ed33ede665dd67f356c36e779999488afce547d2c5aa336b9c6462c943801e44bda899cb11cf71ea129a5278020a13b6832b5c696b88f043719506a8281bc17d042fd60a09d868b29392cb7971c8103020000af038001eba10001ffffffff6c84a22f8966c26537bd98a4a8b2fee995fc0cf5806b76e0c853784b984d803b010000007b4c79a276a072a26ba067a565802103b0dabc5bfd2c2d1c3f5a29c3fd5527f200d0e424dcea08d78e38eb0fe0b34f488140d8e98c29303f5ad3aa8ff3b78c0c481ceb3de7370fa13f281e8ba73c7390bb467ad6e2d53a4c8b739d3ea49bd3e341e9fe685882fff5982bcfef3f353ff933d8a100af038001eba10001ffffffff060300000000000000302ea22c802091deb91c6e5dd0a149f5eb5a9abf38ac7e24a0725554b6d391c963c33793ba3a81031210008203000401cc1027000000000000302ea22c802085c9d33d54ccb32a73aa36804c8712c6700d309e27d0179618adaa2a1484ce198103120c008203000401cc1027000000000000302ea22c8020b28be6c1b45e274bd64245ab3bcfbaabd1971e81d06011af8bf379f5fda890bc8103120c008203000401cc010000000000000023210276c6d1c65abc64c8559710b8aff4b9e33787072d3dda4ec9a47b30da0725f57aac8038010000000000232103b0dabc5bfd2c2d1c3f5a29c3fd5527f200d0e424dcea08d78e38eb0fe0b34f48ac0000000000000000956a4c92eb506c84a22f8966c26537bd98a4a8b2fee995fc0cf5806b76e0c853784b984d803b2103b0dabc5bfd2c2d1c3f5a29c3fd5527f200d0e424dcea08d78e38eb0fe0b34f48210276c6d1c65abc64c8559710b8aff4b9e33787072d3dda4ec9a47b30da0725f57a030000000100000000000000e5c0edd925ed68b4532bc434e04323108a587d1c88572d94e1c9e49ba647b0b700000000```
+
+[10-Dec-18 02:25 PM] siu - Chainmakers#3920
+but `channelspayment` says im sending dust
+
+[10-Dec-18 02:25 PM] Mihailo#5902
+@siu - Chainmakers Is there any output from the daemon?
+
+[10-Dec-18 02:25 PM] siu - Chainmakers#3920
+nope
+
+[10-Dec-18 02:25 PM] siu - Chainmakers#3920
+no output
+
+[10-Dec-18 02:26 PM] siu - Chainmakers#3920
+COQUI repo is not in latest
+
+[10-Dec-18 02:26 PM] siu - Chainmakers#3920
+though
+
+[10-Dec-18 02:26 PM] siu - Chainmakers#3920
+im waiting for the sapling updates to be ready to then update my repo
+
+[10-Dec-18 02:26 PM] Mihailo#5902
+I'm not familiar with this error message. Let me se the repo, and can you give me channelsinfo?
+
+[10-Dec-18 02:27 PM] siu - Chainmakers#3920
+```./coqui-cli channelsinfo 3b804d984b7853c8e0766b80f50cfc95e9feb2a8a498bd3765c266892fa2846c
+{
+  "result": "success",
+  "name": "Channel RTWeBzkZupFpF58VA4FEpooeY44oWFKYww",
+  "Open": "4 payments of 1 satoshi"
+}```
+
+[10-Dec-18 02:28 PM] Mihailo#5902
+Hmmm, maybe the problem is that payment is 1 satoshi. This is way less than txfee. I think we should parse this on RPC to return error if payment value is less than txfee.
+
+[10-Dec-18 02:28 PM] Mihailo#5902
+But still it could be done by raw tx.
+
+[10-Dec-18 03:15 PM] TonyL#3577
+Yes, transactions < than txfee not work with channels as I remember
+
+[10-Dec-18 04:02 PM] Alright#0419
+@siu - Chainmakers you can remove dust rule from daemon and mine your own blocks with those transactions
+
+[10-Dec-18 04:02 PM] Alright#0419
+it's not related to channels in particular, just a general rule
+
+[10-Dec-18 04:04 PM] siu - Chainmakers#3920
+ok, understood, thanks.
+
+[10-Dec-18 04:04 PM] siu - Chainmakers#3920
+i thought that channels purpose was to work with txs that are less than txfee
+
+[10-Dec-18 04:04 PM] siu - Chainmakers#3920
+also i created a 1 satoshi payment channel as a mistake :p
+
+[10-Dec-18 04:06 PM] Mihailo#5902
+No, channel pupose is to have instant payments without a need for waiting for tx to be mined. And that is the top feature of channel 😉
+
+[10-Dec-18 04:22 PM] Mihailo#5902
+Something seems wrong with broadcasting txs. I do not know is it TUI which I'm using or the client itself. So I used TUI for Gateway to create subscription utxos. They showed  in wallet but they only first were sent to mining node and was mined. From then they do not exist at all....
+```
+AddToWallet 7d6adb205a20c2c391c0a0c1c5dee77174087620a1b75b153d2631c74c8c815b  new
+AddToWallet e1a6044960c321b8eebf0c4e2fd5c19bd7953f060980c3ef0d1fd8105a72302e  new
+AddToWallet 15512413e5884c79a0b8c8afd4fc856de8dd0d96e92fc9a6ebf31f87088b4527  new
+AddToWallet 7d6adb205a20c2c391c0a0c1c5dee77174087620a1b75b153d2631c74c8c815b  
+AddToWallet 7d6adb205a20c2c391c0a0c1c5dee77174087620a1b75b153d2631c74c8c815b  
+AddToWallet 7d6adb205a20c2c391c0a0c1c5dee77174087620a1b75b153d2631c74c8c815b  
+UpdateTip: new best=00dc6e4854bf831393b7118119880fda9dafc98e939bd5ed49d2205e9707893b  height=109  log2_work=12.261507  log2_stake=-inf  tx=121  date=2018-12-10 16:13:02 progress=1.009259  cache=0.0MiB(116tx)
+AddToWallet 7d6adb205a20c2c391c0a0c1c5dee77174087620a1b75b153d2631c74c8c815b  
+AddToWallet 7d6adb205a20c2c391c0a0c1c5dee77174087620a1b75b153d2631c74c8c815b  
+AddToWallet 7d6adb205a20c2c391c0a0c1c5dee77174087620a1b75b153d2631c74c8c815b  
+AddToWallet 7d6adb205a20c2c391c0a0c1c5dee77174087620a1b75b153d2631c74c8c815b  
+UpdateTip: new best=00facd4898e4ac0440e231a6760573f874008a8ad51d3a5beb9ae1de243260d3  height=110  log2_work=12.292609  log2_stake=-inf  tx=123  date=2018-12-10 16:13:16 progress=1.018519  cache=0.0MiB(118tx)
+AddToWallet 7d6adb205a20c2c391c0a0c1c5dee77174087620a1b75b153d2631c74c8c815b  update
+UpdateTip: new best=0017e9bdfbb6c15ea26552c50436e9ecbc8b5dffa7f4b75a35d444626f411119  height=111  log2_work=12.323899  log2_stake=-inf  tx=124  date=2018-12-10 16:13:24 progress=1.027778  cache=0.0MiB(119tx)
+```
+```
+komodo-cli -ac_name=FSM getrawtransaction e1a6044960c321b8eebf0c4e2fd5c19bd7953f060980c3ef0d1fd8105a72302e 1
+error code: -5
+error message:
+No information available about transaction
+```
+
+[10-Dec-18 04:23 PM] Mihailo#5902
+This is on latest FSM
+
+[10-Dec-18 04:26 PM] siu - Chainmakers#3920
+thanks... will test now with a larger output
+
+[10-Dec-18 04:35 PM] Mihailo#5902
+@jl777c It seems there is a problem in relaying tx. I have 4 nodes (1 mining) and they are all interconnected with each other. Now when I rebroadcasted e1a6044960c321b8eebf0c4e2fd5c19bd7953f060980c3ef0d1fd8105a72302e it is stays in that node mempool and one more, but it is not reaching mining node and it keeps trying to broadcast it...
+```
+UpdateTip: new best=00e4597552595bec2784df3a38bbad5fd5887e9ec781f0e96acaa86469491719  height=145  log2_work=13.327412  log2_stake=-inf  tx=158  date=2018-12-10 16:30:31 progress=1.006944  cache=0.0MiB(153tx)
+AddToWallet e1a6044960c321b8eebf0c4e2fd5c19bd7953f060980c3ef0d1fd8105a72302e  
+AddToWallet e1a6044960c321b8eebf0c4e2fd5c19bd7953f060980c3ef0d1fd8105a72302e  
+AddToWallet e1a6044960c321b8eebf0c4e2fd5c19bd7953f060980c3ef0d1fd8105a72302e  
+AddToWallet e1a6044960c321b8eebf0c4e2fd5c19bd7953f060980c3ef0d1fd8105a72302e  
+AddToWallet e1a6044960c321b8eebf0c4e2fd5c19bd7953f060980c3ef0d1fd8105a72302e  
+UpdateTip: new best=00ef8461d279f2bc49119f27fa5f6f4990972aa6ef5acb51cc354f8a46c9c1e4  height=146  log2_work=13.354249  log2_stake=-inf  tx=159  date=2018-12-10 16:31:01 progress=1.013889  cache=0.0MiB(154tx)
+AddToWallet e1a6044960c321b8eebf0c4e2fd5c19bd7953f060980c3ef0d1fd8105a72302e  
+AddToWallet e1a6044960c321b8eebf0c4e2fd5c19bd7953f060980c3ef0d1fd8105a72302e  
+AddToWallet e1a6044960c321b8eebf0c4e2fd5c19bd7953f060980c3ef0d1fd8105a72302e  
+UpdateTip: new best=00741345d5911099975d59b503df72660762ab5d0a49459c1bd10ebd0152eefd  height=147  log2_work=13.381137  log2_stake=-inf  tx=160  date=2018-12-10 16:33:17 progress=1.000000  cache=0.0MiB(155tx)
+AddToWallet e1a6044960c321b8eebf0c4e2fd5c19bd7953f060980c3ef0d1fd8105a72302e  
+AddToWallet e1a6044960c321b8eebf0c4e2fd5c19bd7953f060980c3ef0d1fd8105a72302e  
+AddToWallet e1a6044960c321b8eebf0c4e2fd5c19bd7953f060980c3ef0d1fd8105a72302e  
+```
+
+[10-Dec-18 04:35 PM] Mihailo#5902
+I think @Alright mentioned it last Friday
+
+[10-Dec-18 04:36 PM] jl777c#5810
+does the mining node get the tx?
+
+[10-Dec-18 04:36 PM] Mihailo#5902
+No. And they are all on same code...
+
+[10-Dec-18 04:36 PM] jl777c#5810
+in bitcoin, the "broadcasting" is actually just sending it to 2 nodes
+
+[10-Dec-18 04:36 PM] jl777c#5810
+maybe we need to increase that to make it more practical
+
+[10-Dec-18 04:37 PM] Mihailo#5902
+In my case, only one node received it beside origin node. And all nodes have connections to each other node.
+
+[10-Dec-18 04:37 PM] Mihailo#5902
+So it should not be the problem in reaching nodes...
+
+[10-Dec-18 04:38 PM] siu - Chainmakers#3920
+tried a new channel with bigger tx size
+
+[10-Dec-18 04:39 PM] siu - Chainmakers#3920
+```CC Eval EVAL_CHANNELS Invalid: channelOpen is not yet confirmed(notarised)! spending tx 070c112d19cdd9846fbc887edc40484871d85eb6c9ac2c7aa1c59e7037be8a64
+error code: -26
+error message:
+16: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)
+```
+
+[10-Dec-18 04:39 PM] Mihailo#5902
+Just to remind you, there is a check if open is notarized/confirmed. So either the chain has notarization so you have to wait for open to be notarized, or if it does not have it then it is 101 confirms.
+
+[10-Dec-18 04:39 PM] siu - Chainmakers#3920
+let me wait hehehe
+
+[10-Dec-18 04:40 PM] Alright#0419
+can test the notarization side of it on CFEK chains
+
+[10-Dec-18 04:40 PM] Mihailo#5902
+You can build the client with TESTMODE flasg but it then you must bring up your own chain
+
+[10-Dec-18 04:41 PM] Mihailo#5902
+@jl777c I noticed this now but still it did not reach mining node:
+```
+AddToWallet e1a6044960c321b8eebf0c4e2fd5c19bd7953f060980c3ef0d1fd8105a72302e  
+AddToWallet e1a6044960c321b8eebf0c4e2fd5c19bd7953f060980c3ef0d1fd8105a72302e  
+AddToWallet e1a6044960c321b8eebf0c4e2fd5c19bd7953f060980c3ef0d1fd8105a72302e  
+UpdateTip: new best=00f38681d0e8c49d225d56fdb683b4f8b28f8a52fc90713e686ae14f162e6181  height=157  log2_work=13.636171  log2_stake=-inf  tx=170  date=2018-12-10 16:39:28 progress=1.000000  cache=0.0MiB(165tx)
+Relaying wtx e1a6044960c321b8eebf0c4e2fd5c19bd7953f060980c3ef0d1fd8105a72302e
+ResendWalletTransactions: rebroadcast 1 unconfirmed transactions
+```
+
+[10-Dec-18 04:42 PM] jl777c#5810
+can you look into the sendrawtransaction logic in the networking code?
+
+[10-Dec-18 04:43 PM] jl777c#5810
+well i am not sure exactly the code path it takes
+
+[10-Dec-18 04:43 PM] jl777c#5810
+oh, what is the txfee you have for that tx?
+
+[10-Dec-18 04:43 PM] Mihailo#5902
+I have even made sendraw transaction on each node except the mining node, and they all have it in mempool but not on mining node.
+
+[10-Dec-18 04:43 PM] jl777c#5810
+if the txfee is too low, it might not get relayed
+
+[10-Dec-18 04:43 PM] Mihailo#5902
+Regular I think
+
+[10-Dec-18 04:43 PM] Mihailo#5902
+Let me check
+
+[10-Dec-18 04:44 PM] Mihailo#5902
+txfee: 10k sat
+

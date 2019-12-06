@@ -1,0 +1,472 @@
+==============================================================
+Guild: Komodo
+Channel: marmara
+Topic: 
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[25-Jul-19 06:05 PM] Paro#7842
+@dimxy
+
+[25-Jul-19 06:16 PM] dimxy#2587
+Thank you
+This is the settlement tx
+
+[25-Jul-19 06:17 PM] dimxy#2587
+Let's see where the settled amount went to...
+
+[25-Jul-19 06:17 PM] Paro#7842
+http://explorer.marmara.io/tx/2d19799c42f59d91266c82896c557c17d67fd727acc97b943329e898aa3035e9
+
+[25-Jul-19 06:17 PM] Paro#7842
+Unparsed address [0]
+
+[25-Jul-19 07:25 PM] dimxy#2587
+yes bad address
+
+[25-Jul-19 07:36 PM] dimxy#2587
+could you please run 'git log' in komodo src directory and paste the first page of the output?
+for this node 03878fbb38cf2b42a4f640ca36f49cde644b231cdd6cc2bb255f5e318d8f4d6dae
+
+[25-Jul-19 07:41 PM] dimxy#2587
+this is one of the ubuntu nodes, I believe.
+Seems it has not been upgraded, but it has mined the settlement transaction
+(I used to have that empty address issue some time ago but it was fixed. Maybe this bug still remains on ubuntus?)
+
+[26-Jul-19 12:06 AM] Paro#7842
+check "git log" https://docs.google.com/document/d/1Z59CbK-cPjp1wg7hrlzEFTEUgBoPHzegnzhowzJbZIQ/edit
+
+{Embed}
+https://docs.google.com/document/d/1Z59CbK-cPjp1wg7hrlzEFTEUgBoPHzegnzhowzJbZIQ/edit
+TEST 2  - MCL Version 1.0
+test1 Pubkey-1	: 035e4318b658eb281ccf85d7b6876443cc1df5f442da908eb461c97dc827d5cb25 test2 Pubkey-2	: 02906c7be5b4608b99bb20a53dab429a9ce804e6a5fdc3b5f3790560aa5f54f648 test3 Pubkey-3	 : 02ff65f6374d7f23d8d67902622d055d4131cf1a1acb99b85206d2a3ad86acb2ed   before marmarainfo  P...
+https://lh3.googleusercontent.com/j0zjJNegiiDV7UNF4p4zrNWyrFnEsg9oXslZQs5cLZsKnA_myX0QWvwuESbEF5cLXfb27w=w1200-h630-p
+
+[26-Jul-19 03:42 AM] dimxy#2587
+Apart from the pk1,pk2 and pk3 nodes you have two more ubuntu nodes, don't you?
+Could please add git log output from them too?
+as settlement now is done by miners in auto mode then every node in the chain should be upgraded to the latest version because there were bugs in the settlement (and could be further as we are in active development stage)
+
+[26-Jul-19 10:59 AM] Paro#7842
+first node and second node. Not updated.
+
+[26-Jul-19 11:00 AM] Paro#7842
+update. I will build a new chain.
+
+{Reactions}
+👍 
+
+[26-Jul-19 02:57 PM] Paro#7842
+I found the problem.
+
+[26-Jul-19 02:57 PM] Paro#7842
+second node server is shut down.
+
+[26-Jul-19 02:58 PM] Paro#7842
+mining was the only server.so he cannot "settlement".
+
+[26-Jul-19 04:48 PM] dimxy#2587
+The important thing is that the first and second nodes are also upgraded up to the latest version to eliminate the empty address issue (that we saw in the last test)
+
+[26-Jul-19 05:18 PM] Paro#7842
+all node update ..
+
+[02-Aug-19 07:02 AM] Paro#7842
+I've tried it many times and I've done long tests. settlement works well. @dimxy
+
+[02-Aug-19 07:02 AM] dimxy#2587
+great!
+
+[02-Aug-19 07:03 AM] Paro#7842
+Do you want me to run another kind of test?
+
+[02-Aug-19 07:12 AM] dimxy#2587
+we might try to break the system by passing incorrect parameters
+
+[02-Aug-19 07:12 AM] Paro#7842
+oh ok
+
+[02-Aug-19 07:13 AM] Paro#7842
+try almost everything. I will report errors.
+
+[03-Aug-19 08:05 AM] B. Gültekin Çetiner#0626
+Good. Going very well then. Can we definitely say that coins Locked in Credit Loops have definitely much more staking power than other activated/locked coins?
+
+[03-Aug-19 08:07 AM] B. Gültekin Çetiner#0626
+That was question 1. Question 2: Would you suggest the staking power of LCL Coins  to be more than 3x in real chain?
+
+[05-Aug-19 08:28 PM] dimxy#2587
+Actually  my test chain is not very stable in sense of staking. I  believe this is segid problems which to be solved yet
+
+[05-Aug-19 08:32 PM] dimxy#2587
+About the question2 I think we could set any multiplier (which I believe depends on what business requires) as long as stacking in the marmara chain works okay
+
+[06-Aug-19 05:49 PM] dimxy#2587
+I'm rethinking about issues with staking.
+Actually my 3-node marmara chain is stalling. This shows itself as blocks are generated with long delays and there are messages in log:
+```640 seconds until elegible, waiting. 
+600 seconds until elegible, waiting.
+...```
+(That is, more than 10 min waiting for an utxo.)
+Our other developers suggested that this is because not enough utxos for staking.
+Indeed, in non-marmara chains we usually use utxo splitting on 64 addresses (this is about normal coins of course).
+In our marmara chain we have not yet implemented such splitting for activated coins, and I'm thinking why we need this.
+As I understand JL correctly, in large marmara chains we would not need splitting as there will be many user addresses and segids will be filled up naturally.
+In fact this splitting on 64 segids is needed for small chains, while we do not have many addresses yet.
+So I am implementing this splitting of activated coins for small test chains to run stable 
+(And we should understand it would affect rewards generation: of course, split activated coins will have much more advantage over non-split lock-in-loop coins). 
+
+Seems, this feature will be used also in the production chain on its early stage to make it stable.
+And it should be some transition period until enough addresses appear on chain because the initially split coins would affect new users' activated and lock-in-loop coins rewards. 
+(That is, the initially split coins should be taken off as enough other addresses are on the chain)
+
+{Reactions}
+👍🏾 
+
+[07-Aug-19 11:00 AM] Paro#7842
+@dimxy  github will update when sin. I need to run new tests.
+
+[07-Aug-19 11:07 AM] dimxy#2587
+I'm working now on splitting feature, it should not affect any program logic.
+(I hope to get splitting working today or tomorrow)
+
+[07-Aug-19 04:33 PM] Paro#7842
+ok i waiting.
+
+[08-Aug-19 07:53 PM] dimxy#2587
+I'm still working on the splitting (but close to finish)
+And I had to improve the marmara stake transaction opreturn structure (so we would need to start a new chain)
+
+[08-Aug-19 09:04 PM] Paro#7842
+hmm ok i waitin u
+
+[09-Aug-19 06:20 AM] dimxy#2587
+I believe staking works much better with the new command marmaralock64 splitting activated coins on the segids.
+The update is in in my repo.
+
+Please note that I have merged the latest changes from the main komodo repository and your local build repositories may report conflicts with my repo. You may either remove your local repos and clone them again or use for build remote branches instead local branches with this commands: 
+```
+git fetch origin marmara-v1-1-opret-v2 
+git checkout origin/marmara-v1-1-opret-v2
+make clean
+./zcutil/build.sh -j$(nproc)
+```
+
+[09-Aug-19 06:44 AM] Paro#7842
+OK. new chain build.
+
+[09-Aug-19 06:45 AM] Paro#7842
+I'll do a test later
+
+[09-Aug-19 06:58 AM] dimxy#2587
+I wrote a page how to start marmara PoS chain with new marmaralock64 rpc:
+https://github.com/dimxy/komodo/wiki/How-to-start-Marmara-PoS-chain
+
+{Embed}
+https://github.com/dimxy/komodo/wiki/How-to-start-Marmara-PoS-chain
+dimxy/komodo
+Komodo. Contribute to dimxy/komodo development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/21120539?s=400&v=4
+
+{Reactions}
+👍🏾 
+
+[09-Aug-19 07:18 AM] Paro#7842
+We can do a test on my chain?
+
+[09-Aug-19 07:18 AM] Paro#7842
+we loop together.
+
+{Reactions}
+👌 
+
+[09-Aug-19 07:39 AM] Paro#7842
+http://explorer.marmara.io/
+
+{Embed}
+http://explorer.marmara.io/
+Marmara Explorer
+Marmara Insight. View detailed information on all Marmara transactions and block. {{ $root.title + $root.titleDetail }}
+
+[09-Aug-19 07:40 AM] Paro#7842
+new chain OK
+
+[09-Aug-19 07:40 AM] Paro#7842
+start ```./komodod -ac_name=MCL0 -ac_supply=2000000 -ac_cc=2 -addnode=37.148.210.158 -addressindex=1 -spentindex=1 -ac_marmara=1 -ac_staked=75 -ac_reward=3000000000 -pubkey=? & 
+```
+
+[09-Aug-19 07:45 AM] dimxy#2587
+did you create new pubkeys for the nodes?
+
+[09-Aug-19 07:46 AM] Paro#7842
+yes
+
+[09-Aug-19 07:46 AM] Paro#7842
+You think I'm a beginner. 😃 ?
+
+[09-Aug-19 07:47 AM] Paro#7842
+http://prntscr.com/oqehdd
+
+{Embed}
+http://prntscr.com/oqehdd
+Screenshot
+Captured with Lightshot
+https://image.prntscr.com/image/iFAKh3vvTc2wDSA45V_TeA.png
+
+[09-Aug-19 07:48 AM] Paro#7842
+https://tenor.com/view/shocked-shock-omg-zoom-gif-8379270
+
+{Embed}
+https://tenor.com/view/shocked-shock-omg-zoom-gif-8379270
+https://media.tenor.co/images/d5812d44ee9e6acbfd719ef4a438f362/tenor.png
+
+{Reactions}
+😀 
+
+[09-Aug-19 07:53 AM] Paro#7842
+I didn't do it 100x. @dimxy
+
+{Reactions}
+😀 
+
+[09-Aug-19 07:57 AM] Paro#7842
+http://prntscr.com/oqemgx
+
+{Embed}
+http://prntscr.com/oqemgx
+Screenshot
+Captured with Lightshot
+https://image.prntscr.com/image/kT2dJYYqRmy0kfwpxnbQBw.png
+
+[09-Aug-19 07:58 AM] Paro#7842
+6400 coin
+
+[09-Aug-19 07:58 AM] Paro#7842
+lock
+
+[09-Aug-19 07:58 AM] dimxy#2587
+what does listaddressgroupings  show?
+
+[09-Aug-19 07:58 AM] Paro#7842
+```./komodo-cli -ac_name=MCL0  listaddressgroupings
+[
+  [
+    [
+      "RGsBns7fNST45dSATyB7boCtAGbsei6y1Z",
+      6430.00000000,
+      ""
+    ]
+  ]
+]
+```
+
+[09-Aug-19 07:59 AM] Paro#7842
+```{
+  "result": "success",
+  "myNormalAddress": "RGsBns7fNST45dSATyB7boCtAGbsei6y1Z",
+  "myNormalAmount": 6430.00000000,
+  "myCCActivatedAddress": "RUyTj7939fkuXcgMHyc7QG5rUi6f48gZ8H",
+  "myActivatedAmount": 0.00000000,
+  "myAmountOnActivatedAddress-old": 0.00000000,
+  "myCCAddress": "RE3XU9vGUvuznKFqaWq1PsghuCfVsJQMFR",
+  "myCCBalance": 0.00000000,
+  "Loops": [
+  ],
+  "TotalLockedInLoop": 0.00000000,
+  "firstheight": 0,
+  "lastheight": 1073741824,
+  "minamount": 0.00000000,
+  "maxamount": 11529215046.06846976,
+  "currency": "MARMARA"
+}
+```
+
+[09-Aug-19 07:59 AM] dimxy#2587
+I suggest marmaralock64 64 1
+
+[09-Aug-19 08:00 AM] Paro#7842
+yes worked
+
+{Reactions}
+👍 
+
+[09-Aug-19 08:00 AM] Paro#7842
+http://explorer.marmara.io/tx/4c6daa69c3a2c33366adf8525ba2aa11e55921725a7af208d2c5ba5561d961f3
+
+[09-Aug-19 08:01 AM] Paro#7842
+why couldn't we do 6400?
+
+[09-Aug-19 08:02 AM] Paro#7842
+i did 6300 coin
+
+[09-Aug-19 08:02 AM] Paro#7842
+http://explorer.marmara.io/tx/7b7e995ae0e86ac474f8d6efe7e6d8edf39463da72a17cb48d69ba6b13a7761b
+
+[09-Aug-19 08:03 AM] Paro#7842
+6300 ```./komodo-cli -ac_name=MCL0 listaddressgroupings
+[
+  [
+    [
+      "RMF23BKoL7LXMXzdtMjNiwp6pFQxY2wFeD",
+      129.99990000,
+      ""
+    ]
+  ]
+]
+```
+
+[09-Aug-19 08:05 AM] Paro#7842
+http://prntscr.com/oqeqvg
+
+{Embed}
+http://prntscr.com/oqeqvg
+Screenshot
+Captured with Lightshot
+https://image.prntscr.com/image/DfoBBHBYTt2pFE0mnilS8w.png
+
+[09-Aug-19 08:05 AM] dimxy#2587
+this marmaralock64 is used only for initial marmarachain start, to fill in all 64 segids, until many user addresses appear
+
+[09-Aug-19 08:06 AM] dimxy#2587
+so it's okay to use low amounts just for PoS to be able to work
+
+[09-Aug-19 08:06 AM] dimxy#2587
+if all the segids are not covered with addresses with utxos, the PoS could be unstable
+
+[09-Aug-19 08:07 AM] dimxy#2587
+so it is temp solution to make the chain stable
+
+{Reactions}
+👍🏾 
+
+[09-Aug-19 08:07 AM] Paro#7842
+http://prntscr.com/oqerxf
+
+{Embed}
+http://prntscr.com/oqerxf
+Screenshot
+Captured with Lightshot
+https://image.prntscr.com/image/xKOZd6-sTIqsJY8uwCaKOQ.png
+
+[09-Aug-19 08:08 AM] Paro#7842
+5900 does not lock tokens
+
+[09-Aug-19 08:08 AM] dimxy#2587
+marmaralock64 does not create lock-in-loop coins.
+It creates new 64 addresses with activated coins on them
+
+[09-Aug-19 08:09 AM] Paro#7842
+oh ok
+
+[09-Aug-19 08:09 AM] Paro#7842
+will I use "marmaralock" to lock?
+
+[09-Aug-19 08:09 AM] dimxy#2587
+you can see them with new rpc marmaralistactivatedaddresses
+
+[09-Aug-19 08:09 AM] Paro#7842
+yes
+
+[09-Aug-19 08:10 AM] Paro#7842
+i see
+
+[09-Aug-19 08:10 AM] dimxy#2587
+yes you can still use marmaralock to create  activated  coins on **your pubkey** that is in -pubkey= param
+
+[09-Aug-19 08:11 AM] dimxy#2587
+marmaralock64 creates 64 new pubkeys, they are not used in credit loops
+
+[09-Aug-19 08:11 AM] dimxy#2587
+they are only used in staking
+
+[09-Aug-19 08:11 AM] Paro#7842
+I get it now.
+
+[09-Aug-19 08:12 AM] Paro#7842
+http://prntscr.com/oqeut4
+
+{Embed}
+http://prntscr.com/oqeut4
+Screenshot
+Captured with Lightshot
+https://image.prntscr.com/image/029JRYG1SMascZ7q_iqqtQ.png
+
+[09-Aug-19 08:12 AM] dimxy#2587
+My own chain was stalling for 10-20 mins until I made this marmaralock64, because staking protocol  could not find staking utxo for the lack of addresses on 64 segids (there was only 1 address then)
+
+[09-Aug-19 08:13 AM] Paro#7842
+oh ok
+
+[09-Aug-19 08:14 AM] dimxy#2587
+you need to run marmaralock64 only on PoS nodes (I believe  you have 2 PoS nodes?)
+
+[09-Aug-19 08:14 AM] Paro#7842
+ooo
+
+[09-Aug-19 08:14 AM] dimxy#2587
+no need to do it on PoW or other else nodes
+
+[09-Aug-19 08:14 AM] Paro#7842
+I ran it in the tests.
+
+[09-Aug-19 08:15 AM] Paro#7842
+I've run it on the nodes I'm going to "loop"
+
+[09-Aug-19 08:15 AM] dimxy#2587
+send some coins to the address on the PoS node if there is no coins on it
+
+[09-Aug-19 08:16 AM] Paro#7842
+```  "myNormalAddress": "RArmg7vSVD55YMcZRLq4AfX8RZyd5i5cCF",
+  "myNormalAmount": 990.00010000,
+  "myCCActivatedAddress": "RDRJoE9yUADnbgT4eXdgYYjZNU3dKmtNMr",
+  "myActivatedAmount": 1020.00020000,
+  "myAmountOnActivatedAddress-old": 1020.00020000,
+  "myCCAddress": "RK5Na1FgZv1C6WEXL8d3CdhQFVMJbmmtfs",
+  "myCCBalance": 0.00000000,
+```
+
+[09-Aug-19 08:16 AM] Paro#7842
+second node
+
+[09-Aug-19 08:16 AM] Paro#7842
+mining mode.
+
+[09-Aug-19 08:17 AM] Paro#7842
+but. I did not use "second node" marmaralock64.
+
+[09-Aug-19 08:18 AM] dimxy#2587
+is this PoS or PoW node?
+
+[09-Aug-19 08:20 AM] Paro#7842
+first node = setgenerate false 0
+second node = setgenerate true 1
+
+[09-Aug-19 08:20 AM] Paro#7842
+Need two nodes? =
+
+[09-Aug-19 08:21 AM] Paro#7842
+except the first node ?
+
+[09-Aug-19 08:24 AM] Paro#7842
+http://prntscr.com/oqf0x8
+
+{Embed}
+http://prntscr.com/oqf0x8
+Screenshot
+Captured with Lightshot
+https://image.prntscr.com/image/suqQSXKlSFCzo17MJAQtgw.png
+
+[09-Aug-19 08:24 AM] Paro#7842
+status this is currently
+
+[09-Aug-19 08:30 AM] dimxy#2587
+on the node where you did marmaralock64 call setgenerate true 0
+on the  node where you did not call marmaralock64 call setgenerate true 1
+
+[09-Aug-19 08:31 AM] Paro#7842
+yes test1 test2 node . setgenerate false 0
+
+[09-Aug-19 08:31 AM] Paro#7842
+change true 0
+

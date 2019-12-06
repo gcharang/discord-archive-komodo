@@ -1,0 +1,312 @@
+==============================================================
+Guild: Komodo
+Channel: talk-mining
+Topic: ./komodod -ac_name=ZAWY24 -ac_adaptivepow=1 -ac_supply=1000000 -ac_reward=10000000000 -ac_cc=2 -addnode=5.9.102.210 &
+
+A channel to discuss mining. For useful links and more info click the pinned messages to the right.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[08-Aug-19 10:41 AM] jl777c#5810
+for the 2x to 4x cases
+
+[08-Aug-19 10:42 AM] zawy#5864
+You have the 4 in place of 3 in RST?
+
+[08-Aug-19 10:42 AM] jl777c#5810
+no, its still 3
+
+[08-Aug-19 10:42 AM] jl777c#5810
+3, 6 and 12 are active and working very well together
+
+[08-Aug-19 10:43 AM] zawy#5864
+It's noticeably better with all 3?
+
+[08-Aug-19 10:43 AM] jl777c#5810
+yes! they do get the diff up to close where it needs to be
+
+[08-Aug-19 10:43 AM] zawy#5864
+does 12 over-ride 6 which overrides 3?
+
+[08-Aug-19 10:44 AM] jl777c#5810
+not always
+
+[08-Aug-19 10:44 AM] zawy#5864
+it's min target rule?
+
+[08-Aug-19 10:44 AM] jl777c#5810
+usually 3 is the dominant one, but really depends on the specifics
+
+[08-Aug-19 10:44 AM] jl777c#5810
+yes usually all three have very close values
+
+[08-Aug-19 10:44 AM] jl777c#5810
+sometimes 3 is much lower target (higher diff) than the other two, but after a bit, they are essentially the same
+
+[08-Aug-19 10:45 AM] jl777c#5810
+i have seen some cases where 6 was the lowest target, and even 12
+
+[08-Aug-19 10:45 AM] jl777c#5810
+didnt find any pattern, numbers flying by so fast
+
+[08-Aug-19 10:46 AM] zawy#5864
+if RST is active >20 blocks, is digishield automatically close when it takes over?
+
+[08-Aug-19 10:47 AM] jl777c#5810
+with 3, 6, 12, it lasts closer to 40 blocks and probably that is why the diff is closer
+
+[08-Aug-19 10:48 AM] zawy#5864
+From the 1 run of TSA  I've looked at so far that lasted about 20 blocks, average solvetime was correct which means targets was correct.  Digi looks at only past 17 blocks.  It should be adjusted so that it is on target in a case like that
+
+[08-Aug-19 10:54 AM] zawy#5864
+I'll look at what you got.  My plan today is to start modelling this. All the DA needs to abstracted away from programming and look like math.     What kind of efficiency is lost declaring everything arith256?   A nanosecond?  Is lack of RAM a problem for KMD nodes?
+
+[08-Aug-19 10:55 AM] jl777c#5810
+i guess a few nanoseconds, this is just local variables so RAM usages is not an issue
+
+[08-Aug-19 10:55 AM] jl777c#5810
+in a couple hours i will have data from the new test run. the RST phase is working wonderful as usual
+
+[08-Aug-19 10:56 AM] jl777c#5810
+probably the high variance of the TSA is what maybe just made the diff go lower
+
+[08-Aug-19 11:08 AM] zawy#5864
+So it seems declaring everything arith256 is better because it increases clarity   ctA is what miners solve and validators validate, ctB is what RST sees.  Adjusting ctB by 2.72 is not enough for digi to be on track immediately after a long RST run?
+
+[08-Aug-19 11:09 AM] zawy#5864
+Do i have that wrong?  what's ctA?
+
+[08-Aug-19 11:16 AM] zawy#5864
+OK, ctA is RST and digi output.  ctB is the adjusted RST output or zero if digi was in use.  RST uses ctA if ctB is zero, else use ctB.  Digi should be using the same thing, except divide the ctB[i]-ctB[i+1]  values by 2.72
+
+[08-Aug-19 11:16 AM] zawy#5864
+Right?
+
+[08-Aug-19 11:31 AM] zawy#5864
+What are the last 2 columns in the CSV?
+
+[08-Aug-19 12:01 PM] jl777c#5810
+correct. last two columes are diff of ctA and solvetime for that height
+
+[08-Aug-19 12:04 PM] zawy#5864
+avg D for digi right after RST is the same as avg D for RST....I thought you said there was a problem?
+
+[08-Aug-19 12:05 PM] jl777c#5810
+the problem is that after RST ends, the diff goes low, even to the point of triggering RST again, so clearly something is wrong. i am sending the new test results, which at first look seems much better
+
+[08-Aug-19 12:05 PM] jl777c#5810
+
+{Attachments}
+https://cdn.discordapp.com/attachments/456900588018597918/608994315154227200/TSA_div3.csv
+
+[08-Aug-19 12:06 PM] jl777c#5810
+this is with a div3 for digishield, even for the TSA. also the way the state machine works, the TSA ended up alternating turns with digishield
+
+[08-Aug-19 12:07 PM] jl777c#5810
+so the pattern of alternating ctB/000000000 is when TSA was active, the lower two bits for nBits are set when TSA did the block
+
+[08-Aug-19 12:07 PM] zawy#5864
+digi needs to avg a few of the RST's.   Let me think about how to do that
+
+[08-Aug-19 12:07 PM] jl777c#5810
+so ending in 3, 7, b, f
+
+[08-Aug-19 12:08 PM] jl777c#5810
+RST finished on ht.95
+
+[08-Aug-19 12:08 PM] zawy#5864
+digi is not stable after RST because RST targets jump around so much
+
+[08-Aug-19 12:10 PM] jl777c#5810
+then 56 minutes for the next 50 blocks, no RST triggered, so even though the math is wrong, it avoided the problem of earlier versions
+
+[08-Aug-19 12:25 PM] zawy#5864
+When I do digishield on ctA values, the difficulty is correct as if no adjustment is needed
+
+[08-Aug-19 12:25 PM] jl777c#5810
+but without correction, then the diff cant go up as the blocks come out slower
+
+[08-Aug-19 12:28 PM] jl777c#5810
+found a place where it was overcorrecting, which might explain the 10% slower than expected blocks, also trying to smooth out the TSA a bit more, i remember it was working quite smoothly with a 4 block SMA, but it was too slow, so trying a 2 block + digishield average
+
+[08-Aug-19 12:30 PM] zawy#5864
+The 4th column is RST output?
+
+[08-Aug-19 12:31 PM] jl777c#5810
+height, timestamp, nBits in hex, bnTarget based on nBits, ctB, diff, solvetime
+
+[08-Aug-19 12:33 PM] jl777c#5810
+next test run with the above changes RST kicked in an in 2 blocks it slowed it way down, only some big miner luck prevents it from making up time, one block had an implied hashrate to solve 350 diff
+
+[08-Aug-19 12:34 PM] jl777c#5810
+so the RST continues to amaze and if the TSA cant be stabilized, maybe it just needs to be removed. i do like its much faster than digishield behavior though
+
+[08-Aug-19 12:35 PM] jl777c#5810
+we will do an ASIC test in 2 hours to verify it works as well with 1000x attacks
+
+[08-Aug-19 12:36 PM] jl777c#5810
+or maybe will do it so it is  a 10000x
+
+[08-Aug-19 12:38 PM] zawy#5864
+I'm having trouble keeping track of what we're doing because there are 3 difficulty and 3 different algorithm, not counting exp()
+
+[08-Aug-19 12:39 PM] jl777c#5810
+yes, probably nearly impossible to model this accurately
+
+[08-Aug-19 12:39 PM] jl777c#5810
+any model becomes as complex as the actual implementation
+
+[08-Aug-19 12:39 PM] zawy#5864
+no, modelling simulates mining perfectly.
+
+[08-Aug-19 12:40 PM] jl777c#5810
+there are actually 5, counting the 3/6/12 RST
+
+[08-Aug-19 12:41 PM] jl777c#5810
+I check for RST.3 to trigger, if not check RST.6, if not check RST.12
+
+[08-Aug-19 12:41 PM] jl777c#5810
+then if any RST was triggered, calculate all 3 inner values and take the min
+
+[08-Aug-19 12:42 PM] zawy#5864
+You do W=6 inner if W=3 triggers?
+
+[08-Aug-19 12:42 PM] jl777c#5810
+when all three are done, it goes into an alternating digishield/TSA mode, was unintentional side effect of how i integrated the TSA
+
+[08-Aug-19 12:42 PM] jl777c#5810
+i dont have enough bits to encode which trigger triggered
+
+[08-Aug-19 12:42 PM] jl777c#5810
+so it sees that some RST triggered and checks all three
+
+[08-Aug-19 12:52 PM] jl777c#5810
+i think i see what might work to transition from RST to digishield cleanly. like you say the onchain values are very good, but we cant use them when RST is active
+
+[08-Aug-19 12:52 PM] jl777c#5810
+however, i can just use ctA if RST isnt active
+
+[08-Aug-19 12:52 PM] zawy#5864
+diff column is input to RST?  What is input to digi?
+
+[08-Aug-19 12:52 PM] jl777c#5810
+diff is just the diff that derives from nBits, nBits -> bnTarget -> diff
+
+[08-Aug-19 12:53 PM] zawy#5864
+that's the 6th column?
+
+[08-Aug-19 12:53 PM] jl777c#5810
+yes, diff is sixth column
+
+[08-Aug-19 12:53 PM] zawy#5864
+I don't have headers
+
+[08-Aug-19 12:53 PM] jl777c#5810
+height,timestamp,nBits,bnTarget,ctB,diff,solvetime
+
+[08-Aug-19 12:55 PM] jl777c#5810
+with RST3/6/12 it gets the diff all the way where it needs to be, so if i just toggle what digishield sees to just ctA when RST not active, it could just work
+
+[08-Aug-19 12:55 PM] zawy#5864
+OK, so nBits, nbTarget and diff are same thing.
+
+[08-Aug-19 12:56 PM] jl777c#5810
+yes, just different formats
+
+[08-Aug-19 12:57 PM] zawy#5864
+and ctB is nBits (if it's not zero) that is adjusted by my time^2 equation?
+
+[08-Aug-19 12:57 PM] jl777c#5810
+yes
+
+[08-Aug-19 12:57 PM] zawy#5864
+what is the input to digi for RST blocks?  yours looks like it's varying too much
+
+[08-Aug-19 12:58 PM] jl777c#5810
+very simple code change to toggle digishield to use only ctA when RST is not active. i will test that next, it feels very promising as you already verified ctA is correct for digishield. digishield is currently getting ctB if nonz, all the time, even when RST is not active
+
+[08-Aug-19 12:58 PM] jl777c#5810
+so for 17 blocks after it ends it is still seeing the ctB that is very volatile, that could be the reason for the problems
+
+[08-Aug-19 12:59 PM] zawy#5864
+ctA is same as nBits?
+
+[08-Aug-19 12:59 PM] jl777c#5810
+sorry, the digishield gets ctB/3 for an RST active block. that was needed to adjust the diff
+
+[08-Aug-19 01:00 PM] zawy#5864
+using nBits, digisheild seems about right
+
+[08-Aug-19 01:01 PM] jl777c#5810
+yes, it looks very clean and should make a nice transition. will test that soon. current test is 10 blocks away from RST having fixed things and then going into the chaos of alternative digishield/TSA_EMA
+
+[08-Aug-19 01:02 PM] jl777c#5810
+it is at least better than without the /= 3 into the digshield data, but it feels too random. i think there is no big need for TSA_EMA with RST working so well
+
+[08-Aug-19 01:03 PM] jl777c#5810
+so the only weakness would be the small hashrate boost and "strandings", will need to recover via digishield only
+
+[08-Aug-19 01:03 PM] jl777c#5810
+i guess all things considered that is not so bad a weakness as it just means lower coin emissions
+
+[08-Aug-19 01:03 PM] jl777c#5810
+and occasionally exp() will trigger, even with a 3x stranding
+
+[08-Aug-19 01:04 PM] jl777c#5810
+your baby has come a long ways in the last week!
+
+[08-Aug-19 01:08 PM] zawy#5864
+so  digi needs  ctA and RST needs ctB and we don't need the 2.72 .
+
+[08-Aug-19 01:08 PM] zawy#5864
+Right?
+
+[08-Aug-19 01:09 PM] jl777c#5810
+the 2.72 wont ever kick in, correct
+
+[08-Aug-19 01:09 PM] jl777c#5810
+much cleaner
+
+[08-Aug-19 01:10 PM] Lumbi#8378
+new amd kernel.
+
+[08-Aug-19 01:12 PM] Lumbi#8378
+any feedback would be appreciated
+
+[08-Aug-19 01:15 PM] Lumbi#8378
+https://cdn.discordapp.com/attachments/519208579513712660/609011674946600961/input.cl
+
+[08-Aug-19 01:19 PM] zawy#5864
+My plan was for RST to catch up and stop  triggering in W  blocks, which might occur by replacing the 1/W in "i" with 1/(W+1).  This has the problem of digishield not seeing 17 blocks, so Diff will drop back down almost to where it was......but you see it is supposed to drop down if it was an attack and if  RST stops the attack.....and if RST did not stop the attack, it triggers again after 3 block.....after 3 repeats digi gets close to correct target as it should becuase it seems the attacker is refusing to leave.   But this motivates him to attack 3 on and 3 off until digishield rises beyond his comfort zone.  So he leaves long time and digi slowly falls. Then he returns.  There is no solution to this except to make D rise in first block based on TSA-EMA so that he is at least paying 2x more difficulty than average.
+
+[08-Aug-19 01:21 PM] jl777c#5810
+but the 6 and 12 kicking in will prevent a 3 on/3 off pattern
+
+[08-Aug-19 01:22 PM] jl777c#5810
+once the 6 or 12 kickin, then a long stretch will be a bit slower than T
+
+[08-Aug-19 01:23 PM] zawy#5864
+No because it catches up so 6 never triggers
+
+[08-Aug-19 01:23 PM] zawy#5864
+6 is supposed to tigger if the attack was too small for W=3 to see
+
+[08-Aug-19 01:23 PM] jl777c#5810
+so a 3 block attack with 3x hashrate? or much bigger?
+
+[08-Aug-19 01:24 PM] zawy#5864
+W=3 won't see it.   W=6 will, pretty soon
+
+[08-Aug-19 01:25 PM] jl777c#5810
+so a few times of 3on/3off, seems small potatoes
+
+[08-Aug-19 01:26 PM] zawy#5864
+Yes, what I'm saying is that we should get the above plan working before addressing smaller attacks.
+
+[08-Aug-19 01:27 PM] zawy#5864
+sequence is D, E, R, D or D, E, R, E
+
+[08-Aug-19 01:27 PM] zawy#5864
+where D= digi, E=ema, R = RST
+

@@ -1,0 +1,126 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 09:13 AM";"Had PoS 100% working just about prefectly";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 09:16 AM";"i guess with N*N coinage it will find blocks pretty fast, the problem will be with a lot of stakers, many potential forks will be";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 09:17 AM";"Yes trying to make it so that that exemption isnt even required at all, has been the goal...";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 09:18 AM";"i think with an easier mindiff (without overflow/underflow error) will allow small number of coins to stake, and if too many, a few hundred fast blocks and the diff adjustment should take care of it";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 09:23 AM";"I think I see where I went wrong now. Thanks for the help.";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 09:24 AM";"The only place I needed to use VerusHash MINDIFF was in POW_target";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 09:24 AM";"not the staker";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 09:26 AM";"yes, that is what I was trying to say";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 09:34 AM";"thats ok, thanmks again... its been a long day 😅";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:27 AM";"Ok... got some data here to work from maybe you can help me understand why it is working backwards.";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:27 AM";"RATIO: 0000000000000000000000000000000000000000000000000000000001000000";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:27 AM";"mindiff.SetCompact(KOMODO_MINDIFF_NBITS,&fNegative,&fOverflow);";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:28 AM";"No UTXO are elegible using this";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:28 AM";"mindiff.SetCompact(STAKING_MIN_DIFF,&fNegative,&fOverflow); <--- Staking MINDIF is the VerusHash mindiff bBits. (fetched fby printing int output of GetNextWorkRequired.";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:29 AM";"RATIO: 0000000000000000000000000000000000000000000000000000000000000001";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:29 AM";"UTXO are elegible with this.";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:29 AM";"@jl777c";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 10:30 AM";"ratio is basically 0? seems the denominator is bigger than numerator";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:30 AM";"Or it is equal";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 10:30 AM";"probably some sanity check is needed and setting to reasonable values in case the calcs are over/under flowing";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:31 AM";"So I need to like +1 to the mindiff or something to make it divide?";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:32 AM";"I dont undserstand whats going on tbh, fgrom what you explained the MINDIFF should be lower to make an easier ratio, but tios working the exact opposite to that.";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 10:32 AM";"diff works backwards";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 10:32 AM";"higher number is easier";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 10:32 AM";"the mining diff compare is if ( hash < diff )";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:33 AM";"yes, the VerusMin diff = 487526159
+equihash = 537857807";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 10:33 AM";"you know, more leading 0s is harder";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 10:33 AM";"it seems no need to do ratios if it is already at the mindiff";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:35 AM";"so if bnTarget = Verus MINDIFF then Ratio is calculated from Verus MINDIFF, then if it is lower than MINDIFF ratio uses komodo MINDIFF?";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:36 AM";"doesnt really make a lot of sense... But I know that once the DIFF goes over MINDIFF for Block Target, that it basically stops staking.";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 10:39 AM";"the staking diff?";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:40 AM";"yes... 
+I have to use VerusMin diff for mindiff in the staker or it wont stake any blocks. The block target for the first 50 blocks is MINDIFF... it does not rise at all..";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:40 AM";"when using mindiff / target it can stake,";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:40 AM";"when using Komodo MINDIFF / target it cant";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:41 AM";"So I guess something like:
+if bnTarget != verusMindiff
+    mindiff =komodo mindiff";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 10:41 AM";"maybe just set staking diff to mindiff for first 100 blocks?";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:57 AM";"Usin komodo MIN DIFF and setting `diff` to 60 for blocks under 100 does not work either";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:57 AM";"the only thing that works is using VerusMindiff to calc the ratio";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 10:58 AM";"ok, whatever works is more important";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:59 AM";"the problem is it stops working";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 10:59 AM";"I will try to switch them over or something 🤷";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:00 PM";"That didnt work. Just worked out a lot more about how this works. I think I can fix it... But it will break all existing chains totally.. they may need an exception... OR we just dont merge the fixed, working staker into KMD.";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 12:02 PM";"can you implement it using timestamp activation?";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 12:02 PM";"or just a flag to choose PoS methods";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:09 PM";"possibly... what is komodo_elegible... I commented out the entire function and everything works fine?";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:10 PM";"Seems to just do the same exact thign as `komodo_stake`";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:10 PM";"No wonder the staking loop is slow";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 12:15 PM";"yes, the mining loop has a cached version that the validation doesnt have to have";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 12:15 PM";"not sure you can just comment it out...";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:15 PM";"I did and it works fine";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 12:15 PM";"that would seem to allow ineligible utxo into the loop";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:17 PM";"Both are inside the loop... It does elegible, then validat flag 0, then validate flag 1";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 12:17 PM";"it checks to make sure that a utxo is eligible give maxiters";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 12:17 PM";"but yes, it does seem a bit redundant";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:19 PM";"the maxiters is set in komodo_stake anyway... doesnt seem to be hurting it... The onyl way to check it, is to make a chain with many many nodes and see if it forks... Which is the main problem I see possibly happening here.";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 12:19 PM";"it is just used to continue to next utxo";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:19 PM";"multiple utxo elegible at the same time";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 12:22 PM";"it isnt affecting consensus as long as it doesnt make an eligible utxo inelegible or an ineligible one eligible";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:23 PM";"Yes I think removing that elegible check is fine... I mean how I ""fixed"" the staking loop for smaller coin supplies";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:23 PM";"```        if ( ASSETCHAINS_ALGO == ASSETCHAINS_VERUSHASH || ASSETCHAINS_ALGO == ASSETCHAINS_VERUSHASHV2 )
+        {
+            if ( PoSperc < ASSETCHAINS_STAKED )
+            {
+                // Under PoS % target and we need to increase diff.
+                //fprintf(stderr, ""PoS too low diff.%i changed to."",diff);
+                diff = diff * ( (ASSETCHAINS_STAKED - PoSperc + 1) * (ASSETCHAINS_STAKED - PoSperc + 1) );
+                //fprintf(stderr, ""%i \n"",diff);
+            }
+            else if ( PoSperc > ASSETCHAINS_STAKED )
+            {
+                // Over PoS target need to lower diff.
+                //fprintf(stderr, ""PoS too high diff.%i changed to."",diff);
+                diff = diff / ( (PoSperc - ASSETCHAINS_STAKED + 1) * (PoSperc - ASSETCHAINS_STAKED + 1) );
+                //fprintf(stderr, ""%i \n"",diff);
+            }
+        }```";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 12:24 PM";"that will definitely break all existing chains";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:24 PM";"its contained inside VerusHash... need to check it works with equihash aswell";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:24 PM";"maybe can use is_STAKED function to limit it to staked chains";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 12:24 PM";"aha, missed that part. as long as that is the only change, it should be fine then";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:25 PM";"Yeah, I want to check it on equihash... maybe it stops the random 382s blocks";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 12:25 PM";"so if you can get the PoS staking solid using verushash that would solve the backward compatibility issue";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:26 PM";"blocktimes looking quite good now... But I'm not sure if this could cause either forks or reorgs... we will need to test it, with many nodes";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:45 PM";"@ComputerGenie 👴🏼📢 
+I think I solved the difficulty problem.... Now staking difficulty can be adjusted, not just PoW. Seems to work. May need some help to test it out though some time soon. I'm not sure 2 nodes, with 1 staker is enough to tell if it causes more problems than it solves.";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"22-Jan-19 12:45 PM";"sweet";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"22-Jan-19 12:47 PM";"Since you've been working on it, I didn't mention the issue I've found where restarting a node lets PoS kick ass where previously ""stalled"" (which I think is related to the way diff looks back over time)";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:48 PM";"I think I have fixed that already by fixing another issue";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:48 PM";"The problem was that segid isnt set in block index properly";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"22-Jan-19 12:48 PM";"yeah, that's why I didn't mention it, I figured I'd wait and see if it still applied after you do what you're doing";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:50 PM";"When you restart the entire blockindex cache is wiped clean as its not saved to disk. But as soon as segid is called, it sets the flag in block index again. It means that its not their for the entire chain, after a restart, but it *should* now populate teh blockindex flag the firs time it checks that block.";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:50 PM";"the `getlastsegidstakes` RPC will set the entire index if you call it for the whole chain once... then the next tiem you call it its instant response.";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:51 PM";"So I beleive its working fine.";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:51 PM";"We should test these things though, to make sure before launch. I think we can contain these changes to VerusHash and LABS chains.";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:52 PM";"so it does not fork MGNX or DION. Even though both of those seem dead lol";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"22-Jan-19 12:53 PM";"MGNX isn't dead, I mine and stake it :trollface:";"";"😂 (1)";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 12:55 PM";"We might need @webworker01  To do the 300 Google Cloud nodes again, and see if he can fork it. Because maybe having PoW and PoS dificulty adjustments could mean 2 utxo on chain become elegible at once.";"";"";
+"455741312273219595";"jl777c#5810";"22-Jan-19 12:58 PM";"with diff * diff, dozens of utxo could become eligible at once";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 01:00 PM";"likley that calcualtion is wrong... It was a guess to see if it works... I tried diff *2 but that wasnt large enough to do anything at all";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 01:06 PM";"What I am using now for example, if PoS target is 60% and its at 59%
+its using: `diff =  diff * ( 2 * 2 )`
+Maybe it onl;y needs to be: `diff = diff * (2 + 2)`";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"22-Jan-19 01:08 PM";"`( 2 * 2 )` = `( 2 + 2 )` = `4`";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 01:09 PM";"Yes but if it was at 58% 
+it would be:  `diff =  diff * ( 3 * 3  = 9)`
+vs.  `diff =  diff * ( 3 + 3  = 6)`";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 01:10 PM";"I dont see it every really having more than 1% variance due to the massive diff wall on PoW ...";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 01:11 PM";"But this will solve Alrights worries of ppl removing too many utxo off chain, as it should be able to stake with just a single utxo if PoW gets to 100%";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 01:14 PM";"Its a LOT of PoW required to get it there though... so Maybe not..";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 01:14 PM";"I need to go. we can come back to this later. I'm not really qualified for this, pretty much guessing at it lol.";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"22-Jan-19 01:14 PM";"I'm still of the mind that that is really a moot point because any needed movement of an abandoned chain can be dealt with and the numbers don't matter because moving it to drain is only a short-term thing";"";"shexy (1)";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 01:14 PM";"I agree...";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 01:15 PM";"He just keeps going on about it 🤣";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 01:15 PM";"I'm really only concerned with having a stable chain, that makes consistent blocks at very little cost. As there is no incentive to mine the things.";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"22-Jan-19 01:16 PM";"That I can has always been incentive enough for me 😛";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Jan-19 01:16 PM";"true . back later on";"";"";
+"405011811511828481";"Alright#0419";"22-Jan-19 02:15 PM";"@ComputerGenie 👴🏼📢 the way it would be dealt with sets a dangerous precedence";"";"";
+"405011811511828481";"Alright#0419";"22-Jan-19 02:15 PM";"notaries creating coins from thin air";"";"";
+"405011811511828481";"Alright#0419";"22-Jan-19 02:16 PM";"when the coins they are recreating aren't provably burned";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"22-Jan-19 02:16 PM";"@Alright I'm not sure I get what you mean";"";"";
+"405011811511828481";"Alright#0419";"22-Jan-19 02:17 PM";"you're talking about being able to move all coins off of a fungible chain that is meant to die, yes?";"";"";

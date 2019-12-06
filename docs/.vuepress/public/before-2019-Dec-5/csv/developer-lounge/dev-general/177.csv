@@ -1,0 +1,211 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"420119978138664961";"CHMEX#0686";"24-May-19 10:16 AM";"like here:";"https://cdn.discordapp.com/attachments/463445317136809984/581425276039462912/unknown.png";"";
+"420119978138664961";"CHMEX#0686";"24-May-19 10:16 AM";"I think it goes deep into the bitcore code";"";"";
+"423176312354635779";"gcharang#6833";"24-May-19 10:17 AM";"cool, will try to figure it out when I have some time
+https://github.com/gcharang/komodo-install-explorer
+now will patch automatically";"";"";
+"420119978138664961";"CHMEX#0686";"24-May-19 10:18 AM";"on some assetnames you need a <br> I think when the assetname is too large otherwise it looks weird... mybe that could be handled nicer with a specific css idk";"https://cdn.discordapp.com/attachments/463445317136809984/581425878970400781/unknown.png";"👍 (1)";
+"455741312273219595";"jl777c#5810";"24-May-19 10:24 AM";"if ""confirmations"" is > 1, it is notarized";"";"";
+"423176312354635779";"gcharang#6833";"24-May-19 11:54 AM";"need to tweak things, but I am able to add notary confs";"https://cdn.discordapp.com/attachments/463445317136809984/581449936646832156/Screenshot_from_2019-05-24_17-23-44.png";"👍 (1)";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"24-May-19 11:59 AM";"@gcharang is that live or a mock up? 6 notary confs and 0 confs confuses me";"";"";
+"420119978138664961";"CHMEX#0686";"24-May-19 12:00 PM";"did you manage to get that notarized data into the insight-api-komodo module somehow?
+I went to the code and was not really sure how it works almost looked like that whole framework internally keeps track of the confirmations.";"";"";
+"423176312354635779";"gcharang#6833";"24-May-19 12:05 PM";"@ComputerGenie 👴🏼📢 thats just wrong, was a mockup 
+still tweaking
+just wanted to show off I was able to get it to the display";"";"👍🏽 (1)";
+"423176312354635779";"gcharang#6833";"24-May-19 12:06 PM";"@CHMEX 
+I am currently editing the file:
+```
+LABSRCTEST-explorer/node_modules/insight-ui-komodo/public/views/transaction/tx.html
+```";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 01:48 PM";"@CHMEX i have been thinking lately of explorers and confs and rawconfs and dpowconfs. The situation is very very confusing, even as somebody who wrote dpowconfs";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 01:49 PM";"or at least a big chunk of it";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 01:49 PM";"@CHMEX let's say I make a transaction, and it has 2 raw confirmations, but no notarization";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 01:49 PM";"now I look at an explorer";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 01:49 PM";"the explorer shows me 2 confirmations, because it uses rawconfs";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 01:50 PM";"but when I look at my exchange/app/etc, it shows me unconfirmed!!!";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 01:50 PM";"This has confused me before, so it definitely confuses end users and exchanges and people building apps on top of dpow coins";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 01:51 PM";"@CHMEX which is why I agree with you, that explorers should clarify rawconfs vs dpowconfs, until it's notarized, and then those concepts are the same";"";"";
+"455741312273219595";"jl777c#5810";"24-May-19 01:59 PM";"it should show 1 confirm, not as unconfirmed";"";"";
+"423176312354635779";"gcharang#6833";"24-May-19 02:23 PM";"@CHMEX you were right
+it wasn't querying the daemon for the txn, it was manually creating the txn using bitcore-node and bitcore-lib
+so from insight-api to insight-ui a newly constructed transaction comes, so the rawconfirmations vs confirmations difference is lost there and there isn't even a field called rawconfs in the insight api's output
+for example for getting confs, they are using
+```
+var confirmations = 0;
+  if(transaction.height >= 0) {
+    confirmations = this.node.services.bitcoind.height - transaction.height + 1;
+  }
+```
+so I am thinking of bypassing it all together and go for a hacky solution where I will get the data from the daemon directly using sth like stdrpc and display it in the html page";"";"";
+"423176312354635779";"gcharang#6833";"24-May-19 02:27 PM";"eventhough the output here: https://kmdexplorer.io/insight-api-komodo/tx/5b905da385d3100f5a8419266d5943f703b334dad05022157bef59a52020d002
+looks like a daemon constructed txn, its completely made inside insight-api using bitcore-lib-komodo";"";"";
+"420119978138664961";"CHMEX#0686";"24-May-19 02:37 PM";"I have seen ( genie sees it right away and pings me )  negative confirmations which suggests the confirmation code is not using data from the daemon itself...";"";"";
+"423176312354635779";"gcharang#6833";"24-May-19 02:45 PM";"yeah, this is what they use:
+```js
+var confirmations = 0;
+  if(transaction.height >= 0) {
+    confirmations = this.node.services.bitcoind.height - transaction.height + 1;
+  }
+```";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 02:52 PM";"yeah, that code doesn't do much error checking, does it";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 02:52 PM";"` if(transaction.height >= 0 && this.node.services.bitcoind.height >= 0) ` @gcharang";"";"👍 (1)";
+"365714438864633856";"dukeleto#7326";"24-May-19 02:52 PM";"change it to that";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 02:52 PM";"and you won't see negative confirms anymore";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 04:46 PM";"I have run into a bizarre and weird error";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 04:46 PM";"listunspent disagrees with getwalletinfo, even after a reindex";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 04:47 PM";"this happened after i took an old Hush v2 wallet.dat and used it on our new chain with `-zapwallettxes`";"";"";
+"455741312273219595";"jl777c#5810";"24-May-19 04:49 PM";"well a wallet from a different chain... not so surprise that wallet info is different";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 04:50 PM";"i guess it's not intended to use this wallet, only sweep it";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 04:50 PM";"but things seemed to work so I kind of forgot";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 04:50 PM";"and I thought this was a SilentDragon GUI wallet bug";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 04:50 PM";"but it's actually my full node is very confused about my wallet.dat";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 04:51 PM";"```
+(loki)(~/git/hush3/src z_createtransaction $% )$ ./hush-cli getbalance """"
+21.37120973
+(loki)(~/git/hush3/src z_createtransaction $% )$ ./hush-cli listunspent|grep amount|wc -l
+     136
+(loki)(~/git/hush3/src z_createtransaction $% )$ ./hush-cli listunspent|grep amount|sort -ru|head
+    ""amount"": 99.98320000,
+    ""amount"": 99.88040000,
+    ""amount"": 99.86430000,
+    ""amount"": 99.85280000,
+    ""amount"": 99.85115000,
+    ""amount"": 99.84720000,
+    ""amount"": 99.84512000,
+    ""amount"": 99.83110000,
+    ""amount"": 99.82417000,
+    ""amount"": 99.81600000,
+(loki)(~/git/hush3/src z_createtransaction $% )$ ./hush-cli getwalletinfo
+{
+  ""walletversion"": 60000,
+  ""balance"": 21.37120973,
+  ""unconfirmed_balance"": 0.00000000,
+  ""immature_balance"": 0.00000000,
+  ""txcount"": 3996,
+```";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 04:51 PM";"the RPCs which aggregate seem to be correct, I spent almost all utxos";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 04:51 PM";"but listunspent is very confused";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 04:52 PM";"it makes it confusing, to try to send out the final dust from this wallet";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 04:52 PM";"but at least it's not a GUI wallet bug, i guess";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 04:53 PM";"I need to add further docs to that warn people to only sweep with an old wallet, and send it all to a new address in a new wallet";"";"";
+"365714438864633856";"dukeleto#7326";"24-May-19 04:53 PM";"This is a very confusing bug";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 05:10 PM";"```
+libtoolize: putting auxiliary files in AC_CONFIG_AUX_DIR, 'build-aux'.
+libtoolize: copying file 'build-aux/ltmain.sh'
+libtoolize: putting macros in AC_CONFIG_MACRO_DIRS, 'build-aux/m4'.
+libtoolize: copying file 'build-aux/m4/libtool.m4'
+libtoolize: copying file 'build-aux/m4/ltoptions.m4'
+libtoolize: copying file 'build-aux/m4/ltsugar.m4'
+libtoolize: copying file 'build-aux/m4/ltversion.m4'
+libtoolize: copying file 'build-aux/m4/lt~obsolete.m4'
+autoheader: cannot rename /tmp/arDOsnzu/ahtRRFBY/config.hin as src/config/bitcoin-config.h.in: No such file or directory
+autoreconf: /usr/bin/autoheader failed with exit status: 1
+```
+Believe I'm missing a dependency here, does anyone happen to know what? Installed all the ones listed in the readme";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 05:10 PM";"fresh VPS, not sure what the problem is";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 05:11 PM";"Oh and #kmdlabs is *launched* 😀";"";"labs (2)";
+"272003866906722306";"TonyL#3577";"24-May-19 05:15 PM";"Maybe not enough permissions on `tmp` dir";"";"";
+"272003866906722306";"TonyL#3577";"24-May-19 05:16 PM";"Ah, and what is your gcc version?";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 05:24 PM";"4:7.4.0-1ubuntu2.2";"";"";
+"272003866906722306";"TonyL#3577";"24-May-19 05:27 PM";"Hmm for me it working even on 7.3.0";"";"";
+"272003866906722306";"TonyL#3577";"24-May-19 05:27 PM";"`bitcoin-config.h.in: No such file or directory` maybe something failed before output which you shared";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 05:27 PM";"built it fine on 3 machines";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 05:27 PM";"new VPS is the problem, so I assume it's a dependency I missed";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 05:27 PM";"maybe not though";"";"";
+"272003866906722306";"TonyL#3577";"24-May-19 05:28 PM";"Yes, I see - so trying to understand which depenedencie it might be";"";"";
+"405396214805430283";"LiteBit#2418";"24-May-19 05:36 PM";"@jl777c he man. This is Paul from Particl. Are you or @cipi or someone available to talk about the issue surrounding ""all privacy coins"" in a group chat?";"";"";
+"405396214805430283";"LiteBit#2418";"24-May-19 05:38 PM";"I'm looking for details that may have an impact on Particl.  KMD has successfully patched it, could I get a download on the issue?";"";"";
+"405396214805430283";"LiteBit#2418";"24-May-19 05:38 PM";"Gracias";"";"";
+"455741312273219595";"jl777c#5810";"24-May-19 05:39 PM";"sure, just DM me";"";"";
+"419964976397156352";"cipi#4502";"24-May-19 05:57 PM";"also here, in case you need me";"";"";
+"423176312354635779";"gcharang#6833";"25-May-19 10:36 AM";"@dukeleto @CHMEX 
+https://imgur.com/a/obtxoeQ
+I've got the dPoW confs to display on insight exlorer, you can see the progression of a txn's state as blocks get added and notarizations happen from the images above 
+right now:
+```
+daemon - explorer
+confirmation - notary confirmation
+rawconfirmation - confirmation
+```
+eventhough this system the daemon uses to convey the info is understandable by devs, to normal people it would be too confusing
+
+So, the above thing is a proof of concept, I will be tweaking it to have only one conf tab. Its behaviour:
+red - unconfirmed
+orange with number of confs- confirmed but not dpowed
+green with number of confs - dpowed
+this should be clear to everyone";"";"";
+"423176312354635779";"gcharang#6833";"25-May-19 10:37 AM";"also I have bypassed their calculation of confs to take it directly from the daemon's output of getrawtransaction
+@dukeleto 
+@CHMEX the changes I have done are apparent in the repo:  https://github.com/gcharang/explorer-notarized diff it with your repo to see the difference";"";"";
+"420119978138664961";"CHMEX#0686";"25-May-19 10:41 AM";"nice work! Yes I think the traffic light color coding is a good idea.
+ping when when it's completed and I add it to all explorers";"";"👍 (1)";
+"423176312354635779";"gcharang#6833";"25-May-19 10:43 AM";"will do!";"";"";
+"371114647052615681";"Mylo#8306";"25-May-19 10:54 AM";"`blocknotify=/home/mylo/.komodo/HELLOWORLD/blocknotifier.sh %s` is giving me grief.    How do you pass the blockhash into your script.";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"25-May-19 10:57 AM";"should be just like that";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"25-May-19 10:57 AM";"maybe permissions issue?";"";"";
+"371114647052615681";"Mylo#8306";"25-May-19 11:04 AM";"hardcoded it works, just not passing in blockhash for some reason.  thanks for response";"";"";
+"405011811511828481";"Alright#0419";"25-May-19 11:35 AM";"@Mylo `""-blocknotify=/home/mylo/.komodo/HELLOWORLD/blocknotifier.sh %s""`";"";"";
+"405011811511828481";"Alright#0419";"25-May-19 11:35 AM";"do that verbatim";"";"";
+"371114647052615681";"Mylo#8306";"25-May-19 11:44 AM";".conf file.";"";"";
+"405011811511828481";"Alright#0419";"25-May-19 12:01 PM";"sorry, what?";"";"";
+"365714438864633856";"dukeleto#7326";"25-May-19 02:15 PM";"@Mylo use double quotes";"";"";
+"365714438864633856";"dukeleto#7326";"25-May-19 02:15 PM";"blocknotify=""/home/mylo/.komodo/HELLOWORLD/blocknotifier.sh %s""";"";"";
+"405011811511828481";"Alright#0419";"25-May-19 02:20 PM";"not going to work @dukeleto";"";"";
+"405011811511828481";"Alright#0419";"25-May-19 02:20 PM";"oh maybe that will work in conf file";"";"";
+"405011811511828481";"Alright#0419";"25-May-19 02:20 PM";"oh derp, that's what mylo meant 😂";"";"😃 (1)";
+"405011811511828481";"Alright#0419";"25-May-19 02:20 PM";"I rarely use a conf file";"";"";
+"365714438864633856";"dukeleto#7326";"25-May-19 02:53 PM";":troll_cool:";"";"";
+"371114647052615681";"Mylo#8306";"25-May-19 03:54 PM";"cool thanks for help
+.conf file does not work
+```
+2019-05-25 15:52:52 runCommand error: system(""/home/mylo/.komodo/HELLOWORLD/blocknotify.sh 088cfd5201440dc0ccdf3f00dcd65fd1936b00c280a37510a705908628ca5b63"") returned 32512
+```
+(renamed script)
+Same works with ""-blocknotify=/home/mylo/.komodo/HELLOWORLD/blocknotify.sh %s"" from command line works.
+So something going wrong with .conf file
+```
+blocknotify=""/home/mylo/.komodo/HELLOWORLD/blocknotify.sh %s""
+```";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"25-May-19 04:17 PM";"@Mylo what is the contents of your script? 32512 indicates that it's being passed but there's an issue with the script itself";"";"";
+"323462995571245057";"Bar_F1sh_Rel#0834";"25-May-19 04:23 PM";"I'm passing args to blocknotify in the conf without any quotes - it appears to be working.";"";"";
+"371114647052615681";"Mylo#8306";"26-May-19 12:04 AM";"echo to log file one and curl to a web app a second.  I will switch branches today to test.
+Thanks for inputs
+Will post script later but it’s v.basix";"";"";
+"475969746232279050";"ERIC#3057";"26-May-19 01:53 AM";"Hi , we are going to setup a blockchain with the KMD platform .  Who can help us with this ?";"";"";
+"420119978138664961";"CHMEX#0686";"26-May-19 06:01 AM";"@ERIC contact @PTYX @siu - Chainmakers @jorian 
+They build a service company for this
+if you want to do it your self: docs.komodoplatform.com/basic-docs/installations/basic-instructions.html";"";"";
+"423176312354635779";"gcharang#6833";"26-May-19 06:12 PM";"http://35.188.117.96:40268 - KMDLabs explorer with transactions that tell whether they are dPoWed
+api: http://35.188.117.96:40268/insight-api-komodo/tx/7acd6fc7cb7891c8eb068d921ab899074f89a0c7422c2e0f8b2b8e4206c5e0ee
+```json
+{
+""txid"": ""7acd6fc7cb7891c8eb068d921ab899074f89a0c7422c2e0f8b2b8e4206c5e0ee"",
+""version"": 4,
+""locktime"": 1558892797,
+""confirmations"": 13,
+""notarized"": true,  //can be used to see if a txn is notarized
+.....
+```
+I am still tweaking the status page
+any other suggestions for improvement are welcome
+this repo is enough to install: https://github.com/gcharang/komodo-install-explorer
+this repo has the patch that makes the above explorer different from decker's: https://github.com/gcharang/explorer-notarized";"";"👍 (4)";
+"365714438864633856";"dukeleto#7326";"26-May-19 08:36 PM";"@gcharang awesome work, great for the whole ecosystem 👍";"";"";
+"202999072519356416";"NutellaLicka#4241";"27-May-19 03:10 AM";"This may seem like a silly question but I honestly dont know the answer.
+What if somebody tried to start an assetchain with the same name but different parameters as another assetchain already in existence?";"";"";
+"365714438864633856";"dukeleto#7326";"27-May-19 03:17 AM";"@NutellaLicka i went down that rabbit hole a bit 😅";"";"";
+"202999072519356416";"NutellaLicka#4241";"27-May-19 03:18 AM";"With Hush?";"";"";
+"365714438864633856";"dukeleto#7326";"27-May-19 03:18 AM";"@NutellaLicka unless name + ac_supply are exactly the same, there will be different ""magic"" numbers and essentially they are different coins with the same name";"";"";
+"365714438864633856";"dukeleto#7326";"27-May-19 03:19 AM";"@NutellaLicka yeah, i tried to use HUSH as the AC name of HUSH v3";"";"";
+"365714438864633856";"dukeleto#7326";"27-May-19 03:19 AM";"but iguana knows Hush to be something very different";"";"";
+"365714438864633856";"dukeleto#7326";"27-May-19 03:19 AM";"and I was advised to use HUSH3";"";"";
+"365714438864633856";"dukeleto#7326";"27-May-19 03:20 AM";"@NutellaLicka it really only matters if both coins want to be dpowed with exactly the same asset name, then one basically needs to choose a new name";"";"";
+"365714438864633856";"dukeleto#7326";"27-May-19 03:20 AM";"if they don't want dpow, iguana doesn't know about it and it doesn't matter much. Until exchanges....";"";"";
+"202999072519356416";"NutellaLicka#4241";"27-May-19 03:22 AM";"Yeah awesome, thanks! 
+Is there an updated, reliable, rpc or list somewhere for all the dpow'd coins?";"";"";
+"202999072519356416";"NutellaLicka#4241";"27-May-19 05:20 AM";"Also, are notarisation costs pay per notarisation?";"";"";
+"202999072519356416";"NutellaLicka#4241";"27-May-19 05:20 AM";"I was just reading https://docs.komodoplatform.com/basic-docs/installations/creating-asset-chains.html#secure-this-asset-chain-with-delayed-proof-of-work and it isn't clear";"";"";
+"202999072519356416";"NutellaLicka#4241";"27-May-19 05:21 AM";"`As the notarizations are transactions, they naturally have a cost, and this cost is covered by you, the asset-chain developer.`
+This indiciates that it most likely is, but isn't unambiguous";"";"";
+"202999072519356416";"NutellaLicka#4241";"27-May-19 05:22 AM";"I'm loving the new Komodo Documentation btw";"";"";

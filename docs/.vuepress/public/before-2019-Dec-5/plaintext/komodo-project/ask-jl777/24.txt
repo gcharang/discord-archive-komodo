@@ -1,0 +1,372 @@
+==============================================================
+Guild: Komodo
+Channel: ask-jl777
+Topic: Ask questions about the core tech here, but not questions about prices or personal questions or GUI and  please don't DM JL777.
+https://dexstats.info/richlistlookup.php?address=RLVzC4tr9cNKvuw2z4m8KuMfZURwCehx55
+https://medium.com/@jameslee777
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[28-Sep-18 09:44 PM] sidhujag#3327
+@jl777 so notaries have access to blocks of every asset chain in entire tree they verify the header hash and then create a momom hash and stick it in every asset chain including the same hash rooted to kmd chain?
+
+[28-Sep-18 09:45 PM] jl777c#5810
+yes, notaries are all running KMD and the assetchains they are notarizing. the KMD instance maintains the MoMoM out of all the MoM hashes being notarized and sends back to the notarizer the MoMoM to use
+
+[28-Sep-18 09:47 PM] sidhujag#3327
+how are funds protected from double spends? its a new concept to me is it similar to eths merkle root for balances of plasma chains?
+
+[28-Sep-18 09:49 PM] sidhujag#3327
+ok so after block gets created kmd then sends the final momom hash to stick into next  assetchain block?
+
+[28-Sep-18 09:53 PM] jl777c#5810
+the MoMoM are being sent in via notarizations, and once notarized the block cant be reorged
+
+[28-Sep-18 09:53 PM] jl777c#5810
+if it cant be reorged, it cant be double spent
+
+[28-Sep-18 09:53 PM] sidhujag#3327
+the notaries can withhold?
+
+[28-Sep-18 09:54 PM] sidhujag#3327
+whats the recourse? being voted out? so what if aggregate value to withhold or to modify hash is greator than the bonded value and fees?
+
+[28-Sep-18 09:55 PM] sidhujag#3327
+is there BFT on the notarization layer
+
+[28-Sep-18 09:57 PM] jl777c#5810
+there needs to be a consensus on the current hashes
+
+[28-Sep-18 09:58 PM] jl777c#5810
+notarization uses a stochastic process that converges toward a majority consensus value
+
+[28-Sep-18 09:59 PM] sidhujag#3327
+are notaries chosen using a quorum or all of them are tasked every block?
+
+[28-Sep-18 09:59 PM] sidhujag#3327
+is 64 a magic number or dynamic grows?
+
+[28-Sep-18 10:01 PM] jl777c#5810
+annual election by KMD stake weight for 64 notaries
+
+[28-Sep-18 10:03 PM] sidhujag#3327
+so in any block the aggregate value should be below some amount to avoid notary from becoming bad actor?
+
+[28-Sep-18 10:04 PM] sidhujag#3327
+or does the consensus on the hashes take care of that thus the trust is distributed to 32+1 notaries?
+
+[28-Sep-18 10:05 PM] jl777c#5810
+there is no notarization unless there is consensus
+
+[28-Sep-18 10:05 PM] jl777c#5810
+only 13 nodes sign each notarization, but it is based on a 64 node consensus
+
+[28-Sep-18 10:07 PM] sidhujag#3327
+cool.. is there a fundamental num of asset chains where it gets hard for notaries to do their work? it seems notaries need to store all that data across all nodes and that can become an issue.. i guess plasma does fraud proofs instead and exit to parent chain
+
+[28-Sep-18 10:07 PM] jl777c#5810
+most assetchains are pretty small
+
+[28-Sep-18 10:08 PM] jl777c#5810
+we are working on ways to have multiple nodes per notary
+
+[28-Sep-18 10:08 PM] jl777c#5810
+but the notarization process has been made pretty efficient so hundred(s) of chains can be notarized on a node, if all the coins can be run
+
+[28-Sep-18 10:09 PM] sidhujag#3327
+each chain would be its own dapp no?
+
+[28-Sep-18 10:09 PM] sidhujag#3327
+like an identity chain for example
+
+[28-Sep-18 10:09 PM] jl777c#5810
+yes, the idea is that each chain localizes its activity to that chain alone
+
+[28-Sep-18 10:10 PM] jl777c#5810
+maybe a few related dapps are running on it, but the sharding is automatic, things are never combined into a single chain so we dont have the problem of needing to shard
+
+[28-Sep-18 10:11 PM] sidhujag#3327
+wait dapps are sharded across assetchains?
+
+[28-Sep-18 10:11 PM] jl777c#5810
+no
+
+[28-Sep-18 10:11 PM] jl777c#5810
+i mean the concept of sharding is not needed
+
+[28-Sep-18 10:11 PM] jl777c#5810
+the data is automatically already "sharded"
+
+[28-Sep-18 10:11 PM] sidhujag#3327
+oh ok yea
+
+[28-Sep-18 10:11 PM] sidhujag#3327
+same as plasma chain
+
+[28-Sep-18 10:11 PM] jl777c#5810
+sharding is only needed as everything is combined together and it needs to be split apart
+
+[28-Sep-18 10:12 PM] jl777c#5810
+with assetchains, nothing is combined together into a single chain
+
+[28-Sep-18 10:12 PM] jl777c#5810
+just the notarizations are sent to KMD
+
+[28-Sep-18 10:12 PM] jl777c#5810
+and a LOT of chains can be notarized to KMD
+
+[28-Sep-18 10:13 PM] sidhujag#3327
+right.. no its cool stuff im proud of you to follow through man.. ive had some more time to read what you guys did
+
+[29-Sep-18 12:59 AM] lukechilds#2707
+Hey @jl777c currently implementing KMD interest claiming for Ledger, are you able to give me a solid breakdown of the interest/reward consensus rules.
+
+As far as I'm aware it's based on the coinage of any UTXO over 10 KMD. The UTXO value is multiplied by coinage which is then mulitpleied by a specific number to result in the 5% apr.
+
+I'm aware there was also a recent change that caps the interest amount once per month.
+
+I'm assuming age is estimated approximately by number of blocks, so in pseudo code it would be something like:
+
+```
+const  interestPerBlock = <interest%earned every block>
+let interestAmount = UTXOamount * coinage * interestPerBlock;
+const interestAmount = Math.min(interestAmount, maxMonthlyInterest);
+```
+
+Is that more or less correct? I need to get this exactly correct to not violate network consensus rules. Feel free to point me to any docs if this is aleady documented in detail.
+
+Cheers
+
+[29-Sep-18 01:03 AM] Alright#0419
+http://pad.supernet.org/rewards
+
+[29-Sep-18 01:07 AM] lukechilds#2707
+Perfect @Alright thanks
+
+[29-Sep-18 01:07 AM] lukechilds#2707
+a few Qs
+
+[29-Sep-18 01:07 AM] lukechilds#2707
+possibly noob Q
+
+[29-Sep-18 01:08 AM] lukechilds#2707
+```
+to be eligible it needs to be more than an hour old, have nLockTime in the tx set to be a valid timestamp
+```
+is nLockTime already set on all normal P2PKH transactions?
+
+[29-Sep-18 01:09 AM] lukechilds#2707
+```
+the times between the current block and the utxo's nLockTime are subtracted and divided by 60 to convert it to minutes
+```
+Does this mean the time is measured as "blocks since TX had 1 confirmation = 1 minute"
+
+[29-Sep-18 01:11 AM] lukechilds#2707
+```
+rewards once accrued doesnt go down as minutes since nLockTime never goes down, only up
+```
+can you expand on this statement?
+
+[29-Sep-18 01:13 AM] Alright#0419
+nlocktime needs to be set explicitly if you're creating the raw txs yourself
+
+[29-Sep-18 01:13 AM] lukechilds#2707
+```
+the rewards amount stops after one year
+after one year, the rewards are still all there, the principal value is still there, it never goes away, even after 77 years
+there is all sorts of misinformation, stuff like you have to transfer funds every year or you lose your funds, that is nonsense
+```
+slightly confused by this.
+So if I have a 10 KMD UTXO that's 1 year old I get 5% interest.
+If I have a 10 KMD that's 2 years old, I still only get 5% interest beacuse it's capped
+What if I claim my interest after 1 year. Can I reclaim the next year to get anther 5%
+
+[29-Sep-18 01:13 AM] Alright#0419
+the daemon will do it for sendmany and sendtoaddress though
+
+[29-Sep-18 01:14 AM] Alright#0419
+that's outdated, it's 1 month now
+
+[29-Sep-18 01:14 AM] Alright#0419
+but like
+
+[29-Sep-18 01:14 AM] lukechilds#2707
+I believe it's only 1 month for UTXOs past block 1000000
+
+[29-Sep-18 01:14 AM] Alright#0419
+yes
+
+[29-Sep-18 01:15 AM] Alright#0419
+you can claim again after a month, hope that answers your question
+
+[29-Sep-18 01:15 AM] lukechilds#2707
+not quite, I need a 100% accurate spec for this so I can implement it perfectly, otherwise interest claims will get rejected from the network
+
+[29-Sep-18 01:15 AM] lukechilds#2707
+but you have been very helpful
+
+[29-Sep-18 01:16 AM] lukechilds#2707
+@jl777c are you able to provide this?
+
+[29-Sep-18 01:17 AM] lukechilds#2707
+I have been reading through the source and found `komodo_interestnew()` and `komodo_accrued_interest()` which look relevent but I could really do with a concrete specifiaction in writing
+
+[29-Sep-18 06:54 AM] jl777c#5810
+use komodo_interestnew()
+
+[29-Sep-18 06:54 AM] jl777c#5810
+the (chaintip->nTime - nLocktime) is the elapsed time
+
+[29-Sep-18 06:55 AM] jl777c#5810
+for specific utxo you can do gettxout and it prints "interest" field (I didnt change it for technical backward compatibility reasons)
+
+[29-Sep-18 06:55 AM] jl777c#5810
+needs to be >= 10 KMD
+
+[29-Sep-18 06:55 AM] jl777c#5810
+of course needs nLockTime set, else you cant calculate elapsed time
+
+[29-Sep-18 06:55 AM] jl777c#5810
+must be over an hour as 59 minutes are subtracted from elapsed time
+
+[29-Sep-18 06:56 AM] jl777c#5810
+komodo_interestnew() is about 10 lines of code
+
+[29-Sep-18 11:09 AM] ted#5473
+what do you think about veriblock?recentlly,the FLO team want to ues veriblock solution to solve 51% attack,they think veriblock is better than kmd.
+
+[29-Sep-18 11:15 AM] sφldat#8733
+this @ted https://testnet.explore.veriblock.org/network-stats ?
+
+[29-Sep-18 11:16 AM] polycryptoblog#1173
+How can it be better when it's not even mainnet
+
+[29-Sep-18 11:19 AM] sφldat#8733
+Proof-of-Proof ...
+
+[29-Sep-18 11:21 AM] jl777c#5810
+it seems BTC is most secure, but I am glad vericoin team is making new alternatives. not everyone can afford dPoW
+
+[29-Sep-18 11:21 AM] ted#5473
+The problem with the KMD solution is that the FLO community cannot participate in running a notary node because:
+1. Voting in a notary node happens once a year and only a few of them are re-elected
+2. Voting in a notary node requires voting with KMD
+
+The FLO community should not be required to also buy and hold KMD to vote on a node to be able to have a small amount of control over the network. Anyone   can participate in the VBK network at any time
+Unless I'm mistaken, GAME credits was the first coin to implement the dPoW algorithm, and they've only been using it for 2 or 3 months
+
+[29-Sep-18 11:23 AM] jl777c#5810
+to my knowledge, nobody in the KMD community has any significant BTC hashrate. we dont control the BTC network in anyway, yet we still utilize BTC security
+
+[29-Sep-18 11:23 AM] ted#5473
+yes,they said that.@jl777c
+
+[29-Sep-18 11:24 AM] jl777c#5810
+why would they want to be controlling notary nodes? the idea is to not have to worry about such things
+
+{Reactions}
+👆 (4) 
+
+[29-Sep-18 11:26 AM] ted#5473
+they said Still in discussion with KMD devs
+
+[29-Sep-18 11:28 AM] jl777c#5810
+they wanted duke to basically work for free
+
+[29-Sep-18 11:29 AM] jl777c#5810
+the design is that each chain takes care of making its own blocks. having one coin controlling another coin doesnt sound so good, so making that some sort of requirement is strange. if they need that then it is better they use a different solution
+
+[29-Sep-18 11:29 AM] jl777c#5810
+it is like not using bitcoin since bitcoin wont let you mine some percentage of blocks
+
+[29-Sep-18 11:30 AM] jl777c#5810
+oh wait, you could
+
+[29-Sep-18 11:30 AM] jl777c#5810
+just as they could mine KMD blocks, or become notaries. they just dont want to pay for it
+
+[29-Sep-18 11:33 AM] grewalsatinder#9653
+@ted 
+>The problem with the KMD solution is that the FLO community cannot participate in running a notary node because:
+this logic incorrect.
+
+Every assetchain in a project or every other 3rd party blockchain (hush, verushash, gamecredits, etc) don't need to participate in notary node elections.
+But to pay for their assetchain notarisation. even a community member can donate for an yearly notarisation or a community fund can probably do that. aprox of 300 kmd per year I don't think is huge cost to save a blockchain worth multi thousand/million/billion against 51% attack.
+
+[29-Sep-18 11:33 AM] ted#5473
+so they think veriblock is better,and i think many other teams which want to use kmd solution,also worry about those problems
+
+[29-Sep-18 11:35 AM] jl777c#5810
+making it a requirement to have one or more notary nodes to utilize the dPoW service, this is a totally unreasonable thing
+
+[29-Sep-18 11:35 AM] jl777c#5810
+if that cannot be understood, then it is ok that they use something else
+
+[29-Sep-18 11:37 AM] jl777c#5810
+they can just setup their own notary nodes, and pay for BTC txfees themselves
+
+[29-Sep-18 11:39 AM] grewalsatinder#9653
+if every new blockchain utilising dPoW notarisation required to have a notary node of their own, there probably would have need of 1000s of notary nodes. doesn't make sense.
+only 64 notary nodes.
+community elect with their token weight power
+notaries don't hold the power to change or manipulate a blockchain
+only thing these notaries can do is just send the transaction and do notarisation.
+
+[29-Sep-18 11:39 AM] grewalsatinder#9653
+that's a little power.
+
+[29-Sep-18 11:40 AM] grewalsatinder#9653
+and delayed Proof of Work can be applied to any cryptocurrency.
+
+[29-Sep-18 11:40 AM] grewalsatinder#9653
+even IOTA!
+
+[29-Sep-18 11:41 AM] ted#5473
+FLO really a good project,overstock and so on,hope we can have a serious talk with them.
+
+[29-Sep-18 11:41 AM] grewalsatinder#9653
+to any algorithm or way which is protecting blockchain, doesn't matter what PoW or PoS that is or is even DAGs
+
+[29-Sep-18 11:42 AM] grewalsatinder#9653
+you don't want to hold your money on a backing account with web access without a 2 factor authentication.
+
+[29-Sep-18 11:42 AM] grewalsatinder#9653
+just expect that to be this day or another compromised if there isn't a 2fa
+
+[29-Sep-18 11:42 AM] grewalsatinder#9653
+dPoW is similar effect like 2fa
+
+[29-Sep-18 11:42 AM] grewalsatinder#9653
+for blockchains
+
+[29-Sep-18 11:43 AM] grewalsatinder#9653
+second layer of security
+
+[29-Sep-18 11:45 AM] jl777c#5810
+and it isnt right to insist that you are involved in the actual 2FA mechanism
+
+[29-Sep-18 11:46 AM] jl777c#5810
+the 2FA either works or it doesnt and if it does, why fix it
+
+[29-Sep-18 11:46 AM] ted#5473
+😂
+
+[29-Sep-18 11:50 AM] Mylo#8306
+```
+The problem with the KMD solution is that the FLO community cannot participate in running a notary node because:
+1. Voting in a notary node happens once a year and only a few of them are re-elected
+```
+Yes they can participate.  Get voted in.  This is part of any voting process.
+```
+2. Voting in a notary node requires voting with KMD
+```
+Voting in the elections is one part of the KMD ecosystem.  If you want to vote, be a part of it by getting KMD around that time of year.  The Vote coin gets airdroped to holders of KMD.  It is a community process.  How else can a community process be voted on?
+```
+The FLO community should not be required to also buy and hold KMD to vote on a node to be able to have a small amount of control over the network. 
+```
+Nobody is controlling anything.  Notary nodes don't control anything.  They notarize.  The voting process is how it is, if you think there is a better way, please submit details of a better way.
+
+[29-Sep-18 11:51 AM] Mylo#8306
+You actually don't need to hold any KMD.  Just run for elections and get votes from the KMD community - ultimately KMD community decides.
+

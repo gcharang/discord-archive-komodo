@@ -1,0 +1,370 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[06-Dec-18 12:13 PM] jl777c#5810
+i actually never checked the value of consensusBranchId
+
+[06-Dec-18 12:14 PM] Mihailo#5902
+sighash and msgHash from cc_verify?
+
+[06-Dec-18 12:15 PM] jl777c#5810
+rc = secp256k1_ecdsa_verify(ec_ctx_verify, &sig, visitor.msg, &pk);
+visitor.msg and sighash
+
+[06-Dec-18 12:15 PM] jl777c#5810
+they should be the same, assuming the same keypair is used
+
+[06-Dec-18 12:15 PM] Mihailo#5902
+Yep, ok.
+
+[06-Dec-18 12:15 PM] jl777c#5810
+so verify the matching pubkey is used for the privkey that signed it
+
+[06-Dec-18 12:15 PM] jl777c#5810
+that is the only way that should fail
+
+[06-Dec-18 12:15 PM] jl777c#5810
+signing with the mismatched privkey, or singing the wrong hash
+
+[06-Dec-18 12:21 PM] Mihailo#5902
+This is the print from FinalizeCCtx:
+```
+consensus 1991772603
+72d8a144331d923e1eba11f5c74867be3512bf0942ee8f4951ea81b1595b7b2b
+consensus 1991772603
+f88cdd8b6ecf9a2ecc5ab4519333a4a7938d391db62c23665339c04029f25c06
+```
+Those are two sighash for vin0 and vin1 I think
+
+And this is msg32 from visitor when it does cc_verify for vin1:
+```
+D3F3BE70754A39BA254F5167A56761648D4CF32E4B29DC72A000077D660C5AF6
+```
+
+[06-Dec-18 12:22 PM] jl777c#5810
+aha! that is why it fails
+
+[06-Dec-18 12:23 PM] jl777c#5810
+so the question is why is visitor.msg D3F3BE70754A39BA254F5167A56761648D4CF32E4B29DC72A000077D660C5AF6 instead of f88cdd8b6ecf9a2ecc5ab4519333a4a7938d391db62c23665339c04029f25c06
+
+[06-Dec-18 12:24 PM] jl777c#5810
+so at least we found the exact cause and hopefully can find that the visitor.msg is using a different way to get sighash
+
+[06-Dec-18 12:24 PM] jl777c#5810
+or the sighash function is called with slightly different parameters
+
+[06-Dec-18 12:25 PM] Mihailo#5902
+I do not think this is correct compare, as I started new oracle and tested when oraclesdata works and they are still different
+
+[06-Dec-18 12:25 PM] Mihailo#5902
+```
+consensus 1991772603
+3a03adb18ad8261873e77df3e87e5f0d27fca85fa9120600abdae9d13e7bf81f
+consensus 1991772603
+0c6202fcbdbaf1ab36bfdc7b50184e80baf55c5d82d3a85921337126f5500678
+```
+```
+1FF87B3ED1E9DAAB000612A95FA8FC270D5F7EE8F37DE7731826D88AB1AD033A
+780650F52671332159A8D3825D5CF5BA804E18507BDCBF36ABF1BABDFC02620C
+```
+
+[06-Dec-18 12:32 PM] jl777c#5810
+it seems rc = secp256k1_ecdsa_verify(ec_ctx_verify, &sig, visitor.msg, &pk);
+is verifying it, but the CC signing is a bit more complex and it seems to call cc_visit which automatically add a signature?
+
+[06-Dec-18 12:32 PM] jl777c#5810
+you need to dig into the crytoconditions code to see what exactly it is signing with the secp256k1 sign function
+
+[06-Dec-18 12:33 PM] jl777c#5810
+it could be that the sighash in finalizeCCtx is being processed. I know the CC vout is a hash of the actual condition
+
+[06-Dec-18 12:33 PM] jl777c#5810
+so there is another layer of processing going on
+
+[06-Dec-18 12:33 PM] Mihailo#5902
+Ok, need to get to know how it all works. BTW, who wrote the core of CC?
+
+[06-Dec-18 12:33 PM] jl777c#5810
+libscott
+
+[06-Dec-18 12:33 PM] jl777c#5810
+let me know when you find the exact values being secp256k1 signed
+
+[06-Dec-18 12:33 PM] jl777c#5810
+we need to get 100% up to speed with this code
+
+[06-Dec-18 12:34 PM] Mihailo#5902
+Ok, and is he around if I need some help?
+
+[06-Dec-18 12:37 PM] jl777c#5810
+he is around occasionally, but the code is there, so I think we can solve this one
+
+[06-Dec-18 12:48 PM] Mihailo#5902
+Ok, so it is a problem that visitor msg is different after all:
+```
+01689a936c74cf0de5681df6d3231167edf152850d855a9f4f78a2fb2d6d9922 sighash, 7329453ccd1035fb04f658c0d67478ca60d82a98c54bdc4c0e7d36c8c9e73297 signed with privkey
+faaf33dd9ed46ff577a6b9f83f40606fa4a5bc7e76ffdc7907cab9b0e02edd7f sighash, 84621e9eb74ea9218d47937930e854bae5eff798bf2c23306c66d433cd68b728 signed with privkey
+
+01689a936c74cf0de5681df6d3231167edf152850d855a9f4f78a2fb2d6d9922
+faaf33dd9ed46ff577a6b9f83f40606fa4a5bc7e76ffdc7907cab9b0e02edd7f
+
+b909cd5fa57c7c781a341673531866ae1c0eaada34d28234f8c72fb03d96273e sighash, 7329453ccd1035fb04f658c0d67478ca60d82a98c54bdc4c0e7d36c8c9e73297 signed with privkey
+42ed6b230b24f1aad716aee9322f1d23a3733499c765c5fb975426cb3e41cb60 sighash, 84621e9eb74ea9218d47937930e854bae5eff798bf2c23306c66d433cd68b728 signed with privkey
+
+f82fa488427d261e1f82038fe8eca6c7843ac7880f0ef45aeac6dc71f5bfc50e
+cc_verify error C
+ERROR: CScriptCheck(): bd217b74b48be1c6c23de7e0d1bbadf53562da61a5a9f31c43cae5cabe90858d:1 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+f82fa488427d261e1f82038fe8eca6c7843ac7880f0ef45aeac6dc71f5bfc50e
+cc_verify error C
+ERROR: CScriptCheck(): bd217b74b48be1c6c23de7e0d1bbadf53562da61a5a9f31c43cae5cabe90858d:1 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+```
+
+[06-Dec-18 12:49 PM] Mihailo#5902
+So the first check matches 016... and faa..., but the second is different and this is when oraclesdata fails.
+
+[06-Dec-18 12:51 PM] jl777c#5810
+good, now to find out the difference in how it is called.
+
+[06-Dec-18 12:52 PM] jl777c#5810
+i might know why! when it is validating the mempool, it sometimes doesnt know the current height and maybe it defaults to the wrong height
+
+[06-Dec-18 12:52 PM] jl777c#5810
+in CCutils.cpp ProcessCC:
+    height = KOMODO_CONNECTING;
+    if ( KOMODO_CONNECTING < 0 ) // always comes back with > 0 for final confirmation
+        return(true);
+    if ( ASSETCHAINS_CC == 0 || (height & ~(1<<30)) < KOMODO_CCACTIVATE )
+        return eval->Invalid("CC are disabled or not active yet");
+    if ( (KOMODO_CONNECTING & (1<<30)) != 0 )
+    {
+        from_mempool = 1;
+        height &= ((1<<30) - 1);
+    }
+
+[06-Dec-18 12:53 PM] jl777c#5810
+KOMODO_CONNECTING I try to set sanely in all paths coming in from main.cpp, but it can get called from ProcessBlock, which is async from network traffics
+
+[06-Dec-18 12:53 PM] jl777c#5810
+and if the different height is used, it would think it is a different consensusBranchId
+
+[06-Dec-18 12:54 PM] jl777c#5810
+One solution for this is that where it errors to try the alternate serialization
+
+[06-Dec-18 12:54 PM] jl777c#5810
+so if it is sapling active and it fails, try the sapling inactive serialization
+
+[06-Dec-18 12:54 PM] Mihailo#5902
+I saw when I've done prints from cc_verify that sometimes it overlaps so it is multithreaded, could it be some synchronization problem?
+
+[06-Dec-18 12:54 PM] jl777c#5810
+if sapling inactive fails, try sapling active
+
+[06-Dec-18 12:54 PM] jl777c#5810
+it is multithreaded
+
+[06-Dec-18 12:55 PM] jl777c#5810
+ProcessBlock happens while connectblock is happening, this is all the time
+
+[06-Dec-18 12:55 PM] jl777c#5810
+I think this is the other explanation for intermittent
+
+[06-Dec-18 12:55 PM] jl777c#5810
+it depends on the mempool and when a tx is coming in to be verified in the middle of another
+
+[06-Dec-18 12:55 PM] jl777c#5810
+so when there are both sapling active and inactive on the network, it can end up using the wrong serialization format to calculate the sighash
+
+[06-Dec-18 12:56 PM] jl777c#5810
+so the fix is to use both serializations in the validation
+
+[06-Dec-18 12:56 PM] jl777c#5810
+i hope you can understand what I am saying
+
+[06-Dec-18 12:57 PM] Mihailo#5902
+Well not fully,. as I had no time by now to even check what sapling does 😳
+
+[06-Dec-18 12:57 PM] jl777c#5810
+sapling changes the tx serialization which would change the sighash
+
+[06-Dec-18 12:57 PM] jl777c#5810
+that is all that matters here
+
+[06-Dec-18 12:58 PM] jl777c#5810
+and the height of the tx determines if it is sapling or not
+
+[06-Dec-18 12:58 PM] jl777c#5810
+and there is the normal block processing and network based async processing
+
+[06-Dec-18 12:58 PM] Mihailo#5902
+Sapling starts from some height and then it always use sapling?
+
+[06-Dec-18 12:58 PM] jl777c#5810
+both sharing the same global to set the current height of the CC
+
+[06-Dec-18 12:59 PM] jl777c#5810
+yes, once sapling is active it stays active, but tx from older heights can still be process and must be valid
+
+[06-Dec-18 12:59 PM] jl777c#5810
+but the cross talk will reduce a lot the longer we are in all sapling
+
+[06-Dec-18 12:59 PM] jl777c#5810
+so the cost of an extra validate on error is ok
+
+[06-Dec-18 12:59 PM] Mihailo#5902
+Ok, but on my chain sapling started at height 61 and everything I've done was way after that height.
+
+[06-Dec-18 12:59 PM] jl777c#5810
+in some cases the global height is set to 0
+
+[06-Dec-18 12:59 PM] jl777c#5810
+which is <61
+
+[06-Dec-18 01:00 PM] Mihailo#5902
+Oh, you mean sometimes when it validates tx it doesn't know which height it is so it uses 0 and then it will user different serialization?
+
+[06-Dec-18 01:00 PM] jl777c#5810
+yes
+
+[06-Dec-18 01:00 PM] Mihailo#5902
+Got it!
+
+[06-Dec-18 01:00 PM] jl777c#5810
+pretty certain that is what is going on
+
+[06-Dec-18 01:01 PM] jl777c#5810
+it was a flimsy thing, but alternative was to flow through height all the way from main.cpp deep into CC validation
+
+[06-Dec-18 01:01 PM] jl777c#5810
+that is the alternative way to fix this, to remove KOMODO_CONNECTING and pass in an always accurate height into ProcessCC
+
+[06-Dec-18 01:01 PM] jl777c#5810
+which comes in from tx validation
+
+[06-Dec-18 01:02 PM] jl777c#5810
+and script interpreter
+
+[06-Dec-18 01:02 PM] jl777c#5810
+it was a C++ minefield for me so I decided to use global
+
+[06-Dec-18 01:02 PM] jl777c#5810
+maybe you can make a clean way
+
+[06-Dec-18 01:02 PM] jl777c#5810
+maybe adding txheight field to the tx being validated that will be there when ProcessCC is called
+
+[06-Dec-18 01:03 PM] Mihailo#5902
+Ok, I'm going for lunch and will try it on when I'm back.
+
+[06-Dec-18 02:36 PM] Mihailo#5902
+@jl777c I don't quite see how KOMODO_CONNECTING has influence which serialization will be used ...
+
+[06-Dec-18 02:37 PM] jl777c#5810
+for now lets just try the alternate serialization if the selected one gets an error
+
+[06-Dec-18 02:37 PM] jl777c#5810
+the other way would be way too much code changes this close to an update
+
+[06-Dec-18 02:37 PM] jl777c#5810
+just need to know how the visitor.msg was calculated and how to do the alternate calc if it gets an error
+
+[06-Dec-18 02:55 PM] Mihailo#5902
+This is what differs when calculating sighash in CCTx and in verify:
+```cpp
+printf("txdata: %s %s %s %s\n",txdata.hashOutputs.GetHex().data(),txdata.hashPrevouts.GetHex().data(),txdata.hashSequence.GetHex().data(),txdata.hashJoinSplits.GetHex().data());
+```
+```
+txdata: 93a6e371082be9f172b5803f44ec6ae08d5a7d4dbddd1732b6b46667e83e4a6c 47cce7339ce18a01f0a92b5581c2e8fb83c4d3751af525a760802286952cd210 5c4cf0d63b1e79c0cb592656fdc1873d22c6f594f34924a4c7fa32fdb8b15d89 950ffd3ef48936edb04059e67bf7c45aca8450e020243754e9c80e7965b1f33b
+
+txdata: 93a6e371082be9f172b5803f44ec6ae08d5a7d4dbddd1732b6b46667e83e4a6c 1751fa8a98662f7e09f8dee3d8bc748bfdbf95687a810ad5f4771240529d7650 5c4cf0d63b1e79c0cb592656fdc1873d22c6f594f34924a4c7fa32fdb8b15d89 950ffd3ef48936edb04059e67bf7c45aca8450e020243754e9c80e7965b1f33b
+```
+The second variable is txdata.hashPrevouts which is different 😮
+
+[06-Dec-18 02:58 PM] Mihailo#5902
+Verification takes txdata from TransactionSignatureChecker class: `sighash = SignatureHash(CCPubKey(cond), *txTo, nIn, nHashType, amount, consensusBranchId, this->txdata);`
+And CCTx gets it from mtx passed.
+
+[06-Dec-18 03:01 PM] jl777c#5810
+something is overwriting vin[1] ??
+
+[06-Dec-18 03:01 PM] jl777c#5810
+that woudl indeed change the sighash
+
+[06-Dec-18 03:02 PM] jl777c#5810
+do we know if it is the same tx being validated in the working vs not working case?
+
+[06-Dec-18 03:02 PM] Mihailo#5902
+Don't know. It should not. I'm trying to figure out where it got this data and how it can be different
+
+[06-Dec-18 03:02 PM] Mihailo#5902
+"do we know if it is the same tx being validated in the working vs not working case?" How do you mean?
+
+[06-Dec-18 03:03 PM] jl777c#5810
+is it the same txid being validated in both working vs not working cases?
+
+[06-Dec-18 03:04 PM] Mihailo#5902
+I could not make same tx to sometime work and sometimes not. Just some previous txs work and then the one that does not verify never passes
+
+[06-Dec-18 03:05 PM] jl777c#5810
+but here we have a single specific tx that is modified from when it is signed to when it is validated?
+
+[06-Dec-18 03:06 PM] Mihailo#5902
+Yes
+
+[06-Dec-18 03:06 PM] jl777c#5810
+the C++ memory management is a mystery to me
+
+[06-Dec-18 03:06 PM] jl777c#5810
+i cant tell what the allocated memory ptrs are
+
+[06-Dec-18 03:07 PM] jl777c#5810
+hopefully you can find the tx data and make it not molested
+
+[06-Dec-18 03:07 PM] Mihailo#5902
+Well, it could be that something modified hashprevout when broadcasting that tx. There is a lot of code where tx passes before it reaches this function...
+
+[06-Dec-18 03:10 PM] Mihailo#5902
+What is the first point in main.cpp (or is it main) where tx is processed after sendrawtransactin?
+
+[06-Dec-18 03:13 PM] jl777c#5810
+i am pretty sure the CC validation is all done before it ever completes back up to main.cpp
+
+[06-Dec-18 03:13 PM] jl777c#5810
+but sendrawtransaction, just adds it to mempool and broadcasts it
+
+[06-Dec-18 03:14 PM] Mihailo#5902
+Yep, and then it does validation I think
+
+[06-Dec-18 03:14 PM] jl777c#5810
+process message would get a new transaction and check for validity
+
+[06-Dec-18 03:14 PM] Mihailo#5902
+Before relaying
+
+[06-Dec-18 03:14 PM] jl777c#5810
+or it could be part of block validation that is doing the CC validation
+
+[06-Dec-18 03:15 PM] jl777c#5810
+pretty sure it is just within the script interpreter where the cryptoconditions validation is done
+
+[06-Dec-18 03:15 PM] jl777c#5810
+so from the time of FinalizeCCtx to where it is broadcast, must be where it is changed
+
+[06-Dec-18 03:16 PM] Mihailo#5902
+Also, it could be good to check this data in the hex returned, maybe something is there malformed
+
+[06-Dec-18 03:32 PM] Mihailo#5902
+It has entered to AcceptToMemoryPool already modified...
+
+[06-Dec-18 03:34 PM] jl777c#5810
+you verified the hex you are broadcasting is unmodified?
+
+[06-Dec-18 03:34 PM] Mihailo#5902
+Doing that now
+

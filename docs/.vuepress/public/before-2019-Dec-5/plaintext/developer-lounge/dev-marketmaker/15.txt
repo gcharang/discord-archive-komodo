@@ -1,0 +1,381 @@
+==============================================================
+Guild: Komodo
+Channel: dev-marketmaker
+Topic: Discussion about AtomiAPI and its market making tech.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[25-Jun-19 04:11 PM] wbradt#2043
+Will the functionality described in this issue https://github.com/artemii235/SuperNET/issues/328 be similar to getendpoint from MM1's API? @artem.pikulin
+
+{Embed}
+https://github.com/artemii235/SuperNET/issues/328
+Push swap status update events to client using Websocket endpoint ...
+https://avatars1.githubusercontent.com/u/15745003?s=400&v=4
+
+[25-Jun-19 04:12 PM] artem.pikulin#0794
+@wbradt Hi, no, the MM2 API is very different already so when we implement a kind of push notifications from MM2 to GUI the messages format will be different.
+
+[25-Jun-19 04:13 PM] wbradt#2043
+Thanks
+
+[25-Jun-19 07:36 PM] dan.#2473
+has the networking improved in mm2? do Bobs still crap out after X Alice connections
+
+[25-Jun-19 07:37 PM] dan.#2473
+or is scale something yet to be tested
+
+[25-Jun-19 07:47 PM] jl777c#5810
+networking massively improved
+
+[25-Jun-19 08:13 PM] dan.#2473
+cool
+
+[25-Jun-19 08:13 PM] jl777c#5810
+they got even mobile to mobile swaps working
+
+[25-Jun-19 08:14 PM] dan.#2473
+is there a plan for the chicken and egg problem in terms of users?
+
+[25-Jun-19 08:16 PM] jl777c#5810
+all the recent regulations combined with easy to use GUI, i am more worried about handling the scaling
+
+[25-Jun-19 08:16 PM] dan.#2473
+are there are any other Mobile DEXs? Sorry for the plethora of questions
+
+[25-Jun-19 08:16 PM] jl777c#5810
+but we have tech in progress to handling arbitrary scaling
+
+[25-Jun-19 08:17 PM] jl777c#5810
+i am not aware of any other cross chain atomic swap mobile DEX
+
+[25-Jun-19 08:17 PM] dan.#2473
+thats interesting. that should not be understated then
+
+[25-Jun-19 08:17 PM] dan.#2473
+something gone mobile that is well executed, opens up a whole market
+
+[25-Jun-19 08:18 PM] jl777c#5810
+yes, we work hard on tech that can get actual usage
+
+[26-Jun-19 03:12 PM] wbradt#2043
+For the order_status response, will the keys of "matches" be the same as the elements of "started_swaps"? (For maker orders specifically)
+
+[26-Jun-19 11:40 PM] kmdkrazy#8280
+Can I please test?
+
+[27-Jun-19 08:02 AM] Oszy#5734
+just a note from me, when building mm2 near the end or` cargo build`  
+`cmake` it threw and error and halted for `-j 4` as unknown argument. 
+it compiled without it fine.
+
+[27-Jun-19 08:10 AM] gcharang#6833
+`-j4` without spaces
+tells the compiler number of threads to use (optional)
+
+[27-Jun-19 08:16 AM] Oszy#5734
+`-j 4` it was like that in the code from git
+
+[27-Jun-19 08:16 AM] Oszy#5734
+so that has to be changed then
+
+{Reactions}
+👍 
+
+[27-Jun-19 09:27 AM] Oszy#5734
+params for MORTY chain same as RICK?
+
+[27-Jun-19 09:31 AM] CHMEX#0686
+Other than the name yes
+
+[27-Jun-19 09:34 AM] Oszy#5734
+ty
+
+[27-Jun-19 12:01 PM] cipi#4502
+all coin params should be here: https://github.com/jl777/coins/blob/master/coins
+if not, make a PR
+
+{Embed}
+https://github.com/jl777/coins/blob/master/coins
+jl777/coins
+coin parameters and all files needed for GUI support - jl777/coins
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[28-Jun-19 05:29 AM] artem.pikulin#0794
+@wbradt `
+For the order_status response, will the keys of "matches" be the same as the elements of "started_swaps"? (For maker orders specifically)` - yes, the keys of matches are same as `started_swaps` for now as swap uuid is equal to taker request uuid. But I think it won't be like this forever as we plan to allow partial match of taker order so we will have to use something different for swap uuid as current approach will produce same uuid for different swaps.
+
+{Reactions}
+👌 
+
+[28-Jun-19 05:30 AM] artem.pikulin#0794
+So you shouldn't treat this like potential uuid of swap if order is matched successfully - it's uuid of `ongoing match` and that's it.
+
+[28-Jun-19 06:06 PM] sindresorhus#8187
+@artem.pikulin Do you plan to implement the `portfolio` endpoint (from mm v1) in the near future?
+
+[29-Jun-19 12:25 PM] artem.pikulin#0794
+@sindresorhus Hi, as of now it's not planned to implement it in near future and there's no ETA for it.
+
+[29-Jun-19 03:09 PM] sindresorhus#8187
+@artem.pikulin Is it possible to get the same data through other (maybe multiple) new mm v2 endpoints or would we have to implement our own Electrum communication?
+
+[29-Jun-19 04:03 PM] artem.pikulin#0794
+@sindresorhus Our goal is to prevent GUIs from directly accessing coin RPC as we can have many different coin protocols supported and these can have very different APIs. As starting point to replicate the old `portfolio` call you may use `my_balance` - https://github.com/artemii235/developer-docs/blob/mm/docs/basic-docs/atomicdex/atomicdex-api.md#my_balance.
+
+{Embed}
+https://github.com/artemii235/developer-docs/blob/mm/docs/basic-docs/atomicdex/atomicdex-api.md
+artemii235/developer-docs
+Contribute to artemii235/developer-docs development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/15745003?s=400&v=4
+
+[29-Jun-19 04:03 PM] artem.pikulin#0794
+Also it's easy to add a call that will return all balances of enabled coins, but this call will take some time to run as MM2 will request the balance on demand from RPCs, caching is not implemented yet
+
+[29-Jun-19 04:03 PM] artem.pikulin#0794
+Could you please clarify what info do you require from portfolio?
+
+[29-Jun-19 04:30 PM] sindresorhus#8187
+We use the `portfolio` endpoint for the balance, and price for currencies not on Coingecko.
+
+[29-Jun-19 04:33 PM] sindresorhus#8187
+So the missing thing is to get an endpoint to get the price.
+
+[29-Jun-19 04:47 PM] artem.pikulin#0794
+So for coins not present on coingecko you need to get the exchange rate with some known coin (presumably BTC or KMD)? And it will be best price available on current orderbook, correct?
+
+[29-Jun-19 04:48 PM] sindresorhus#8187
+Yes, we currently use the `price` field here: https://github.com/KomodoPlatform/KomodoPlatform/wiki/BarterDEX-API-Summary-by-Category#portfolio
+
+{Embed}
+https://github.com/KomodoPlatform/KomodoPlatform/wiki/BarterDEX-API-Summary-by-Category
+KomodoPlatform/KomodoPlatform
+Contribute to KomodoPlatform/KomodoPlatform development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[29-Jun-19 04:49 PM] sindresorhus#8187
+It would also be useful with an endpoint to get a list of the enabled currencies. We already have this locally, but there's a risk of the app getting out of sync with mm. Would be nice if mm could be the source of truth for that.
+
+[29-Jun-19 04:49 PM] sindresorhus#8187
+I'm happy to open issues for these suggestions if you want?
+
+[29-Jun-19 04:49 PM] artem.pikulin#0794
+Sure, let's start with this simple one, getting list of all enabled coins will be easy to add.
+
+[29-Jun-19 04:53 PM] jl777c#5810
+if mm2 isnt already getting prices externally, it seems to make more sense for the gui to be getting prices from external sites
+
+{Reactions}
+💯 
+
+[29-Jun-19 04:53 PM] jl777c#5810
+maybe the best orderbook price can be returned, but that wont necesarily be the best price
+
+[29-Jun-19 04:55 PM] sindresorhus#8187
+@jl777c What did mm v1 use as the basis for the `price` field for coins not on CMC/Coingecko?
+
+[29-Jun-19 04:55 PM] jl777c#5810
+it used internal prices
+
+[29-Jun-19 04:55 PM] jl777c#5810
+that is sees on the network
+
+[29-Jun-19 04:56 PM] jl777c#5810
+but that can be easily manipulated
+
+[29-Jun-19 04:56 PM] jl777c#5810
+i would suggest using an external reference
+
+[29-Jun-19 04:58 PM] sindresorhus#8187
+But we can't realistically hook up the app to separate APIs for each coin, so we have to use an API like Coingecko. So the result then is that we don't support prices for such coins.
+
+[29-Jun-19 04:59 PM] jl777c#5810
+it is hard to have a function that uses internal if external is not available?
+
+[29-Jun-19 05:00 PM] sindresorhus#8187
+That's what we already do. We use Coingecko whenever possible and fall back to the price given by mm.
+
+[29-Jun-19 05:01 PM] artem.pikulin#0794
+As I understand the main purpose is approximate estimation of total portfolio value in USD, for coin not present on CMC/Gecko we can add a kind of `bestprices` call that will return just best price if there're any orders.
+
+[29-Jun-19 05:01 PM] artem.pikulin#0794
+But also you can get this info from the corresponding `orderbook`.
+
+[29-Jun-19 05:02 PM] sindresorhus#8187
+@artem.pikulin Correct
+
+[29-Jun-19 05:02 PM] sindresorhus#8187
+A `bestprices` endpoint would be very useful.
+
+[29-Jun-19 05:04 PM] artem.pikulin#0794
+So is it like `bestprices(KMD)` to get the best prices of all enabled coins in pair with KMD?
+
+[29-Jun-19 05:07 PM] sindresorhus#8187
+Yes, the current API also returns the price relative to KMD.
+
+[29-Jun-19 05:11 PM] sindresorhus#8187
+I opened a couple of issues about these things.
+
+[29-Jun-19 05:11 PM] sindresorhus#8187
+Just wanted to say that the mm v2 is looking very good and it's super fast.
+
+[29-Jun-19 05:13 PM] artem.pikulin#0794
+Thanks! `enabled_coins` is very easy so will be done right after weekend, `bestprices` will require a bit more effort, but I guess I will have some time for this on next week.
+
+[29-Jun-19 05:14 PM] sindresorhus#8187
+Thanks 😃
+
+[29-Jun-19 05:16 PM] sindresorhus#8187
+@artem.pikulin Is `order_status` the correct endpoint to track updates for a swap? I'm trying to replace the mm v1 websocket code we have for tracking swap progress. Was not clear if it's that one or `my_swap_status` (what is the difference?)
+
+[29-Jun-19 05:20 PM] artem.pikulin#0794
+Swap is result of matching `the order`, so these are different entities. As of now if you're acting as `taker` there's really not that much differerence between order and swap. Taker request is `fill` only and swap uuid will be equal to uuid of the order - only 1 swap can start by matching the taker request.
+
+[29-Jun-19 05:21 PM] sindresorhus#8187
+Ok, thanks.
+
+[29-Jun-19 05:21 PM] artem.pikulin#0794
+https://github.com/artemii235/developer-docs/blob/mm/docs/basic-docs/atomicdex/atomicdex-api.md#response-maker-order - but maker order can already have multiple matches so you need to track the `order_status` at least to know  what swaps has been started by it.
+
+{Embed}
+https://github.com/artemii235/developer-docs/blob/mm/docs/basic-docs/atomicdex/atomicdex-api.md
+artemii235/developer-docs
+Contribute to artemii235/developer-docs development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/15745003?s=400&v=4
+
+[29-Jun-19 05:23 PM] artem.pikulin#0794
+https://github.com/artemii235/developer-docs/blob/mm/docs/basic-docs/atomicdex/atomicdex-api.md - and also Taker order status response already has `matches` - we will allow taker order to partially match and start multiple swaps in the near future.
+
+{Embed}
+https://github.com/artemii235/developer-docs/blob/mm/docs/basic-docs/atomicdex/atomicdex-api.md
+artemii235/developer-docs
+Contribute to artemii235/developer-docs development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/15745003?s=400&v=4
+
+[29-Jun-19 05:25 PM] sindresorhus#8187
+So if I do a `buy` order, I get a response with a `uuid` back. I tried using that `uuid` for `order_status`, but the order is not found. I must be missing something.
+
+[29-Jun-19 05:25 PM] artem.pikulin#0794
+If the order is matched it's removed immediately, please try to call `my_swap_status` with same uuid.
+
+[29-Jun-19 05:31 PM] artem.pikulin#0794
+It's a bit tricky situation as of now, MM2 doesn't persist the order history yet, `order_status` returns the active order info, but if it's matched it's not active anymore.
+
+[29-Jun-19 05:32 PM] artem.pikulin#0794
+And it matches quite fast usually so yes, you might not have enough time to catch the `order_status` 🙂
+
+[29-Jun-19 05:34 PM] artem.pikulin#0794
+But if it's not matched it will stay online for 30 seconds and then be recreated as maker order.
+
+[29-Jun-19 05:34 PM] sindresorhus#8187
+I see. So I cannot really rely on `order_status` then, since I have to be sure I catch it.
+
+[29-Jun-19 05:35 PM] sindresorhus#8187
+Is persistence of `order_status` something that will be implemented in the short term?
+
+[29-Jun-19 05:36 PM] artem.pikulin#0794
+Maybe after `enabled_coins` and `bestprices` 🙂
+
+[29-Jun-19 05:36 PM] sindresorhus#8187
+Ok, thanks.
+
+[29-Jun-19 05:42 PM] artem.pikulin#0794
+We will have to persist the `order_history` sooner or later so it'll be done for sure. As of now you have to follow these steps: create order -> check order_status -> if there's no order check my_swap_status with same uuid -> if swap is not found there's something unexpected.
+
+[29-Jun-19 05:43 PM] artem.pikulin#0794
+Hopefully it doesn't add too much code.
+
+[29-Jun-19 05:43 PM] sindresorhus#8187
+Ok, thanks for talking me through this.
+
+[29-Jun-19 05:45 PM] artem.pikulin#0794
+You're welcome! I'm going offline now, please leave your questions here if needed, I will respond when I come back online.
+
+[29-Jun-19 06:16 PM] ca333#0118
+@sindresorhus check out `my_recent_swaps` - it is very reliable for order status tracking.
+
+[01-Jul-19 06:31 PM] JvdP#8992
+Guys, sorry if this is a noob question, but let's say I wanted to experiment with running mm2, where should I start? Can I even, before the Dex is officially out? 
+Totally comfortable with CLI, just not sure where the latest & greatest information is at...
+
+[01-Jul-19 06:33 PM] phm87#7395
+I'm also interested to be Tester of mm2
+
+[01-Jul-19 08:45 PM] kmdkrazy#8280
+MME2
+
+[02-Jul-19 01:18 PM] sindresorhus#8187
+@ca333 Thanks. I managed to get it working with that.
+
+{Reactions}
+👍 
+
+[04-Jul-19 03:57 PM] Rtg#7500
+@SHossain Hello 👋,
+
+I work with the Chaincoin community and one of our devs is interested in the new atomic api announced today. 
+
+How can I get more information or documentation to share with them. They built our explorer and are looking to build atomic swap capabilities into the explorer.
+
+Thanks for sharing and for building an open framework with shared liquidity!💪🏻👍🏻
+
+[04-Jul-19 05:13 PM] SHossain#0007
+@Rtg the API doc is available here https://github.com/artemii235/developer-docs/blob/mm/docs/basic-docs/atomicdex/atomicdex-api.md
+
+{Embed}
+https://github.com/artemii235/developer-docs/blob/mm/docs/basic-docs/atomicdex/atomicdex-api.md
+artemii235/developer-docs
+Contribute to artemii235/developer-docs development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/15745003?s=400&v=4
+
+[04-Jul-19 05:18 PM] Rtg#7500
+Thanks @SHossain!
+
+[04-Jul-19 07:22 PM] jajabanks#1894
+how does one become a Markermarker for usdc on atomicdex
+
+[04-Jul-19 07:27 PM] jorian#4555
+<https://github.com/artemii235/SuperNET/> clone, build, start marketmaker, set price. that's it in a nutshell
+
+[04-Jul-19 07:28 PM] jorian#4555
+there's much more to it, we are soon releasing a GUI where you can be marketmaker
+
+[04-Jul-19 07:30 PM] jajabanks#1894
+when? @jorian and a guide for mac os will be appreciated if  you have a link thanks
+
+[04-Jul-19 07:33 PM] jorian#4555
+not an exact date yet, but it's a matter of weeks
+
+[04-Jul-19 07:33 PM] jorian#4555
+the readme of that repository i linked to has some information
+
+[04-Jul-19 07:33 PM] jorian#4555
+once you have done all that is in the readme, go read this: <https://github.com/artemii235/developer-docs/blob/mm/docs/basic-docs/atomicdex/atomicdex-api.md>
+
+[04-Jul-19 07:33 PM] jajabanks#1894
+ok thanks weeks meaning less than 4 weeks or it will be a month
+
+[04-Jul-19 07:34 PM] jorian#4555
+we're aiming this month, but no promises
+
+[04-Jul-19 07:34 PM] jajabanks#1894
+ok
+
+[08-Jul-19 08:05 AM] sindresorhus#8187
+@artem.pikulin I noticed the Linux build name has a shorter Git hash than Windows and macOS:
+
+mm2-e31bd72-Linux.zip
+mm2-e31bd721f-Windows_NT.zip
+mm2-e31bd721f-Darwin.zip
+
+At http://195.201.0.6/mm2/
+
+Could you make them have the exact same hash? It's weird that they differ and it makes it slightly harder to make a build script that downloads them.
+
+[08-Jul-19 10:10 AM] artem.pikulin#0794
+@sindresorhus Hi, you may download the latest nightly by special links: http://195.201.0.6/mm2/mm2-latest-Linux.zip, http://195.201.0.6/mm2/mm2-latest-Darwin.zip, http://195.201.0.6/mm2/mm2-latest-Windows_NT.zip.
+
+[08-Jul-19 10:10 AM] sindresorhus#8187
+@artem.pikulin And for Linux and macOS build ZIP files, can you remove the directory nesting? `./target/debug/mm2` => `./mm2`?
+

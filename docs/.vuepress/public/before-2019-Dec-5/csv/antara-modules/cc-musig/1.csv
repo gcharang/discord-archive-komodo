@@ -1,0 +1,285 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"423176312354635779";"gcharang#6833";"22-Feb-19 09:35 AM";"```bash
+git clone https://github.com/jl777/komodo
+cd komodo
+git checkout jl777
+cd src/cc
+./makecclib
+cd ../..
+./zcutil/build.sh -j$(nproc)
+```";"";"";
+"423176312354635779";"gcharang#6833";"22-Feb-19 09:35 AM";"@jl777c are these the correct build instructions for the first time?";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 09:36 AM";"yes, but you might need to build komodod at least once before makecclib will work";"";"";
+"423176312354635779";"gcharang#6833";"22-Feb-19 09:43 AM";"Build instructions:
+```bash
+git clone https://github.com/jl777/komodo
+cd komodo
+git checkout jl777
+./zcutil/fetch-params.sh
+./zcutil/build.sh -j$(nproc)
+```
+then
+```bash
+cd src/cc
+./makecclib
+cd ../..
+make -j$(nproc)
+```
+Chain params:
+```
+./komodod -ac_name=MUSIG -ac_supply=100000 -ac_reward=10000000 -pubkey=<yourpub> -ac_cclib=sudoku -ac_cc=2 -addnode=5.9.102.210 &
+```
+Get funds to test:
+```bash
+./komodo-cli -ac_name=MUSIG faucetget
+# copy the hex in the response
+./komodo-cli -ac_name=MUSIG sendrawtransaction <hex copied from the above response>
+```
+RPC are in the comments of the file: https://github.com/jl777/komodo/blob/jl777/src/cc/musig.cpp
+There are comments in the following files that describe musig:
+https://github.com/jl777/komodo/blob/jl777/src/secp256k1/include/secp256k1_musig.h
+https://github.com/jl777/komodo/blob/jl777/src/secp256k1/src/modules/musig/example.c
+
+Documentation for musig : https://developers.komodoplatform.com/basic-docs/cryptoconditions/cc-musig.html
+A working example: create combined pubkey, send funds to it, spend the funds: https://developers.komodoplatform.com/basic-docs/cryptoconditions/cc-musig.html#full-example";"";"treasure (1)";
+"423176312354635779";"gcharang#6833";"22-Feb-19 09:44 AM";"Pinned a message.";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 12:52 PM";"hello";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 12:52 PM";"will start testing this now.";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 12:58 PM";"I got as far as making a combined signature, but it didnt validate. so if you get a different result let me know. the crypto library is self-testing properly so it must be a bug in the code or my manual rpc";"";"";
+"420119978138664961";"CHMEX#0686";"22-Feb-19 01:20 PM";"if you need: http://musig.explorer.dexstats.info/";"";"";
+"423176312354635779";"gcharang#6833";"22-Feb-19 01:51 PM";"@jl777c should rogue,sudoku and musig be treated diffrently from the initial contracts like faucet,reward,dice etc., in the documementation? 
+The difference I can see is that rogue,sudoku and musig are dynamic modules and are loaded using -ac_cclib
+where as the contracts faucet,reward,dice etc., are available through -ac_cc
+
+The main question is: is it temporary that both kind of contracts exist and are there plans to convert the -ac_cc contracts to -ac_cclib type?";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 01:52 PM";"there are built in contracts and dynamic";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 01:53 PM";"likely there will always be this difference";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 01:53 PM";"things like gateways would want to be built in";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 01:53 PM";"things like specific games, dynamic";"";"";
+"423176312354635779";"gcharang#6833";"22-Feb-19 01:53 PM";"Understood";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 01:58 PM";"``` change script: 2102aff51dad774a1c612dc82e63f85f07b992b665836b0f0efbcb26ee679f4f4848ac
+```
+
+where can i find this change script specified in the guide?";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 01:58 PM";"i did a send. and all i ok";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 01:58 PM";"http://musig.explorer.dexstats.info/tx/74a3ac1dc2cc01916f9b8e9e59d4e08d61220d7da4534805baf79d7c0f2e8597";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 01:59 PM";"@jl777c";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 02:00 PM";"if you did any payment to one of your addresses, find the vout hex";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 02:00 PM";"for Rwxx... 023ef3d3bf277dcf3c363e41d7a3adfa72b8659c148e108079a268e22717fa9a88";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 02:01 PM";"explorer, + for details, output scrpt";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 02:02 PM";"scriptpubkey";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 02:02 PM";"ok";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 02:07 PM";"In the case of my test, all pubkeys for the signature are in the same node, is this something i should not do?";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 02:08 PM";"it is designed for one pubkey per node";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 02:09 PM";"🤦 need to import the second pubkey to another node then";"";"";
+"423176312354635779";"gcharang#6833";"22-Feb-19 02:12 PM";"@jl777c 
+```
+first make a combined pk
+```
+`pk` is pubkey?";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 02:13 PM";"yes";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 02:13 PM";"multisig pubkey";"";"👍 (1)";
+"423176312354635779";"gcharang#6833";"22-Feb-19 04:56 PM";"Documentation for musig in construction: https://developers.komodoplatform.com/basic-docs/cryptoconditions/dynamic/cc-musig.html please report any errors you find and suggest improvements.
+Still need to add explanations for the RPC and examples";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 04:56 PM";"@jl777c  ```./makecclib 
+In file included from ../amount.h:24:0,
+                 from ../primitives/transaction.h:24,
+                 from ../primitives/block.h:24,
+                 from cclib.cpp:19:
+../serialize.h:41:10: fatal error: boost/optional.hpp: No such file or directory
+ #include <boost/optional.hpp>
+          ^~~~~~~~~~~~~~~~~~~~
+compilation terminated.
+``` in a new docker image for testing";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 04:59 PM";"install boost";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 05:02 PM";"ok";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 05:08 PM";"```In file included from ../wallet/walletdb.h:25:0,
+                 from ../cc/../wallet/wallet.h:38,
+                 from ../cc/CCinclude.h:48,
+                 from cclib.cpp:24:
+../wallet/db.h:36:10: fatal error: db_cxx.h: No such file or directory
+ #include <db_cxx.h>
+```";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 05:08 PM";"libdb?";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 05:15 PM";"does komodod build on that system?";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 05:26 PM";"yes";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 05:29 PM";"``` make -j2 V=1
+Making all in src
+make[1]: Entering directory '/root/komodo/src'
+make[2]: Entering directory '/root/komodo/src'
+make  -C secp256k1 libsecp256k1.la OPTFLAGS=""-O2 -march=x86-64 -g ""
+make[3]: Entering directory '/root/komodo/src/secp256k1'
+make[3]: Leaving directory '/root/komodo/src/secp256k1'
+make  -C cryptoconditions libcryptoconditions_core.la OPTFLAGS=""-O2 -march=x86-64 -g ""
+make[3]: Entering directory '/root/komodo/src/cryptoconditions'
+make[3]: 'libcryptoconditions_core.la' is up to date.
+make[3]: Leaving directory '/root/komodo/src/cryptoconditions'
+make[2]: Leaving directory '/root/komodo/src'
+make[1]: Leaving directory '/root/komodo/src'
+Making all in doc/man
+make[1]: Entering directory '/root/komodo/doc/man'
+make[1]: Nothing to be done for 'all'.
+make[1]: Leaving directory '/root/komodo/doc/man'
+make[1]: Entering directory '/root/komodo'
+make[1]: Nothing to be done for 'all-am'.
+make[1]: Leaving directory '/root/komodo'
+```";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 05:29 PM";"outcome from ./zcutil/build.sh";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 05:30 PM";"also, ./makerogue works: ```make: 'rogue' is up to date.
+rogue build SUCCESSFUL
+
+Linux
+make: Nothing to be done for 'all'.
+ROGUE BUILD SUCCESSFUL
+```";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 05:31 PM";"but ./makecclib: ```~/komodo/src/cc# ./makecclib 
+In file included from ../wallet/walletdb.h:25:0,
+                 from ../cc/../wallet/wallet.h:38,
+                 from ../cc/CCinclude.h:48,
+                 from cclib.cpp:24:
+../wallet/db.h:36:10: fatal error: db_cxx.h: No such file or directory
+ #include <db_cxx.h>
+          ^~~~~~~~~~
+compilation terminated.
+```";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 05:32 PM";"@jl777c";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 05:32 PM";"then use makerogue";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 05:32 PM";"just remove the ENABLE_ROGUE part";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 05:32 PM";"ok";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 05:45 PM";"my bad... sorry... it didnt work.";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 05:52 PM";"so you cant build SUDOKU chain... were you able to before?";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 05:52 PM";"in my personal computer i can, but in this docker image im creating to have a second musig node, it doesnt work";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 05:52 PM";"im installing libdb4.8 now to see if this is the issue";"";"";
+"272003866906722306";"TonyL#3577";"22-Feb-19 05:52 PM";"I'll share SUDOKU ubuntu bundle in few mins";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 05:53 PM";"i have the same issue with libdb4.8 too ```./makecclib 
+In file included from ../wallet/walletdb.h:25:0,
+                 from ../cc/../wallet/wallet.h:38,
+                 from ../cc/CCinclude.h:48,
+                 from cclib.cpp:24:
+../wallet/db.h:36:10: fatal error: db_cxx.h: No such file or directory
+ #include <db_cxx.h>
+          ^~~~~~~~~~
+compilation terminated.
+```";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 05:53 PM";"people say docker is just like a normal VPS, but in reality it seems to always have problems";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 05:53 PM";"so these are docker issues";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 05:54 PM";"yes, it should be.";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 05:54 PM";"i guess ill test on anormal vps then";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 05:54 PM";"too much time lost here";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 06:39 PM";"finally!";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 06:40 PM";"i was missing leveldb 🤦";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 07:18 PM";"ok, i got to the commitment part";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 07:25 PM";"but the nonce sharing part doesnt seem to be working: ```./komodo-cli -ac_name=MUSIG cclib nonce 18 \""[%228028483fb20e18cb2f9f26526ce39bf25dca8983792c43d2f1b7b3cb4bc62a86%22,1,%22026a5e09767b69cb6d4c0ee255bd32520eb1be9aeb36b71cf691b3b35882458772%22]\""
+{
+  ""added_index"": 1,
+  ""status"": ""error"",
+  ""error"": ""error setting nonce""
+}
+```";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 07:26 PM";"```./komodo-cli -ac_name=MUSIG cclib nonce 18 \""[%228028483fb20e18cb2f9f26526ce39bf25dca8983792c43d2f1b7b3cb4bc62a86%22,0,%2202770bde5a023a9f62d05f09e1a852b5f0af42117e3d2f6c3cd755f41635c4b7cd%22]\""
+{
+  ""added_index"": 0,
+  ""status"": ""error"",
+  ""error"": ""error setting nonce""
+}
+```";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 07:26 PM";"there is no way i can make it work here.";"";"";
+"272003866906722306";"TonyL#3577";"22-Feb-19 07:26 PM";"Don't have such daemon yet - but just as idea - what if try to use %221%22 as second arg?";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 07:27 PM";"```./komodo-cli -ac_name=MUSIG cclib nonce 18 \""[%228028483fb20e18cb2f9f26526ce39bf25dca8983792c43d2f1b7b3cb4bc62a86%22,0,%22026a5e09767b69cb6d4c0ee255bd32520eb1be9aeb36b71cf691b3b35882458772%22]\""
+{
+  ""added_index"": 0,
+  ""status"": ""error"",
+  ""error"": ""error setting nonce""
+}
+```";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 07:27 PM";"hmm, let me try that... the guide doesnt add it, but ill try it now";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 07:28 PM";"nope, that doesnt do it either";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 07:28 PM";"```./komodo-cli -ac_name=MUSIG cclib nonce 18 \""[%228028483fb20e18cb2f9f26526ce39bf25dca8983792c43d2f1b7b3cb4bc62a86%22,%220%22,%22026a5e09767b69cb6d4c0ee255bd32520eb1be9aeb36b71cf691b3b35882458772%22]\""
+{
+  ""added_index"": 0,
+  ""status"": ""error"",
+  ""error"": ""error setting nonce""
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"22-Feb-19 07:29 PM";"Building daemon to try on my side";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 07:29 PM";"im off for now. scrambled to ge everything done and got stuck here, but i need to move.";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 07:29 PM";"Ill keep monitoring the chat though.";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 07:30 PM";"@TonyL let me know if you get the nonce part to work";"";"👌 (1)";
+"455741312273219595";"jl777c#5810";"22-Feb-19 07:51 PM";"why not to follow the example?";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 07:51 PM";"./c cclib nonce 18 \""[%225be117f3c5ce87e7dc6882c24b8231e0652ee82054bf7b9f94aef1f45e055cba%22,0,%220261671b0a6de416938cf035c98f8af37c6ca88bbbd1bcce693d709d4919b010e1%22]\""";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 07:52 PM";"on node 0, use 1, on node 1 use 0";"";"";
+"272003866906722306";"TonyL#3577";"22-Feb-19 08:14 PM";"@jl777c https://github.com/jl777/komodo/blob/jl777/src/cc/musig.cpp#L33 which call should I execute on this step (after send)? (seems there is only output of call)
+And how to get the change script?";"";"";
+"272003866906722306";"TonyL#3577";"22-Feb-19 08:16 PM";"https://github.com/jl777/komodo/blob/jl777/src/cc/musig.cpp#L29 as I can see change script persists in hex on this stage";"";"";
+"272003866906722306";"TonyL#3577";"22-Feb-19 08:19 PM";"Oh sorry it's vout, not RPC call output on L34";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 08:20 PM";"just do a getrawtransaction for any tx that pays to your address. the scriptPubKey hex is the script";"";"👍 (1)";
+"272003866906722306";"TonyL#3577";"22-Feb-19 08:57 PM";"```./komodo-cli -ac_name=MUSIG cclib nonce 18 \""[%225be117f3c5ce87e7dc6882c24b8231e0652ee82054bf7b9f94aef1f45e055cba%22,1,%2202e5fe62e5d717420db394d7ee3f7a582c2b18b6762c6575510be4faaac7ffc169%22]\""
+{
+  ""status"": ""error"",
+  ""error"": ""pkhash doesnt match session pkhash""
+}
+```
+Mistaken in place where exchanged nonces - used 1 in both calls 😦";"";"";
+"272003866906722306";"TonyL#3577";"22-Feb-19 08:58 PM";"What is the best way to start process from ""clean sheet"" ? I wonder new session might help";"";"";
+"272003866906722306";"TonyL#3577";"22-Feb-19 09:03 PM";"```./komodo-cli -ac_name=MUSIG cclib nonce 18 \""[%22b8d60ea48994385b8e7038b5586b2475211225e0c6e66173aaedcd8f437c3945%22,1,%2202176ea9b7740264544422d44fed59cc472495e54b21ccf6877cca4ee3bfbea162%22]\""
+{
+  ""added_index"": 1,
+  ""myind"": 0,
+  ""partialsig"": ""0538d67c7e8c97ff3dfada55c4dcf4dd47a9e4c9b1813e90bfe12ca1d3cbbcb9"",
+  ""result"": ""success""
+}
+``` yay";"";"";
+"272003866906722306";"TonyL#3577";"22-Feb-19 09:11 PM";"@jl777c I've called `nonce` succesfully from first node, but on second node daemon crashing on nonce exchange attempt:
+```./komodo-cli -ac_name=MUSIG cclib nonce 18 \""[%22b8d60ea48994385b8e7038b5586b2475211225e0c6e66173aaedcd8f437c3945%22,0,%2203e5463b110330e15ccc5377de92678fe998760b01ea99caa89194fb3ef9d40923%22]\""```
+```
+Thread 9 ""zcash-httpworke"" received signal SIGSEGV, Segmentation fault.
+[Switching to Thread 0x7fffd903a700 (LWP 3344)]
+__memcmp_avx2_movbe () at ../sysdeps/x86_64/multiarch/memcmp-avx2-movbe.S:68
+68      ../sysdeps/x86_64/multiarch/memcmp-avx2-movbe.S: No such file or directory.```";"";"";
+"272003866906722306";"TonyL#3577";"22-Feb-19 09:12 PM";"Ahh maybe it's because to second node I've only downloaded komodod komodo-cli and komodo-tx from first node but some other files needed";"";"";
+"272003866906722306";"TonyL#3577";"22-Feb-19 09:16 PM";"@siu - Chainmakers https://paste.ubuntu.com/p/hXx69NPfDb/ issued nonce call succesfully - it just crashed on second node with backtrace above, tomorrow will build daemon on this node from scratch and try again";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 09:18 PM";"I did the 0 and 1 tries. But it didnt work for me on any of the combinations, will try again to see.";"";"";
+"272003866906722306";"TonyL#3577";"22-Feb-19 09:19 PM";"Maybe you've mistaken somewhere on previous steps (I did it twice when tried)
+No need to try combinations - it's messages rebroadcast: to node 0 you broadcast message from node 1, to node 1 you broadcast message from node 0";"";"";
+"272003866906722306";"TonyL#3577";"22-Feb-19 09:20 PM";"So in calls (I mean messages exchange, not session opening) on node0 it's always will be 1, in calls on node1 it'll be 0";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 09:24 PM";"Maybe it needs a specific turn? Node 0 first than 1?";"";"";
+"272003866906722306";"TonyL#3577";"22-Feb-19 09:25 PM";"I'm not sure if exchange order in session matters. I've followed example when tested (called on first node then on second node)";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 09:27 PM";"you need libcc.so";"";"😊 (1)";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 09:47 PM";"@jl777c does pubkey order when creating the multisig matter like in normal multisig?";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 09:54 PM";"yes";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Feb-19 10:02 PM";"Ok, might have been that. Need to check. Thanks.";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 06:49 AM";"`910635bf69a047fc90567a83ff12e47b753f470658b6d0855ec96e07e7349a8a`
+sucessful spend made";"";"";
+"423176312354635779";"gcharang#6833";"23-Feb-19 07:06 AM";"```
+gcharang@qa-gcharang1:~/komodo$ cd src/cc
+gcharang@qa-gcharang1:~/komodo/src/cc$ ./makecclib 
+gcharang@qa-gcharang1:~/komodo/src/cc$ cd ../..
+gcharang@qa-gcharang1:~/komodo$ make -j$(nproc)
+Making all in src
+make[1]: Entering directory '/home/gcharang/komodo/src'
+make[2]: Entering directory '/home/gcharang/komodo/src'
+  CXXLD    komodo-test
+  CXXLD    komodod
+libcc.so: In function `__static_initialization_and_destruction_0(int, int)':
+cclib.cpp:(.text+0x1621d): undefined reference to `boost::system::system_category()'
+collect2: error: ld returned 1 exit status
+libcc.so: In function `__static_initialization_and_destruction_0(int, int)':
+cclib.cpp:(.text+0x1621d): undefined reference to `boost::system::system_category()'
+collect2: error: ld returned 1 exit status
+Makefile:2210: recipe for target 'komodod' failed
+make[2]: *** [komodod] Error 1
+make[2]: *** Waiting for unfinished jobs....
+Makefile:2202: recipe for target 'komodo-test' failed
+make[2]: *** [komodo-test] Error 1
+make[2]: Leaving directory '/home/gcharang/komodo/src'
+Makefile:4992: recipe for target 'all-recursive' failed
+make[1]: *** [all-recursive] Error 1
+make[1]: Leaving directory '/home/gcharang/komodo/src'
+Makefile:659: recipe for target 'all-recursive' failed
+make: *** [all-recursive] Error 1
+```
+Any help?";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 07:15 AM";"does komodod build normally?";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 07:16 AM";"it could be the Makefile_rogue works better, but of course that builds the rogue version of libcc.so. How would you modify that to make the MUSIG version of libcc.so?";"";"";
+"423176312354635779";"gcharang#6833";"23-Feb-19 07:20 AM";"yes `./zcutil/build.sh` worked normally";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 07:26 AM";"look at cc/Makefile_rogue. change it to build sudoku";"";"";

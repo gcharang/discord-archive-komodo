@@ -1,0 +1,413 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[07-Nov-18 12:10 PM] TonyL#3577
+Seems have to re-write tests for diceCC after latest updates
+
+[07-Nov-18 12:11 PM] jl777c#5810
+i disabled old odds of 1
+
+[07-Nov-18 12:11 PM] TonyL#3577
+So just 50/50 bets arent possible now?
+
+[07-Nov-18 12:13 PM] TonyL#3577
+Oh, oracles unit tests cover only creation process so far.  Have to improve this white space
+
+[07-Nov-18 02:34 PM] TonyL#3577
+@jl777c I'm receiving now blank JSON in case of dicebet to diceplan `name` not matching original one (noticed it in auto-tests):
+```./komodo-cli -ac_name=TONY0 dicebet test 0073aa8af8f07fc7770db37b5ebc0e36814699423ed0694b00fcdb1773eb805c 10 2
+error decoding opret or sbits mismatch 594b43554c vs 74736574
+Dice plan (test) exists.0 vs cmpflag.1
+{
+}
+```
+Is it the right place to add sbits match check: https://github.com/jl777/komodo/blob/FSM/src/cc/dice.cpp#L1064 ?
+
+{Embed}
+https://github.com/jl777/komodo/blob/FSM/src/cc/dice.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[07-Nov-18 02:35 PM] jl777c#5810
+yes
+
+[07-Nov-18 02:36 PM] TonyL#3577
+Just found that it's implemented here https://github.com/jl777/komodo/blob/FSM/src/cc/dice.cpp#L886
+Trying to understand now why there is no RPC printout
+
+{Embed}
+https://github.com/jl777/komodo/blob/FSM/src/cc/dice.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[07-Nov-18 03:40 PM] dukeleto#7326
+@TonyL that needs some error handling
+
+[07-Nov-18 03:40 PM] dukeleto#7326
+@TonyL it's just printing to stderr, when it should be assigning to `CCerror` variable
+
+[07-Nov-18 03:41 PM] dukeleto#7326
+something like this: ```        CCerror = strprintf("bet size violation %.8f",(double)bet/COIN);
+        fprintf(stderr,"%s\n", CCerror.c_str() );```
+
+[07-Nov-18 03:41 PM] dukeleto#7326
+which is in the same file
+
+[07-Nov-18 03:41 PM] dukeleto#7326
+CCerror variable is special
+
+[07-Nov-18 03:42 PM] dukeleto#7326
+if CCerror != "", it is returned as the error message in RPC response
+
+[07-Nov-18 03:42 PM] TonyL#3577
+@dukeleto I did it other way:
+https://github.com/jl777/komodo/blob/FSM/src/cc/dice.cpp#L1078
+added `error=` here
+
+{Embed}
+https://github.com/jl777/komodo/blob/FSM/src/cc/dice.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[07-Nov-18 03:42 PM] dukeleto#7326
+any place that prints to stderr, should probably also set CCerror, unless it's for debugging
+
+[07-Nov-18 03:43 PM] TonyL#3577
+There was Diceinit check (which checking existing and name match) but no error message
+
+[07-Nov-18 03:44 PM] dukeleto#7326
+@TonyL your "other way", does the rpc know how to set error responses that way?
+
+[07-Nov-18 03:44 PM] dukeleto#7326
+i haven't looked at cc code in a while
+
+[07-Nov-18 03:44 PM] TonyL#3577
+Yes, RPC print these `"errors=` I've checked first for sure
+
+[07-Nov-18 03:44 PM] TonyL#3577
+Continuing reanimate dice tests 😃
+
+[07-Nov-18 03:45 PM] dukeleto#7326
+this line is an error: https://github.com/jl777/komodo/blob/FSM/src/cc/dice.cpp#L1182
+
+{Embed}
+https://github.com/jl777/komodo/blob/FSM/src/cc/dice.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[07-Nov-18 03:45 PM] dukeleto#7326
+unless you always want to print out CCerror, probably want { } around line 1181 and 1182
+
+[07-Nov-18 03:46 PM] dukeleto#7326
+@TonyL so what exactly is your "new/other way" to deal with CC errors? I am not quite understanding.
+
+[07-Nov-18 03:47 PM] TonyL#3577
+It's not a new way - I just added error message to check
+
+[07-Nov-18 03:47 PM] dukeleto#7326
+i am not understanding
+
+[07-Nov-18 03:48 PM] TonyL#3577
+```    if ( (cp= Diceinit(fundingPubKey,fundingtxid,&C,planstr,txfee,mypk,dicepk,sbits,minbet,maxbet,maxodds,timeoutblocks)) == 0 )
+        error = "Diceinit error on Dicebet (probably plan not exists or plan name not match)";
+        return("");```
+
+[07-Nov-18 03:48 PM] dukeleto#7326
+why assign to `error` instead of CCerror ?
+
+[07-Nov-18 03:49 PM] dukeleto#7326
+i don't understand this new `error` variable, why it was introduced or how it is tied to CCerror
+
+[07-Nov-18 03:49 PM] dukeleto#7326
+but also, i am vastly out-of-date with CC stuff. I see Tony has been doing awesome stuff!
+
+{Reactions}
+🙌 
+
+[07-Nov-18 03:50 PM] dukeleto#7326
+```       error = "Diceinit error in status";
+        return(0.);```
+
+[07-Nov-18 03:50 PM] dukeleto#7326
+from DiceStatus
+
+[07-Nov-18 03:50 PM] dukeleto#7326
+that can't work correctly
+
+[07-Nov-18 03:51 PM] dukeleto#7326
+CCerror must be assigned to
+
+[07-Nov-18 03:51 PM] TonyL#3577
+It's James code not mine 😃
+
+[07-Nov-18 03:52 PM] TonyL#3577
+I just saw this `error=` around, added for my case and it's seems working correct in RPC responses
+
+[07-Nov-18 03:52 PM] dukeleto#7326
+don't throw the sage wizard under the bus 😹 . he must have left it there for us to find and learn 🤓
+
+[07-Nov-18 03:53 PM] dukeleto#7326
+it seems many/all internals functions take a std::string error now, that is new
+
+[07-Nov-18 03:54 PM] dukeleto#7326
+but not all
+
+[07-Nov-18 03:54 PM] dukeleto#7326
+so the new ones that take that string, assign to it. older functions without that assign to CCerror, it seems
+
+[07-Nov-18 03:55 PM] TonyL#3577
+James working actively on diceCC debugging these days so a lot of stuff probably might be changed 😃
+
+[07-Nov-18 03:55 PM] dukeleto#7326
+i thought `error` was a local variable, but it's passed by reference, so the function modifies the value, and then the caller probably does something special
+
+[07-Nov-18 03:56 PM] dukeleto#7326
+my guess is James took my hacky CCerror solution and improved it
+
+[07-Nov-18 03:56 PM] jl777c#5810
+i am waiting for someone to make a pull request to make the error handling sane
+
+[07-Nov-18 03:56 PM] dukeleto#7326
+oh gosh
+
+[07-Nov-18 03:56 PM] dukeleto#7326
+@jl777c is every internals function taking a `std::string error` the *new* way?
+
+[07-Nov-18 03:57 PM] jl777c#5810
+maybe the entire std::string return value needs to be changed
+
+[07-Nov-18 03:57 PM] jl777c#5810
+i havent paid much attention to the error reporting
+
+[07-Nov-18 03:57 PM] dukeleto#7326
+CCerror was introduced so that RPC json responses could be sane
+
+[07-Nov-18 03:57 PM] TonyL#3577
+```./komodo-cli -ac_name=TONY0 dicebet test 0073aa8af8f07fc7770db37b5ebc0e36814699423ed0694b00fcdb1773eb805c 10 2
+error decoding opret or sbits mismatch 594b43554c vs 74736574
+Dice plan (test) exists.0 vs cmpflag.1
+{
+  "result": "error",
+  "error": "Diceinit error on Dicebet (probably plan not exists or plan name not match)"
+}
+```
+
+[07-Nov-18 03:57 PM] dukeleto#7326
+instead of libraries trying to parse error strings as json
+
+[07-Nov-18 03:57 PM] TonyL#3577
+This `error = ` worked fine hmm
+
+[07-Nov-18 03:58 PM] jl777c#5810
+i think it is a global
+
+[07-Nov-18 03:58 PM] dukeleto#7326
+my guess is the calling code takes the `error` response and maybe puts that in CCerror
+
+[07-Nov-18 03:59 PM] dukeleto#7326
+i haven't looked at the fsm branch CC code lately
+
+[07-Nov-18 04:03 PM] dukeleto#7326
+i am looking at the code now
+
+[07-Nov-18 04:03 PM] dukeleto#7326
+dicebet does not use CCerror
+
+[07-Nov-18 04:05 PM] dukeleto#7326
+which then calls DiceInit
+
+[07-Nov-18 04:06 PM] dukeleto#7326
+and other internals functions, which have no way to pass errors back up via CCerror
+
+[07-Nov-18 04:07 PM] TonyL#3577
+Hmm, interesting so how RPC error printing this way 🤔
+
+[07-Nov-18 04:08 PM] dukeleto#7326
+i am just saying that some error conditions are currently not covered, or not easy to report, because various levels of functions don't have `error` variables
+
+[07-Nov-18 04:09 PM] dukeleto#7326
+making everything use CCerror and then doing a single check for CCerror when returning JSON response seems easiest/best to me
+
+[07-Nov-18 04:10 PM] dukeleto#7326
+otherwise you need to pass various `error` variables to functions which call other functions, seems like a lot of work for not much gain. CCerror global is all we need, I think
+
+[07-Nov-18 04:25 PM] dukeleto#7326
+@TonyL do you know of any cases where errors should be returned, but they are not?
+
+[07-Nov-18 04:43 PM] TonyL#3577
+@dukeleto Hmm usually I add to RPC validations in such cases
+
+[07-Nov-18 04:43 PM] TonyL#3577
+Oh
+
+[07-Nov-18 04:43 PM] TonyL#3577
+At the moment you can put to `oraclessubscribe` almost everything you want
+
+[07-Nov-18 04:44 PM] TonyL#3577
+That one I remember @dukeleto
+
+[07-Nov-18 04:44 PM] TonyL#3577
+Sorry, `oraclesregister`
+
+[07-Nov-18 04:44 PM] TonyL#3577
+```./komodo-cli -ac_name=CCNG oraclesregister imatrollputtext+randomhexhere 01000000011d2ede37ad589e5774e6dc220a925ae043325bf45d6f65c8a1afe47ac62d2d200000000049483045022100cc40b3f8aa698772dfe1486a8349d465115efbdfa38c9d15ec3b99ceb25fe0ef02206ca2599a3f848c6e8f23bdc04926bdad5f00424a61298243b3517aa5eef007a001ffffffff0410270000000000002321020000000000000000000000000000000000000000000000000000000000000000ac1027000000000000302ea22c8020a83bdefbd26a188a1bb0d74b96636c39157333ec44c8dbae934e4862e2cd39e18103120c008203000401ccd02a724e1809000023210324f94e76159d69a5163b91588c3a04dac2c80e0011f713e3bfc5a8b67ba01272ac00000000000000004f6a4c4cec520000000000000000000000000000000000000000000000000000000000000000210324f94e76159d69a5163b91588c3a04dac2c80e0011f713e3bfc5a8b67ba012720bca9a3b0000000000000000```
+
+[07-Nov-18 04:45 PM] TonyL#3577
+Posted behaviour of `oraclesregister` above in this channel
+
+[07-Nov-18 04:45 PM] dukeleto#7326
+cool, i haven't touched oracle CC's at all yet
+
+[07-Nov-18 04:46 PM] TonyL#3577
+I've started unit-tests for oraclesCC but covered only creation process - now I remember - this oraclesregister is why I've stopped 😂
+
+[07-Nov-18 04:47 PM] TonyL#3577
+@dukeleto If you'll need to use auto-tests - it's failing now for diceCC because of last contract changes, I'll PR fix today-tomorrow so you may just comment it if needed
+
+[07-Nov-18 04:51 PM] TonyL#3577
+@jl777c dicebet seems just broken on latest FSM
+
+[07-Nov-18 04:51 PM] TonyL#3577
+```./komodo-cli -ac_name=TONY0 diceinfo 0073aa8af8f07fc7770db37b5ebc0e36814699423ed0694b00fcdb1773eb805c
+first.0 entropytxid.304283c41b1d1e14d29db2f319fe3c696906b3186e4b14858403c43ba57f984d val 10000.00000000
+numentropy tx 1: 11000.00000000
+{
+  "result": "success",
+  "fundingtxid": "0073aa8af8f07fc7770db37b5ebc0e36814699423ed0694b00fcdb1773eb805c",
+  "name": "LUCKY",
+  "sbits": 383514793292,
+  "minbet": "1.00000000",
+  "maxbet": "800.00000000",
+  "maxodds": 10,
+  "timeoutblocks": 5,
+  "funding": "11000.00000000",
+  "entropytxs": 1
+}
+```
+
+[07-Nov-18 04:51 PM] TonyL#3577
+./komodo-cli -ac_name=TONY0 dicebet LUCKY 0073aa8af8f07fc7770db37b5ebc0e36814699423ed0694b00fcdb1773eb805c 900 2
+{
+}
+
+[07-Nov-18 04:51 PM] TonyL#3577
+Oh, it's same sorry
+
+[07-Nov-18 04:51 PM] TonyL#3577
+Just no printout on error when bet sum is more than maxbet
+
+[07-Nov-18 04:52 PM] TonyL#3577
+```./komodo-cli -ac_name=TONY0 dicebet LUCKY 0073aa8af8f07fc7770db37b5ebc0e36814699423ed0694b00fcdb1773eb805c 100 2
+{
+}
+```
+
+[07-Nov-18 04:52 PM] TonyL#3577
+Hmm nope, no printouts at all
+
+[07-Nov-18 04:52 PM] jl777c#5810
+anything in console?
+
+[07-Nov-18 04:54 PM] TonyL#3577
+On other node with a little bit behind in commits I'm getting:
+```{
+  "result": "error",
+  "error": "cant find dice entropy inputs"
+}
+```
+
+[07-Nov-18 04:54 PM] TonyL#3577
+That's because I did only one diceaddfunds so expected
+
+[07-Nov-18 04:56 PM] jl777c#5810
+make more
+
+[07-Nov-18 04:57 PM] TonyL#3577
+Node with empty output is on:
+```commit 8858150393daee9f0adf9d75ae8362e1785655f5 (HEAD -> FSM, upstream/FSM, origin/FSM)
+Author: jl777 <jameslee777@yahoo.com>
+Date:   Wed Nov 7 01:33:44 2018 -1100
+
+    Test
+```
+
+[07-Nov-18 04:57 PM] TonyL#3577
+Node which getting error print is on:
+```commit a6b21d0d44c3f9c4efb499050723618883d51534 (HEAD -> FSM, origin/FSM)
+Author: jl777 <jameslee777@yahoo.com>
+Date:   Tue Nov 6 21:58:18 2018 -1100
+
+    Guard adding to entropyused list```
+
+[07-Nov-18 04:59 PM] jl777c#5810
+i made many dice changes, you should be on latest
+
+[07-Nov-18 05:01 PM] TonyL#3577
+Oh, there were more changes while I dinner 😃  Will re-check with very latest 👍
+
+[07-Nov-18 05:02 PM] TonyL#3577
+On very latest get this printout, sorry for false alarm
+
+[07-Nov-18 06:21 PM] TonyL#3577
+Hmm I found the reason: If I'm adding `error=` printout here: https://github.com/jl777/komodo/blob/FSM/src/cc/dice.cpp#L1074
+I'm receiving RPC error when plan name not match or exists but not receive error when bet or odds is more than maximum. Will try to do with CCerror as @dukeleto advised.
+So problem was even not in JL code but in mine 😃
+
+{Embed}
+https://github.com/jl777/komodo/blob/FSM/src/cc/dice.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[07-Nov-18 07:31 PM] dukeleto#7326
+@TonyL stuff is a bit confusing
+
+[07-Nov-18 07:33 PM] dukeleto#7326
+if you look at the code that calls DiceBet, it doesn't look at CCerror (yet)
+
+[07-Nov-18 09:41 PM] dukeleto#7326
+@jl777c @TonyL https://github.com/jl777/komodo/pull/929
+
+{Embed}
+https://github.com/jl777/komodo/pull/929
+Clean up dicebet/dicestatus error handling  by leto · Pull Reques...
+New macro RETURN_IF_ERROR makes it very easy correctly handle CCerror from internals functions and return it in JSON. It doesn't seem worth it to convert lots of existing code to use it, but va...
+https://avatars1.githubusercontent.com/u/30298?s=400&v=4
+
+[07-Nov-18 09:41 PM] dukeleto#7326
+pretty simple/trivial, but brings some sanity to CC error checking
+
+[07-Nov-18 09:42 PM] jl777c#5810
+thanks!
+
+{Reactions}
+👍 
+
+[07-Nov-18 09:43 PM] dukeleto#7326
+i see many places to add error checking/reporting to oracle/gateway, RETURN_IF_ERROR makes it super easy
+
+[07-Nov-18 09:45 PM] TonyL#3577
+Wow it's really cool @dukeleto !
+
+[07-Nov-18 09:57 PM] dukeleto#7326
+just doing my part 😅
+
+[08-Nov-18 11:32 AM] Mihailo#5902
+Hey guys, I see you were talking about returning errors in RPC for CC. When I started with CC (my first CC was channels) I didn't know there was CCerror thing. Now I see it was used in rewards, prices, dice...
+I gave some thought on returning errors from CC in RPC, but I went different way. If we would be ok to change that the CC functions instead of returning std::string with hex, to return JSON in which we can already format the JSON with result success and hex if it was ok, or result error with specific error if something went wrong. 
+If there is some big issue with this, than I think this CCerror could be used as it was intended to...
+
+[08-Nov-18 12:06 PM] CrisF#3405
+Hi, Is `migration` not a single `cc` but a combination of contracts?
+

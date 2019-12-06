@@ -1,0 +1,401 @@
+==============================================================
+Guild: Komodo
+Channel: cc-prices
+Topic: ./komodod -ac_cbopret=7 -ac_prices="LTC, BCHABC, XMR, IOTA, ZEC, WAVES, LSK, DCR, RVN, DASH, XEM, BTS, ICX, HOT, STEEM, ENJ, STRAT" -pubkey=<yourpubkey> -ac_name=REKT0 -ac_cclib=prices -ac_cc=10777 -ac_reward=3000000000 -ac_supply=120000000 -ac_pubkey=039433dc3749aece1bd568f374a45da3b0bc6856990d7da3cd175399577940a775 -ac_perc=77777 -ac_blocktime=600 -addnode=5.9.102.210 &
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[19-Apr-19 11:17 AM] TonyL#3577
+```{
+  "rekt": 0,
+  "batontxid": "bfc041193a11b34b8de01d83dd328e894b212ed62f2478f8a8612427a137eb44",
+  "profits": 0.00000000,
+  "costbasis": 5263.37140000,
+  "positionsize": 1.00000000,
+  "equity": 1.00000001,
+  "addedbets": 0.00000001,
+  "leverage": 100,
+  "firstheight": 2349,
+  "firstprice": 5293.97990000,
+  "lastprice": 5263.37140000,
+  "height": 2351
+}
+```
+
+[19-Apr-19 11:17 AM] TonyL#3577
+It's added 1 satoshi
+
+[19-Apr-19 11:18 AM] TonyL#3577
+So `positionsize` is `intialbetsize`, `equity` is `initialbetsize` + `addedbets`
+
+[19-Apr-19 11:18 AM] jl777c#5810
++ profit
+
+[19-Apr-19 11:18 AM] TonyL#3577
+Maybe rename`positionsize` to `initialbetsize` ? It's quite confusing
+
+[19-Apr-19 11:18 AM] jl777c#5810
+well the initial bet is the size of the position
+
+[19-Apr-19 11:19 AM] TonyL#3577
+But there is added funding
+
+[19-Apr-19 11:19 AM] jl777c#5810
+it might be that we cant allow funds to be added and maintain risk management
+
+[19-Apr-19 11:19 AM] TonyL#3577
+Which actually enlarging your position
+
+[19-Apr-19 11:19 AM] jl777c#5810
+no
+
+[19-Apr-19 11:19 AM] jl777c#5810
+the definition i am using is the position is what the leverage applies to
+
+[19-Apr-19 11:20 AM] jl777c#5810
+otherwise if you have a 50% loss and addfunding 50% is lost immediate
+
+[19-Apr-19 11:20 AM] jl777c#5810
+i think there is a possible attack...
+
+[19-Apr-19 11:20 AM] TonyL#3577
+Ok, so ` "addedbets"` should be `addedmargin` maybe
+
+[19-Apr-19 11:20 AM] jl777c#5810
+make a small bet at 777 leverage
+
+[19-Apr-19 11:21 AM] jl777c#5810
+as it goes negative add enough margin to prevent being rekt
+
+[19-Apr-19 11:21 AM] jl777c#5810
+if on average you add less than 777x small bet size, you end up ahead
+
+[19-Apr-19 11:21 AM] jl777c#5810
+so i think the rekt percentage should change based on leverage
+
+[19-Apr-19 11:22 AM] jl777c#5810
+at no leverage you are not rekt till negative
+
+[19-Apr-19 11:22 AM] jl777c#5810
+at high leverage you are rekt at something higher, like 30%?
+
+[19-Apr-19 11:22 AM] jl777c#5810
+not sure need some modeling on this
+
+[19-Apr-19 11:22 AM] TonyL#3577
+Bitmex connecting margin to rektprice - when you adding more margin to position your rektprice moving
+
+[19-Apr-19 11:23 AM] TonyL#3577
+quite clearly for trader in such case
+
+[19-Apr-19 11:23 AM] TonyL#3577
+You can also take back some (or all) added margin if your position stands good
+
+[19-Apr-19 11:24 AM] TonyL#3577
+So for now: 
+```costbasis print is wrong
+rekt price showing as 0
+profits showing as 0
+priceaddfunding add funding in satoshis```
+@dimxy
+
+[19-Apr-19 11:28 AM] jl777c#5810
+ok, lets change it to work more like bitmex
+
+[19-Apr-19 11:29 AM] TonyL#3577
+Maybe I just not understood current clue so far with costbasis
+
+[19-Apr-19 11:30 AM] jl777c#5810
+the big issue is that we use the 24hour average
+
+[19-Apr-19 11:31 AM] jl777c#5810
+that means if the mined price is significantly above the smoothed price, a price rise for the next 24hrs is already baked in
+
+[19-Apr-19 11:31 AM] jl777c#5810
+it cant help but go up
+
+[19-Apr-19 11:31 AM] jl777c#5810
+so we cant let bettors use future knowledge. any such future knowledge, leveraged and bankroll is gone
+
+[19-Apr-19 11:31 AM] TonyL#3577
+Attacks vectors on oracle stops us to use realtime price?
+
+[19-Apr-19 11:32 AM] jl777c#5810
+the chain will stop if the oracle is someone stopped
+
+[19-Apr-19 11:32 AM] jl777c#5810
+but yes, we cant use the mined price due to the 2% attack
+
+[19-Apr-19 11:32 AM] jl777c#5810
+miner would just need to bias price 1% higher, place a bet, then bias -1%, to get a 2% swing, which under leverage is enormous
+
+[19-Apr-19 11:33 AM] jl777c#5810
+so we do the prior 24hr 51% correlation using a deterministic random. that means a miner can bias it +/-1% but wont know which block (if any) it will be used in and much less likely if it is a biased price
+
+[19-Apr-19 11:34 AM] jl777c#5810
+so we get the correlated price, but that is literally a random price from the prior day that just happened to be correlated with a majority of prices
+
+[19-Apr-19 11:34 AM] TonyL#3577
+https://www.bitmex.com/app/index/.BXBT maybe use such index - so to move price 1% you have to move it on all exchanges
+
+{Embed}
+https://www.bitmex.com/app/index/.BXBT
+.BXBT: Minutely Bitcoin Price Index - BitMEX
+BitMEX is the world's most advanced P2P crypto-products trading platform and API. Trade with up to 100x leverage with only Bitcoin as collateral.
+https://www.bitmex.com/img/bitmex-logo-alt.png
+
+[19-Apr-19 11:34 AM] jl777c#5810
+but it is not useful for trading due to this choppiness
+
+[19-Apr-19 11:34 AM] jl777c#5810
+but the miner can submit a +/-1% price
+
+[19-Apr-19 11:35 AM] jl777c#5810
+doesnt matter the source
+
+[19-Apr-19 11:35 AM] TonyL#3577
+Ah, submit into oracle
+
+[19-Apr-19 11:35 AM] jl777c#5810
+so the average of the prior 24hrs is the trustless price feed
+
+[19-Apr-19 11:35 AM] jl777c#5810
+but this has 24hrs of future knowledge that hasnt been incorporated yet
+
+[19-Apr-19 11:35 AM] jl777c#5810
+so....
+
+[19-Apr-19 11:35 AM] jl777c#5810
+the cost basis needs to be based on the max value of the pricefeed for 24hrs
+
+[19-Apr-19 11:37 AM] jl777c#5810
+so that is the thinking behind the costbasis changing during the first 24hrs
+
+[19-Apr-19 11:48 AM] dimxy#2587
+Now profits is 0 as costbasis=lastprice
+
+[19-Apr-19 11:55 AM] jl777c#5810
+it shouldnt always be the last price
+
+[19-Apr-19 11:55 AM] jl777c#5810
+only if lastprice is the MAX
+
+[19-Apr-19 11:55 AM] jl777c#5810
+otherwise there would be a loss
+
+[19-Apr-19 11:57 AM] dimxy#2587
+Firstheight block was skipped for calc
+Maybe for the blocks after , the lastprice is max indeed
+
+[19-Apr-19 02:40 PM] Mihailo#5902
+@jl777c we cannot set ac_supply to 0 as we need initial funds to setup gateway and fund oracle publishers. So what should be the limit?
+
+[19-Apr-19 03:45 PM] jl777c#5810
+the magic calculation will provide some coins
+
+[19-Apr-19 03:45 PM] jl777c#5810
+around 10
+
+[19-Apr-19 03:45 PM] jl777c#5810
+even with supply of 0
+
+[19-Apr-19 05:38 PM] Alright#0419
+Could someone give me steps for properly building daemon for prices? I did the same process I was using for dilithium, and `cclibinfo` still shows me rogue rpcs
+
+[19-Apr-19 05:40 PM] jl777c#5810
+prices CC is built in
+
+[19-Apr-19 05:40 PM] jl777c#5810
+doesnt use libcc
+
+[19-Apr-19 05:43 PM] Alright#0419
+`-ac_cclib=prices` threw me off
+
+[19-Apr-19 05:43 PM] Alright#0419
+Are the rpcs mentioned in comments in prices.cpp not implemented yet?
+
+[19-Apr-19 05:44 PM] Alright#0419
+`pricesbet` or `pricesaddfunding` for example
+
+[19-Apr-19 05:44 PM] Alright#0419
+method not found
+
+[19-Apr-19 05:44 PM] jl777c#5810
+it is in dimxy repo
+
+[19-Apr-19 05:44 PM] Alright#0419
+Ahhh ok was trying FSM
+
+[19-Apr-19 05:44 PM] Alright#0419
+your FSM that is
+
+[19-Apr-19 05:45 PM] jl777c#5810
+bug fixed versiom with rpc not merged yet
+
+[19-Apr-19 05:45 PM] Alright#0419
+I see he's working on it right now
+
+[19-Apr-19 05:45 PM] Alright#0419
+his prices-rpc branch
+
+[19-Apr-19 05:46 PM] Alright#0419
+@dimxy sorry to bother, but could you ping me when I can test that?
+
+[19-Apr-19 05:57 PM] dimxy#2587
+I just pushed corrections for pricesinfo (costbasis calculations)
+https://github.com/dimxy/komodo/tree/prices-rpc
+
+[19-Apr-19 06:02 PM] gcharang#6833
+https://github.com/jl777/komodo/blob/jl777/src/cc/makeprices#L2
+does this file exist because `prices` was going to be dynamic before, but now it has been made core ?
+
+{Embed}
+https://github.com/jl777/komodo/blob/jl777/src/cc/makeprices
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[19-Apr-19 06:04 PM] jl777c#5810
+correct
+
+[19-Apr-19 06:04 PM] jl777c#5810
+i should remove the prices libcc, but been to busy with other things
+
+{Reactions}
+👍 
+
+[19-Apr-19 07:52 PM] TonyL#3577
+In last update something strange happened:
+
+```./komodo-cli -ac_name=REKT0 help | grep prices
+prices maxsamples
+pricesaddress [pubkey]
+pricesinfo fundingtxid
+priceslist
+```
+
+```./komodo-cli -ac_name=REKT0 pricesbet 100 1 "BTC_USD, 1"
+error code: -32601
+error message:
+Method not found
+```
+
+[19-Apr-19 07:53 PM] TonyL#3577
+Ahh, something strange happened in my head
+
+[19-Apr-19 07:53 PM] TonyL#3577
+I've updated FSM instead of dimxy repo
+
+[19-Apr-19 08:01 PM] TonyL#3577
+```./komodo-cli -ac_name=REKT0 pricesinfo d06c1bbcfe57798beefbcefa53dac7cba161d97d17bd9a1261c24664bd820627
+prices_costbasis() no costbasis txid found
+prices_syntheticprice i=0 price=0 value=1 depth=0
+prices_syntheticprice pricedata[0]=6681694276141253617 pricedata[1]=527510830000 pricedata[2]=526687601586
+pricestack[depth=1]=4
+prices_syntheticprice i=1 price=0 value=1 depth=1
+pricestack[depth=0]=527510830000
+prices_syntheticprice price=527510830000 den=1
+prices_syntheticprofits() minmax costbasis=527510830000 price=527510830000
+prices_syntheticprofits() test value1 (price/PRICES_NORMFACTOR * SATOSHIDEN)=5275108300000000
+prices_syntheticprofits() test value2 (price/PRICES_NORMFACTOR * SATOSHIDEN)/costbasis=10000
+prices_syntheticprofits() fract profits=0
+prices_syntheticprofits() val profits=0
+{
+  "rekt": 0,
+  "batontxid": "d06c1bbcfe57798beefbcefa53dac7cba161d97d17bd9a1261c24664bd820627",
+  "profits": 0.00000000,
+  "costbasis": 5275.10830000,
+  "positionsize": 1.00000000,
+  "equity": 1.00000000,
+  "addedbets": 0.00000000,
+  "leverage": 100,
+  "firstheight": 2393,
+  "firstprice": 5275.10830000,
+  "lastprice": 5275.10830000,
+  "height": 2393
+}
+```
+
+[19-Apr-19 08:02 PM] TonyL#3577
+Now waiting for lastprice move to track costbasis
+
+[19-Apr-19 08:17 PM] TonyL#3577
+```{
+  "rekt": 0,
+  "batontxid": "d06c1bbcfe57798beefbcefa53dac7cba161d97d17bd9a1261c24664bd820627",
+  "profits": 0.00000000,
+  "costbasis": 5287.80670000,
+  "positionsize": 1.00000000,
+  "equity": 1.00000000,
+  "addedbets": 0.00000000,
+  "leverage": 100,
+  "firstheight": 2393,
+  "firstprice": 5275.10830000,
+  "lastprice": 5287.80670000,
+  "height": 2394
+}
+``` costbasis moved with lastprice
+
+[19-Apr-19 08:18 PM] jl777c#5810
+good!
+
+[19-Apr-19 08:18 PM] jl777c#5810
+so now there should be a loss if ever the price is lower
+
+[19-Apr-19 08:19 PM] TonyL#3577
+I wonder it should be a profit now because it's long and last price (and costbasis) is > than firstprice
+
+[19-Apr-19 08:20 PM] jl777c#5810
+no the costbasis is what you paid for
+
+[19-Apr-19 08:20 PM] jl777c#5810
+remember the "cant use future info" rule
+
+[19-Apr-19 08:20 PM] jl777c#5810
+so the price you paid for it wont be known for 24 hours
+
+[19-Apr-19 08:20 PM] jl777c#5810
+if you paid the same price as it is now, 0 profits
+
+[19-Apr-19 08:20 PM] TonyL#3577
+Aha, so game will actually start in 24hours
+
+[19-Apr-19 08:20 PM] jl777c#5810
+for the first 24hrs the best you can do is breakeven
+
+[19-Apr-19 08:20 PM] jl777c#5810
+you can get rekt within 24 hours like you suggested, when that is implemented
+
+[19-Apr-19 08:21 PM] jl777c#5810
+so there is the game of how much will you put into the position before the 24hrs
+
+[19-Apr-19 08:21 PM] TonyL#3577
+Finally almost collected  in head puzzle how it works
+
+[19-Apr-19 08:21 PM] TonyL#3577
+Will price from which I start be fixed automatically in 24 hours?
+
+[19-Apr-19 08:21 PM] jl777c#5810
+yes, after 24 hours there is the costbasis that is permanent
+
+[19-Apr-19 08:22 PM] jl777c#5810
+if you can make a strategy that wins more than random chance, that is a bug
+
+[19-Apr-19 08:22 PM] TonyL#3577
+Hmm, some "blocks_until_costbasis_fixed" timer might be very helpful imo
+
+[19-Apr-19 08:23 PM] TonyL#3577
+`if you can make a strategy that wins more than random chance, that is a bug` - have to make timemachine for it I think
+
+[19-Apr-19 08:24 PM] jl777c#5810
+then we are good and it is a matter to tune the monetization, rekt percentages, limits on addingfunds?
+
+[19-Apr-19 08:24 PM] jl777c#5810
+stuff like that
+
+[19-Apr-19 08:25 PM] TonyL#3577
+So for now I have to open few positions and wait 24 hours to see what will happen.
+
+Maybe we can make some "temporary testing" version in which lock will happen in a few minutes to not wait 1 day to test rekt/profit claim cases?
+

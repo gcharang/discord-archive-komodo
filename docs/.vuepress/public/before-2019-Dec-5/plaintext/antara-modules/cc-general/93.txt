@@ -1,0 +1,422 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[12-Sep-18 10:38 AM] jl777c#5810
+been distracted training new CC devs
+
+{Reactions}
+🚀 (3) 
+
+[12-Sep-18 10:39 AM] siu - Chainmakers#3920
+Oh, that is great!
+
+[12-Sep-18 11:09 AM] TonyL#3577
+@jl777c I've noticed that it's possible to subscribe/register on oracle even if oracle creation txid isn't mined yet (in mempool). Should I consider it as an expected behaviour?
+
+[12-Sep-18 11:10 AM] jl777c#5810
+as long as no ill effect, it seems ok
+
+{Reactions}
+👌 
+
+[12-Sep-18 12:36 PM] jl777c#5810
+update oraclesdata so more than one oraclesdata can be posted each block, if there are enough utxos
+
+[12-Sep-18 12:37 PM] jl777c#5810
+i had to get this working so that assetchains can keep up with posting one merkleroot per block, as it was both KMD and assetchains are on a one minute per block, but if any delay error, the posting side falls behind, so gradually it ended up being way behind
+
+[12-Sep-18 12:43 PM] jl777c#5810
+gateways CC is now ready for automated deposits, there now is a working oraclefeed to write the KMD merkleroots onchain
+
+[12-Sep-18 12:43 PM] jl777c#5810
+to get the merkleroots onchain, from the multisig signers nodes run the oraclefeed program with acname oracletxid pubkey Ihh
+ ./oraclefeed AT5 1f1aefcca2bdea8196cfd77337fb21de22d200ddea977c2f9e8742c55829d808 02ebc786cb83de8dc3922ab83c21f3f8a2f3216940c3bf9da43ce39e2a3a882c92 Ihh
+
+[12-Sep-18 12:44 PM] jl777c#5810
+run that from the node(s) that are able to sign the multisig/only gateway deposit address
+
+[12-Sep-18 12:44 PM] jl777c#5810
+once it is running, it will write the (height, blockhash, merkleroot) each block (for now 10 blocks behind)
+
+[12-Sep-18 12:47 PM] TonyL#3577
+Oh just wrote script to send only one oraclesdata per block and no limitation now so now may try to send the all file lines in one block , yahooo
+
+[12-Sep-18 12:50 PM] jl777c#5810
+you will need 1 utxo per pending oraclesdata
+
+[12-Sep-18 12:52 PM] TonyL#3577
+utxo on oraclescontract or my wallet?
+
+[12-Sep-18 12:52 PM] jl777c#5810
+oraclessubscribe utxos
+
+[12-Sep-18 12:53 PM] TonyL#3577
+Thanks! Will add utxos creation to oracles preparation step. Can I send as much as I want `oraclessubscribe` in one block?
+
+[12-Sep-18 12:56 PM] jl777c#5810
+yes, well limited by blocksize
+
+[12-Sep-18 12:57 PM] TonyL#3577
+Is blocksize allows to send ~1000 txs atm in one block?
+
+[12-Sep-18 12:58 PM] TonyL#3577
+Used this num as a limit when tested
+
+[12-Sep-18 01:03 PM] jl777c#5810
+5000 or so
+
+[12-Sep-18 01:03 PM] jl777c#5810
+depends on tx size
+
+[12-Sep-18 01:03 PM] jl777c#5810
+2MB blocksize
+
+[12-Sep-18 01:03 PM] jl777c#5810
+the oraclefeed was updated so it stays 10 blocks behind KMD
+
+[12-Sep-18 01:04 PM] jl777c#5810
+which is in lieu of checking for notarization. for now good enough which means until 10 blocks after the KMD deposit, the gatewaysdeposit will get an error as it wont be able to find the merkleroot
+
+[12-Sep-18 02:51 PM] TonyL#3577
+@jl777c Still can't send two `oraclesdata` in same block - no matters how many `oraclessubscribe` creating.
+For a second data broadcasting (rawtransaction sending) receiving:
+```error code: -25
+error message:``` 
+(nothing in daemon logs)
+
+[12-Sep-18 02:53 PM] jl777c#5810
+you need to wait for the first oraclesdata to get into mempool before calling the second oraclesdata
+
+[12-Sep-18 02:53 PM] TonyL#3577
+Yes it's in mempool when I'm calling second one
+
+[12-Sep-18 02:53 PM] TonyL#3577
+I'm testing just manually in cli now
+
+[12-Sep-18 02:57 PM] TonyL#3577
+```komodo-cli -ac_name=ORCL oraclesdata c4b9823149bb8cd616a961ef95303aa2c9f70c0ba9ea39cfa4d81d1006bf0852 ff
+{
+  "result": "success",
+  "hex":
+```
+```komodo-cli -ac_name=ORCL sendrawtransaction hex
+a2a1b038edcb7019e26a1130d045cbb53296186e878fb4fedcba86a5188a8f08```
+```komodo-cli -ac_name=ORCL getrawmempool
+[
+  "a2a1b038edcb7019e26a1130d045cbb53296186e878fb4fedcba86a5188a8f08"
+]
+```
+``` komodo-cli -ac_name=ORCL oraclesdata c4b9823149bb8cd616a961ef95303aa2c9f70c0ba9ea39cfa4d81d1006bf0852 ff
+ "result": "success",
+  "hex":```
+```komodo-cli -ac_name=ORCL sendrawtransaction hex 
+error code: -25
+error message:
+```
+
+[12-Sep-18 02:58 PM] TonyL#3577
+```git log -1
+commit ac903b5e7eb0d3d284845b7959860ca98fb761b7 (HEAD -> jl777, origin/jl777)
+Merge: 4147936c2 02df0dce6
+Author: jl777 <jl777@users.noreply.github.com>
+Date:   Wed Sep 12 01:58:57 2018 -1100
+
+    Merge pull request #877 from jl777/FSM
+    
+    10 block setback
+```
+
+[12-Sep-18 03:02 PM] jl777c#5810
+look at the vins for the tx that is getting error -25
+
+[12-Sep-18 03:02 PM] jl777c#5810
+find which one is already spent and let me know
+
+[12-Sep-18 03:03 PM] jl777c#5810
+oraclefeed.c is doing oraclesdata with the baton in the mempool
+
+[12-Sep-18 03:04 PM] jl777c#5810
+maybe try FSM branch, it is slightlymore recent
+
+[12-Sep-18 03:04 PM] jl777c#5810
+also FSM branch now has gatewayswithdraw and gatewayspending
+
+[12-Sep-18 03:04 PM] jl777c#5810
+the only thing left is for the signing nodes to process the withdraws, without double withdrawing
+
+[12-Sep-18 03:19 PM] TonyL#3577
+```"vin": [
+    {
+      "txid": "a2a1b038edcb7019e26a1130d045cbb53296186e878fb4fedcba86a5188a8f08",
+      "vout": 3,
+      "scriptSig": {
+        "asm": "3044022013668bb8829073d82e834642b08563c06762dd42089e7548f5f70adf8c7b738a0220467a3a425548187cbcc7e830a5ff5b0887621d75fe0f2d27068491e08cc681cf01",
+        "hex": "473044022013668bb8829073d82e834642b08563c06762dd42089e7548f5f70adf8c7b738a0220467a3a425548187cbcc7e830a5ff5b0887621d75fe0f2d27068491e08cc681cf01"
+      },
+      "sequence": 4294967295
+    },
+    {
+      "txid": "45e49e330fb4e11131ce9b78c0d7847ef0ecdfdc45e61b94aa9017f5044acd42",
+      "vout": 1,
+      "scriptSig": {
+        "asm": "a276a072a26ba067a5658021032fb43bcd5a6b1589dc8f58128decc2785e3d89f16faade72402425c8cc5860078140dd01510c10d6a67d1b570dc49cc2e7bce4b191fe4880a7e04e5f10b87dc86ac54061b64553b8c15929555fc7013f5b852cec6b58a530624e694f2c188845dcdaa100af038001eca10001",
+        "hex": "4c79a276a072a26ba067a5658021032fb43bcd5a6b1589dc8f58128decc2785e3d89f16faade72402425c8cc5860078140dd01510c10d6a67d1b570dc49cc2e7bce4b191fe4880a7e04e5f10b87dc86ac54061b64553b8c15929555fc7013f5b852cec6b58a530624e694f2c188845dcdaa100af038001eca10001"
+      },
+      "sequence": 4294967295
+    },
+    {
+      "txid": "cbcc407e97fac43db25968a26782aec75bdfb0f9460c78bfdca15adb1e856e66",
+      "vout": 0,
+      "scriptSig": {
+        "asm": "a276a072a26ba067a565802102a6fccee9503330091a2a2d92741cea93fa0157688406e2c755cbcce7e96b30e781409c337aff20bc50a1e888cea9931563aee065f554356f0a67f325621f30b05243081eee64c80ecf6dbfa6aa484c88825d2049d92e88ec16cce6b3ed6ada32e9a5a100af038001eca10001",
+        "hex": "4c79a276a072a26ba067a565802102a6fccee9503330091a2a2d92741cea93fa0157688406e2c755cbcce7e96b30e781409c337aff20bc50a1e888cea9931563aee065f554356f0a67f325621f30b05243081eee64c80ecf6dbfa6aa484c88825d2049d92e88ec16cce6b3ed6ada32e9a5a100af038001eca10001"
+      },
+      "sequence": 4294967295
+    }
+  ],```
+
+[12-Sep-18 03:19 PM] TonyL#3577
+There is a 3 vins for this transaction with error.
+First vin is a previous oraclesdata transaction which in mempool
+Second vin is a current oracle batontxid
+Third vin is a previously successfully published data
+`gettxout 0` returns data for all of these 3 vins. 
+Is it correct way to check is it spent?
+
+[12-Sep-18 03:33 PM] TonyL#3577
+Will build latest FSM and try the same
+
+[12-Sep-18 03:55 PM] jl777c#5810
+then that is not the reason for error. what does the console print
+
+[12-Sep-18 03:56 PM] TonyL#3577
+there is nothing except of ```error code: -25
+error message:```
+
+[12-Sep-18 03:58 PM] jl777c#5810
+does oraclefeed work for you?
+
+[12-Sep-18 03:59 PM] TonyL#3577
+Let me try `oraclesfeed`
+
+[12-Sep-18 04:18 PM] jl777c#5810
+the c program in dapps
+
+[12-Sep-18 04:18 PM] TonyL#3577
+Yep I've tested it before. Now it's just hangs and don't do any printouts after I input parameters
+
+[12-Sep-18 04:18 PM] TonyL#3577
+So trying to troubleshoot
+
+[12-Sep-18 04:19 PM] TonyL#3577
+```./oracle_dapp 
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   673    0   673    0     0  23206      0 --:--:-- --:--:-- --:--:-- 23206
+BTC/USD 6271.1825
+usage: oraclefeed $ACNAME $ORACLETXID $MYPUBKEY $FORMAT
+Powered by CoinDesk (https://www.coindesk.com/price/) 6271.18250000```
+
+```./oracle_dapp ORCL eb79c3b6ec1cde314c19e8fbb2f9627ad7d8469d8536335794286c4eb68c9fbf 02a6fccee9503330091a2a2d92741cea93fa0157688406e2c755cbcce7e96b30e7 L
+``` - just hangs
+
+[12-Sep-18 04:22 PM] TonyL#3577
+`gcc oraclefeed.c -lm -o oracle_dapp` built it this way and placed with same folder with komodo-cli since it's trying to execute it like it's in same folder with it
+
+[12-Sep-18 04:28 PM] jl777c#5810
+I only tested Ihh mode
+
+[12-Sep-18 04:28 PM] jl777c#5810
+maybe L mode is broken
+
+[12-Sep-18 04:28 PM] siu - Chainmakers#3920
+i think there are a couple of modes broken.
+
+[12-Sep-18 04:29 PM] siu - Chainmakers#3920
+s and S too
+
+[12-Sep-18 04:29 PM] jl777c#5810
+oraclefeed only has 2 mode
+
+[12-Sep-18 04:29 PM] TonyL#3577
+Before tested on `L` (worked for me) now used same oracle/pubkey with which tested before.
+Let me try `lhh`
+
+[12-Sep-18 04:29 PM] TonyL#3577
+On latest FSM branch oraclesfeed with same parameters as above hangs as well
+
+[12-Sep-18 04:29 PM] jl777c#5810
+Ihh <- uppercase i
+
+[12-Sep-18 04:31 PM] TonyL#3577
+Oh, yep `if ( strncmp(format,"Ihh",3) != 0 && format[0] != 'L' )`
+
+[12-Sep-18 04:31 PM] TonyL#3577
+Missed this format announcement
+
+[12-Sep-18 04:33 PM] TonyL#3577
+What is the correct data input format for Ihh ? 
+Didn't find info there https://github.com/jl777/komodo/blob/jl777/src/cc/oracles.cpp
+
+{Embed}
+https://github.com/jl777/komodo/blob/jl777/src/cc/oracles.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[12-Sep-18 04:35 PM] TonyL#3577
+Oh, found pinned post about gateways, will research it
+
+[12-Sep-18 04:35 PM] jl777c#5810
+Ihh
+
+{Reactions}
+😂 
+
+[12-Sep-18 04:36 PM] TonyL#3577
+Typo sry
+
+[12-Sep-18 04:48 PM] TonyL#3577
+@jl777c For `Ihh` it seems working but extacly same behaviour when have tx in mempool:
+```txid.(ba2d3154cef53a4e81fe9e111d5c2e2a6c0b14fc59f186d7cb72322a518c2c1f)
+ht.1006700 <- 6c5c0f002fe67f508fb837f15e88e98df1a5617011d59e486b90127a19c16e7d010000002511629bf9547d1620f7dccfa346575a1ca99da48c74692eacc316969def5f4f
+error code: -25
+error message:
+error code: -25
+error message:
+```
+Then successful transaction:
+```txid.(db28ca813a1c62569c461bc6b16be5d76e1fb36c86bbd6dc06d999b4b8dc63bd)
+ht.1006701 <- 6d5c0f0034c77c92e75b8ac57ab31247ff5a9470d4054352a034835d79c268e1296a00043d4a27c7cb33edbdd9f380e501e7b64539433a9af67913a9ad7f884d7c381669```
+Then again:
+```error code: -25
+error message:```
+While transaction is on mempool
+
+[12-Sep-18 04:49 PM] jl777c#5810
+how many utxo does the subscription address have?
+
+[12-Sep-18 04:49 PM] jl777c#5810
+needs to be created via oraclessubscribe
+
+[12-Sep-18 04:49 PM] TonyL#3577
+This one just 2
+
+[12-Sep-18 04:49 PM] jl777c#5810
+make more
+
+{Reactions}
+👌 
+
+[12-Sep-18 05:01 PM] TonyL#3577
+Made 100 more `oraclessubscribe` - same behaviour
+
+[12-Sep-18 05:02 PM] jl777c#5810
+ok, for now stay with one per block. i cant duplicate it and still debugging withdraw processing
+
+{Reactions}
+😦 
+
+[12-Sep-18 07:57 PM] jl777c#5810
+@siu - Chainmakers i verified that gatewayCC does deposit and withdraw, you do need to have KMD with addressindex=1 and spentindex=1
+
+[12-Sep-18 07:58 PM] siu - Chainmakers#3920
+the komodo daemon needs to also be run with addressindex and spentindex?
+
+[12-Sep-18 07:58 PM] jl777c#5810
+running oraclefeed.c as a standalone with the appropriate params takes care of all the processing needed by the non-msig deposit address owner
+
+[12-Sep-18 07:58 PM] jl777c#5810
+yes KMD itself needs to be fully cross indexed
+
+[12-Sep-18 07:59 PM] jl777c#5810
+once you setup a gateway, you will have all the parameters needed for oraclefeed
+
+[12-Sep-18 07:59 PM] jl777c#5810
+it will write the merkleroots and also process withdraws
+
+[12-Sep-18 07:59 PM] siu - Chainmakers#3920
+hmm that might make me require a new setup
+
+[12-Sep-18 08:00 PM] jl777c#5810
+validation is not done yet, so you have to be nice to it
+
+[12-Sep-18 08:00 PM] siu - Chainmakers#3920
+this is in FSM branch?
+
+[12-Sep-18 08:04 PM] jl777c#5810
+jl777
+
+[12-Sep-18 08:08 PM] siu - Chainmakers#3920
+ok
+
+[12-Sep-18 08:14 PM] siu - Chainmakers#3920
+no need to run komodo with pubkey too?
+
+[12-Sep-18 08:14 PM] siu - Chainmakers#3920
+o do i need to run KMD as if im going to use cc with it?
+
+[12-Sep-18 08:16 PM] jl777c#5810
+no need on the KMD side, but the privkey for the deposit address needs to be in the wallet
+
+[12-Sep-18 08:17 PM] jl777c#5810
+it just finally got working in a single case, so clearly can still have bugs
+
+[12-Sep-18 08:17 PM] jl777c#5810
+its only 3 days since I started coding it, so plz be nice to it
+
+[12-Sep-18 08:17 PM] jl777c#5810
+once we get it working solid in the simple cases, we can start trying to abuse it and steal from it
+
+[12-Sep-18 08:18 PM] jl777c#5810
+the asset that is gatewaysbind to the KMD represents KMD 1:1
+
+[12-Sep-18 08:18 PM] jl777c#5810
+so if any of the assets can be obtained without depositing KMD, that is a bad bug needs to be fixed
+
+[12-Sep-18 08:18 PM] siu - Chainmakers#3920
+the komodo daemon and the gateway CC assetchain need to be in the same server?
+
+[12-Sep-18 08:19 PM] siu - Chainmakers#3920
+i just started reindexing komodo daemon in my test server
+
+[12-Sep-18 08:20 PM] jl777c#5810
+no
+
+[12-Sep-18 08:20 PM] jl777c#5810
+it can be anywhere
+
+[12-Sep-18 08:20 PM] siu - Chainmakers#3920
+ok
+
+[12-Sep-18 08:20 PM] jl777c#5810
+the gatewaysdeposit is the big ugly rpc that proves the KMD deposit was made
+
+[12-Sep-18 08:21 PM] jl777c#5810
+you need to use the KMD daemon to get the txproof and then submit it on the assetchain
+
+[12-Sep-18 08:21 PM] jl777c#5810
+so it is more convenient on a single node
+
+[12-Sep-18 08:21 PM] jl777c#5810
+but you can copy/paste, getting the right values is what matters
+
+[12-Sep-18 08:21 PM] Mihailo#5902
+@jl777c In channel CC , validation of secret should be done to see does it reach the final hashchain or else funds will be unspendable, but in usual cases the initial secret will only be revealed after sender release all the payments. So  we should rely on ChannelOpen RPC that it has done the correct job?
+
+[12-Sep-18 08:23 PM] siu - Chainmakers#3920
+im just getting out of the office... will test once the daemon syncs.
+
+[12-Sep-18 08:23 PM] Mihailo#5902
+For ChannelPayment we can iterate the secret n amount of times and compare with hashchain
+
+[12-Sep-18 08:25 PM] jl777c#5810
+yes, channelopen must be bugfree
+

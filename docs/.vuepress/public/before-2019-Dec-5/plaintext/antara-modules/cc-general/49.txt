@@ -1,0 +1,444 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[14-Aug-18 03:14 PM] dukeleto#7326
+I want to make sure the way I am writing the tests is correct, if I am doing rewards* RPCs in the correct order/etc
+
+[14-Aug-18 03:14 PM] siu - Chainmakers#3920
+seems like you hit the right line of code this time @jl777c
+
+[14-Aug-18 03:14 PM] SHossain#0007
+@dukeleto this is the example
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/478944602007666698/Screenshot_from_2018-08-14_16-14-08.png
+
+[14-Aug-18 03:14 PM] jl777c#5810
+it needed to be 100% precise
+
+[14-Aug-18 03:15 PM] SHossain#0007
+@dukeleto you need to keep the txid from `rewardslock` call and use that for `rewardsunlock`
+
+[14-Aug-18 03:16 PM] SHossain#0007
+i'm glad to be in help 😃
+
+[14-Aug-18 03:17 PM] dukeleto#7326
+@SHossain i am doing that, but i need to verify all the RPC functions up to that, the order
+
+[14-Aug-18 03:17 PM] dukeleto#7326
+to see if I am doing something dumb
+
+[14-Aug-18 03:18 PM] dukeleto#7326
+@SHossain this is the test: https://github.com/letolabs/komodo/blob/cctests/qa/rpc-tests/cryptoconditions.py#L227
+
+{Embed}
+https://github.com/letolabs/komodo/blob/cctests/qa/rpc-tests/cryptoconditions.py
+letolabs/komodo
+komodo - Komodo
+https://avatars0.githubusercontent.com/u/648647?s=400&v=4
+
+[14-Aug-18 03:19 PM] dukeleto#7326
+rewardscreatefunding, broadcast xtn, rewardsaddfunding broadcast xtn, rewardsunlock
+
+[14-Aug-18 03:19 PM] dukeleto#7326
+that sequence should work?
+
+[14-Aug-18 03:20 PM] SHossain#0007
+diceinfo updated after i lost the bet
+```
+diceinfo 48937c74c07d7202bf4727a595fb2aab297af74f2ecff77c5e422ce1
+e1657800b3856acbe0b106595d34cbab31ae2032629599dcffe757fe207df009.(L 787.00000000) check first
+8a971c2129d42a673c36fe3b80584e68bbbc1e297db35c78145e5013a629de48.(E 50.00000000) fb8072964cbdb2f95be1da2f0d6cd25d19096861de1d29628153ae0e80e1794a.(E 777.00000000) 43abf49489d161de25ebe0bfd707f646c558e24c1d69e167aaff28bb1d2be163.(E 500.00000000) b0eb10e7c106fa75fdf2dafc8f321f77e73a6a9392dbb16352d0364c1172ca72.(E 20.00000000) 982ba88257fa334a0630a4e264b805bc913262890b81eaf572ff81ec3408d473.(E 20.00000000) 1dd730410f3226e976a8a223f585cacc5cabc12e4b7f4c32538038f1eecc0e83.(E 1000.00000000) 6fb37e71ec3a17c4840146d154b498bf8d8f128417c4cbdea1e7b6fa15137985.(E 100.00000000) 48937c74c07d7202bf4727a595fb2aab297af74f2ecff77c5e422ce194d37d8f.(F 100000.00000000) 0f9664911f71ae84b1c801eae1f77880dd0b08772f9fc312eaac0225092424bb.(W 7766.99990000) bef0cc12cbd0a373720d9ac8d3778c77c28e14f5cd65e62640b8dbcfafdc32c9.(E 50.00000000) 1fc258794c857ee2383d99955c458b043eddf06f269c70dee8d95323214f30d0.(E 10.00000000) 8c02359cff943ef6e7ab1a2a04c52c39a5b593b3110b68bc1d54723a0978e9ef.(E 77.00000000) 54f0740be852f305625643885d56101a8c2caaebed23279269087a5a62b64ff9.(E 10.00000000) numentropy tx 13: 111167.99990000
+{
+  "result": "success",
+  "fundingtxid": "48937c74c07d7202bf4727a595fb2aab297af74f2ecff77c5e422ce194d37d8f",
+  "name": "Dice3",
+  "sbits": 220744345924,
+  "minbet": "1.00000000",
+  "maxbet": "10000.00000000",
+  "maxodds": 777,
+  "timeoutblocks": 2,
+  "funding": "111167.99990000"
+}
+```
+
+[14-Aug-18 03:20 PM] dukeleto#7326
+in the process of this, i have added nice error messages to rewards*, so you understand why your RPC failed in a nice json blob
+
+[14-Aug-18 03:20 PM] SHossain#0007
+@dukeleto you need `rewardslock` before `rewardsunlock`
+
+[14-Aug-18 03:21 PM] dukeleto#7326
+addfunding is not required, that is only to add funding after it's created? I could just do createfunding, rewardslock, rewardsunlock ?
+
+[14-Aug-18 03:21 PM] SHossain#0007
+so, the steps could be
+1. Create new rewards plan
+2. Add funding
+3. Lock funds
+4. Unlock funds
+
+[14-Aug-18 03:22 PM] SHossain#0007
+if you are not using your own rewards plan, then, you can't add funds in there. you can only lock and unlock
+
+[14-Aug-18 03:22 PM] SHossain#0007
+your own plan needs funding
+
+{Reactions}
+❤ 
+
+[14-Aug-18 03:22 PM] dukeleto#7326
+i was confusing addfunding and lock i think
+
+[14-Aug-18 03:23 PM] siu - Chainmakers#3920
+im now on a streak! 3 straight wins!
+
+[14-Aug-18 03:23 PM] jl777c#5810
+also anybody is able to unlock anybody elses funds, but it goes back to the same place it was locked from
+
+[14-Aug-18 03:24 PM] jl777c#5810
+the dice game is actually pretty fun, even when for test coins
+
+[14-Aug-18 03:24 PM] siu - Chainmakers#3920
+yeah.... my vicious better is getting out
+
+[14-Aug-18 03:25 PM] SHossain#0007
+@dukeleto I have updated the test plan spreadsheet. please let me know if this make sense now.
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/478947258981679104/Screenshot_from_2018-08-14_16-24-28.png
+
+[14-Aug-18 03:25 PM] jl777c#5810
+one thng about the dice I didnt really write much about is the entropy source. each bet has 2 entropy sources
+
+[14-Aug-18 03:26 PM] jl777c#5810
+the one from the house account, which has the hash of it added to the opreteurn and the dicebet that adds it directly to the opreturn. this allows the hous account to immediately know if it wins or loses and it processes it in realtime
+
+[14-Aug-18 03:26 PM] dukeleto#7326
+@SHossain awesome, thanks! that gdoc made it very straightforward to write tests when I didn't really know much about CC, well done 👍
+
+{Reactions}
+😃 
+
+[14-Aug-18 03:27 PM] jl777c#5810
+in the event a house account tries to cheat by not dicefinish for winning bets, ie. trying to not payout. when the dice plan's expiration happens, it is treated as a win and anybody can complete the dicefinish
+
+[14-Aug-18 03:29 PM] jl777c#5810
+when the dicefinish completes a bet for either win or loss, it attaches the original entropy value so the hash of it can be verified. in other words it is provably fair and random for each and every bet. the dicebet is the one that chooses what house entropy to use, so that alone gives the power to determine the outcome to the dicebettoer. and as long as the bettor's entropy is a high entropy value, the outcome is totally random
+
+[14-Aug-18 03:31 PM] jl777c#5810
+technically I generate 2 256 bit numbers from the two entropy values. I just SHA256(house entropy + bettor entropy) for the house and SHA256(bettor entropy + house entropy) for the bettor. Then for odds of > 1, the entropy value is divided by the odds and the two numbers compared. the bettor value adjusted by odds needs to be bigger than the house value
+
+[14-Aug-18 03:31 PM] jl777c#5810
+I think the payout matches the risk. for a 1:1, the two values are directly compared and a win is 2x what was bet
+
+[14-Aug-18 03:32 PM] siu - Chainmakers#3920
+damn... 5 straight wins
+
+[14-Aug-18 03:32 PM] jl777c#5810
+since there is a 50% chance, the expected result is 50% of 2x or 1x
+
+[14-Aug-18 03:32 PM] jl777c#5810
+at what odds, 5 times in a row?
+
+[14-Aug-18 03:32 PM] siu - Chainmakers#3920
+1:1
+
+[14-Aug-18 03:32 PM] jl777c#5810
+still, that is a good run
+
+[14-Aug-18 03:32 PM] siu - Chainmakers#3920
+broke it 😦
+
+[14-Aug-18 03:33 PM] siu - Chainmakers#3920
+```(W) 4019.99990000 SIU1 556825de18a3517a16a8a34124cc5a0d96d0666dc178390e57ba64961a8dacea
+0100000004d553a827094eab73157bf1ee3dfd2687a71697533a5c6f0beb8b90f24ad2a80a0100000049483045022100adf453e72104ef0fbde9368c00b7bb2f85557c5e27e5a3fe3dba970186b2abbc022025918dd9d1662b025cc90162e82825c922253540058bd135dfe83bffc4c4484d01ffffffff1f2c00020d715cfdbed699f6d6e1efe28cc9b0b32b9734848080074dc0bcfab2000000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e8140d85b2811a3c76a66e6faa5f75e3d4657829410df4dc3513b238f10441a06f09a78aa8405225d96e09c4039d0db39ccf5ff3feafb986f3580d34256e18b53dfe7a100af038001e6a10001ffffffff1f2c00020d715cfdbed699f6d6e1efe28cc9b0b32b9734848080074dc0bcfab2010000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e81408a2fdb1a07a967fc9bb39c1ae321b2e07c8e24f53ea42fee4455168ec7bca6720be38eebfd9f5409a6de6b9e30edc6544e86736ccd447e57d86d49126a48062ea100af038001e6a10001ffffffffeaac8d1a9664ba570e3978c16d66d0960d5acc2441a3a8167a51a318de256855000000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e8140f9f1e5ec3de4e92e1f09a7e473cac9a84a041e1f0c4f1c1f4a01adf0d4f9ec6505304313c5b79ddb8a37f5e6d1bc83a6ea6cc7efe64300fb0c4816508503b1caa100af038001e6a10001ffffffff04a0dd45105e000000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc102700000000000023210225583e18a48116c4c9571f530240f22affe00f95804f1947d59fbc7b825763f6ac00d0ed902e00000023210225583e18a48116c4c9571f530240f22affe00f95804f1947d59fbc7b825763f6ac00000000000000006d6a4c6ae6575349553100000000d4074e546a5585f354201980e38597a1382741b863af8df76993a1d4472fdccc6b5215ee6036dec78e653e5a80f13b8e6894ffe6fdd6cd371e43682f9a1f6334223f8a456be1da9f5eb87837e3f793fa3a1873fcc063d29f9f8b4ff4763ed0ef00000000
+6aa57f070766c5acfe03047ac052224f15df6905472c7b897e8571ec78049c28
+spentheight.3757 valuein 5039.9996 vs 6039.9995 error
+error adding to mempool
+```
+
+[14-Aug-18 03:33 PM] jl777c#5810
+at 2:1 odds, the hash value is divided in 2, so it seems that the odds of winning are 1 out of 3 and a win is 3x, so it seems to work
+
+[14-Aug-18 03:34 PM] SHossain#0007
+i have a lost bet
+`6dbf148468d46aba8911c02bf89f84c59ffdfb6393ee72d75af0929b60489399 winnings 0.00000000 bet 10.00000000 at odds 1:1`
+
+[14-Aug-18 03:34 PM] jl777c#5810
+need the dicefinish for  the above bet
+
+[14-Aug-18 03:34 PM] siu - Chainmakers#3920
+on it
+
+[14-Aug-18 03:34 PM] siu - Chainmakers#3920
+```siu@T460:~/komodo/src$ ./komodo-cli -ac_name=AT3 sendrawtransaction 0100000004d553a827094eab73157bf1ee3dfd2687a71697533a5c6f0beb8b90f24ad2a80a0100000049483045022100adf453e72104ef0fbde9368c00b7bb2f85557c5e27e5a3fe3dba970186b2abbc022025918dd9d1662b025cc90162e82825c922253540058bd135dfe83bffc4c4484d01ffffffff1f2c00020d715cfdbed699f6d6e1efe28cc9b0b32b9734848080074dc0bcfab2000000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e8140d85b2811a3c76a66e6faa5f75e3d4657829410df4dc3513b238f10441a06f09a78aa8405225d96e09c4039d0db39ccf5ff3feafb986f3580d34256e18b53dfe7a100af038001e6a10001ffffffff1f2c00020d715cfdbed699f6d6e1efe28cc9b0b32b9734848080074dc0bcfab2010000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e81408a2fdb1a07a967fc9bb39c1ae321b2e07c8e24f53ea42fee4455168ec7bca6720be38eebfd9f5409a6de6b9e30edc6544e86736ccd447e57d86d49126a48062ea100af038001e6a10001ffffffffeaac8d1a9664ba570e3978c16d66d0960d5acc2441a3a8167a51a318de256855000000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e8140f9f1e5ec3de4e92e1f09a7e473cac9a84a041e1f0c4f1c1f4a01adf0d4f9ec6505304313c5b79ddb8a37f5e6d1bc83a6ea6cc7efe64300fb0c4816508503b1caa100af038001e6a10001ffffffff04a0dd45105e000000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc102700000000000023210225583e18a48116c4c9571f530240f22affe00f95804f1947d59fbc7b825763f6ac00d0ed902e00000023210225583e18a48116c4c9571f530240f22affe00f95804f1947d59fbc7b825763f6ac00000000000000006d6a4c6ae6575349553100000000d4074e546a5585f354201980e38597a1382741b863af8df76993a1d4472fdccc6b5215ee6036dec78e653e5a80f13b8e6894ffe6fdd6cd371e43682f9a1f6334223f8a456be1da9f5eb87837e3f793fa3a1873fcc063d29f9f8b4ff4763ed0ef00000000
+error code: -26
+error message:
+16: bad-txns-in-belowout
+```
+
+[14-Aug-18 03:35 PM] siu - Chainmakers#3920
+`spentheight.3759 valuein 5039.9996 vs 6039.9995 error
+`
+
+[14-Aug-18 03:36 PM] jl777c#5810
+i need the console output of dicefinish
+
+[14-Aug-18 03:37 PM] siu - Chainmakers#3920
+https://pastebin.com/xub2Rdqn
+
+{Embed}
+https://pastebin.com/xub2Rdqn
+(W) 4019.99990000 SIU1 556825de18a3517a16a8a34124cc5a0d96d0666dc17...
+https://pastebin.com/i/facebook.png
+
+[14-Aug-18 03:38 PM] SHossain#0007
+i used dicefinish on the lsot txid 
+```
+./komodo-cli -ac_name=AT3 dicefinish Dice3 48937c74c07d7202bf4727a595fb2aab297af74f2ecff77c5e422ce194d37d8f 6dbf148468d46aba8911c02bf89f84c59ffdfb6393ee72d75af0929b60489399
+6dbf148468d46aba8911c02bf89f84c59ffdfb6393ee72d75af0929b60489399 winnings 0.00000000 bet 10.00000000 at odds 1:1
+{
+  "result": "success",
+  "hex": "01000000034a79e1800eae538162291dde616809195dd26c0d2fdae15bf9b2bd4c967280fb0100000049483045022100e88f470630b43ee978614196ce2171775bc484038e9f52355d2d70aab6de45fa022033cadbe25350949461f89e6a0f9907ae68c9068ca275a674898eca165d49c7ac01ffffffff999348609b92f05ad772ee9363fbfd9fc5849ff82bc01189ba6ad4688414bf6d000000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e8140380b3c9b43daca647d35a183584beb50de88fba2e119efccec9b45d1e7e370654b4f8136d0f66b33f2e02c181dc0f12a486a61d81953aae6ee2205f7c2378ec1a100af038001e6a10001ffffffff999348609b92f05ad772ee9363fbfd9fc5849ff82bc01189ba6ad4688414bf6d010000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e814088df703b21234aa6564121ca2470fefde8154584b3ddac5ab0cd93aaaecfd6710b17a23cd0b69005e1bbd9679c02248507b1451883da7ec01d2e34dc6f1c53f7a100af038001e6a10001ffffffff03007d7d8e12000000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc1027000000000000232103fe754763c176e1339a3f62ee6b9484720e17ee4646b65a119e9f6370c7004abcac00000000000000006d6a4c6ae64c44696365330000008f7dd394e12c425e7cf7cf2e4ff77a29ab2afb95a52747bf02727dc0747c9348a7591e10e8ee88a5647d57e4eb71d800054ee72bd3c5dc85aeb99aa7b657e9d074281e822d15ea87877a0793c76787b50737cf4c6b5e336c2560663052cb048500000000"
+```
+output
+```
+error code: -26
+error message:
+18: bad-txns-inputs-spent
+```
+
+[14-Aug-18 03:39 PM] siu - Chainmakers#3920
+this time balances are not affected  in dicedund though
+
+[14-Aug-18 03:39 PM] SHossain#0007
+house got 10 more coins from me and reflected on it's funding balance
+
+[14-Aug-18 03:39 PM] jl777c#5810
+do another dicefinish for the failed one
+
+[14-Aug-18 03:40 PM] SHossain#0007
+```
+./komodo-cli -ac_name=AT3 sendrawtransaction 01000000034a79e1800eae538162291dde616809195dd26c0d2fdae15bf9b2bd4c967280fb0100000049483045022100e88f470630b43ee978614196ce2171775bc484038e9f52355d2d70aab6de45fa022033cadbe25350949461f89e6a0f9907ae68c9068ca275a674898eca165d49c7ac01ffffffff999348609b92f05ad772ee9363fbfd9fc5849ff82bc01189ba6ad4688414bf6d000000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e8140380b3c9b43daca647d35a183584beb50de88fba2e119efccec9b45d1e7e370654b4f8136d0f66b33f2e02c181dc0f12a486a61d81953aae6ee2205f7c2378ec1a100af038001e6a10001ffffffff999348609b92f05ad772ee9363fbfd9fc5849ff82bc01189ba6ad4688414bf6d010000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e814088df703b21234aa6564121ca2470fefde8154584b3ddac5ab0cd93aaaecfd6710b17a23cd0b69005e1bbd9679c02248507b1451883da7ec01d2e34dc6f1c53f7a100af038001e6a10001ffffffff03007d7d8e12000000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc1027000000000000232103fe754763c176e1339a3f62ee6b9484720e17ee4646b65a119e9f6370c7004abcac00000000000000006d6a4c6ae64c44696365330000008f7dd394e12c425e7cf7cf2e4ff77a29ab2afb95a52747bf02727dc0747c9348a7591e10e8ee88a5647d57e4eb71d800054ee72bd3c5dc85aeb99aa7b657e9d074281e822d15ea87877a0793c76787b50737cf4c6b5e336c2560663052cb048500000000
+error code: -26
+error message:
+18: bad-txns-inputs-spent
+```
+
+[14-Aug-18 03:41 PM] jl777c#5810
+so losses are getting errors now?
+
+[14-Aug-18 03:41 PM] jl777c#5810
+plz check the vins, which ine is already spent
+
+[14-Aug-18 03:43 PM] siu - Chainmakers#3920
+https://pastebin.com/sPNNndTs
+
+{Embed}
+https://pastebin.com/sPNNndTs
+1ecad706be2b57b6449512244dba5e59bf168ff6426402e9f339dbe79b18780d B...
+https://pastebin.com/i/facebook.png
+
+[14-Aug-18 03:43 PM] siu - Chainmakers#3920
+tried dice finish again
+
+[14-Aug-18 03:43 PM] siu - Chainmakers#3920
+funny part is that the funds i had lost in the last days show up in the console output of dicefinish
+
+[14-Aug-18 03:44 PM] siu - Chainmakers#3920
+``` ./komodo-cli -ac_name=AT3 sendrawtransaction 0100000004d553a827094eab73157bf1ee3dfd2687a71697533a5c6f0beb8b90f24ad2a80a0100000049483045022100adf453e72104ef0fbde9368c00b7bb2f85557c5e27e5a3fe3dba970186b2abbc022025918dd9d1662b025cc90162e82825c922253540058bd135dfe83bffc4c4484d01ffffffff1f2c00020d715cfdbed699f6d6e1efe28cc9b0b32b9734848080074dc0bcfab2000000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e8140d85b2811a3c76a66e6faa5f75e3d4657829410df4dc3513b238f10441a06f09a78aa8405225d96e09c4039d0db39ccf5ff3feafb986f3580d34256e18b53dfe7a100af038001e6a10001ffffffff1f2c00020d715cfdbed699f6d6e1efe28cc9b0b32b9734848080074dc0bcfab2010000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e81408a2fdb1a07a967fc9bb39c1ae321b2e07c8e24f53ea42fee4455168ec7bca6720be38eebfd9f5409a6de6b9e30edc6544e86736ccd447e57d86d49126a48062ea100af038001e6a10001ffffffffeaac8d1a9664ba570e3978c16d66d0960d5acc2441a3a8167a51a318de256855000000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e8140f9f1e5ec3de4e92e1f09a7e473cac9a84a041e1f0c4f1c1f4a01adf0d4f9ec6505304313c5b79ddb8a37f5e6d1bc83a6ea6cc7efe64300fb0c4816508503b1caa100af038001e6a10001ffffffff04a0dd45105e000000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc102700000000000023210225583e18a48116c4c9571f530240f22affe00f95804f1947d59fbc7b825763f6ac00d0ed902e00000023210225583e18a48116c4c9571f530240f22affe00f95804f1947d59fbc7b825763f6ac00000000000000006d6a4c6ae6575349553100000000d4074e546a5585f354201980e38597a1382741b863af8df76993a1d4472fdccc6b5215ee6036dec78e653e5a80f13b8e6894ffe6fdd6cd371e43682f9a1f6334223f8a456be1da9f5eb87837e3f793fa3a1873fcc063d29f9f8b4ff4763ed0ef00000000
+error code: -26
+error message:
+16: bad-txns-in-belowout
+```
+
+[14-Aug-18 03:45 PM] siu - Chainmakers#3920
+this is the rawtx of my second try at dicefinish
+
+[14-Aug-18 03:46 PM] jl777c#5810
+ok, dont change anything. fix coming up
+
+[14-Aug-18 03:46 PM] siu - Chainmakers#3920
+```1ecad706be2b57b6449512244dba5e59bf168ff6426402e9f339dbe79b18780d B refsbits.31554953 sbits.31554953 nValue 11050.00000000```
+
+[14-Aug-18 03:47 PM] siu - Chainmakers#3920
+```2e594f77aabd14f3edd0beecdd63f73ec99215085f7ca25386e9730a71e29344 B refsbits.31554953 sbits.31554953 nValue 1000019.99990000```
+
+[14-Aug-18 03:47 PM] siu - Chainmakers#3920
+```d49e4f2791f30ea1e84322c879453200eec2ef180a2f7fdb6316c4ee8a07d7b3 B refsbits.31554953 sbits.31554953 nValue 102000.00000000```
+
+[14-Aug-18 03:47 PM] siu - Chainmakers#3920
+these are missed utxos i can identify
+
+[14-Aug-18 03:48 PM] SHossain#0007
+finally, you found them.
+
+[14-Aug-18 03:48 PM] jl777c#5810
+it was a different case. pushed fix not consensus change it should just make valid dicefinish
+
+[14-Aug-18 03:48 PM] jl777c#5810
+yes the dicefinish errors are the root of all evil
+
+[14-Aug-18 03:49 PM] jl777c#5810
+it leaves the B tx unfinished, with all its funds
+
+[14-Aug-18 03:49 PM] jl777c#5810
+once dicefinish is 100% solid I think the funds disappearing bug will disappear
+
+[14-Aug-18 03:50 PM] jl777c#5810
+if you didnt change the state of utxo at all from when the bug was, updating and doing dicefinish will verify the bug is fixed
+
+[14-Aug-18 03:52 PM] siu - Chainmakers#3920
+ok
+
+[14-Aug-18 03:52 PM] siu - Chainmakers#3920
+updating
+
+[14-Aug-18 03:52 PM] siu - Chainmakers#3920
+so i just go straight to dicefinish now?
+
+[14-Aug-18 03:53 PM] SHossain#0007
+just in case, before doing so, you can use `getinfo` and `diceinfo fundingtxid` to record the balance
+
+[14-Aug-18 03:54 PM] jl777c#5810
+dicefinish theone that got an error when doing the dicefinish so we can see if i fixed the dicefinish bug
+
+[14-Aug-18 03:57 PM] SHossain#0007
+be back soon. need some food
+
+[14-Aug-18 03:58 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=AT3 sendrawtransaction 0100000004d553a827094eab73157bf1ee3dfd2687a71697533a5c6f0beb8b90f24ad2a80a01000000484730440220443e3a517a785ca7bba4e230f7094eb6424dd473a6d71dd4b0ffe4f4635e0f7c0220268ceb532c3a0246d9f1a6fef0459df7bcee80228dd926f60f835c7255a9a8e901ffffffff1f2c00020d715cfdbed699f6d6e1efe28cc9b0b32b9734848080074dc0bcfab2000000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e8140c1b82ff4e2033f9e17cf0f6317b09a2a8fa6c33d581f03be4522c6c7108410b143fa3704865c7ad595418599523412fff99cf6e45c3d0a7abbd33dc8f35756d2a100af038001e6a10001ffffffff1f2c00020d715cfdbed699f6d6e1efe28cc9b0b32b9734848080074dc0bcfab2010000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e8140b26abd66af7988014b139ac563910165d769b36718e5cb8ea95474ba4e817a4c3343c83f2abaa119e7dcfa520fea82c0f86b8fba386f8ca47c758c9a99c10d41a100af038001e6a10001ffffffffeaac8d1a9664ba570e3978c16d66d0960d5acc2441a3a8167a51a318de256855000000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e8140d5563f3126c48446d1337d393545fe00fa62f92e967979e13bb12a23ef1dda9e68113b7840b2c693ac20f28ed608408bf36190997c4e8958e30eec3aedc08939a100af038001e6a10001ffffffff04a0f5cec746000000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc102700000000000023210225583e18a48116c4c9571f530240f22affe00f95804f1947d59fbc7b825763f6ac00d0ed902e00000023210225583e18a48116c4c9571f530240f22affe00f95804f1947d59fbc7b825763f6ac00000000000000006d6a4c6ae6575349553100000000d4074e546a5585f354201980e38597a1382741b863af8df76993a1d4472fdccc6b5215ee6036dec78e653e5a80f13b8e6894ffe6fdd6cd371e43682f9a1f6334223f8a456be1da9f5eb87837e3f793fa3a1873fcc063d29f9f8b4ff4763ed0ef00000000
+49de76f70f13d8fe7dcfb0677d304b50c05dc7765046cd3ab9f5045c4a7c65c3
+```
+
+[14-Aug-18 03:58 PM] siu - Chainmakers#3920
+no error this time
+
+[14-Aug-18 03:59 PM] siu - Chainmakers#3920
+```/komodo-cli -ac_name=AT3 diceinfo ccdc2f47d4a19369f78daf63b8412738a19785e380192054f385556a544e07d4
+{
+  "result": "success",
+  "fundingtxid": "ccdc2f47d4a19369f78daf63b8412738a19785e380192054f385556a544e07d4",
+  "name": "SIU1",
+  "sbits": 827672915,
+  "minbet": "1.00000000",
+  "maxbet": "100000.00000000",
+  "maxodds": 15,
+  "timeoutblocks": 2,
+  "funding": "0.00000000"
+}
+```
+
+[14-Aug-18 03:59 PM] siu - Chainmakers#3920
+but now balance went to 0
+
+[14-Aug-18 04:00 PM] siu - Chainmakers#3920
+ohh, its back
+
+[14-Aug-18 04:00 PM] siu - Chainmakers#3920
+ok... seems like i did resolve the issue with the last stuc bet
+
+[14-Aug-18 04:00 PM] jl777c#5810
+did you wait for the confirmation
+
+[14-Aug-18 04:00 PM] siu - Chainmakers#3920
+let me see if i can get the other bets i saw in the output unlocked
+
+[14-Aug-18 04:00 PM] jl777c#5810
+funding is CONFIRMED funding
+
+[14-Aug-18 04:00 PM] siu - Chainmakers#3920
+yep. now orries
+
+[14-Aug-18 04:00 PM] jl777c#5810
+a discestatus will unlock all
+
+[14-Aug-18 04:00 PM] siu - Chainmakers#3920
+noticed it was still not confirmed
+
+[14-Aug-18 04:00 PM] jl777c#5810
+that can be
+
+[14-Aug-18 04:01 PM] jl777c#5810
+which should be all from the diceplan creator's node
+
+[14-Aug-18 04:01 PM] jl777c#5810
+dicestatus with just the plan txid
+
+[14-Aug-18 04:01 PM] jl777c#5810
+it seems we are close to being able to make a GUI for this
+
+[14-Aug-18 04:09 PM] siu - Chainmakers#3920
+its working!!!
+
+[14-Aug-18 04:09 PM] siu - Chainmakers#3920
+getting my funds back!
+
+[14-Aug-18 04:10 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=AT3 dicestatus SIU1 ccdc2f47d4a19369f78daf63b8412738a19785e380192054f385556a544e07d4
+{
+  "result": "success",
+  "status": "finalized",
+  "n": 3
+}
+```
+
+[14-Aug-18 04:10 PM] siu - Chainmakers#3920
+```d49e4f2791f30ea1e84322c879453200eec2ef180a2f7fdb6316c4ee8a07d7b3 winnings 6000.00000000 bet 1000.00000000 at odds 5:1
+bettxid already spent
+Dice plan (SIU1) already exists cmpflag.1
+Diceinit error
+Dice plan (SIU1) already exists cmpflag.1
+Diceinit error
+Dice plan (SIU1) already exists cmpflag.1
+Diceinit error
+Dice plan (SIU1) already exists cmpflag.1
+Diceinit error
+Dice plan (SIU1) already exists cmpflag.1
+ENTROPY tx:
+Dice plan (SIU1) already exists cmpflag.1
+ENTROPY tx:
+Dice plan (SIU1) already exists cmpflag.1
+ENTROPY tx:
+Dice plan (SIU1) already exists cmpflag.1
+ENTROPY tx:
+8936c095f1b994c8669144253da2d576152ebba8aadb26f3e4df4c9fd9a7f003.(W 10049.99990000) check first
+309015bc3cc460ae99bb82462148297baaf29a6ec7a887cbbd9e3d7861e553c3.(W 999019.99980000) 49de76f70f13d8fe7dcfb0677d304b50c05dc7765046cd3ab9f5045c4a7c65c3.(W 3039.99940000) numentropy tx 3: 1012109.99910000
+
+```
+
+[14-Aug-18 04:13 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=AT3 diceinfo ccdc2f47d4a19369f78daf63b8412738a19785e380192054f385556a544e07d4
+{
+  "result": "success",
+  "fundingtxid": "ccdc2f47d4a19369f78daf63b8412738a19785e380192054f385556a544e07d4",
+  "name": "SIU1",
+  "sbits": 827672915,
+  "minbet": "1.00000000",
+  "maxbet": "100000.00000000",
+  "maxodds": 15,
+  "timeoutblocks": 2,
+  "funding": "1118149.99880000"
+}
+```
+
+[14-Aug-18 04:13 PM] siu - Chainmakers#3920
+i think i got everything back!
+
+[14-Aug-18 04:14 PM] siu - Chainmakers#3920
+and im getting the utxos of the first dice plan too
+
+[14-Aug-18 04:16 PM] jl777c#5810
+it prints utxos from all plans for debug, but should only count and use the ones from the right plan, otherwise it is a bug
+
+[14-Aug-18 04:16 PM] jl777c#5810
+but is sounds like things are working much better
+

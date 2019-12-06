@@ -1,0 +1,330 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[09-Nov-18 01:15 AM] jl777c#5810
+leveraging the existing bitcoin protocol
+
+[09-Nov-18 01:15 AM] Bryan_Beus#6442
+heh
+
+yes, I can appreciate the simplicity
+
+[09-Nov-18 01:22 AM] jl777c#5810
+of course, it isnt a full DB
+
+[09-Nov-18 01:22 AM] jl777c#5810
+but it lets you very efficiently fine the most recent samples from any publisher
+
+[09-Nov-18 01:22 AM] jl777c#5810
+which is really what most dapps need
+
+[09-Nov-18 01:23 AM] jl777c#5810
+all in a data marketplace context
+
+[09-Nov-18 01:23 AM] jl777c#5810
+so the cost for the oraclizing of data is paid for by the datafee
+
+[09-Nov-18 01:23 AM] jl777c#5810
+really, an entire major crypto project can be made out of oracles CC
+
+[09-Nov-18 01:33 AM] Bryan_Beus#6442
+yes, I can see that
+
+[09-Nov-18 01:34 AM] Bryan_Beus#6442
+seems like oracles can basically be a repository for placing existing legacy solutions that are non-decentralized into a blockchain format, while waiting to see what more can be solved with other blockchain/smart-contract technologies
+
+[09-Nov-18 01:35 AM] Bryan_Beus#6442
+what is the difference between `baton` and `batontxid`?
+
+[09-Nov-18 01:35 AM] Bryan_Beus#6442
+I see `baton` is an address
+
+[09-Nov-18 01:35 AM] Bryan_Beus#6442
+and `batontxid` is a typical txid has
+
+[09-Nov-18 01:35 AM] Bryan_Beus#6442
+hash
+
+[09-Nov-18 01:35 AM] Bryan_Beus#6442
+I guess I should ask, what is the baton address used for?
+
+[09-Nov-18 01:36 AM] Bryan_Beus#6442
+do all batontxids take place in the baton address?
+
+[09-Nov-18 01:40 AM] jl777c#5810
+the batontxid is the baton utxo sent to the baton address
+
+[09-Nov-18 01:47 AM] Bryan_Beus#6442
+this is changing my understanding
+
+[09-Nov-18 01:48 AM] Bryan_Beus#6442
+I think part of the difficulty in understanding this is that I'm still confused about how cc addresses work...
+
+[09-Nov-18 01:48 AM] Bryan_Beus#6442
+when a publisher does `oraclesregister`, do they get both a `baton` and `batontxid`?
+
+[09-Nov-18 01:49 AM] Bryan_Beus#6442
+I'm looking through the method, but it's a long complicated hex
+
+[09-Nov-18 01:49 AM] Bryan_Beus#6442
+and I don't see any mention of baton in `oraclesregister`
+
+[09-Nov-18 01:49 AM] jl777c#5810
+baton address is just the address of the publisher
+
+[09-Nov-18 01:49 AM] jl777c#5810
+normal address
+
+[09-Nov-18 01:50 AM] jl777c#5810
+Getscriptaddress(batonaddr,regtx.vout[1].scriptPubKey);
+
+[09-Nov-18 01:50 AM] jl777c#5810
+oh, sorry it is a CC address
+
+[09-Nov-18 01:50 AM] jl777c#5810
+which is a CC script derived from the publishers pubkey, so it has the publishers pubkey and the oracles eval code
+
+[09-Nov-18 01:51 AM] jl777c#5810
+that is put into crypto-conditions serialization
+
+[09-Nov-18 01:51 AM] jl777c#5810
+then it is hashed and that is the OP_CHECKCRYPTOCONDITIONS script
+
+[09-Nov-18 01:52 AM] jl777c#5810
+I then use the normal method of calculating bitcoin addresses by hashing the CC vout scriptPubkey, adding KMD prefix and base58 encoding it
+
+[09-Nov-18 01:52 AM] jl777c#5810
+if anything about the CC vout is changed, the address changes
+
+[09-Nov-18 01:52 AM] jl777c#5810
+so a different pubkey changes the CC address
+
+[09-Nov-18 01:52 AM] jl777c#5810
+a different evalcode, changes the CC address
+
+[09-Nov-18 01:52 AM] jl777c#5810
+a different cryptocondition (1of2, 2of2, etc) will change the CC address
+
+[09-Nov-18 01:53 AM] jl777c#5810
+the CC address is just the base58 encoding of the serialized cryptocondition hash
+
+[09-Nov-18 01:53 AM] jl777c#5810
+so each pubkey gets one CC address per different CC
+
+[09-Nov-18 02:49 AM] Bryan_Beus#6442
+interesting. I think i follow that. Will save it.
+
+going to write instructions and more details about cc addresses soon
+
+[09-Nov-18 03:13 AM] Bryan_Beus#6442
+curious, in `oraclesregister`, why do we have the user indicate the desired publisher by using `batonutxo`, and not `baton`? 
+
+as the `baton` address doesn't change, but the `batonutxo` does,  why do we use `batonutxo`?
+
+[09-Nov-18 05:31 AM] Bryan_Beus#6442
+@jl777c 
+
+another question, I don't see a method for adding more funds to a subscription. is the `datafee` on `oraclessubscribe`, is that acting like an advance depost, so you have to put in more than the minimum fee?
+
+[09-Nov-18 05:32 AM] Bryan_Beus#6442
+also, do you have to subscribe to have any kind of special access to the oracle? or is it that once an oracle uploads data, it's open sourced?
+
+[09-Nov-18 06:01 AM] blackjok3r#3181
+You just subscribe more than once, I think... .or at least thats how the Chat dAPP is using it.
+
+[09-Nov-18 06:36 AM] jl777c#5810
+subscribe more to prepay more
+
+[09-Nov-18 06:36 AM] jl777c#5810
+all data is on the blockchain
+
+[09-Nov-18 06:36 AM] jl777c#5810
+however it is possible to provide encrypted data to limit who gets the data
+
+[09-Nov-18 08:30 AM] Bryan_Beus#6442
+so, for example, a publisher would write a script or something that would send a key to the addresses from which the subscription fees come?
+
+[09-Nov-18 08:31 AM] Bryan_Beus#6442
+Also, this question from earlier:
+
+curious, in oraclesregister, why do we have the user indicate the desired publisher by using batonutxo, and not baton? 
+
+as the baton address doesn't change, but the batonutxo does,  why do we use batonutxo?
+
+[09-Nov-18 08:37 AM] jl777c#5810
+i think you are confused about batons
+
+[09-Nov-18 08:38 AM] jl777c#5810
+oraclesregister is done only by the publisher
+
+[09-Nov-18 08:38 AM] jl777c#5810
+he creates the first baton
+
+[09-Nov-18 08:38 AM] jl777c#5810
+blockchains dont have addresses in them, just pubkeys or hashes
+
+[09-Nov-18 08:39 AM] jl777c#5810
+by specifying a specific baton utxo, you specify the baton address and further, the specific tx in the linked list
+
+[09-Nov-18 08:43 AM] Bryan_Beus#6442
+ok, I think I get that. thanks
+
+[09-Nov-18 10:12 AM] passcombo.com 🏴☠🍋#0622
+is such CC possible? -> https://twitter.com/PassCombo/status/1060834025827418112
+
+{Embed}
+PassComboCom 🛡️ (@PassCombo)
+https://twitter.com/PassCombo/status/1060834025827418112
+@Falkvinge The idea could be good only if conditioned by user using smart contract - so that when I die (my condition would be no tx for 1 year) my funds would go to family, friends or organization I support. Not sure if BSV can achieve that. I believe ETH, EOS, Lisk or KM...
+Twitter
+
+[09-Nov-18 10:13 AM] passcombo.com 🏴☠🍋#0622
+time-based user conditioned tx from specific address
+
+[09-Nov-18 10:13 AM] passcombo.com 🏴☠🍋#0622
+best would be if the "code" would run even if wallet off - not dependent on specific machine?
+
+[09-Nov-18 10:32 AM] jl777c#5810
+if you lock your funds in to a special contract, then it can be claimed by heirs if you dont use the funds for a year
+
+[09-Nov-18 10:37 AM] actionslacks#4072
+this is one of the problems that if solved, could be a big deal.
+
+[09-Nov-18 10:38 AM] jl777c#5810
+it seems rather a trivial thing to do...
+
+[09-Nov-18 10:39 AM] actionslacks#4072
+Thats a good way to do it. If you don't move the funds within a year, the keys you gave to your beneficiary would have access to the funds
+
+[09-Nov-18 10:39 AM] jl777c#5810
+basically you want a DMS
+
+[09-Nov-18 10:40 AM] jl777c#5810
+so there is the big stash of funds locked in the inheritance address, a set of smaller amount addresses are referenced, if all of them are idle for the specified amount of time, the heir can spend the big stash
+
+[09-Nov-18 10:41 AM] jl777c#5810
+the owner is free to withdraw funds from the big stash at any time
+
+[09-Nov-18 10:42 AM] actionslacks#4072
+so how reliable would the date keeping be? would it be referenced to a particular block height?
+
+[09-Nov-18 10:44 AM] jl777c#5810
+it would be X amount of time/blocks from the last time any of the referenced addresses sent any funds
+
+[09-Nov-18 10:45 AM] jl777c#5810
+simpler to make it blocks (minutes)
+
+[09-Nov-18 10:46 AM] jl777c#5810
+simplest case is to refer to the big stash address itself. then if you stop using it, it can be claimed
+
+[09-Nov-18 10:47 AM] actionslacks#4072
+is cc modular enough to do this with other coins or would it be exclusive to kmd?
+
+[09-Nov-18 10:47 AM] actionslacks#4072
+I guess all you need is to display a message with the key
+
+[09-Nov-18 10:48 AM] jl777c#5810
+any CC activated chain can be used
+
+[09-Nov-18 10:49 AM] jl777c#5810
+if tokens are supported, then tokenized versions of other coins can also be done,but that makes it more complicated to do
+
+[09-Nov-18 10:50 AM] actionslacks#4072
+It would be pretty trick to hack some thing like a ledger hardware wallet to do it for you.
+
+[09-Nov-18 10:54 AM] actionslacks#4072
+your heirs plug it in, open the app, "funds not accessible"... wait a year. "I'm dead, here's your inheritance"
+
+[09-Nov-18 11:01 AM] jl777c#5810
+ledger wouldnt support it
+
+[09-Nov-18 11:13 AM] actionslacks#4072
+ledger the company? or the hardware itself is not capable of referencing the contract?
+
+[09-Nov-18 11:14 AM] jl777c#5810
+ledger only does normal taddr tx, not CC
+
+[09-Nov-18 11:19 AM] actionslacks#4072
+so is it just a matter of writing the firmware to make cc work with an appropriate chipset?
+
+[09-Nov-18 11:22 AM] actionslacks#4072
+idk, I'm way out of my depth here. just spitballing
+
+[09-Nov-18 11:23 AM] jl777c#5810
+considering how much work it was to get rewards claiming working, getting CC support is like 1000x the effort
+
+[09-Nov-18 11:23 AM] jl777c#5810
+maybe by the year 2500
+
+[09-Nov-18 11:28 AM] actionslacks#4072
+Yeah I've been following that. lukechilds made the magic happen.
+
+[09-Nov-18 03:53 PM] Bryan_Beus#6442
+Hey @Mihailo 
+
+Whenever you are ready.
+
+[09-Nov-18 04:01 PM] Mihailo#5902
+Hey, go ahead
+
+[09-Nov-18 04:01 PM] Mihailo#5902
+@Bryan_Beus Wanna continue in DM?
+
+[09-Nov-18 04:01 PM] Bryan_Beus#6442
+Sure
+
+[09-Nov-18 04:02 PM] Bryan_Beus#6442
+well...
+
+[09-Nov-18 04:02 PM] Bryan_Beus#6442
+let's talk about general stuff here, then any specific technical stuff in dm
+
+[09-Nov-18 04:02 PM] Mihailo#5902
+Ok
+
+[09-Nov-18 04:02 PM] Bryan_Beus#6442
+We're going over... channels, right?
+
+[09-Nov-18 04:02 PM] Mihailo#5902
+Yep
+
+[09-Nov-18 04:03 PM] Bryan_Beus#6442
+How would you introduce the channels smart contract?
+
+[09-Nov-18 04:03 PM] Bryan_Beus#6442
+What's it generally about, and how does it work?
+
+[09-Nov-18 04:03 PM] Bryan_Beus#6442
+I'll take your description and turn this into a paragraph or three, depending on how complex.
+
+[09-Nov-18 04:08 PM] Mihailo#5902
+Channels CC is a mechanism to make instant payments between two points without a need to wait for transactions to get in the chain and be confirmed. This possible because the funds are locked in a special CC address that could be spent only by owners of private keys for those two pubkeys that are used in creating channel and then funds are released with each payment by the sender to receiver. After that tx with locking funds is protected with dPoW (notarized)  the receiving party can be sure it will receive funds at the moment the payment tx gets in the mempool.
+
+[09-Nov-18 04:09 PM] Bryan_Beus#6442
+So channels creates instant payments -- verified as soon as they are in the mempool.
+
+[09-Nov-18 04:09 PM] Bryan_Beus#6442
+that's a useful feature!
+
+[09-Nov-18 04:09 PM] Mihailo#5902
+Correct
+
+[09-Nov-18 04:09 PM] Mihailo#5902
+Very
+
+[09-Nov-18 04:10 PM] Bryan_Beus#6442
+Can we combine this with other cc's?
+
+[09-Nov-18 04:11 PM] Mihailo#5902
+Well, there is idea to combine it with other CCs to be able to instant pay tokens or tokenized deposit from gateway and etc.
+
+[09-Nov-18 04:11 PM] Mihailo#5902
+It is not so simple to combine multiple CCs
+

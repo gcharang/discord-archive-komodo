@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Komodo - cc-musig</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+
+    <style>
+        /* === GENERAL === */
+
+@font-face {
+    font-family: Whitney;
+    src: url(https://discordapp.com/assets/6c6374bad0b0b6d204d8d6dc4a18d820.woff);
+    font-weight: 300;
+}
+
+@font-face {
+    font-family: Whitney;
+    src: url(https://discordapp.com/assets/e8acd7d9bf6207f99350ca9f9e23b168.woff);
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: Whitney;
+    src: url(https://discordapp.com/assets/3bdef1251a424500c1b3a78dea9b7e57.woff);
+    font-weight: 500;
+}
+
+@font-face {
+    font-family: Whitney;
+    src: url(https://discordapp.com/assets/be0060dafb7a0e31d2a1ca17c0708636.woff);
+    font-weight: 600;
+}
+
+@font-face {
+    font-family: Whitney;
+    src: url(https://discordapp.com/assets/8e12fb4f14d9c4592eb8ec9f22337b04.woff);
+    font-weight: 700;
+}
+
+body {
+    font-family: "Whitney", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 17px;
+}
+
+a {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+img {
+    object-fit: contain;
+}
+
+.markdown {
+    white-space: pre-wrap;
+    line-height: 1.3;
+    overflow-wrap: break-word;
+}
+
+.spoiler {
+    border-radius: 3px;
+}
+
+.quote {
+    border-left: 4px solid;
+    border-radius: 3px;
+    margin: 8px 0;
+    padding-left: 10px;
+}
+
+.pre {
+    font-family: "Consolas", "Courier New", Courier, monospace;
+}
+
+.pre--multiline {
+    margin-top: 4px;
+    padding: 8px;
+    border: 2px solid;
+    border-radius: 5px;
+}
+
+.pre--inline {
+    padding: 2px;
+    border-radius: 3px;
+    font-size: 85%;
+}
+
+.mention {
+    font-weight: 500;
+}
+
+.emoji {
+    width: 1.45em;
+    height: 1.45em;
+    margin: 0 1px;
+    vertical-align: -0.4em;
+}
+
+.emoji--small {
+    width: 1rem;
+    height: 1rem;
+}
+
+.emoji--large {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* === INFO === */
+
+.info {
+    display: flex;
+    max-width: 100%;
+    margin: 0 5px 10px 5px;
+}
+
+.info__guild-icon-container {
+    flex: 0;
+}
+
+.info__guild-icon {
+    max-width: 88px;
+    max-height: 88px;
+}
+
+.info__metadata {
+    flex: 1;
+    margin-left: 10px;
+}
+
+.info__guild-name {
+    font-size: 1.4em;
+}
+
+.info__channel-name {
+    font-size: 1.2em;
+}
+
+.info__channel-topic {
+    margin-top: 2px;
+}
+
+.info__channel-message-count {
+    margin-top: 2px;
+}
+
+.info__channel-date-range {
+    margin-top: 2px;
+}
+
+/* === CHATLOG === */
+
+.chatlog {
+    max-width: 100%;
+    margin-bottom: 24px;
+}
+
+.chatlog__message-group {
+    display: flex;
+    margin: 0 10px;
+    padding: 15px 0;
+    border-top: 1px solid;
+}
+
+.chatlog__author-avatar-container {
+    flex: 0;
+    width: 40px;
+    height: 40px;
+}
+
+.chatlog__author-avatar {
+    border-radius: 50%;
+    height: 40px;
+    width: 40px;
+}
+
+.chatlog__messages {
+    flex: 1;
+    min-width: 50%;
+    margin-left: 20px;
+}
+
+.chatlog__author-name {
+    font-size: 1em;
+    font-weight: 500;
+}
+
+.chatlog__timestamp {
+    margin-left: 5px;
+    font-size: .75em;
+}
+
+.chatlog__message {
+    padding: 2px 5px;
+    margin-right: -5px;
+    margin-left: -5px;
+    background-color: transparent;
+    transition: background-color 1s ease;
+}
+
+.chatlog__content {
+    font-size: .9375em;
+    word-wrap: break-word;
+}
+
+.chatlog__edited-timestamp {
+    margin-left: 3px;
+    font-size: .8em;
+}
+
+.chatlog__attachment-thumbnail {
+    margin-top: 5px;
+    max-width: 50%;
+    max-height: 500px;
+    border-radius: 3px;
+}
+
+.chatlog__embed {
+    margin-top: 5px;
+    display: flex;
+    max-width: 520px;
+}
+
+.chatlog__embed-color-pill {
+    flex-shrink: 0;
+    width: 4px;
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+}
+
+.chatlog__embed-content-container {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 10px;
+    border: 1px solid;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+.chatlog__embed-content {
+    width: 100%;
+    display: flex;
+}
+
+.chatlog__embed-text {
+    flex: 1;
+}
+
+.chatlog__embed-author {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.chatlog__embed-author-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 9px;
+    border-radius: 50%;
+}
+
+.chatlog__embed-author-name {
+    font-size: .875em;
+    font-weight: 600;
+}
+
+.chatlog__embed-title {
+    margin-bottom: 4px;
+    font-size: .875em;
+    font-weight: 600;
+}
+
+.chatlog__embed-description {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.chatlog__embed-fields {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.chatlog__embed-field {
+    flex: 0;
+    min-width: 100%;
+    max-width: 506px;
+    padding-top: 10px;
+}
+
+.chatlog__embed-field--inline {
+    flex: 1;
+    flex-basis: auto;
+    min-width: 150px;
+}
+
+.chatlog__embed-field-name {
+    margin-bottom: 4px;
+    font-size: .875em;
+    font-weight: 600;
+}
+
+.chatlog__embed-field-value {
+    font-size: .875em;
+    font-weight: 500;
+}
+
+.chatlog__embed-thumbnail {
+    flex: 0;
+    margin-left: 20px;
+    max-width: 80px;
+    max-height: 80px;
+    border-radius: 3px;
+}
+
+.chatlog__embed-image-container {
+    margin-top: 10px;
+}
+
+.chatlog__embed-image {
+    max-width: 500px;
+    max-height: 400px;
+    border-radius: 3px;
+}
+
+.chatlog__embed-footer {
+    margin-top: 10px;
+}
+
+.chatlog__embed-footer-icon {
+    margin-right: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    vertical-align: middle;
+}
+
+.chatlog__embed-footer-text {
+    font-weight: 500;
+    font-size: .75em;
+}
+
+.chatlog__reactions {
+    display: flex;
+}
+
+.chatlog__reaction {
+    display: flex;
+    align-items: center;
+    margin: 6px 2px 2px 2px;
+    padding: 3px 6px;
+    border-radius: 3px;
+}
+
+.chatlog__reaction-count {
+    min-width: 9px;
+    margin-left: 6px;
+    font-size: .875em;
+}
+
+.chatlog__bot-tag {
+    margin-left: 0.3em;
+    background: #7289da;
+    color: #ffffff;
+    font-size: 0.625em;
+    padding: 1px 2px;
+    border-radius: 3px;
+    vertical-align: middle;
+    line-height: 1.3;
+    position: relative;
+    top: -.2em;
+}
+    </style>
+    <style>
+        /* === GENERAL === */
+
+body {
+    background-color: #ffffff;
+    color: #23262a;
+    font-weight: 500;
+}
+
+a {
+    color: #00b0f4;
+}
+
+.spoiler {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.quote {
+    border-color: #c7ccd1;
+}
+
+.pre {
+    background-color: #f9f9f9 !important;
+}
+
+.pre--multiline {
+    border-color: #f3f3f3 !important;
+    color: #657b83 !important;
+}
+
+.mention {
+    background-color: #f1f3fb;
+    color: #7289da;
+}
+
+/* === INFO === */
+
+.info__guild-name {
+    color: #2f3136;
+}
+
+.info__channel-name {
+    color: #2f3136;
+}
+
+.info__channel-topic {
+    color: #2f3136;
+}
+
+/* === CHATLOG === */
+
+.chatlog__message-group {
+    border-color: #eceeef;
+}
+
+.chatlog__author-name {
+    font-weight: 600;
+    color: #2f3136;
+}
+
+.chatlog__timestamp {
+    color: #747f8d;
+}
+
+.chatlog__message--highlighted {
+    background-color: rgba(114, 137, 218, 0.2) !important;
+}
+
+.chatlog__message--pinned {
+    background-color: rgba(249, 168, 37, 0.05);
+}
+
+.chatlog__edited-timestamp {
+    color: #747f8d;
+}
+
+.chatlog__embed-content-container {
+    background-color: rgba(249, 249, 249, 0.3);
+    border-color: rgba(204, 204, 204, 0.3);
+}
+
+.chatlog__embed-author-name {
+    color: #4f545c;
+}
+
+.chatlog__embed-author-name-link {
+    color: #4f545c;
+}
+
+.chatlog__embed-title {
+    color: #4f545c;
+}
+
+.chatlog__embed-description {
+    color: #737f8d;
+}
+
+.chatlog__embed-field-name {
+    color: #36393e;
+}
+
+.chatlog__embed-field-value {
+    color: #737f8d;
+}
+
+.chatlog__embed-footer {
+    color: rgba(79, 83, 91, 0.6);
+}
+
+.chatlog__reaction {
+    background-color: rgba(79, 84, 92, 0.06);
+}
+
+.chatlog__reaction-count {
+    color: #747f8d;
+}
+    </style>
+
+    <script>
+        function scrollToMessage(event, id) {
+            var element = document.getElementById('message-' + id);
+
+            if (element !== null && element !== undefined) {
+                event.preventDefault();
+
+                element.classList.add('chatlog__message--highlighted');
+
+                window.scrollTo({
+                    top: element.getBoundingClientRect().top - document.body.getBoundingClientRect().top - (window.innerHeight / 2),
+                    behavior: 'smooth'
+                });
+
+                window.setTimeout(function() {
+                    element.classList.remove('chatlog__message--highlighted');
+                }, 2000);
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/styles/solarized-light.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.pre--multiline').forEach((block) => {
+                hljs.highlightBlock(block);
+            });
+        });
+    </script>
+</head>
+<body>
+
+<div class="info">
+    <div class="info__guild-icon-container">
+        <img class="info__guild-icon" src="https://cdn.discordapp.com/icons/412898016371015680/a_157cb08c4198ad53b9e9b7168c930571.png" />
+    </div>
+    <div class="info__metadata">
+        <div class="info__guild-name">Komodo</div>
+        <div class="info__channel-name">cc-musig</div>
+
+            <div class="info__channel-topic">./komodod -ac_name=MUSIG -ac_supply=100000 -ac_reward=10000000 -pubkey=&lt;yourpub&gt; -ac_cclib=sudoku -ac_cc=2 -addnode=5.9.102.210 &amp;
+faucet is funded, do faucetget and sendrawtransaction</div>
+
+        <div class="info__channel-message-count">100 messages</div>
+
+            <div class="info__channel-date-range">
+                    Before 05-Dec-19 12:00 AM
+            </div>
+    </div>
+</div>
+
+<div class="chatlog">
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/232679450301431808/3623f2c79f81112c8a9336f8fcbfa6ea.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="blackjok3r#3181" data-user-id="232679450301431808">blackjok3r</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 07:58 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549138002803163137" id="message-549138002803163137">
+                        <div class="chatlog__content">
+                            <span class="markdown">jl777 branch and repo on latest works, but only with 2 nodes</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549138193497325568" id="message-549138193497325568">
+                        <div class="chatlog__content">
+                            <span class="markdown">it gets extemlly complicated with more than 2, and the daemon has a bug where you will get stuck after the <span class="pre pre--inline">commit</span> step</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/347922216429813760/947757b6add4a77197be279b88a7f75b.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="grewalsatinder#9653" data-user-id="347922216429813760">grewalsatinder</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 07:59 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549138342290128896" id="message-549138342290128896">
+                        <div class="chatlog__content">
+                            <span class="markdown">I want to test, so that I can make it included in my kmdgo package <img class="emoji " alt="🙂" title="🙂" src="https://twemoji.maxcdn.com/2/72x72/1f642.png" /></span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549138485760753665" id="message-549138485760753665">
+                        <div class="chatlog__content">
+                            <span class="markdown">testing also makes things clearer and gives more ideas how it can be used in different usecases</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/232679450301431808/3623f2c79f81112c8a9336f8fcbfa6ea.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="blackjok3r#3181" data-user-id="232679450301431808">blackjok3r</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 08:00 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549138500730224651" id="message-549138500730224651">
+                        <div class="chatlog__content">
+                            <span class="markdown">cool. its reasonably easy for 2 nodes... I had some trouble early on, but the example and gcharngs docs will clear those up well.</span>
+
+                                <span class="chatlog__edited-timestamp" title="24-Feb-19 08:00 AM">(edited)</span>
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/347922216429813760/947757b6add4a77197be279b88a7f75b.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="grewalsatinder#9653" data-user-id="347922216429813760">grewalsatinder</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 08:00 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549138569474867215" id="message-549138569474867215">
+                        <div class="chatlog__content">
+                            <span class="markdown">also I have not been involved in testing for much long, so trying to do it</span>
+
+                        </div>
+
+
+
+                        <div class="chatlog__reactions">
+                                <div class="chatlog__reaction">
+                                    <img class="emoji emoji--small" alt="👍" title="👍" src="https://twemoji.maxcdn.com/2/72x72/1f44d.png" />
+                                    <span class="chatlog__reaction-count">1</span>
+                                </div>
+                        </div>
+                    </div>
+                    <div class="chatlog__message " data-message-id="549138638668038164" id="message-549138638668038164">
+                        <div class="chatlog__content">
+                            <span class="markdown">test is a lot of fun, that I missed, while busy learning go language</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/232679450301431808/3623f2c79f81112c8a9336f8fcbfa6ea.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="blackjok3r#3181" data-user-id="232679450301431808">blackjok3r</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 08:01 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549138678061072388" id="message-549138678061072388">
+                        <div class="chatlog__content">
+                            <span class="markdown">me either really, so much time on labs, got pretty good at C++/C in that time though.</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549138762852990996" id="message-549138762852990996">
+                        <div class="chatlog__content">
+                            <span class="markdown">Its good to be able to test and also debug it, so james has more time to write more contracts <img class="emoji " alt="😄" title="😄" src="https://twemoji.maxcdn.com/2/72x72/1f604.png" /></span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/347922216429813760/947757b6add4a77197be279b88a7f75b.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="grewalsatinder#9653" data-user-id="347922216429813760">grewalsatinder</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 08:01 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549138837432041472" id="message-549138837432041472">
+                        <div class="chatlog__content">
+                            <span class="markdown">testing is what got me so much involved in SuperNET at the first place that I quit my day job! <img class="emoji " alt="😄" title="😄" src="https://twemoji.maxcdn.com/2/72x72/1f604.png" /></span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/232679450301431808/3623f2c79f81112c8a9336f8fcbfa6ea.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="blackjok3r#3181" data-user-id="232679450301431808">blackjok3r</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 08:02 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549138948455399425" id="message-549138948455399425">
+                        <div class="chatlog__content">
+                            <span class="markdown">yeah... Havent worked a &quot;real job&quot; for so long now, it would be difficult to go back to it lol</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/347922216429813760/947757b6add4a77197be279b88a7f75b.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="grewalsatinder#9653" data-user-id="347922216429813760">grewalsatinder</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 08:02 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549139022329544704" id="message-549139022329544704">
+                        <div class="chatlog__content">
+                            <span class="markdown">agree mate</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549139145772236811" id="message-549139145772236811">
+                        <div class="chatlog__content">
+                            <span class="markdown">isn&#39;t it possible to just copy the cclib.cpp file to the komodoplatform repo which compiles on mac?</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549139190798090240" id="message-549139190798090240">
+                        <div class="chatlog__content">
+                            <span class="markdown">oh... I guess it wont&#39; be just that simple</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549139209617670172" id="message-549139209617670172">
+                        <div class="chatlog__content">
+                            <span class="markdown">there are more dependency files</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549139254383607839" id="message-549139254383607839">
+                        <div class="chatlog__content">
+                            <span class="markdown">alright, making more vm then</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="jl777c#5810" data-user-id="455741312273219595">jl777c</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 08:06 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549140105902686209" id="message-549140105902686209">
+                        <div class="chatlog__content">
+                            <span class="markdown">is there a bug fix needed to handle more than 3 pubkeys in the jl777 repo?</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/232679450301431808/3623f2c79f81112c8a9336f8fcbfa6ea.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="blackjok3r#3181" data-user-id="232679450301431808">blackjok3r</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 08:12 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549141650727895071" id="message-549141650727895071">
+                        <div class="chatlog__content">
+                            <span class="markdown">I think so yes.</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549141717375385630" id="message-549141717375385630">
+                        <div class="chatlog__content">
+                            <span class="markdown">my repo&#39;s fix doesnt seem like a good way to go about it for multiple nodes.</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549141939979812864" id="message-549141939979812864">
+                        <div class="chatlog__content">
+                            <span class="markdown">the steps <span class="pre pre--inline">commit</span>, <span class="pre pre--inline">nonce</span> and <span class="pre pre--inline">partialsig</span> where the data is swapped between all nodes, needs to make sure that all the data is in there before creating the next hash.</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549142067071418388" id="message-549142067071418388">
+                        <div class="chatlog__content">
+                            <span class="markdown">I did it by sending each lot of data in exact order and only generateing hash on the last node.</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549142128849190912" id="message-549142128849190912">
+                        <div class="chatlog__content">
+                            <span class="markdown">not sure in real world thats practical...</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549142214031441951" id="message-549142214031441951">
+                        <div class="chatlog__content">
+                            <span class="markdown">It should just check to make sure all feilds are populated somehow.</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="jl777c#5810" data-user-id="455741312273219595">jl777c</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 08:21 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549143940649975809" id="message-549143940649975809">
+                        <div class="chatlog__content">
+                            <span class="markdown">is that restriction for nonce only, or also partial sigs?</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549144098049753088" id="message-549144098049753088">
+                        <div class="chatlog__content">
+                            <span class="markdown">I can add a counter at the required steps and only do the combine after all are there</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/232679450301431808/3623f2c79f81112c8a9336f8fcbfa6ea.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="blackjok3r#3181" data-user-id="232679450301431808">blackjok3r</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 08:27 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549145231455551499" id="message-549145231455551499">
+                        <div class="chatlog__content">
+                            <span class="markdown">I ended up adding it for all 3 of those steps, not 100% sure if it needs it for all, but I know 100% that it works when used for all.</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549145412544495636" id="message-549145412544495636">
+                        <div class="chatlog__content">
+                            <span class="markdown">to generate nonce, you need all commits. Pretty sure to generate partialsig you need all nonce, and to generate the combined sig, you need all partial sig.</span>
+
+                                <span class="chatlog__edited-timestamp" title="24-Feb-19 08:28 AM">(edited)</span>
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549145523529973761" id="message-549145523529973761">
+                        <div class="chatlog__content">
+                            <span class="markdown">it doesnt check this currently and as such gives wrong outputs.</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="jl777c#5810" data-user-id="455741312273219595">jl777c</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 08:38 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549148206093565963" id="message-549148206093565963">
+                        <div class="chatlog__content">
+                            <span class="markdown">ok, I will add this</span>
+
+                        </div>
+
+
+
+                        <div class="chatlog__reactions">
+                                <div class="chatlog__reaction">
+                                    <img class="emoji emoji--small" alt="👍" title="👍" src="https://twemoji.maxcdn.com/2/72x72/1f44d.png" />
+                                    <span class="chatlog__reaction-count">1</span>
+                                </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/347922216429813760/947757b6add4a77197be279b88a7f75b.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="grewalsatinder#9653" data-user-id="347922216429813760">grewalsatinder</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 09:41 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549164024760238081" id="message-549164024760238081">
+                        <div class="chatlog__content">
+                            <span class="markdown">I found my node 1 got komodod died after command <span class="pre pre--inline">commit</span></span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549164064757121024" id="message-549164064757121024">
+                        <div class="chatlog__content">
+                            <span class="markdown">didn&#39;t had it run with gdb, started it again</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549164120411471887" id="message-549164120411471887">
+                        <div class="chatlog__content">
+                            <span class="markdown">I just execute <span class="pre pre--inline">commit</span> command agian or start from <span class="pre pre--inline">session</span> command ?</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549165271831674891" id="message-549165271831674891">
+                        <div class="chatlog__content">
+                            <span class="markdown">started from session again</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549165629383507977" id="message-549165629383507977">
+                        <div class="chatlog__content">
+                            <span class="markdown">okay, executed nonce command on node 1 and it died just by executing it.</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549165653257617409" id="message-549165653257617409">
+                        <div class="chatlog__content">
+                            <span class="markdown">found git pull had updates</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549165682923667456" id="message-549165682923667456">
+                        <div class="chatlog__content">
+                            <span class="markdown">gonna compile that again</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/347922216429813760/947757b6add4a77197be279b88a7f75b.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="grewalsatinder#9653" data-user-id="347922216429813760">grewalsatinder</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 10:11 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549171480504696853" id="message-549171480504696853">
+                        <div class="chatlog__content">
+                            <span class="markdown">trying to start komodod with gdb, and get this:</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549171489656799233" id="message-549171489656799233">
+                        <div class="chatlog__content">
+                            <span class="markdown"><div class="pre pre--multiline nohighlight">(gdb) start
+Temporary breakpoint 1 at 0x7b6ae: main. (5 locations)
+Starting program: /home/satinder/jl777/komodo/src/komodod -ac_name=MUSIG -ac_supply=100000 -ac_reward=10000000 -pubkey=03b4e12dbf7345f476b5e1217534a70bf0f4f28b234fa8f0f427c282449051d5de -ac_cclib=sudoku -ac_cc=2 -addnode=5.9.102.210
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library &quot;/lib/x86_64-linux-gnu/libthread_db.so.1&quot;.
+[New Thread 0x7ffff14a4700 (LWP 42822)]
+
+Thread 1 &quot;komodod&quot; hit Temporary breakpoint 1, main (argc=8, argv=0x7fffffffdf88) at bitcoind.cpp:249
+249    {
+(gdb) </div></span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549171549161127956" id="message-549171549161127956">
+                        <div class="chatlog__content">
+                            <span class="markdown">komodod need fixing or something I need to change in my command?</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549171590672285706" id="message-549171590672285706">
+                        <div class="chatlog__content">
+                            <span class="markdown">without that gdb , it works</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="jl777c#5810" data-user-id="455741312273219595">jl777c</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 10:11 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549171619013328908" id="message-549171619013328908">
+                        <div class="chatlog__content">
+                            <span class="markdown">remove breakpoint</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/347922216429813760/947757b6add4a77197be279b88a7f75b.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="grewalsatinder#9653" data-user-id="347922216429813760">grewalsatinder</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 10:12 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549171861234122752" id="message-549171861234122752">
+                        <div class="chatlog__content">
+                            <span class="markdown">not clear, change command? or edit code?</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="jl777c#5810" data-user-id="455741312273219595">jl777c</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 10:13 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549172019766362122" id="message-549172019766362122">
+                        <div class="chatlog__content">
+                            <span class="markdown">Thread 1 &quot;komodod&quot; hit Temporary breakpoint 1, main (argc=8, argv=0x7fffffffdf88) at bitcoind.cpp:249</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549172063580192769" id="message-549172063580192769">
+                        <div class="chatlog__content">
+                            <span class="markdown">it seems you have some breakpoints somehow</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549172108937134113" id="message-549172108937134113">
+                        <div class="chatlog__content">
+                            <span class="markdown">clear them or maybe continue or something like that</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/347922216429813760/947757b6add4a77197be279b88a7f75b.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="grewalsatinder#9653" data-user-id="347922216429813760">grewalsatinder</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 10:15 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549172439721050132" id="message-549172439721050132">
+                        <div class="chatlog__content">
+                            <span class="markdown"><div class="pre pre--multiline nohighlight">int main(int argc, char* argv[])
+{
+    SetupEnvironment();
+
+    // Connect bitcoind signal handlers
+    noui_connect();
+
+    return (AppInit(argc, argv) ? EXIT_SUCCESS : EXIT_FAILURE);
+}</div>
+this is from bitcoind.cpp:249</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549172534931750923" id="message-549172534931750923">
+                        <div class="chatlog__content">
+                            <span class="markdown">I&#39;m n00b for C/C++, will need help plz</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549172679861600276" id="message-549172679861600276">
+                        <div class="chatlog__content">
+                            <span class="markdown"><span class="mention" title="blackjok3r#3181">@blackjok3r</span></span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549173391744172063" id="message-549173391744172063">
+                        <div class="chatlog__content">
+                            <span class="markdown">started the daemon like normal, gonna try the commands from session onward again</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549174480560455681" id="message-549174480560455681">
+                        <div class="chatlog__content">
+                            <span class="markdown"><div class="pre pre--multiline nohighlight">$ musig-cli cclib nonce 18 &#39;[&quot;fdc05d65d1de360fe09ffb53fd51b4e52f4138860e0f49bff03654c39749a850&quot;,0,&quot;029fe919fec162e5346accf2ab82b1512123f74bc56ff4447e7f6df40adacbb274&quot;]&#39;
+error: couldn&#39;t connect to server: EOF reached (code 1)
+(make sure server is running and you are connecting to the correct RPC port)</div>
+<div class="pre pre--multiline nohighlight">satinder@ubuntu:~/jl777/komodo/src$ [libsecp256k1] illegal argument: !secp256k1_fe_is_zero(&amp;ge-&gt;x)</div></span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549174896241016832" id="message-549174896241016832">
+                        <div class="chatlog__content">
+                            <span class="markdown">I think I did something wrong.....</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549174920186298405" id="message-549174920186298405">
+                        <div class="chatlog__content">
+                            <span class="markdown">I used 0 on node 1</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549174964046135306" id="message-549174964046135306">
+                        <div class="chatlog__content">
+                            <span class="markdown">the example commands says 1</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/232679450301431808/3623f2c79f81112c8a9336f8fcbfa6ea.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="blackjok3r#3181" data-user-id="232679450301431808">blackjok3r</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 10:26 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549175212323635224" id="message-549175212323635224">
+                        <div class="chatlog__content">
+                            <span class="markdown">Yes thats the bug I encountered</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549175262299029510" id="message-549175262299029510">
+                        <div class="chatlog__content">
+                            <span class="markdown">your trying to do something when it doesnt have the required data</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549175298504130570" id="message-549175298504130570">
+                        <div class="chatlog__content">
+                            <span class="markdown">instead of erroring out, it just crashes</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549175455937331210" id="message-549175455937331210">
+                        <div class="chatlog__content">
+                            <span class="markdown">I couldnt figure out how to check if the data was there or not so worked around the issue, with executing the commands in an excact specified order using a python script</span>
+
+                                <span class="chatlog__edited-timestamp" title="24-Feb-19 10:27 AM">(edited)</span>
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549175856484974614" id="message-549175856484974614">
+                        <div class="chatlog__content">
+                            <span class="markdown">You need to really pay attention to what order things are done. One tip I will give you is that the 3 steps to trade data are all the same RPC call, so just use the absh history and change the single hash, along with the name of the cclib call.</span>
+
+                                <span class="chatlog__edited-timestamp" title="24-Feb-19 10:29 AM">(edited)</span>
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/347922216429813760/947757b6add4a77197be279b88a7f75b.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="grewalsatinder#9653" data-user-id="347922216429813760">grewalsatinder</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 10:29 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549176042120675338" id="message-549176042120675338">
+                        <div class="chatlog__content">
+                            <span class="markdown">okay, this time it gave at least errro instead of crashing komodod</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549176049217437706" id="message-549176049217437706">
+                        <div class="chatlog__content">
+                            <span class="markdown"><div class="pre pre--multiline nohighlight">$ musig-cli cclib nonce 18 &#39;[&quot;fdc05d65d1de360fe09ffb53fd51b4e52f4138860e0f49bff03654c39749a850&quot;,1,&quot;0206e0a0528cd7d9218f0c1999394c242058d793e89147edfe0576f9d93d55ae21&quot;]&#39;
+{
+  &quot;added_index&quot;: 1,
+  &quot;status&quot;: &quot;error&quot;,
+  &quot;error&quot;: &quot;error setting nonce&quot;
+}</div></span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549176114833129502" id="message-549176114833129502">
+                        <div class="chatlog__content">
+                            <span class="markdown">changed 0 to 1, as per examples for node 1 command</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549176616962621470" id="message-549176616962621470">
+                        <div class="chatlog__content">
+                            <span class="markdown">I&#39;m not using script, just manually copy/pasting commands in VM after editing it on my host sublime editor <img class="emoji " alt="😛" title="😛" src="https://twemoji.maxcdn.com/2/72x72/1f61b.png" /></span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/232679450301431808/3623f2c79f81112c8a9336f8fcbfa6ea.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="blackjok3r#3181" data-user-id="232679450301431808">blackjok3r</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 10:32 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549176771027664908" id="message-549176771027664908">
+                        <div class="chatlog__content">
+                            <span class="markdown">Yeah, I did that the first time. its took me 4-5 goes and nearly a whole day just to get 1 sucessful spend <img class="emoji " alt="😅" title="😅" src="https://twemoji.maxcdn.com/2/72x72/1f605.png" /></span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/347922216429813760/947757b6add4a77197be279b88a7f75b.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="grewalsatinder#9653" data-user-id="347922216429813760">grewalsatinder</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 10:32 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549176813637599235" id="message-549176813637599235">
+                        <div class="chatlog__content">
+                            <span class="markdown"><img class="emoji emoji--large" alt="😄" title="😄" src="https://twemoji.maxcdn.com/2/72x72/1f604.png" /></span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549176873171812352" id="message-549176873171812352">
+                        <div class="chatlog__content">
+                            <span class="markdown">yea, it&#39;s my first time right now with these API calls <img class="emoji " alt="😛" title="😛" src="https://twemoji.maxcdn.com/2/72x72/1f61b.png" /></span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/232679450301431808/3623f2c79f81112c8a9336f8fcbfa6ea.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="blackjok3r#3181" data-user-id="232679450301431808">blackjok3r</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 10:32 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549176901739216907" id="message-549176901739216907">
+                        <div class="chatlog__content">
+                            <span class="markdown">one fixed bug and made script did  a spend of 100 pubkeys in a couple of minutes.</span>
+
+                                <span class="chatlog__edited-timestamp" title="24-Feb-19 10:33 AM">(edited)</span>
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="jl777c#5810" data-user-id="455741312273219595">jl777c</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 10:46 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549180437952593940" id="message-549180437952593940">
+                        <div class="chatlog__content">
+                            <span class="markdown">dilithium support is almost complete.there is detailed comments explaining how to do a dilithium signing at the end of the dilithium algo code and before the dilithium CC code in dilithium.c
+everything other than the actual spend is working</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549180441148653584" id="message-549180441148653584">
+                        <div class="chatlog__content">
+                            <span class="markdown"><a href="https://pq-crystals.org/">https://pq-crystals.org/</a></span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/347922216429813760/947757b6add4a77197be279b88a7f75b.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="grewalsatinder#9653" data-user-id="347922216429813760">grewalsatinder</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 10:47 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549180447503024128" id="message-549180447503024128">
+                        <div class="chatlog__content">
+                            <span class="markdown">re-read and confirmed that my command is correct and the result is same</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549180510740545539" id="message-549180510740545539">
+                        <div class="chatlog__content">
+                            <span class="markdown">error and status</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="jl777c#5810" data-user-id="455741312273219595">jl777c</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 10:47 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549180583843069953" id="message-549180583843069953">
+                        <div class="chatlog__content">
+                            <span class="markdown">&quot;based on hard problems over module lattices, are designed to withstand attacks by large quantum computers, and have been submitted to the NIST post-quantum cryptography project.&quot;</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549181908869709832" id="message-549181908869709832">
+                        <div class="chatlog__content">
+                            <span class="markdown">OK, added guards so that you can now do the commit, nonce, partial in any order as long as you are not duplicating for the same ind</span>
+
+                        </div>
+
+
+
+                        <div class="chatlog__reactions">
+                                <div class="chatlog__reaction">
+                                    <img class="emoji emoji--small" alt="👌" title="👌" src="https://twemoji.maxcdn.com/2/72x72/1f44c.png" />
+                                    <span class="chatlog__reaction-count">1</span>
+                                </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/347922216429813760/947757b6add4a77197be279b88a7f75b.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="grewalsatinder#9653" data-user-id="347922216429813760">grewalsatinder</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 10:54 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549182353080188940" id="message-549182353080188940">
+                        <div class="chatlog__content">
+                            <span class="markdown"><img class="emoji " alt="🤔" title="🤔" src="https://twemoji.maxcdn.com/2/72x72/1f914.png" /> I was doing nonce after session -&gt; commit -&gt; nonce.</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549182396797550652" id="message-549182396797550652">
+                        <div class="chatlog__content">
+                            <span class="markdown">gonnna compile with any updates and try again</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="jl777c#5810" data-user-id="455741312273219595">jl777c</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 10:55 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549182629539217411" id="message-549182629539217411">
+                        <div class="chatlog__content">
+                            <span class="markdown">session, commit, commit, commit..., then nonce, nonce, nonce, ...</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549182682190577664" id="message-549182682190577664">
+                        <div class="chatlog__content">
+                            <span class="markdown">all nodes need all commits to be able to generate a nonce</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549182719683330058" id="message-549182719683330058">
+                        <div class="chatlog__content">
+                            <span class="markdown">need all nonces to be able to do a partial sig</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549182751992053791" id="message-549182751992053791">
+                        <div class="chatlog__content">
+                            <span class="markdown">need all partial sigs to be able to do a combined sig</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549182874621050883" id="message-549182874621050883">
+                        <div class="chatlog__content">
+                            <span class="markdown">think multisig in three stages. all participants need to do each stage until you can start the next stage</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549183074974302248" id="message-549183074974302248">
+                        <div class="chatlog__content">
+                            <span class="markdown">the dilithium is much easier, as it is the normal keypair model</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/347922216429813760/947757b6add4a77197be279b88a7f75b.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="grewalsatinder#9653" data-user-id="347922216429813760">grewalsatinder</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 11:00 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549183841768570903" id="message-549183841768570903">
+                        <div class="chatlog__content">
+                            <span class="markdown">yep, was doing the same.
+I execute command one node 1 till command <span class="pre pre--inline">calcmsg</span>
+
+after than, execute command <span class="pre pre--inline">session</span> on node 1, and save the <span class="pre pre--inline">commitment</span> output
+then execute <span class="pre pre--inline">session</span> on node 2, and save the <span class="pre pre--inline">commitment</span> output in text file
+
+then make the <span class="pre pre--inline">commit</span> command based on the previous output and execute on node 1, and save the <span class="pre pre--inline">nonce</span> output
+and make the <span class="pre pre--inline">commit</span> command based on previous session output and execute on node 2, and save the <span class="pre pre--inline">nonce</span> output
+
+and then execute <span class="pre pre--inline">nonce</span> command on node 1 and there I got that error and status outputs.</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549183874953904135" id="message-549183874953904135">
+                        <div class="chatlog__content">
+                            <span class="markdown">compiling updates right now</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="jl777c#5810" data-user-id="455741312273219595">jl777c</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 11:02 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549184398558494730" id="message-549184398558494730">
+                        <div class="chatlog__content">
+                            <span class="markdown">node 1 needs the data from node 2</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549184429239566345" id="message-549184429239566345">
+                        <div class="chatlog__content">
+                            <span class="markdown">node 2 need the data from node 1</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/347922216429813760/947757b6add4a77197be279b88a7f75b.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="grewalsatinder#9653" data-user-id="347922216429813760">grewalsatinder</span>
+
+
+                <span class="chatlog__timestamp">24-Feb-19 11:03 AM</span>
+
+                    <div class="chatlog__message " data-message-id="549184622555168768" id="message-549184622555168768">
+                        <div class="chatlog__content">
+                            <span class="markdown">is that okay, if I execute and confirm here before I execute next command?</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549185101897007120" id="message-549185101897007120">
+                        <div class="chatlog__content">
+                            <span class="markdown">already have address and pubkeys from both nodes.
+<div class="pre pre--multiline nohighlight">node 1 pubkey: 03b4e12dbf7345f476b5e1217534a70bf0f4f28b234fa8f0f427c282449051d5de
+node 2 pubkey: 02f04b469d52bc83d87663458ed0f2875bf81be93b0aa6e15e127ddd78c442d674</div></span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549185328859185153" id="message-549185328859185153">
+                        <div class="chatlog__content">
+                            <span class="markdown">compiled latest changes using makecclib and then make in src on both nodes</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549185375524880386" id="message-549185375524880386">
+                        <div class="chatlog__content">
+                            <span class="markdown">had komodod stopped while compiling</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549185436908519424" id="message-549185436908519424">
+                        <div class="chatlog__content">
+                            <span class="markdown">started komodod with the <span class="pre pre--inline">pubkey</span> of both nodes of their own</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549185559462019093" id="message-549185559462019093">
+                        <div class="chatlog__content">
+                            <span class="markdown">executing combine command on node 1</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549185584107618304" id="message-549185584107618304">
+                        <div class="chatlog__content">
+                            <span class="markdown"><div class="pre pre--multiline nohighlight">musig-cli cclib combine 18 &#39;[&quot;03b4e12dbf7345f476b5e1217534a70bf0f4f28b234fa8f0f427c282449051d5de&quot;,&quot;02f04b469d52bc83d87663458ed0f2875bf81be93b0aa6e15e127ddd78c442d674&quot;]&#39;</div></span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549185808645750813" id="message-549185808645750813">
+                        <div class="chatlog__content">
+                            <span class="markdown"><div class="pre pre--multiline nohighlight">{
+  &quot;pkhash&quot;: &quot;fdc05d65d1de360fe09ffb53fd51b4e52f4138860e0f49bff03654c39749a850&quot;,
+  &quot;combined_pk&quot;: &quot;02d5851912f810ec10e8ec4db9a78306cb62dad110548a3e20e24efd42aab8f841&quot;,
+  &quot;result&quot;: &quot;success&quot;
+}</div></span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549185883778187291" id="message-549185883778187291">
+                        <div class="chatlog__content">
+                            <span class="markdown">saved this in my nodes editor:
+<div class="pre pre--multiline nohighlight">pkhash: fdc05d65d1de360fe09ffb53fd51b4e52f4138860e0f49bff03654c39749a850
+combined_pk: 02d5851912f810ec10e8ec4db9a78306cb62dad110548a3e20e24efd42aab8f841</div></span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549186024002027524" id="message-549186024002027524">
+                        <div class="chatlog__content">
+                            <span class="markdown">sending 0.001 coin as I only got 0.1 coins from faucetget</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549186045703356426" id="message-549186045703356426">
+                        <div class="chatlog__content">
+                            <span class="markdown">sending from node 1</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549186083729047580" id="message-549186083729047580">
+                        <div class="chatlog__content">
+                            <span class="markdown"><div class="pre pre--multiline nohighlight">musig-cli -ac_name=MUSIG  cclib send 18 &#39;[&quot;02d5851912f810ec10e8ec4db9a78306cb62dad110548a3e20e24efd42aab8f841&quot;,0.001]&#39;</div></span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549186252079890432" id="message-549186252079890432">
+                        <div class="chatlog__content">
+                            <span class="markdown"><div class="pre pre--multiline nohighlight">{
+  &quot;hex&quot;: &quot;0400008085202f890126b0b7cc029e65bb0be6288e9ccc8f381b3b72f391b3b986471da9aacfa27f870100000049483045022100ad691cf425eb3f855f56398d2df3f88b0fcf11426a80a75cdcdac076d38ca7c3022013cc36fffd1652c307ab08bcd2a96960e87f012a354e6845f1752b7156dac42a01ffffffff03b0ad010000000000302ea22c8020c71ddb3aac7f9b9e4bdacf032aaa8b8e4433c4ff9f8a43cebb9c1f5da96928a48103120c008203000401cc00ed940000000000232103b4e12dbf7345f476b5e1217534a70bf0f4f28b234fa8f0f427c282449051d5deac0000000000000000266a2412782102d5851912f810ec10e8ec4db9a78306cb62dad110548a3e20e24efd42aab8f841000000003c0c00000000000000000000000000&quot;,
+  &quot;txid&quot;: &quot;bd0242b36f7bebd5e346dda9bcd726fe661e418b1c09c10d0bb9b9b3e58320d2&quot;,
+  &quot;result&quot;: &quot;success&quot;
+}</div></span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549186300880748564" id="message-549186300880748564">
+                        <div class="chatlog__content">
+                            <span class="markdown">doing sendrawtransaction now</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549186449434738703" id="message-549186449434738703">
+                        <div class="chatlog__content">
+                            <span class="markdown"><div class="pre pre--multiline nohighlight">$ musig-cli -ac_name=MUSIG  sendrawtransaction 0400008085202f890126b0b7cc029e65bb0be6288e9ccc8f381b3b72f391b3b986471da9aacfa27f870100000049483045022100ad691cf425eb3f855f56398d2df3f88b0fcf11426a80a75cdcdac076d38ca7c3022013cc36fffd1652c307ab08bcd2a96960e87f012a354e6845f1752b7156dac42a01ffffffff03b0ad010000000000302ea22c8020c71ddb3aac7f9b9e4bdacf032aaa8b8e4433c4ff9f8a43cebb9c1f5da96928a48103120c008203000401cc00ed940000000000232103b4e12dbf7345f476b5e1217534a70bf0f4f28b234fa8f0f427c282449051d5deac0000000000000000266a2412782102d5851912f810ec10e8ec4db9a78306cb62dad110548a3e20e24efd42aab8f841000000003c0c00000000000000000000000000
+bd0242b36f7bebd5e346dda9bcd726fe661e418b1c09c10d0bb9b9b3e58320d2</div></span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="549186852796497941" id="message-549186852796497941">
+                        <div class="chatlog__content">
+                            <span class="markdown"><div class="pre pre--multiline nohighlight">satinder@ubuntu:~$ musig-cli getrawtransaction bd0242b36f7bebd5e346dda9bcd726fe661e418b1c09c10d0bb9b9b3e58320d2 1</div>
+<div class="pre pre--multiline nohighlight">,
+    {
+      &quot;value&quot;: 0.09760000,
+      &quot;valueSat&quot;: 9760000,
+      &quot;n&quot;: 1,
+      &quot;scriptPubKey&quot;: {
+        &quot;asm&quot;: &quot;03b4e12dbf7345f476b5e1217534a70bf0f4f28b234fa8f0f427c282449051d5de OP_CHECKSIG&quot;,
+        &quot;hex&quot;: &quot;2103b4e12dbf7345f476b5e1217534a70bf0f4f28b234fa8f0f427c282449051d5deac&quot;,
+        &quot;reqSigs&quot;: 1,
+        &quot;type&quot;: &quot;pubkey&quot;,
+        &quot;addresses&quot;: [
+          &quot;RFBTa1km458aXCfU4yFpBQnAdCiDixAwEZ&quot;
+        ]
+      }
+    },</div></span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+</div>
+
+</body>
+</html>

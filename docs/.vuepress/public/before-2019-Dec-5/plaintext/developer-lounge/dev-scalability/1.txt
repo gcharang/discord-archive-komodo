@@ -1,0 +1,420 @@
+==============================================================
+Guild: Komodo
+Channel: dev-scalability
+Topic: Discussion about Komodo scalability. Komodo has demonstrated 20,000 TPS.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[27-May-18 04:10 AM] matrix-appservice-discord-t2bot#8432
+@snoa:matrix.org on matrix would like to bridge this channel. Someone with permission to manage webhooks please reply with !approve or !deny in the next 5 minutes
+
+[27-May-18 04:10 AM] noashh#2802
+!approve
+
+[27-May-18 04:10 AM] matrix-appservice-discord-t2bot#8432
+Thanks for your response! The matrix bridge has been approved
+
+[27-May-18 04:49 AM] smk762#0000
+Can anyone please validate (or fix) the accuracy of this statement? - "Komodo is testing the limits of payment processing per second, and has already achieved rates faster than Visa and Mastercard. This is achieved through "Grandmother of Merkle" notarisation via linked assetchains, with atomic swap capability allowing parallel chains to act as a single cryptocurrency."
+
+[27-May-18 04:51 AM] blackjok3r#0000
+I don't think atomic swaps have anything to do with this system.
+
+[27-May-18 04:51 AM] emmanux#0000
+more related to crypto-conditions, i think
+
+[27-May-18 04:51 AM] blackjok3r#0000
+yes, crypto conditions and MoMoM .
+
+[27-May-18 04:51 AM] smk762#0000
+yeah, thought so. sounds cool but 😛
+
+[27-May-18 04:53 AM] smk762#0000
+anyone got linkage to a good explanation of crypto-conditions?
+
+[27-May-18 04:54 AM] emmanux#0000
+there will be a "burning protocol" that will allow crosschain transactions.
+
+[27-May-18 04:54 AM] blackjok3r#0000
+https://tools.ietf.org/html/draft-thomas-crypto-conditions-04
+
+[27-May-18 04:55 AM] smk762#0000
+burn protocol also sounds cool
+
+[27-May-18 04:56 AM] smk762#0000
+Better? 
+"Komodo is testing the limits of payment processing per second, and has already achieved rates faster than Visa and Mastercard.
+This is achieved through "Grandmother of Merkle" notarisation via linked assetchains, with crypto-conditions (https://tools.ietf.org/html/draft-thomas-crypto-conditions-04) instituting a burn protocol, allowing parallel chains to act as a single cryptocurrency."
+
+[27-May-18 04:57 AM] blackjok3r#0000
+Sounds pretty good to my understanding of it. 🙂
+
+[27-May-18 04:59 AM] smk762#0000
+Awse. Finally cleaned up my vis code on git and added a readme - https://github.com/smk762/txscl_vis/
+
+[27-May-18 04:59 AM] smk762#0000
+Still on random, will begin linking to the AWS data @Mylo is working on.
+
+[27-May-18 05:02 AM] blackjok3r#0000
+Yeah if you want any specific data to be pushed to the DB let me or @Mylo know. I have all the new blaster code running from `-blocknotify` so I can run any cli call you want directly after a block is mined.
+
+[27-May-18 05:04 AM] blackjok3r#0000
+I was thinking to just calculate the number of payments (and grab number of TX) in each block and push that plus assetchain name and timestamp to the DB. Otherwise the DB may need to do all the calculations from the RAW blocks and end up becoming a bottleneck.
+
+[27-May-18 05:06 AM] smk762#0000
+I had a list somewhere. What you just mentioned is enough for the majors. Beyond that, it's just a "last 5 min" sum or average of those values which I can do on my side.
+
+[27-May-18 05:06 AM] smk762#0000
+How are you calculating payments?
+
+[27-May-18 09:05 AM] blackjok3r#0000
+I am not yet lol. Need to test the fastest way to get the TX. I think something like what james proposed is the best way.
+
+[27-May-18 09:33 AM] smk762#0000
+If you include blocksize in the stats emitted I have a basic method. Will need more data from different payment per tx test runs to refine it more but it's good with 20s and 100s from the lst test we ran
+
+[27-May-18 09:51 AM] blackjok3r#0000
+I think we dont really need to measure anything between 1 and 100. I can test a few diffrent ones though. I need the docker files, as the scripts will change a little bit when its all put into containers. After that then we cna start chains and test different things very easily. Once we have 2 docker images that work perfectly for a single chain, its just a matter of starting X of them.
+
+[27-May-18 09:52 AM] blackjok3r#0000
+The blaster nodes dont use very much resource as it is, so stats gathering there is the best solution.
+
+[27-May-18 09:52 AM] blackjok3r#0000
+Should have these ready tomorrow. I think any calculations should be made on the blaster nodes, just to distribute load for endless scale.
+
+[27-May-18 10:29 AM] smk762#0000
+sounds good. If broadcast from blaster nodes does it need to be calculated or is it already available as a blast variable?
+
+[27-May-18 10:29 AM] smk762#0000
+Guess it's just a matter of finding the most efficient payments per tx value then?
+
+[27-May-18 10:40 AM] blackjok3r#0000
+There is an output from blaster at the end of each loop that gives a TX/s value that it sent to the mempool. The blasters run a fair bit faster than the miners can clear them, so there is a condition after each blast loop that checks if the mempool is under 5mb before running the next loop. I dont have an optimal setup for this yet either, but as long as the mempool is always full thats all that matters really. It took quite a while before it got to a 5MB mempool using 1payment TX/s.
+
+[27-May-18 10:44 AM] blackjok3r#0000
+Larger TX (100p) will fill the mempool a lot faster, than small ones (1p). But a single blast node is able to saturate a mempool of a single chain without issues for any TX size. The hardest thing will be starting all the chains at the same time. I might be able to change the block height condition to check for a timestamp instead. That might not be as fool proof though. I dont think it will matter too much if if it slowly ramps up to the maximum, it can pretty much run indefinatly as long as we have disk space for the chains to fit into.
+
+[27-May-18 12:44 PM] imylomylo#0000
+this is why it's good to get a cloud provider onboard for testing.  aws, redhat, canonical, ibm, azure any of them - they'll have the bandwidth and processing power to provide explorer-like services in the future and for individual businesses - to have an explorer-like api to talk to other chains to verify blockhash - save doing it manually - have oracles, like with MoMoM data... shrug...
+
+[29-May-18 12:58 AM] imylomylo#0000
+resync with `txindex=1` takes a while!  blackjok3r that paris test box is at 18% from 10 hours ago - if you can let it do it's thing that would be ace so i can get txdata out of it later in the week for aws explorer.
+
+[29-May-18 02:47 AM] blackjok3r#0000
+No worries, havent even touched it since putting LTC/DASH on there mate.
+
+[29-May-18 02:05 PM] libscott#0000
+Hi all
+
+[29-May-18 02:05 PM] libscott#0000
+is anyone running chains with the momo branch?
+
+[29-May-18 02:06 PM] jl777#0000
+all the TXSCL chains use -ac_cc=1
+
+[29-May-18 02:08 PM] libscott#0000
+I see
+
+[29-May-18 02:08 PM] libscott#0000
+are they running momo branch
+
+[29-May-18 02:08 PM] jl777#0000
+no, just normal
+
+[29-May-18 02:09 PM] jl777#0000
+but do all nodes need to run the momo branch? maybe for now test in a non-forking way?
+
+[29-May-18 02:09 PM] libscott#0000
+the burn tx will work but import tx wont
+
+[29-May-18 02:10 PM] libscott#0000
+also import tx will only work if ac_cc >= 2, the way I made it
+
+[29-May-18 02:10 PM] libscott#0000
+ie 1 is not a valid fungibility group
+
+[29-May-18 02:12 PM] shossain#0000
+i've kept them running as -ac_cc=3
+
+[29-May-18 02:12 PM] jl777#0000
+the ac_cc val cant change without changing the chain, so they started at ac_cc=3?
+
+[29-May-18 02:12 PM] jl777#0000
+if so it is ready to test
+
+[29-May-18 02:13 PM] shossain#0000
+```
+TXSCL002
+{
+  "version": 1001550,
+  "protocolversion": 170003,
+  "KMDversion": "0.1.1",
+  "notarized": 0,
+  "prevMoMheight": 0,
+  "notarizedhash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "notarizedtxid": "0000000000000000000000000000000000000000000000000000000000000000",
+  "notarizedtxid_height": "mempool",
+  "KMDnotarized_height": 0,
+  "notarized_confirms": 0,
+  "walletversion": 60000,
+  "balance": 777776.99940000,
+  "blocks": 8488,
+  "longestchain": 8488,
+  "timeoffset": 0,
+  "tiptime": 1527602910,
+  "connections": 1,
+  "proxy": "",
+  "difficulty": 5.867738866757834,
+  "testnet": false,
+  "keypoololdest": 1527096377,
+  "keypoolsize": 101,
+  "paytxfee": 0.00000000,
+  "relayfee": 0.00000100,
+  "errors": "",
+  "CCid": 3,
+  "name": "TXSCL002",
+  "p2pport": 20748,
+  "rpcport": 20749,
+  "magic": -491927048,
+  "premine": 77000000,
+  "reward": 100000000
+}
+```
+
+[29-May-18 02:15 PM] blackjok3r#0000
+No. I created 4 new chains running the momo branch for @SHossain
+
+[29-May-18 02:16 PM] jl777#0000
+ok, as long as we are on the same page
+
+[29-May-18 02:17 PM] blackjok3r#0000
+I think we can just use the seed node for any test you need. 4 chains is enough? 
+I have not genereated new chains for now test yet, we are working with just 2 local chains until we have the 2 docker images working. I started on the TxBlaster image today but got caught up. Will finish it tomorrow unless I run into any problems.
+
+[29-May-18 02:19 PM] libscott#0000
+Awesome 👍
+
+[29-May-18 02:20 PM] libscott#0000
+Do all chains have different symbols?
+
+[29-May-18 02:20 PM] libscott#0000
+How can i see how to sync with them?
+
+[29-May-18 02:20 PM] shossain#0000
+TXSCL, TXSCL000, TXSCL001, TXSCL002
+
+[29-May-18 02:20 PM] libscott#0000
+Nice
+
+[29-May-18 02:21 PM] blackjok3r#0000
+as long as you use the seed ip @SHossain has you will sync with those chains.
+
+[29-May-18 02:21 PM] blackjok3r#0000
+every other parameter is the same as the old ones.
+
+[29-May-18 02:21 PM] libscott#0000
+Perfect
+
+[29-May-18 02:21 PM] shossain#0000
+```
+git clone https://github.com/blackjok3rtt/scaletest
+cd scaletest
+
+{Embed}
+https://github.com/blackjok3rtt/scaletest
+blackjok3rtt/scaletest
+scaletest - Scripts For Scale Test
+https://avatars3.githubusercontent.com/u/30971146?s=400&v=4
+
+[29-May-18 02:21 PM] blackjok3r#0000
+all the coins_7776 files should also be the same. But those are generated when you start them
+
+[29-May-18 02:22 PM] shossain#0000
+```
+git clone https://github.com/blackjok3rtt/scaletest
+cd scaletest
+git checkout 4096
+# Edit the *sync_assets* script to use -ac_cc=3
+./setchains 0 3
+./sync_assets
+```
+
+[29-May-18 02:23 PM] shossain#0000
+@libscott ^^
+
+[29-May-18 02:24 PM] shossain#0000
+blackjok3r you may want to update the komodod for the `momo` branch in your seed node. there were some updates.
+
+[29-May-18 02:24 PM] blackjok3r#0000
+ok I will do that now 🙂
+
+[29-May-18 02:24 PM] shossain#0000
+thanks
+
+[29-May-18 02:25 PM] libscott#0000
+Exciting!
+
+[29-May-18 02:34 PM] blackjok3r#0000
+``` ./assets-cli getblockcount
+TXSCL
+2798
+TXSCL000
+8497
+TXSCL001
+8501
+TXSCL002
+8500
+```
+
+[29-May-18 02:34 PM] blackjok3r#0000
+updated, this is good?
+
+[29-May-18 02:35 PM] shossain#0000
+```
+$ ./assets-cli getinfo | grep "blocks"
+  "blocks": 2798,
+  "errors": "WARNING: check your network connection, 4 blocks received in the last 4 hours (240 expected)",
+  "blocks": 8496,
+  "blocks": 8500,
+  "blocks": 8499,
+```
+
+[29-May-18 02:37 PM] blackjok3r#0000
+😞
+
+[29-May-18 02:37 PM] blackjok3r#0000
+```Please help, human!
+Error: A block chain reorganization has been detected that would roll back 8499 blocks! This is larger than the maximum of 99 blocks, and so the node is shutting down for your safety.
+
+Reorganization details:
+- Current tip: 0165598e1c08e393753bafc230348cd63c91f8c4a50321908b2c1ef7327cda17, height 8499, work 00000000000000000000000000000000000000000000000000000000000ba67b
+- New tip:     036b49e035c54d9e2237de3f06b27ee18bcdb1c4a5951dff49ad696d9515d978, height 17705, work 00000000000000000000000000000000000000000000000000000000000ca6b9
+- Fork point:  TXSCL000 027e3758c3a65b12aa1046462b486d0a63bfa1beae327897f56c5cfb7daaae71, height 0
+
+Please help, human!
+Error: A block chain reorganization has been detected that would roll back 8499 blocks! This is larger than the maximum of 99 blocks, and so the node is shutting down for your safety.
+
+Reorganization details:
+- Current tip: 0165598e1c08e393753bafc230348cd63c91f8c4a50321908b2c1ef7327cda17, height 8499, work 00000000000000000000000000000000000000000000000000000000000ba67b
+- New tip:     0152746ce305dbda8fc155e9c968fe67b470682b2dab0a76039a6f1928959bb8, height 17706, work 00000000000000000000000000000000000000000000000000000000000ca6f6
+- Fork point:  TXSCL000 027e3758c3a65b12aa1046462b486d0a63bfa1beae327897f56c5cfb7daaae71, height 0
+
+Please help, human!
+```
+
+[29-May-18 02:37 PM] blackjok3r#0000
+we need to clear these and start again?
+
+[29-May-18 02:38 PM] shossain#0000
+it would be better
+
+[29-May-18 02:39 PM] blackjok3r#0000
+I know what I did.. yes we need to start again.
+
+[29-May-18 02:39 PM] blackjok3r#0000
+I think my seed ip was set :faceplm:
+
+[29-May-18 02:39 PM] blackjok3r#0000
+it picked up old chains
+
+[29-May-18 02:39 PM] shossain#0000
+i had them running for last 5 days
+
+[29-May-18 02:39 PM] blackjok3r#0000
+yeah, i might be able to resync them off you by just clearing mine.
+
+[29-May-18 02:39 PM] blackjok3r#0000
+only take a minute.
+
+[29-May-18 02:41 PM] shossain#0000
+👍🏼
+
+[29-May-18 02:42 PM] blackjok3r#0000
+its working fine 😄
+
+[29-May-18 02:44 PM] libscott#0000
+so are these chains notarising to a test kmd chain?
+
+[29-May-18 02:46 PM] jl777#0000
+not yet
+
+[29-May-18 02:46 PM] jl777#0000
+but the code accepts any OP_RETURN as notarized for TXSCL* chains
+
+[29-May-18 02:53 PM] shossain#0000
+i'll start the notarization soon. need to wait for the ACs to sync on 2nd node
+
+[29-May-18 03:09 PM] shossain#0000
+```
+$ ./assets-cli getinfo | grep "blocks"
+  "blocks": 2826,
+  "blocks": 8525,
+  "blocks": 8527,
+  "blocks": 8523,
+```
+@libscott blackjok3r can you confirm you have this?
+
+[29-May-18 03:09 PM] shossain#0000
+```
+"blocks": 2829,
+  "blocks": 8528,
+  "blocks": 8528,
+  "blocks": 8525,
+```
+
+[29-May-18 03:09 PM] shossain#0000
+blocks are mining pretty fast
+
+[29-May-18 03:10 PM] shossain#0000
+use my node `addnode=77.75.121.138`
+
+[29-May-18 03:10 PM] shossain#0000
+put that in your coin.conf file
+
+[29-May-18 03:10 PM] shossain#0000
+nano ~/.komodo/TXSCL001/TXSCL001.conf
+
+[29-May-18 03:10 PM] shossain#0000
+nano ~/.komodo/TXSCL000/TXSCL000.conf
+
+[29-May-18 03:11 PM] shossain#0000
+nano ~/.komodo/TXSCL002/TXSCL002.conf
+
+[29-May-18 03:11 PM] libscott#0000
+oh i see
+
+[29-May-18 03:11 PM] shossain#0000
+nano ~/.komodo/TXSCL/TXSCL.conf
+
+[29-May-18 03:12 PM] libscott#0000
+cool, syncing blocks now
+
+[29-May-18 03:18 PM] libscott#0000
+"blocks": 2839,
+"errors": "WARNING: check your network connection, 47 blocks received in the last 4 hours (240 expected)",
+"blocks": 8544,
+"blocks": 8540,
+"blocks": 8539,
+
+[29-May-18 03:24 PM] shossain#0000
+```
+  "blocks": 2850,
+  "blocks": 8552,
+  "blocks": 8547,
+  "blocks": 8546,
+```
+
+[29-May-18 03:24 PM] shossain#0000
+started notarizing process
+
+[29-May-18 04:33 PM] shossain#0000
+1 node started notarizing 
+```
+[1] notarize TXSCL002->KMD 0009a1e112bb61f64bfd65e0e27626e7bcf0a917a838642b1751eefe46b7fbf1 ht.8618 minsigs.11 duration.72000 start.1527611460 MoM[8617] 7d4b4b1d2768f7c2cf356b565dfca0ee28ac8f702d954db7d6e325ba75cd93b1
+MoMoM.["TXSCL002", "855825", "0"] -> {"coin":"TXSCL002","kmdheight":855825,"ccid":0,"MoMs":[],"notarization_hash":"0000000000000000000000000000000000000000000000000000000000000000","MoMoM":"0000000000000000000000000000000000000000000000000000000000000000","data":"00000000000000000000000000000000000000000000000000000000000000000000000000000000"}
+```
+
+[29-May-18 05:52 PM] jl777#0000
+there is only one KMD chain
+

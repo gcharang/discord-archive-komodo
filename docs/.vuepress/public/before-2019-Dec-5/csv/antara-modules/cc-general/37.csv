@@ -1,0 +1,158 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"405011811511828481";"Alright#0419";"09-Aug-18 05:28 PM";"it would have reorged 1000+ blocks worth of txs if we kept AT1";"";"";
+"365714438864633856";"dukeleto#7326";"09-Aug-18 05:29 PM";"@Alright thanks for the reminder, i was just being lazy by using it still 😃";"";"";
+"365714438864633856";"dukeleto#7326";"09-Aug-18 05:29 PM";"it's nice to compare what AT1/AT2 gives me versus regtest";"";"";
+"405011811511828481";"Alright#0419";"09-Aug-18 06:29 PM";"@jl777c the thing I described yesterday is reproducible. If I start a node from scratch with new wallet and new pubkey and fund the pubkey, the cc commands don't work properly. 
+```
+./komodo-cli -ac_name=AT2 rewardslock 0time 062211921373a002306628024d2ac0c912b79ace5baed673473b1325e87e7006 100
+error code: -1
+error message:
+basic_string::_M_construct null not valid
+```
+```
+error finding unspent i.1 of 0, 100.00020000 vs 100.00020000
+cant find enough inputs 9999.99972528 note enough for 100.00000000
+cant find rewards inputs
+```";"";"";
+"405011811511828481";"Alright#0419";"09-Aug-18 06:29 PM";"once I get this node to mine a block, it works fine";"";"";
+"455741312273219595";"jl777c#5810";"09-Aug-18 06:30 PM";"does it have normal inputs?";"";"";
+"405011811511828481";"Alright#0419";"09-Aug-18 06:30 PM";"The tx that I funded the pubkey address with?";"";"";
+"405011811511828481";"Alright#0419";"09-Aug-18 06:30 PM";"was `sendtoaddress` from my other node";"";"";
+"455741312273219595";"jl777c#5810";"09-Aug-18 06:30 PM";"oh, i think I see, it needs p2pk inputs";"";"";
+"455741312273219595";"jl777c#5810";"09-Aug-18 06:31 PM";"not p2pkh. i will fix this tomorrow";"";"";
+"365714438864633856";"dukeleto#7326";"09-Aug-18 06:32 PM";"my tests only test the mining pathway, not the bug that Alright just found";"";"";
+"455741312273219595";"jl777c#5810";"09-Aug-18 06:32 PM";"I think another way, is if you have normal funds received and then send a tx, the change becomes of the right form";"";"";
+"455741312273219595";"jl777c#5810";"09-Aug-18 06:32 PM";"so sendtoaddress funds dont work directly?";"";"";
+"405011811511828481";"Alright#0419";"09-Aug-18 06:33 PM";"do not";"";"";
+"405011811511828481";"Alright#0419";"09-Aug-18 06:33 PM";"will try to send coins from this wallet and use the change";"";"";
+"455741312273219595";"jl777c#5810";"09-Aug-18 06:33 PM";"ok, it sort of makes sense";"";"";
+"365714438864633856";"dukeleto#7326";"09-Aug-18 09:36 PM";"```DEBUG:BitcoinRPC:-11-> faucetfund [""0""]
+funds=0
+DEBUG:BitcoinRPC:<-11- {""result"": ""error"", ""error"": ""funding amount must be positive""}
+DEBUG:BitcoinRPC:-12-> faucetfund [""-1""]
+funds=-100000000
+DEBUG:BitcoinRPC:<-12- {""result"": ""error"", ""error"": ""funding amount must be positive""}```";"";"";
+"365714438864633856";"dukeleto#7326";"09-Aug-18 09:37 PM";"i have some nice error checking of edge cases added to faucetfund which i will add to other similar rpc's";"";"";
+"365714438864633856";"dukeleto#7326";"09-Aug-18 09:39 PM";"i've merged the latest `jl777` branch into `cctests`";"";"";
+"365714438864633856";"dukeleto#7326";"09-Aug-18 09:50 PM";"all tests passing with the latest `jl777` changes 👍";"";"";
+"455741312273219595";"jl777c#5810";"09-Aug-18 09:51 PM";"i read that rewards CC was having problems with p2pkh utxo";"";"";
+"365714438864633856";"dukeleto#7326";"09-Aug-18 09:53 PM";"@jl777c does it make sense to do a check in `faucetfund` that the amount is <= the current wallet mature balance, or maybe not since the xtn can be broadcasted at  a different time when the balance is different?";"";"";
+"455741312273219595";"jl777c#5810";"09-Aug-18 09:54 PM";"i figure if you try to fund more than you have, it wont work and get an error";"";"";
+"371114647052615681";"Mylo#8306";"09-Aug-18 10:09 PM";"fundamount as a string got me when testing remote rpc";"";"";
+"371114647052615681";"Mylo#8306";"09-Aug-18 10:09 PM";"good morning ☕";"";"☕ (3)";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 05:45 AM";"i am writing lots of good CC tests, making very good progress";"";"👌 (1)";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 05:47 AM";"```DEBUG:BitcoinRPC:-13-> sendrawtransaction [""010000000bfd1.....
+DEBUG:BitcoinRPC:<-- {""result"":null,""error"":{""code"":-26,""message"":""16: bad-txns-inputs-duplicate""},""id"":13}```";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 05:47 AM";"that error is new to me, i get it when i try to broadcast the hex returned by faucetfund";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 05:49 AM";"```1187-        if (vInOutPoints.count(txin.prevout))
+1188-            return state.DoS(100, error(""CheckTransaction(): duplicate inputs""),
+1189:                             REJECT_INVALID, ""bad-txns-inputs-duplicate"");```";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 05:49 AM";"i almost know what that is trying to do. it's saying that one vout was tried to be used multiple times in 1 transaction?";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 05:54 AM";"look at the vins, likely there is a duplicate. how did you create the rawtx?";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 05:55 AM";"decode the rawtx to make sure it does have identical vin.i and vin.j";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 05:57 AM";"the strange thing is there is a duplicate filter so it shouldnt happen unless there is a bug in the duplicate filter";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 05:57 AM";"oh, wait. there is a possibility of this. fixing";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:00 AM";"pushed fix";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:01 AM";"it wont fix the already generated rawtx with duplicates, but if the wallet has a duplicate utxo in it, it will filter it out";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:02 AM";"all i did was mine blocks in regtest, then call `faucetfund ""1""`";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:02 AM";"then try to `sendrawtransaction` that hex";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:02 AM";"@Alright is rewardslock the only one with problems using p2pkh utxo?";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:02 AM";"```DEBUG:BitcoinRPC:-7-> getwalletinfo []
+DEBUG:BitcoinRPC:<-7- {""unconfirmed_balance"": 0.0, ""paytxfee"": 0.0, ""keypoololdest"": 1533879887, ""walletversion"": 60000, ""immature_balance"": 0.1, ""txcount"": 101, ""balance"": 5555564.90615135, ""keypoolsize"": 2}
+DEBUG:BitcoinRPC:-8-> faucetaddress []
+DEBUG:BitcoinRPC:<-8- {""FaucetCCaddress"": ""R9zHrofhRbub7ER77B7NrVch3A63R39GuC"", ""myCCaddress"": ""RCuoYrXABKT6SoReQHCkoBxxgb2aqEs86z"", ""result"": ""success"", ""Faucetmarker"": ""RKQV4oYs4rvxAWx1J43VnT73rSTVtUeckk"", ""myaddress"": ""RWPg8B91kfK5UtUN7z6s6TeV9cHSGtVY8D""}```";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:03 AM";"that is the relevant wallet/faucet info";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:03 AM";"@dukeleto I added duplicate filter for the case where the wallet is returning the same utxo more than once. I assumed that couldnt happen, but apparently it did";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:03 AM";"well, these tests are proving useful already";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:03 AM";"plz try latest version, preferably with the identical chain in the identical test";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:03 AM";"i will merge it in right now";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:04 AM";"your specific utxo set is a bit part of how this bug was exposed, so if that changes, it could be the bug goes away";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:04 AM";"yes, any automated tests will be very useful";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:05 AM";"just merged in jl777 branch, compiled, and waiting for tests to finish 😃";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:07 AM";"@jl777c your fixed worked, the exact same tests now pass";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:08 AM";"```DEBUG:BitcoinRPC:-17-> faucetinfo []
+DEBUG:BitcoinRPC:<-17- {""funding"": ""1.00000000"", ""result"": ""success"", ""name"": ""Faucet""}
+```";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:08 AM";"i finally funded a faucet in regtest, now i can test various other RPCs";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:09 AM";"actually 1 isnt enough";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:09 AM";"as faucetget needs 1 + txfee";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:09 AM";"is that value in assetoshis? if so, should `funding` be an integer?";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:10 AM";"funding is in coins with 8 decimals";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:10 AM";"only assets are in satoshis in some cases";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:11 AM";"all the other CC use floating point (as strings) for amounts";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:11 AM";"the reason assets are in satoshis is that they are creating colored utxo and tracking each one is critical";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:12 AM";"that makes sense";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:12 AM";"i think some assets rpc calls are using the ""wrong"" denomination (coins instead of satoshis), mostly because I just cut and pasted the argv[] handling";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:14 AM";"we are early enough and there are no GUI using CC yet, so feel free to fix things to make it more consistent";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:14 AM";"these initial CC are just that, the initial ones";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:14 AM";"reference implementations to show what can be done and how it is done";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:14 AM";"many mistakes were made as it was the first batch";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:15 AM";"my goal was minimum viable functionality";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:15 AM";"which I believe they have";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:15 AM";"considering assets has most of counterparty functionality";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:16 AM";"i will definitely be adding more error checking and friendlier JSON responses for errors, and probably RPC docs";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:16 AM";"also not sure of any other realtime dice games that are blockchain enforced";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:16 AM";"there is a sneaky bug that I had to fix, with uint64_t";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:17 AM";"what bug with uint64_t?";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:17 AM";"when I did a printf(%li), it shows a negative number for it, but foo < 0 returns false, because it's a uint";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:17 AM";"```--- a/src/wallet/rpcwallet.cpp
++++ b/src/wallet/rpcwallet.cpp
+@@ -5138,7 +5138,7 @@ UniValue faucetinfo(const UniValue& params, bool fHelp)
+
+ UniValue faucetfund(const UniValue& params, bool fHelp)
+ {
+-    UniValue result(UniValue::VOBJ); uint64_t funds; std::string hex;
++    UniValue result(UniValue::VOBJ); int64_t funds; std::string hex;
+     if ( fHelp || params.size() > 1 )
+         throw runtime_error(""faucetfund amount\n"");
+     if ( ensure_CCrequirements() < 0 )
+@@ -5147,7 +5147,7 @@ UniValue faucetfund(const UniValue& params, bool fHelp)
+     LOCK2(cs_main, pwalletMain->cs_wallet);
+     funds = atof(params[0].get_str().c_str()) * COIN;
+     if (funds > 0) {
+-        hex = FaucetFund(0,funds);
++        hex = FaucetFund(0,(uint64_t) funds);```";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:17 AM";"without that change, funds > 0 is never true for a uint64_t, or it's undefined behavior";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:17 AM";"or compiler-specific";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:17 AM";"yes, I missed that";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:18 AM";"i will fix that as I added error checking for positive amounts in various places";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:19 AM";"i am really enjoying working on CC tests, it's a good way to learn the API";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:24 AM";"yes, actually no better way to fully understand something";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 06:32 AM";"updated to use int64_t for all coin values (other than txfee)";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:32 AM";"awesome";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 06:34 AM";"just as a heads up to anybody who runs the CC tests, if you CRTL-C the test or it fails very hard (not just a test failure), the regtest komodod will still be running in the background and you must manually kill it";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 07:14 AM";"@jl777c i may have spoke too soon and I am seeing non-deterministic failures, i.e. it only fails sometimes with bad-txns-inputs-duplicate";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 07:14 AM";"i made sure to `make clean` and build from scratch";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 07:14 AM";"need to see the failing rawtx";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 07:14 AM";"this is why i said your exact utxo set is a key part of the test and any changes to it could change the result";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 07:15 AM";"hmm";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 07:15 AM";"i always seem to get the exact same amount of `balance` from my mined blocks, i haven't changed that";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 07:16 AM";"i assumed that i got the same utxo structure for each test. But I also changed the test to do `faucetfund 2` instead of `1`. I will get a failing output, it seems to fail less then half the time for me";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 07:18 AM";"it takes 2 mins to run the tests and i am trying to generate a failure again";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 07:19 AM";"got it";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 07:20 AM";"https://gist.github.com/leto/b09aac83d21659c69a17f65904778ab3";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 07:20 AM";"@jl777c plz let me know if I can give more debug info";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 07:22 AM";"definitely a duplicate. investigating";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 07:24 AM";"in case it helps, the test failure comes from this line in the tests: https://github.com/letolabs/komodo/blob/a6a826c625527a21f2953d7642a68a6f8da0f3d1/qa/rpc-tests/cryptoconditions.py#L122";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 07:24 AM";"pushed fix. it was a blatant out of order access bug";"";"";
+"365714438864633856";"dukeleto#7326";"10-Aug-18 07:27 AM";"great, i just merged in the latest jl777 and rebuilding";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 10:06 AM";"@Alright I just created a rewards plan with just one p2pkh utxo:
+01000000014bc959a774d9fdcbd3e57e5de0447fcd411e82d8861cf5d0e2539a2df2ef951e010000006a47304402206f36f57c8da5a8b555ae0ca6773b06fa465f500a182340429031fa399f71027e02206cf180ee1f05cb2050005a7f9de5b38ee29bc236203c2d06438be1f744b58eed012102f5d9c29c1720f244565ec6260b0b87774a3d1ec831282c40d0712fba2aeafe5fffffffff0400e40b5402000000302ea22c802065686d47a4049c2c845a71895a915eb84c04445896eec5dc0be40df0b31372da8103120c008203000401cc1027000000000000232103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb9ace0b56af414000000232102f5d9c29c1720f244565ec6260b0b87774a3d1ec831282c40d0712fba2aeafe5fac00000000000000002c6a2ae546746573740000000000ca9a3b000000008051010000000000805101000000000000e1f5050000000000000000";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 10:07 AM";"rewardsinfo e65f64e01a64d3a85f5e41fb21f14883d30e50ba930c4de2e6c7283382038d79
+{
+  ""result"": ""success"",
+  ""fundingtxid"": ""e65f64e01a64d3a85f5e41fb21f14883d30e50ba930c4de2e6c7283382038d79"",
+  ""name"": ""test"",
+  ""sbits"": 1953719668,
+  ""APR"": ""10.00000000"",
+  ""minseconds"": 86400,
+  ""maxseconds"": 86400,
+  ""mindeposit"": ""1.00000000"",
+  ""funding"": ""100.00000000""
+}";"";"";
+"455741312273219595";"jl777c#5810";"10-Aug-18 10:09 AM";"also rewards lock is working:
+rewardslock test e65f64e01a64d3a85f5e41fb21f14883d30e50ba930c4de2e6c7283382038d79 10
+{
+  ""result"": ""success"",
+  ""hex"": ""010000000136b55955c0baa517e46313a4ff58b8a452ece197b2eb15faabce07ee61464419010000006a47304402205a0eacaae5951dd5106906c9e8b393602fe2603fff6df00b4d47cb7350de0c7d02206619c27220a1e311e9a2c522e32c7eff50e9b9bd4cef12b91f4ecbd676af0dc7012102f5d9c29c1720f244565ec6260b0b87774a3d1ec831282c40d0712fba2aeafe5fffffffff0400ca9a3b00000000302ea22c802065686d47a4049c2c845a71895a915eb84c04445896eec5dc0be40df0b31372da8103120c008203000401cc1027000000000000232102f5d9c29c1720f244565ec6260b0b87774a3d1ec831282c40d0712fba2aeafe5fac68df701802000000232102f5d9c29c1720f244565ec6260b0b87774a3d1ec831282c40d0712fba2aeafe5fac00000000000000002c6a2ae54c7465737400000000798d03823328c7e6e24d0c93ba500ed38348f121fb415e5fa8d3641ae0645fe600000000""
+}";"";"";

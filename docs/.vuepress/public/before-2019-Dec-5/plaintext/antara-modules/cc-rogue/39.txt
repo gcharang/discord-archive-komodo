@@ -1,0 +1,408 @@
+==============================================================
+Guild: Komodo
+Channel: cc-rogue
+Topic: use FSM branch AND then build as normal
+ 
+./komodod -ac_name=ROGUE -ac_supply=1000000 -pubkey=<yourpubkey> -addnode=5.9.102.210  -ac_cclib=rogue -ac_perc=10000000 -ac_reward=100000000 -ac_cc=60001 -ac_script=2ea22c80203d1579313abe7d8ea85f48c65ea66fc512c878c0d0e6f6d54036669de940febf8103120c008203000401cc -daemon
+Guide here: https://github.com/KomodoPlatform/komodo/wiki/Get-Started-with-Rogue-Game
+Explorer: http://rogue.explorer.dexstats.info/
+Player's Handbook: https://github.com/jl777/komodo/blob/jl777/src/cc/rogue/rogue.doc
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[18-Feb-19 08:03 AM] TonyL#3577
+It's just finishing on last screen until I press any key
+
+{Attachments}
+https://cdn.discordapp.com/attachments/542758401516634112/546964866598961192/unknown.png
+
+[18-Feb-19 08:04 AM] TonyL#3577
+Working so smooth now
+
+[18-Feb-19 08:22 AM] TonyL#3577
+```Top Ten Scores:
+   Score Name
+ 1  1712 Doomguy: quit on level 8.
+22439
+22439
+Waiting for next block before bailout
+(Doomguy) found baton 2dfa2db6cb30d51f9c8e5460f05005f0204e9a9ebe449ac9fe82ccc47abe5f2a numkeys.4481 seed.992301165794668517 playerdata.916
+replay finished but readchar called
+gold.974 hp.37 strength.8 level.6 exp.312 dungeon.7 data[1228]
+
+extracted $$$gold.974 hp.37 strength.8 level.6 exp.312 dl.7 n.1 size.1228```
+A little bit longer
+
+[18-Feb-19 08:26 AM] TonyL#3577
+@jl777c by some reason replay interrupting on lvl7 while I've quited on lvl8
+
+[18-Feb-19 08:27 AM] TonyL#3577
+And it's interrupting exactly on moment where I quaff potion in hard fight
+
+[18-Feb-19 08:28 AM] jl777c#5810
+seems the last keystrokes tx wasnt added in?
+
+[18-Feb-19 08:29 AM] TonyL#3577
+Last tx from keystrokes.log is on blockchain and no errors
+
+[18-Feb-19 08:30 AM] TonyL#3577
+Will try to play with potions quaff 😃
+
+[18-Feb-19 08:30 AM] TonyL#3577
+Potions of restore HP and increase Str - I think there is something around it
+
+[18-Feb-19 08:31 AM] jl777c#5810
+yes could be
+
+[18-Feb-19 08:31 AM] TonyL#3577
+Will do simple test now: quaff, screenshot this moment, play a little and see replay then
+
+[18-Feb-19 08:35 AM] jl777c#5810
+replay exits now
+
+[18-Feb-19 08:35 AM] TonyL#3577
+@jl777c There is a bug with strength
+warrior restored with maxstrength 8, but it had maxstrength 17 and just current strength 8
+
+{Attachments}
+https://cdn.discordapp.com/attachments/542758401516634112/546973047433986058/unknown.png
+
+[18-Feb-19 08:36 AM] jl777c#5810
+well if current strength was 8, that is what is used
+
+[18-Feb-19 08:36 AM] jl777c#5810
+the idea is to inherit the player attributes
+
+[18-Feb-19 08:36 AM] jl777c#5810
+you complained if it was set to maxstrength, it didnt match the player strength
+
+[18-Feb-19 08:36 AM] jl777c#5810
+so i changed it
+
+[18-Feb-19 08:36 AM] jl777c#5810
+otherwise, you can bailout to do a restore strength
+
+[18-Feb-19 08:37 AM] jl777c#5810
+how did you lose 10 strength points?
+
+[18-Feb-19 08:37 AM] TonyL#3577
+I meant a little bit different
+There are max strength and current strength
+Before if you left dungeon you every time start new game with 16 from maxstrength strength
+
+[18-Feb-19 08:38 AM] jl777c#5810
+ok, I can set maxstrength to a min of 16
+
+[18-Feb-19 08:38 AM] TonyL#3577
+I just asked to do start new game with `previous game strength from maxstrength`
+
+[18-Feb-19 08:38 AM] jl777c#5810
+not sure it is good to do an effective restore strength to full via bailout
+
+[18-Feb-19 08:38 AM] TonyL#3577
+Max strength possible to increase by potions and also strength is possible to restore by potions
+
+[18-Feb-19 08:38 AM] TonyL#3577
+No need to restore
+
+[18-Feb-19 08:38 AM] TonyL#3577
+Just need to transfer state
+
+[18-Feb-19 08:38 AM] jl777c#5810
+ok, i will add that
+
+[18-Feb-19 08:38 AM] TonyL#3577
+Like a same with HP
+
+[18-Feb-19 08:39 AM] TonyL#3577
+HP transferring with current hp and max hp
+
+[18-Feb-19 08:39 AM] TonyL#3577
+So I can restore hp to max hp
+
+[18-Feb-19 08:39 AM] TonyL#3577
+But now I can't restore my strength to previous max strength because I'm limited by 8
+
+[18-Feb-19 08:40 AM] TonyL#3577
+I'm sorry if explained bad before
+
+[18-Feb-19 08:42 AM] TonyL#3577
+```how did you lose 10 strength points?```
+A lot of snakes with potion 😂
+
+[18-Feb-19 08:43 AM] jl777c#5810
+pushed fix
+
+[18-Feb-19 08:44 AM] TonyL#3577
+Reproduced bug with quaff
+
+[18-Feb-19 08:45 AM] TonyL#3577
+```./komodo-cli -ac_name=ROGUE cclib extract 17 \"[%22f49c62e2c9e2f0c165b2f8e9e6142d949b8c897ccb199e9d030a71490e1b2269%22,%22027d28d7d59ac499fac55f89b9e06933d66aaf74435c48326d83f8fbc6a7b14e85%22]\"
+``` replay interrupting on moment where I quaff potion
+
+[18-Feb-19 08:45 AM] TonyL#3577
+
+{Attachments}
+https://cdn.discordapp.com/attachments/542758401516634112/546975562611032074/quaff.png
+
+[18-Feb-19 08:45 AM] TonyL#3577
+I screenshoted this moment while played
+
+[18-Feb-19 08:46 AM] TonyL#3577
+Replay interrupting but actually I've played a little bit more and died because of Ice monster
+
+[18-Feb-19 08:48 AM] jl777c#5810
+ok, the change strength function was one that gave me a strange error. preserve the game where you can reproduce this
+
+[18-Feb-19 08:49 AM] TonyL#3577
+Yahoo doomguy not died because of this bug
+
+[18-Feb-19 08:49 AM] jl777c#5810
+for now i changed the cursesd to fprintf all messages. so if you do an extract it should show all the things it thinks happened. would be interesting to see if it just stops at the potion or keeps going to icemonster
+
+[18-Feb-19 08:50 AM] TonyL#3577
+Sure, let me update and check
+
+[18-Feb-19 08:55 AM] TonyL#3577
+```The emu scored an excellent hit on you
+Level: 1  Gold: 119    Hp: 32(37)  Str:  8(12)  Arm: 5   Exp: 6/314  
+You swing and hit the emu
+--More--
+You have defeated the emu
+Level: 1  Gold: 119    Hp: 32(37)  Str:  8(12)  Arm: 5   Exp: 6/316  
+Level: 1  Gold: 119    Hp: 33(37)  Str:  8(12)  Arm: 5   Exp: 6/316  
+Level: 1  Gold: 119    Hp: 34(37)  Str:  8(12)  Arm: 5   Exp: 6/316  
+Which direction? 
+You have defeated the bat
+Level: 1  Gold: 119    Hp: 34(37)  Str:  8(12)  Arm: 5   Exp: 6/318  
+Level: 1  Gold: 119    Hp: 35(37)  Str:  8(12)  Arm: 5   Exp: 6/318  
+Level: 1  Gold: 119    Hp: 36(37)  Str:  8(12)  Arm: 5   Exp: 6/318  
+Level: 1  Gold: 119    Hp: 37(37)  Str:  8(12)  Arm: 5   Exp: 6/318  
+Level: 2  Gold: 119    Hp: 37(37)  Str:  8(12)  Arm: 5   Exp: 6/318  
+gold.119 hp.37 strength.8/12 level.6 exp.318 dungeon.2 data[1228]
+extracted $$$gold.119 hp.37 strength.8/12 level.6 exp.318 dl.2
+The emu scored an excellent hit on you
+Level: 1  Gold: 119    Hp: 32(37)  Str:  8(12)  Arm: 5   Exp: 6/314  
+You swing and hit the emu
+--More--
+You have defeated the emu
+Level: 1  Gold: 119    Hp: 32(37)  Str:  8(12)  Arm: 5   Exp: 6/316  
+Level: 1  Gold: 119    Hp: 33(37)  Str:  8(12)  Arm: 5   Exp: 6/316  
+Level: 1  Gold: 119    Hp: 34(37)  Str:  8(12)  Arm: 5   Exp: 6/316  
+Which direction? 
+You have defeated the bat
+Level: 1  Gold: 119    Hp: 34(37)  Str:  8(12)  Arm: 5   Exp: 6/318  
+Level: 1  Gold: 119    Hp: 35(37)  Str:  8(12)  Arm: 5   Exp: 6/318  
+Level: 1  Gold: 119    Hp: 36(37)  Str:  8(12)  Arm: 5   Exp: 6/318  
+Level: 1  Gold: 119    Hp: 37(37)  Str:  8(12)  Arm: 5   Exp: 6/318  
+Level: 2  Gold: 119    Hp: 37(37)  Str:  8(12)  Arm: 5   Exp: 6/318  
+gold.119 hp.37 strength.8/12 level.6 exp.318 dungeon.2 data[1228]
+extracted $$$gold.119 hp.37 strength.8/12 level.6 exp.318 dl.2
+```
+
+[18-Feb-19 08:55 AM] TonyL#3577
+It's ending on battle with bat - quaff even not captured
+
+[18-Feb-19 08:57 AM] jl777c#5810
+so the replay is definitely broken... was the bat right before the quaff?
+
+[18-Feb-19 08:58 AM] TonyL#3577
+Bat was definitely before
+
+[18-Feb-19 08:58 AM] TonyL#3577
+``` Str:  8(12)```
+
+[18-Feb-19 08:58 AM] TonyL#3577
+Potion made my strength 9
+
+[18-Feb-19 08:58 AM] jl777c#5810
+how long is the replay?
+
+[18-Feb-19 08:58 AM] TonyL#3577
+Replay stops on moment where I quaff
+
+[18-Feb-19 08:58 AM] jl777c#5810
+i need to extract this. what is the gametxid and your pubkey
+
+[18-Feb-19 08:59 AM] TonyL#3577
+```./komodo-cli -ac_name=ROGUE cclib extract 17 \"[%22f49c62e2c9e2f0c165b2f8e9e6142d949b8c897ccb199e9d030a71490e1b2269%22,%22027d28d7d59ac499fac55f89b9e06933d66aaf74435c48326d83f8fbc6a7b14e85%22]\"```
+
+[18-Feb-19 08:59 AM] jl777c#5810
+reproduced. pretty spooky it is so easy to replay your game
+
+[18-Feb-19 09:01 AM] jl777c#5810
+so 'q' 'k' and it stopped?
+
+[18-Feb-19 09:01 AM] TonyL#3577
+I played fine after
+
+[18-Feb-19 09:02 AM] TonyL#3577
+Until was killed by icemonster one level later
+
+[18-Feb-19 09:02 AM] jl777c#5810
+it stops for me right after you get to level2
+
+[18-Feb-19 09:02 AM] TonyL#3577
+My yesterdays long games progress with Leeroy wasn't saved because of same reason
+
+[18-Feb-19 09:02 AM] TonyL#3577
+Now picture is clear in head 😃
+
+[18-Feb-19 09:03 AM] TonyL#3577
+I quaffed yesterday in game with Leeroy on lvl1 gain strength so thats why had replay till lvl1 when quited ond lvl15
+
+[18-Feb-19 09:03 AM] jl777c#5810
+gain strength, prevent afterlife for playerdata
+
+[18-Feb-19 09:03 AM] TonyL#3577
+```it stops for me right after you get to level2```
+Same for me - but actually I've died on level3 or even level4
+
+[18-Feb-19 09:04 AM] jl777c#5810
+ok, investigating. this will take a while. better to test new area like multiplayer
+
+[18-Feb-19 09:04 AM] TonyL#3577
+
+{Attachments}
+https://cdn.discordapp.com/attachments/542758401516634112/546980290942337025/quaff.png
+
+[18-Feb-19 09:04 AM] TonyL#3577
+It should stop on this frame - I've screenshoted when quaffed
+
+[18-Feb-19 09:04 AM] jl777c#5810
+i dont see the bulging muscles print
+
+[18-Feb-19 09:04 AM] TonyL#3577
+It's screenshot not from replay
+
+[18-Feb-19 09:04 AM] TonyL#3577
+I made it while played
+
+[18-Feb-19 09:05 AM] TonyL#3577
+To easy check if quaffing causing progress not saving
+
+[18-Feb-19 09:05 AM] jl777c#5810
+i know, now I have a 100% reproduced non-determinism bug!
+
+[18-Feb-19 09:05 AM] jl777c#5810
+i wonder if other potions (healing) have the same effect, but first let me track this one down. I might get a clean fix
+
+{Reactions}
+🙌 
+
+[18-Feb-19 09:09 AM] jl777c#5810
+it shows a 'Q' in the replay keystrokes
+
+[18-Feb-19 09:10 AM] TonyL#3577
+Previous game replay today was interrupted on point where I've quaffed potions of healing - so I wonder healing is causing bug as well. This game can be checked here if needed: ```./komodo-cli -ac_name=ROGUE cclib extract 17 \"[%22f49c62e2c9e2f0c165b2f8e9e6142d949b8c897ccb199e9d030a71490e1b2269%22,%22027d28d7d59ac499fac55f89b9e06933d66aaf74435c48326d83f8fbc6a7b14e85%22]\"```
+ but do not distract you from the current one 😃
+
+[18-Feb-19 09:10 AM] TonyL#3577
+I pressed `Q n` yup
+
+[18-Feb-19 09:11 AM] TonyL#3577
+Sometimes forgetting that `q`  is for quaff and print `Q`
+
+[18-Feb-19 09:16 AM] TonyL#3577
+Lunch time, brb in 15-20 mins
+
+[18-Feb-19 09:19 AM] jl777c#5810
+ok, that is the reason. the Q is being immediately making a quit
+
+[18-Feb-19 09:19 AM] jl777c#5810
+fixing
+
+[18-Feb-19 09:20 AM] TonyL#3577
+Wow
+
+{Reactions}
+👍 
+
+[18-Feb-19 09:23 AM] jl777c#5810
+so any game you did a 'Q' n will abort at that point
+
+[18-Feb-19 09:23 AM] jl777c#5810
+just triggered by 'q' thirst for potions
+
+[18-Feb-19 09:23 AM] jl777c#5810
+seems a clean fix
+
+[18-Feb-19 09:23 AM] jl777c#5810
+testing
+
+[18-Feb-19 09:38 AM] TonyL#3577
+Yeah yeah, pressed `Q+n` in both games - in one just missclicked, in second thought to quit first but then decided to use healing potions and continue the fight 😃
+
+[18-Feb-19 09:40 AM] jl777c#5810
+pushed test for fix
+
+{Reactions}
+👌 
+
+[18-Feb-19 09:40 AM] TonyL#3577
+Even didn't even have such idea that Q may cause it and didn't give attention to Q presses
+
+[18-Feb-19 09:40 AM] jl777c#5810
+it gets to icemonster
+
+[18-Feb-19 09:40 AM] jl777c#5810
+you can replay other strange results games
+
+[18-Feb-19 09:40 AM] jl777c#5810
+also ^c might cause problems
+
+[18-Feb-19 09:40 AM] TonyL#3577
+Real problems I have when apparently switch keyboard layout from English to Russian
+
+[18-Feb-19 09:41 AM] TonyL#3577
+Interface became unresponsible - though it's a bug first before not switched layout back 😃
+
+[18-Feb-19 09:41 AM] TonyL#3577
+Will test a fix now
+
+[18-Feb-19 09:42 AM] ca333#0118
+@TonyL - if you have a Mac available for a quick build beside your testings plz use https://github.com/KomodoPlatform/komodo/tree/rogue_multiOS - just run ./zcutil/build-mac.sh and let me know result.
+
+{Embed}
+https://github.com/KomodoPlatform/komodo/tree/rogue_multiOS
+KomodoPlatform/komodo
+Komodo. Contribute to KomodoPlatform/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[18-Feb-19 09:42 AM] ca333#0118
+this branch is in sync with jl777:jl777 and will deliver komodo rogue version.
+
+[18-Feb-19 09:42 AM] TonyL#3577
+Sure @ca333  👍  Will start build now
+
+{Reactions}
+👍 
+
+[18-Feb-19 09:45 AM] TonyL#3577
+@ca333 I wonder I have to `./makerogue` before build-mac? Or in this branch build script will build rogue before daemon build for me?
+
+[18-Feb-19 09:45 AM] ca333#0118
+no
+
+[18-Feb-19 09:45 AM] ca333#0118
+its a automated build. Rogue now has its own Makefile: https://github.com/KomodoPlatform/komodo/blob/rogue_multiOS/src/cc/Makefile_rogue and makerogue is being called in build-mac.sh
+
+{Embed}
+https://github.com/KomodoPlatform/komodo/blob/rogue_multiOS/src/cc/Makefile_rogue
+KomodoPlatform/komodo
+Komodo. Contribute to KomodoPlatform/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+{Reactions}
+💯 (2) 
+
+[18-Feb-19 09:45 AM] TonyL#3577
+https://github.com/KomodoPlatform/komodo/blob/rogue_multiOS/zcutil/build-mac.sh#L50 👌
+
+{Embed}
+https://github.com/KomodoPlatform/komodo/blob/rogue_multiOS/zcutil/build-mac.sh
+KomodoPlatform/komodo
+Komodo. Contribute to KomodoPlatform/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+

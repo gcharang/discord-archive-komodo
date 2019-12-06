@@ -1,0 +1,365 @@
+==============================================================
+Guild: Komodo
+Channel: dex-hyperdex
+Topic: IMPORTANT: Development is paused right now. Use at your own risk.
+Discussion and questions about HyperDEX atomic swap powered decentralized exchange. The project is maintained by HyperDEX team.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[03-Oct-18 04:52 AM] cipi#4502
+@Nabob sent that to me and i had a look... bobdeposit and alicepayment were done, both are unspent though... next would have been bob doing bobpayment, but that one is missing... if you call swapstatus for that swap it should be "rewinded" (alice gets back alicepayment and bob bobdeposit)
+
+[03-Oct-18 04:53 AM] cipi#4502
+yes, like this `curl --url "http://127.0.0.1:7783" --data "{\"userpass\":\"$userpass\",\"method\":\"swapstatus\",\"requestid\":3076945675,\"quoteid\":1167555031}"`
+
+[03-Oct-18 04:54 AM] Nabob#5004
+👆  That issue is with other user @strugglebus
+
+[03-Oct-18 04:55 AM] cipi#4502
+could be strugglebus was alice and tolken was bob in this failed swap?
+
+[03-Oct-18 04:56 AM] tolken#2655
+Yes, my bob died right at start
+
+[03-Oct-18 04:57 AM] tolken#2655
+Ran swapstatus with the ids
+
+[03-Oct-18 04:58 AM] tolken#2655
+```
+{"uuid":"0b0d17daa8cdcfa5350b60f804a4ca1eb8809cbb5d0e85c586906c9b4e867c37","expiration":1538549268,"tradeid":0,"requestid":1300182034,"quoteid":3781287769,"iambob":1,"Bgui":"nogui","Agui":"","gui":"nogui","bob":"BTC","srcamount":0.04012375,"bobtxfee":0.00020000,"alice":"KMD","destamount":235.29807823,"alicetxfee":0.00001000,"aliceid":"4670002419739852803","txChain":[],"sentflags":[],"values":[0, 0, 0.04513921, 0, 0, 0, 0, 0, 0, 0, 0],"result":"success","status":"finished","finishtime":1538521025,"bobdeposit":"6b1359eadafa6991da327d6b810bb1413b803dd7db0eec166c9b8efac5026335","alicepayment":"0000000000000000000000000000000000000000000000000000000000000000","bobpayment":"0000000000000000000000000000000000000000000000000000000000000000","paymentspent":"0000000000000000000000000000000000000000000000000000000000000000","Apaymentspent":"0000000000000000000000000000000000000000000000000000000000000000","depositspent":"0000000000000000000000000000000000000000000000000000000000000000","alicedexfee":"2e19b2c3020533f6ebe037d5085c86f90078324fe716a59651a005fe8818cd26","method":"tradestatus","finishtime":1538521025}
+```
+
+[03-Oct-18 04:59 AM] cipi#4502
+was there any additional output in console? btw, the ty from that swap:
+bobdeposit https://blockchair.com/bitcoin/transaction/6b1359eadafa6991da327d6b810bb1413b803dd7db0eec166c9b8efac5026335
+alicepayment https://kmdexplorer.io/tx/ffb1d45808635c95284cb7cea53093be8380048c5fc9b2c5794f79a6d607193a
+
+{Embed}
+https://blockchair.com/bitcoin/transaction/6b1359eadafa6991da327d6b810bb1413b803dd7db0eec166c9b8efac5026335
+Blockchair / Bitcoin / Transaction / 6b1359eadafa6991da327d6b810bb...
+Blockchair is a blockchain search and analytics engine featuring Bitcoin, Bitcoin Cash, Ethereum, and Litecoin explorers, as well as full-text search over blockchain data.
+https://blockchair.com/images/twitter_card.png
+
+[03-Oct-18 05:02 AM] cipi#4502
+hmmm, both are still unspent... if there is already a .finished file for that swap on bob, could be you will have to remove that and repeat the swapstatus-call again...
+
+[03-Oct-18 05:03 AM] tolken#2655
+Sure
+
+[03-Oct-18 05:05 AM] Nabob#5004
+so, swap Now waiting at 4/5 need to complete alice spend
+
+[03-Oct-18 05:08 AM] tolken#2655
+There we go, I see some action now
+
+[03-Oct-18 05:09 AM] cipi#4502
+yes, bob reclaimed his bobdeposit back: https://blockchair.com/bitcoin/address/3LqnsD6TcfwFj3VFqwR9wZt77t9cqZYVbW... waits for confirmation on BTC chain
+
+[03-Oct-18 05:10 AM] tolken#2655
+```
+{"uuid":"0b0d17daa8cdcfa5350b60f804a4ca1eb8809cbb5d0e85c586906c9b4e867c37","expiration":1538549268,"tradeid":0,"requestid":1300182034,"quoteid":3781287769,"iambob":1,"Bgui":"nogui","Agui":"","gui":"nogui","bob":"BTC","srcamount":0.04012375,"bobtxfee":0.00020000,"alice":"KMD","destamount":235.29807823,"alicetxfee":0.00001000,"aliceid":"4670002419739852803","txChain":[{"stage":"bobdeposit","coin":"BTC","txid":"6b1359eadafa6991da327d6b810bb1413b803dd7db0eec166c9b8efac5026335","amount":0.04513921}, {"stage":"bobrefund","coin":"BTC","txid":"25d5599160cf9fc77a23a58e098b7186212a7aaf36108985269ad304d14b25c1","amount":0.04493921}],"sentflags":["bobdeposit", "bobrefund"],"values":[0, 0, 0.04513921, 0, 0, 0, 0, 0.04493921, 0, 0, 0],"result":"success","status":"finished","finishtime":1538543262,"bobdeposit":"6b1359eadafa6991da327d6b810bb1413b803dd7db0eec166c9b8efac5026335","alicepayment":"0000000000000000000000000000000000000000000000000000000000000000","bobpayment":"0000000000000000000000000000000000000000000000000000000000000000","paymentspent":"0000000000000000000000000000000000000000000000000000000000000000","Apaymentspent":"0000000000000000000000000000000000000000000000000000000000000000","depositspent":"25d5599160cf9fc77a23a58e098b7186212a7aaf36108985269ad304d14b25c1","alicedexfee":"2e19b2c3020533f6ebe037d5085c86f90078324fe716a59651a005fe8818cd26","method":"tradestatus","finishtime":1538543262}
+```
+
+[03-Oct-18 05:10 AM] tolken#2655
+Another finished file has shown up.
+
+[03-Oct-18 05:10 AM] cipi#4502
+yes, happened, 1 confirm: https://blockchair.com/bitcoin/transaction/25d5599160cf9fc77a23a58e098b7186212a7aaf36108985269ad304d14b25c1
+
+{Embed}
+https://blockchair.com/bitcoin/transaction/25d5599160cf9fc77a23a58e098b7186212a7aaf36108985269ad304d14b25c1
+Blockchair / Bitcoin / Transaction / 25d5599160cf9fc77a23a58e098b7...
+Blockchair is a blockchain search and analytics engine featuring Bitcoin, Bitcoin Cash, Ethereum, and Litecoin explorers, as well as full-text search over blockchain data.
+https://blockchair.com/images/twitter_card.png
+
+[03-Oct-18 05:12 AM] cipi#4502
+if alice now calls swapstatus again, she should be able to spend alicepayment: https://kmdexplorer.io/tx/ffb1d45808635c95284cb7cea53093be8380048c5fc9b2c5794f79a6d607193a
+
+[03-Oct-18 05:17 AM] tolken#2655
+Thank you @lukechilds for calling attention to this, @cipi for your help!
+
+[03-Oct-18 05:22 AM] Nabob#5004
+@strugglebus  @Hermes 👆 
+Thanks @cipi  for a quick look
+
+[03-Oct-18 06:15 AM] artem.pikulin#0794
+@lukechilds @strugglebus Hi, in case of stuck swaps it's required to provide MM logs and swap data from `DB/SWAPS` directory. In this particular case I need to know bob deposit tx id to retrieve Bob PrivN (in case bob refunded the deposit). Please provide this info in PM and I'll be able to help.
+
+[03-Oct-18 06:18 AM] artem.pikulin#0794
+@lukechilds Could you please point @strugglebus how he's able to find logs and SWAPS data?
+
+[03-Oct-18 07:07 AM] Nabob#5004
+@artem.pikulin  Seems issue resolved, bob node stopped suddenly, after he started and initiated `swapstatus` call. then, everything goes fine
+struglebus is alice
+tolken is bob
+
+[03-Oct-18 07:10 AM] artem.pikulin#0794
+@Nabob https://kmdexplorer.io/address/bD7WSJat5QmzpKtpmdF5AMi2UKAGUXAmSE - the address reported as APayment and KMD is still there, need to send it back to struglebus.
+
+[03-Oct-18 07:10 AM] jl777c#5810
+i think strugglebus just needs to do a swapstatus
+
+[03-Oct-18 10:06 AM] lukechilds#2707
+Opening HyperDEX will do that automatically
+
+[03-Oct-18 10:09 AM] lukechilds#2707
+But if SWAPS data is still needed then you can get that by clicking `Debug > Show App Data` in HyperDEX
+Then inside the directory that pops up navigate to: `marketmaker/DB/SWAPS`
+
+[03-Oct-18 10:50 AM] artem.pikulin#0794
+@strugglebus Please follow steps Luke posted above, if HyperDEX restart doesn't help please send the swap data to me in PM.
+
+[03-Oct-18 01:54 PM] coiin#0708
+I need some kind of support in Hyperdex or Barterdex.  In Hyperdex i'm able to take a trade but nothing happens. Still pending/open after one our. In Braterdex thesame.  Anyone could help?
+
+[03-Oct-18 01:57 PM] coiin#0708
+If i log into Barterdex there are shown the UTXOs, in Hyperdex not. If i loginto with my agama-wallet seed do i haveto make Inventory?
+
+[03-Oct-18 01:58 PM] coiin#0708
+Want to buy DEX (InstantDex)
+
+[03-Oct-18 01:59 PM] Nabob#5004
+No, Utxo's will be splitted automatically, with which pair you are trading ?
+
+[03-Oct-18 01:59 PM] coiin#0708
+KMD/DEX
+
+[03-Oct-18 01:59 PM] coiin#0708
+buy DEX
+
+[03-Oct-18 02:01 PM] coiin#0708
+I tried several times, with different options (in Barterdex) in Hyperdex there nothing to switch..
+
+[03-Oct-18 02:02 PM] coiin#0708
+Hyperdex nightly
+
+[03-Oct-18 02:06 PM] coiin#0708
+should i upload debug-data?
+
+[03-Oct-18 02:09 PM] Nabob#5004
+Dm me details, checking my side also
+
+[03-Oct-18 02:10 PM] coiin#0708
+I'm new to discord. Dm means paste here?
+
+[03-Oct-18 02:10 PM] Nabob#5004
+direct message
+
+[03-Oct-18 02:12 PM] coiin#0708
+the debug data output is too long for Dm
+
+[03-Oct-18 02:12 PM] coiin#0708
+want you need to know?
+
+[03-Oct-18 02:12 PM] coiin#0708
+what
+
+[03-Oct-18 02:13 PM] Nabob#5004
+please use paste.bin
+
+[04-Oct-18 09:25 AM] Mylo#8306
+@yo88 hyperdex is another trading software built on same barterdex network, same API calls, different gui and features.  barterdex is the "reference" of anything that is possible on the dex network.   hyperdex is a polished version of the functions for trading.
+
+[04-Oct-18 02:58 PM] d_lzz#0109
+The latest HyperDEX doesn't work on my Debian Stretch.  There is only the screen that asks if I want to add HyperDEX to  the menu. After that it just "hangs", nada. The terminal doesn't give any errors. The previous version also didn't work. The versions before that did start correctly. I have to add that I'm testing it inside Whonix, although I doubt it has anything to do with it.
+
+[04-Oct-18 02:59 PM] d_lzz#0109
+I'm using the AppImage
+
+[04-Oct-18 04:13 PM] qmc#4355
+HyperDEX requires only 2 electrum servers right ?
+
+[04-Oct-18 04:14 PM] qmc#4355
+Oh yeah, there was that icon issue -.-
+
+[04-Oct-18 04:15 PM] qmc#4355
+Could someone point me to what that was - something to do with a svg with particulate size or?
+
+[04-Oct-18 04:16 PM] xRobeSx#5136
+this is the icon repo: https://github.com/atomiclabs/cryptocurrency-icons  not sure what your specific issue was though
+
+{Embed}
+https://github.com/atomiclabs/cryptocurrency-icons
+atomiclabs/cryptocurrency-icons
+A set of icons for all the main cryptocurrencies and altcoins, in a range of styles and sizes. - atomiclabs/cryptocurrency-icons
+https://avatars0.githubusercontent.com/u/1520924?s=400&v=4
+
+[04-Oct-18 04:19 PM] qmc#4355
+No issue - I just remember there being a requirement to make a PR somewhere with an icon
+
+[04-Oct-18 04:20 PM] qmc#4355
+for listing
+
+[04-Oct-18 04:35 PM] xRobeSx#5136
+That would be the repo then.
+
+[04-Oct-18 05:15 PM] qmc#4355
+@jl777c https://github.com/jl777/coins/pull/165 if and when possible 🙏
+
+{Embed}
+https://github.com/jl777/coins/pull/165
+update QMC electrums by project-qmc · Pull Request #165 · jl777/...
+https://avatars1.githubusercontent.com/u/43421218?s=400&v=4
+
+[04-Oct-18 05:16 PM] qmc#4355
+Damn you're fast 😉 Thanks !
+
+[04-Oct-18 09:02 PM] qmc#4355
+Well the UTXO stuff is a nightmare for the average user, no can seem to trade
+
+[04-Oct-18 09:03 PM] qmc#4355
+How about listing @ hyperdex - how long would that take? maybe it would make a difference :/
+
+[05-Oct-18 12:39 AM] qmc#4355
+@lukechilds ?
+
+[05-Oct-18 12:42 AM] lukechilds#2707
+@qmc Please fill out this issue template: https://github.com/atomiclabs/cryptocurrency-icons/issues/new
+
+{Embed}
+https://github.com/atomiclabs/cryptocurrency-icons/issues/new
+Build software better, together
+GitHub is where people build software. More than 28 million people use GitHub to discover, fork, and contribute to over 85 million projects.
+https://assets-cdn.github.com/images/modules/open_graph/github-logo.png
+
+[05-Oct-18 12:43 AM] lukechilds#2707
+And then open an issue on https://github.com/atomiclabs/hyperdex/ requesting QMC and link to the `cryptocurrency-icons` issue and mention it's added to the `jl777/coins` repo
+
+{Embed}
+https://github.com/atomiclabs/hyperdex
+atomiclabs/hyperdex
+Grandma-Friendly Atomic Swaps. Contribute to atomiclabs/hyperdex development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/1520924?s=400&v=4
+
+[05-Oct-18 12:44 AM] qmc#4355
+Thanks (we're on barter with electrum btw - figured that matters)
+
+[05-Oct-18 12:44 AM] qmc#4355
+oh ok
+
+[05-Oct-18 12:44 AM] qmc#4355
+thanks!
+
+[05-Oct-18 12:57 AM] qmc#4355
+@lukechilds done and done 😃 (https://github.com/atomiclabs/hyperdex/issues/541)
+
+{Embed}
+https://github.com/atomiclabs/hyperdex/issues/541)
+atomiclabs/hyperdex
+Grandma-Friendly Atomic Swaps. Contribute to atomiclabs/hyperdex development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/1520924?s=400&v=4
+
+[05-Oct-18 12:58 AM] qmc#4355
+You could probably get a bot to test and merge this to be honest...something in combination with travis
+
+[05-Oct-18 12:58 AM] qmc#4355
+just saying - could save you time and effort 😉
+
+[05-Oct-18 01:05 AM] qmc#4355
+is hyperdex volume counted as barterdex volume on CMC?
+
+[05-Oct-18 01:42 AM] qmc#4355
+Alright, hopefully the end users/traders understand it better (and we'll post a video tutorial whenever we are listed)
+
+[05-Oct-18 01:42 AM] qmc#4355
+Volume seems low to say the least, marketing issue or usage issue?
+
+[05-Oct-18 02:37 AM] lukechilds#2707
+We intentionally haven't marketed HyperDEX yet, because we don't think it's ready
+
+[05-Oct-18 02:37 AM] lukechilds#2707
+it's still beta
+
+[05-Oct-18 02:37 AM] lukechilds#2707
+ready for testing and early adopters but not quite ready for the general public
+
+[05-Oct-18 12:31 PM] qmc#4355
+I see
+
+[05-Oct-18 12:31 PM] qmc#4355
+@lukechilds was I supposed to make a PR and not open an issue ?
+
+[05-Oct-18 12:32 PM] qmc#4355
+or, anyone for that matter ?
+
+[05-Oct-18 04:18 PM] qmc#4355
+Just made one anyway
+
+[05-Oct-18 04:18 PM] qmc#4355
++ opened and issue on the git(s)
+
+[05-Oct-18 05:19 PM] qmc#4355
+@sindresorhus confirming these are the domains we are using for electrum
+
+[05-Oct-18 09:54 PM] qmc#4355
+Anyone around ? 🤔
+
+[05-Oct-18 10:38 PM] Hermes#6934
+I think they are on another time zone, but they should be getting back to you shortly
+
+[06-Oct-18 04:28 AM] lukechilds#2707
+Me and Sindre are currently in Thai time
+
+[06-Oct-18 04:28 AM] lukechilds#2707
+PR is fine if you know what you're doing
+
+[06-Oct-18 04:28 AM] lukechilds#2707
+😉
+
+[06-Oct-18 04:29 AM] lukechilds#2707
+our fault, but we haven't added any docs for adding a coin yet, we're in the process of that, so we might need to tweak a few things
+
+[06-Oct-18 04:29 AM] lukechilds#2707
+@qmc we'll check it out next week
+
+[06-Oct-18 05:49 AM] jspook16#3059
+please also let me know. I'd like to add a coin as well
+
+[06-Oct-18 06:12 AM] tolken#2655
+FYI Liquidity SALT pairs added for KMD, BTC, LTC, BCH.
+
+{Reactions}
+👍 (2) 
+
+[06-Oct-18 06:38 AM] tolken#2655
+Scratch eth, don’t know why it isn’t showing up on books. Maybe can’t pair eth with an erc-20 yet?
+
+[06-Oct-18 07:41 AM] hastrup#8742
+every time i try to use hdex my trade is getting stuck what can i do?
+
+[06-Oct-18 07:41 AM] hastrup#8742
+7453e0a02c292e0d6284afc07d77334fb1019f20b6221cfc87419de8e163a5df
+
+[06-Oct-18 10:15 AM] qmc#4355
+@lukechilds Thanks, meaning we could be added only some time next week ? The PR should be fine - our team are mostly devs....and travis is happy
+
+[06-Oct-18 10:18 AM] qmc#4355
+Was hoping it was the same process of barterdex since not a single user has managed to trade there, but kop kun ka
+
+[06-Oct-18 05:39 PM] tolken#2655
+@lukechilds ```
+Unhandled Promise RejectionError: Document update conflict <Original stack missing>     at module.exports.input (app://-/bundle.js:124485:16)     at handleError (app://-/bundle.js:124345:9)     at reason (app://-/bundle.js:124390:4)     at invokeFunc (app://-/bundle.js:124655:19)     at trailingEdge (app://-/bundle.js:124702:14)     at timerExpired (app://-/bundle.js:124690:14)
+```
+
+[06-Oct-18 05:42 PM] tolken#2655
+Seeing this in hyperDex 0.1.3 although I seem to be able to continue. Since that error came up I’m 3/5 through swap steps buying bch with kmd.  Confirmed Alice payment, waiting quite some time for my fee. Not sure if it’s still going or not.
+
+[07-Oct-18 03:20 AM] lukechilds#2707
+Thanks
+
+[07-Oct-18 03:20 AM] lukechilds#2707
+can you submit an issue, we'll look into it
+
+[07-Oct-18 03:21 AM] lukechilds#2707
+just FYI for everyone  here, I'm focussing mainly on claiming KMD interest on the Ledger for the time being
+
+[07-Oct-18 03:21 AM] lukechilds#2707
+I'm still working on HyperDEX
+
+[07-Oct-18 03:22 AM] lukechilds#2707
+but Ledger interest is my priority at the moment
+
+[07-Oct-18 03:22 AM] lukechilds#2707
+@sindresorhus is probably a better point of contact for HyperDEX related issues for the time being
+

@@ -1,0 +1,150 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"455741312273219595";"jl777c#5810";"21-Mar-19 05:27 PM";"just a heads up, after discussing a specific usecase today, I coded the Payments CC with methods: txidopret, create, list, info, fund, release
+validation isnt done yet, but that shouldnt take long once the rpc calls are debugged. just a heads up so there are no complaints about being blind sided by a new CC.
+payments CC allows to define a fixed allocation of incoming funds. the destination addresses can be however many normal scriptPubKeys and one that needs an opreturn. if more than one opreturn is needed, then a chain of payments CC creates can be created, one per opreturn.
+The usecase this was for was a smartchain that wanted to fund X amount to founders reward and the rest to rewards CC. the rewards CC needs an opreturn, so things got a bit more complex than you would expect.
+total time so far: 8 hours
+all the rpc calls have been tested in the easy cases, all that is left is the validation and to make sure the non-zero param cases and opreturn in the paymentsrelease is working properly";"";"🔥 (12)";
+"455741312273219595";"jl777c#5810";"22-Mar-19 10:19 AM";"fixed all the reported bugs and it works now with a single opreturn destination";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 10:19 AM";"also changed it so it payouts out a minimum of a 0.0001 to all destinations, this might create a small subsidy but simplifies validation";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 10:20 AM";"@blackjok3r";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 10:20 AM";"@Alright";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 10:20 AM";"with a minimum payout set, it will create a predictable vout vector";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 10:23 AM";"just had a paymentsrelease try to spend 0.00009999 more than it should have";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 10:23 AM";"didn't have that latest commit though, might be related, rebuilding now";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 10:27 AM";"@jl777c the additional 0.0001 vout isn't accounted for in inputs it seems";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 10:28 AM";"Oh it must use the the paymentfund utxos as inputs";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 10:29 AM";"so it must be subtracted from one of the other outputs?";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 10:31 AM";"https://pastebin.com/puArnHVe what is vout3 here? the 0.0001?";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 10:31 AM";"if it's simply a marker, you could make it a CC vout with value of 0 I believe";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 10:31 AM";"this way you don't need to subtract 0.0001 from another vout";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 10:31 AM";"we need to be able to extract the pubkey from the vout";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 10:31 AM";"a CC vout is mostly a hash";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 10:32 AM";"i add inputs for newamount +2*txfee";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 10:33 AM";"problem is that the inputs are limited by the paymentsfund utxos";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 10:33 AM";"it can't just grab any random utxo to spend";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 10:33 AM";"Does that make sense? Like if we're splitting the payentfund utxos 1:2 to two separate vouts, we need to subtract the 0.0001 from one of them, no?";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 10:34 AM";"or it means there needs to be 5.0002 in inputs available";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 10:35 AM";"what was the sum of vouts for that tx? vs size of vins?";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 10:37 AM";"7.3 in, 7.30009999 out";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 10:37 AM";"pushed fix";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 10:40 AM";"I think that assumes there always will be a change vout";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 10:41 AM";"spending the exact amount would lead to the same vin vout mismatch I think";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 10:41 AM";"i think it is ok as the bug was that i was miscalculating change";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 10:51 AM";"@jl777c I believe it doesn't pay a tx fee now";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 10:51 AM";"I was able to do a `paymentsrelease` and it paid a 1 sat tx fee because of the rounding on the ratio split";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 10:52 AM";"yes, off by one. pushed fix";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 11:11 AM";"@blackjok3r after you get the validation sorted, what do you think about adding a dividends payment method? The idea is to use token balances to allocate a total amount. You can use getsnapshot code to get a complete list of balances in addresses, then for each one would need to do a CCtoken_balance to filter out the ones with non-zero tokenbalance. Summing all the satoshis for the token gets the denominator to use to allocate the funded amount. I dont think it should be a consensus involved rpc, just a way to issue a dividend of X amount of coins to the token holders. Having an exclude list of addresses would be a practical thing.";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 11:12 AM";"once something like this works, maybe a filename can be specified that has the output of a getsnapshot call. that way people could do airdrops to a coin by doing a getsnapshot > file, then a paymentsdividend [file,amount,dustlevel,excluded addresses]";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 11:13 AM";"iguana has something like this it you need an example";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 11:15 AM";"another utility that would be handy would be to convert a getsnapshot output into a set of paymentstxidopret tx and a paymentscreate for each group of 255 (about the max that will fit). Then it would need to make a ""linked list"" of paymentcreates where the first one is to 255 address + createtxid for the second, the second would have the same with createtxid CC address for the third, etc. until it reaches the end.";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 11:16 AM";"A bit of tricky calculation to figure out how much the linkd list allocation is (should be sum of all the remaining txidoprets) for each createtxid";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 11:18 AM";"once this is setup, then a single payment to the initial payments CC address should allow a dividend payment to be released and by sorting the payout addresses to the largest first, then the amounts get smaller and smaller at each stage. so at some point it wont be big enough for a minimum, but this will track things precisely (other than the 0,0001 rounding)";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 11:19 AM";"It seems possible to convert a cashflow allocation to a set of paymentscreate definitions, so even a spreadsheet to payments CC ""compiler"" would be possible";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 12:01 PM";"generating tx with 64 to 256 payments will be able to complete airdrops with not so many tx";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 12:43 PM";"@dukeleto if you were still interested in using rewards CC on HUSH, this would be how you do it";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 12:44 PM";"Man, I'm excited to see what people do with this 😊";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 12:44 PM";"also @jorian @siu - Chainmakers I believe you could use this to fund the dice plan on KMDICE from the coinbases";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 12:44 PM";"@Decker maybe some tools you can make along these lines?";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Mar-19 12:49 PM";"@Alright do you have any docs for this?";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Mar-19 12:49 PM";"or how i can test? branch, chain?";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 12:49 PM";"sorry no docs, he made  it yesterday 😂";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Mar-19 12:50 PM";"😂";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 12:50 PM";"Well there is a simple how to in payments.cpp";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Mar-19 12:50 PM";"ok";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 12:50 PM";"I have a walkthrough of it if you want";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 12:50 PM";"not a real guide, just the rpc commands of each step";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 12:50 PM";"jl777 branch";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Mar-19 12:51 PM";"thanks";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Mar-19 12:53 PM";"payments CC is a result of total dev hours of about 6 hrs for first iteration and may be about another 6 hrs for debugging, and then maybe few more hours to what it is now.";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Mar-19 12:53 PM";"As I read stuff and calculate it 🤔";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 12:54 PM";"more like 10hrs total so far for me, not counting testing time and review time. plus validation is totally missing";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Mar-19 12:54 PM";"I'm still unclear what payments CC does";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Mar-19 12:54 PM";"the example use case I mean";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 12:55 PM";"allows to blockchain enforce payment allocations";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 12:55 PM";"say you have an agreement to share income 10%, 10%, 40%, 40% across 4 receivers";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 12:55 PM";"you can define this and then funds can be sent to a single address knowning that the exact percentages will be paid out";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 12:56 PM";"very useful for businesses that need to share a single source of income across different groups";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Mar-19 12:56 PM";"aha.... a part of the decentralized organization's funds management!";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 12:56 PM";"or you can make a onetime payment CC to do an airdrop";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 12:56 PM";"killer feature is being able to do this in a coinbase transaction";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 12:56 PM";"IMO";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 12:57 PM";"design the coinbase to do *whatever*";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 12:57 PM";"it arose from a usecase where the founders reward for the blockchain needed to partially fund a rewards CC";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 12:57 PM";"but I generalized it from that";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Mar-19 12:57 PM";"awesome! have another question... will be back in 5";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"22-Mar-19 01:19 PM";"I see good implementation opportunity in CHAIN";"";"";
+"365714438864633856";"dukeleto#7326";"22-Mar-19 08:21 PM";"this looks like a useful CC";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Mar-19 12:57 AM";"Yeah those things sound pretty useful. Going to knock out validation today. Shouldnt be that hard. Hopefully have it working in 6-8H 😃 
+Then we can try and make some cool scripts to use it.";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Mar-19 08:01 AM";"https://github.com/jl777/komodo/pull/1347";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Mar-19 08:02 AM";"Has a few issues I cant really work out. Seems an integer rounding problem. Apart from that it validates the PAY chain just fine.";"";"";
+"405011811511828481";"Alright#0419";"23-Mar-19 05:43 PM";"@jl777c What do you think the best way for initializing a chain that uses a ac_script paying to payments CC is? I just started a chain that does it, but the only way to sync it is to boostrap block 1";"";"";
+"405011811511828481";"Alright#0419";"23-Mar-19 05:44 PM";"an exception for this block 1 magic check? a height activated ac_script maybe?";"";"";
+"455741312273219595";"jl777c#5810";"23-Mar-19 06:01 PM";"get the payments CC vout from one instance of the chain, then start a new chain with that, it wont change if it is paying to the 'opret' form of 'F'";"";"";
+"455741312273219595";"jl777c#5810";"23-Mar-19 06:02 PM";"@blackjok3r that is why we needed the opreturn form of payment, so we can make an -ac_script chain that doesnt have a txid dependency";"";"";
+"455741312273219595";"jl777c#5810";"23-Mar-19 06:26 PM";"so we cant deprecate the opreturn form of the 'F' funding tx";"";"";
+"455741312273219595";"jl777c#5810";"24-Mar-19 06:21 PM";"and we also need to add a -mineropreturn komodod arg to make the miner add an opreturn";"";"";
+"455741312273219595";"jl777c#5810";"24-Mar-19 06:22 PM";"set -ac_founders to > 10, then you have 10 blocks to create the payments CC to get the createtxid that allows to know the opreturn needed. just do a fund with opretflag and extract the opreturn";"";"";
+"455741312273219595";"jl777c#5810";"24-Mar-19 06:22 PM";"use that for -mineropreturn and use the CC vout for the -ac_script";"";"";
+"455741312273219595";"jl777c#5810";"24-Mar-19 06:22 PM";"restart the daemon";"";"";
+"455741312273219595";"jl777c#5810";"24-Mar-19 06:23 PM";"at the founders reward it will fund the payments CC and then you can do a release as per the createtxid was made";"";"";
+"405011811511828481";"Alright#0419";"24-Mar-19 07:49 PM";"Still trying to figure this out. How can I ensure the 1of2 CC address will be the same on the new ac_script chain?";"";"";
+"455741312273219595";"jl777c#5810";"24-Mar-19 08:17 PM";"because the useopret form of Fund sends to the global CC address, always the same";"";"";
+"455741312273219595";"jl777c#5810";"24-Mar-19 08:17 PM";"it is like faucetfund is always having the same CC vout";"";"";
+"405011811511828481";"Alright#0419";"24-Mar-19 09:24 PM";"@jl777c @blackjok3r there seems to be an off by 1 error in the validation code because of the rounding on the ratio split. If you do the minimum release amount and the ratio drops 1 sat in the rounding, it gives this error
+```
+komodo-cli -ac_name=PAY paymentsrelease ""[%2256d99ce5b1173ce192e4742d3c854828af439358719917ab1eef9d9e0809651a%22,5]""
+
+vout.2 test.333333332 vs nVlaue.333333333
+does not meet minrelease amount.499999999 minrelease.500000000
+vin.0 is not a payments CC vout: txid.920de530e52e982a10c7e64a4551b3a2c5878e9f2e1bec82a2470441f64e11b4 vout.0
+CC Eval EVAL_PAYMENTS Invalid: vin is not paymentsCC type spending tx 920de530e52e982a10c7e64a4551b3a2c5878e9f2e1bec82a2470441f64e11b4
+```";"";"";
+"405011811511828481";"Alright#0419";"24-Mar-19 09:31 PM";"Ah this `vin.0 is not a payments CC vout:` seems an unrelated error";"";"";
+"405011811511828481";"Alright#0419";"24-Mar-19 09:31 PM";"figuring it out now";"";"";
+"405011811511828481";"Alright#0419";"24-Mar-19 09:38 PM";"```
+komodo-cli -ac_name=PAY paymentsinfo ""[%2256d99ce5b1173ce192e4742d3c854828af439358719917ab1eef9d9e0809651a%22]""
+{
+  ""lockedblocks"": 5,
+  ""totalallocations"": 3,
+  ""minrelease"": 5,
+  ""numoprets"": 1,
+  ""txidoprets"": [
+    {
+      ""txid"": ""8e497614627980a72405a09a4c86ed705dea65c3a86c59c7e1b6dd8f8b7b6fd4"",
+      ""scriptPubKey"": ""76a914f7e35fb76643f055c0d4cbcc769bb88a83d1cc9f88ac""
+    },
+    {
+      ""txid"": ""ff25e11fb3c9bbe251c51d39aecbc3a1b147b958c852ccfe2ee960e58d64dfe1"",
+      ""scriptPubKey"": ""2ea22c802065686d47a4049c2c845a71895a915eb84c04445896eec5dc0be40df0b31372da8103120c008203000401cc"",
+      ""opreturn"": ""6a2ae541414c0000000000000000000000000000000000000000000000000000000000000000000000000000""
+    }
+  ],
+  ""RSepiQwRvAJtmcp4vrkmRiiAEzdhYXVzCe"": 7.29950000,
+  ""REpyKi7avsVduqZ3eimncK4uKqSArLTGGK"": 5.00000000,
+  ""totalfunds"": 12.29950000,
+  ""result"": ""success""
+}
+```
+it's trying to spend the 5 coins in `REpyKi7avsVduqZ3eimncK4uKqSArLTGGK` address, but the check checks against whether it's spending from `RSepiQwRvAJtmcp4vrkmRiiAEzdhYXVzCe`";"";"";
+"405011811511828481";"Alright#0419";"24-Mar-19 09:38 PM";"Not sure I understand the purpose of `paymentsfund`'s optional argument `useopret`";"";"";
+"371114647052615681";"Mylo#8306";"25-Mar-19 01:34 AM";"`pub2createtxid` do we call this _protocol customization_ ? 😛";"";"";
+"371114647052615681";"Mylo#8306";"25-Mar-19 01:42 AM";"Just a question:
+https://github.com/jl777/komodo/blob/18c541a88557700c48c8ce33cebb5cd4902f4a99/src/cc/payments.cpp#L174
+
+`lockedblocks, minrelease, totalallocations`
+
+These are the things you've made up to make the payments-cc what it is?";"";"";
+"405011811511828481";"Alright#0419";"25-Mar-19 01:42 AM";"believe it's just a way to store the txid in a p2pk tx";"";"";
+"371114647052615681";"Mylo#8306";"25-Mar-19 01:44 AM";"yes it looks like that.  just some handy trick 😃";"";"";
+"405011811511828481";"Alright#0419";"25-Mar-19 01:44 AM";"`lockedblocks` is the amount of blocks before a `paymentsfund` utxo is able to be spent with `paymentsrelease`
+`minrelease` is the minimum amount a `paymentsrelease` tx can release
+`totalallocations` is the amount of vouts specified in `paymentscreate` I believe";"";"";
+"371114647052615681";"Mylo#8306";"25-Mar-19 01:48 AM";"thanks";"";"";
+"371114647052615681";"Mylo#8306";"25-Mar-19 04:34 AM";"```
+another utility that would be handy would be to convert a getsnapshot output into a set of paymentstxidopret tx and a paymentscreate for each group of 255 (about the max that will fit). Then it would need to make a ""linked list"" of paymentcreates where the first one is to 255 address + createtxid for the second, the second would have the same with createtxid CC address for the third, etc. until it reaches the end.
+```
+This linked list to other CC addresses is useful too.
+Eg Product -> Component -> SubComponent -> SubComponent^n";"";"";
+"371114647052615681";"Mylo#8306";"25-Mar-19 04:45 AM";"Oops, 255 already a lot of sub components, plz ignore my comment";"";"";

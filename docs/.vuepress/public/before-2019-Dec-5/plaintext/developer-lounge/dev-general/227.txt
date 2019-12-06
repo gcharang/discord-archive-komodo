@@ -1,0 +1,352 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[28-Sep-19 07:45 AM] Oszy#5734
+we just told you z_listreceivedbyaddress and z_listunspent
+
+[28-Sep-19 07:45 AM] gcharang#6833
+z_listunspent ( minconf maxconf includeWatchonly ["zaddr", ...] )
+set the maxconf to a value you like to get only the recent ones
+
+[28-Sep-19 07:45 AM] Oszy#5734
+try these see if that's what you are looking for
+
+[28-Sep-19 07:46 AM] lc123456#5516
+address is too many
+
+[28-Sep-19 07:46 AM] CrisF#3405
+Also, `z_listoperationids` might have what you need for recent transactions.
+
+[28-Sep-19 07:47 AM] lc123456#5516
+i work on the exchange
+
+[28-Sep-19 07:48 AM] Oszy#5734
+you need to log user balances then with z_listreceivedbyaddress
+
+[28-Sep-19 07:48 AM] lc123456#5516
+i need has filter condition interface
+
+[28-Sep-19 07:48 AM] gcharang#6833
+```
+./komodo-cli -ac_name=BEER z_listunspent 1 100 true "[\"zs1wqykmk74mv2ezjscpxsgzrn4fasqwh50tgk0ym64m45c5yw5fjtpkps64gle963veqzuj04872z\",\"zxxxxx\",\"zyyyyyyy\",]"
+```
+
+[28-Sep-19 07:48 AM] lc123456#5516
+but we  address is too many
+
+[28-Sep-19 07:49 AM] gcharang#6833
+run the command for each address and store the value?
+
+[28-Sep-19 07:49 AM] lc123456#5516
+./komodo-cli -ac_name=BEER z_listunspent 1 100 true "[\"zs1wqykmk74mv2ezjscpxsgzrn4fasqwh50tgk0ym64m45c5yw5fjtpkps64gle963veqzuj04872z\",\"zxxxxx\",\"zyyyyyyy\",]"  this order
+
+[28-Sep-19 07:49 AM] lc123456#5516
+if node is down,and confirm number more 100, will i miss some tx?
+
+[28-Sep-19 07:50 AM] lc123456#5516
+@gcharang
+
+[28-Sep-19 07:50 AM] gcharang#6833
+make sure the bolckchain is in sync when you are giving the command
+
+[28-Sep-19 07:52 AM] Oszy#5734
+Are you running ARRR node?
+
+[28-Sep-19 07:53 AM] gcharang#6833
+you will only get txns that have upto 100 confirmations
+also, this command only gives "unspent transactions" not all transactions
+
+[28-Sep-19 07:54 AM] Oszy#5734
+log everything internally in a db all the time, as soon as tx coming in, and opid-s when going out and everything will be fine
+
+[28-Sep-19 07:55 AM] lc123456#5516
+if i use it,and i cant search by z_listunspent interface
+
+[28-Sep-19 07:56 AM] lc123456#5516
+how can i search opids?
+
+[28-Sep-19 07:57 AM] dukeleto#7326
+`z_getoperationstatus`
+
+[28-Sep-19 07:57 AM] dukeleto#7326
+will return all current opids
+
+[28-Sep-19 07:57 AM] Oszy#5734
+then `z_getoperationresult (["operationid", ... ])` to see status
+
+[28-Sep-19 07:58 AM] Oszy#5734
+opid-s are only local not on the chain so always log them
+
+[28-Sep-19 07:58 AM] lc123456#5516
+but first i dont has operationid
+
+[28-Sep-19 07:59 AM] lc123456#5516
+if someone has one  deposit
+
+[28-Sep-19 07:59 AM] Oszy#5734
+opid is created when you make an operation like z_sendmany
+
+[28-Sep-19 07:59 AM] lc123456#5516
+i cant know this tx operation id
+
+[28-Sep-19 07:59 AM] lc123456#5516
+deposit
+
+[28-Sep-19 08:00 AM] CrisF#3405
+Do as DukeLeto suggested to get the opid
+
+[28-Sep-19 08:00 AM] lc123456#5516
+someone send coin to my exchange
+
+[28-Sep-19 08:00 AM] Oszy#5734
+no it is not for deposits (incoming)
+
+[28-Sep-19 08:00 AM] CrisF#3405
+Ahh
+
+[28-Sep-19 08:01 AM] Oszy#5734
+that someone has an address right? so as we said before, you can use `z_listreceivedbyaddress "address" ( minconf )` and `z_listunspent 1 100 true "[\"zs1wqykmk74mv2ezjscpxsgzrn4fasqwh50tgk0ym64m45c5yw5fjtpkps64gle963veqzuj04872z\",\"zxxxxx\",\"zyyyyyyy\",]"`
+
+[28-Sep-19 08:01 AM] gcharang#6833
+you give each user adifferent z-address as deposit address correct?
+
+[28-Sep-19 08:01 AM] Oszy#5734
+if you want to run this on multiple addresses put the command in a loop
+
+[28-Sep-19 08:02 AM] Oszy#5734
+@mrlynch are you with us? 😄 I think he has a "guide" of some sort for exchanges how to handle z-tx's 🙂
+
+[28-Sep-19 08:03 AM] gcharang#6833
+you give a user this deposit address:  zs1wqykmk74mv2ezjscpxsgzrn4fasqwh50tgk0ym64m45c5yw5fjtpkps64gle963veqzuj04872z
+to check if the deposit arrived, run
+```
+./komodo-cli -ac_name=BEER z_listunspent 1 100 true "[\"zs1wqykmk74mv2ezjscpxsgzrn4fasqwh50tgk0ym64m45c5yw5fjtpkps64gle963veqzuj04872z\"]"
+```
+in a loop with a timeout of say 10 seconds
+any deposits to this address will be credited to the user
+change the 1 to the minimum number of confs you choose
+
+{Reactions}
+☝ 
+
+[28-Sep-19 08:05 AM] lc123456#5516
+?
+
+[28-Sep-19 08:06 AM] lc123456#5516
+what should i do ?
+
+[28-Sep-19 08:06 AM] gcharang#6833
+and change max confs from 100 to 9999999
+because, if you change the deposit address for every  user, there won't be too many txns to this address
+
+[28-Sep-19 08:07 AM] lc123456#5516
+use this z_listunspent  interface
+
+[28-Sep-19 08:09 AM] gcharang#6833
+@lc123456 which part of my last two messages did you not understand?
+
+[28-Sep-19 08:10 AM] lc123456#5516
+and change max confs from 100 to 9999999
+
+[28-Sep-19 08:10 AM] lc123456#5516
+it will return me  too message
+
+[28-Sep-19 08:10 AM] lc123456#5516
+more than 100 confirm tx, all return me
+
+[28-Sep-19 08:11 AM] lc123456#5516
+and will time out
+
+[28-Sep-19 08:11 AM] gcharang#6833
+you don't need to filter for maxconfs because you have given this address to only one user
+
+[28-Sep-19 08:11 AM] gcharang#6833
+did you try it and it timed out?
+
+[28-Sep-19 08:12 AM] lc123456#5516
+has chinese?
+
+[28-Sep-19 08:12 AM] lc123456#5516
+./komodo-cli -ac_name=BEER z_listunspent 100 99999 false "[\"zs1wqykmk74mv2ezjscpxsgzrn4fasqwh50tgk0ym64m45c5yw5fjtpkps64gle963veqzuj04872z\"]"
+
+[28-Sep-19 08:12 AM] lc123456#5516
+like this?
+
+[28-Sep-19 08:12 AM] gcharang#6833
+someone in the community might know chinese
+I am not aware of anyone in the team
+
+[28-Sep-19 08:14 AM] gcharang#6833
+yes
+```
+./komodo-cli -ac_name=BEER z_listunspent 100 99999 false "["zs1wqykmk74mv2ezjscpxsgzrn4fasqwh50tgk0ym64m45c5yw5fjtpkps64gle963veqzuj04872z"]"
+```
+in the above command,
+100 is the minimum number of confirmations you are expecting
+99999 is the maximum number of confirmations you want to filter
+
+[28-Sep-19 08:15 AM] lc123456#5516
+for example
+
+[28-Sep-19 08:16 AM] lc123456#5516
+z_listunspent  it will filter unspent
+
+[28-Sep-19 08:16 AM] lc123456#5516
+if i spent it, this interface cant search it
+
+[28-Sep-19 08:16 AM] lc123456#5516
+this right?
+
+[28-Sep-19 08:16 AM] gcharang#6833
+yes
+
+[28-Sep-19 08:17 AM] lc123456#5516
+this not i need
+
+[28-Sep-19 08:17 AM] gcharang#6833
+if you spent it, use
+z_listreceivedbyaddress
+
+[28-Sep-19 08:17 AM] gcharang#6833
+```
+./komodo-cli -ac_name=BEER z_listreceivedbyaddress "ztfaW34Gj9FrnGUEf833ywDVL62NWXBM81u6EQnM6VR45eYnXhwztecW1SjxA7JrmAXKJhxhj3vDNEpVCQoSvVoSpmbhtjf"
+```
+
+[28-Sep-19 08:17 AM] lc123456#5516
+we has thousands of users
+
+[28-Sep-19 08:18 AM] lc123456#5516
+param send thousands of  addresss?
+
+[28-Sep-19 08:18 AM] lc123456#5516
+dont has like "listtransactions" ?
+
+[28-Sep-19 08:18 AM] gcharang#6833
+no, repeat this same command thousands of times
+
+[28-Sep-19 08:19 AM] lc123456#5516
+this not good idea
+
+[28-Sep-19 08:19 AM] CrisF#3405
+fyi, PIRATE has a Chinese channel: `https://discordapp.com/channels/512188534111862784/519706426810302466`
+
+[28-Sep-19 08:19 AM] lc123456#5516
+no
+
+[28-Sep-19 08:19 AM] CrisF#3405
+They deal in `Z`
+
+[28-Sep-19 08:20 AM] lc123456#5516
+if you can know i said
+
+[28-Sep-19 08:20 AM] lc123456#5516
+i dont need chinese
+
+[28-Sep-19 08:20 AM] CrisF#3405
+Why don't you like @gcharang's suggestion?
+
+[28-Sep-19 08:21 AM] lc123456#5516
+execute  z_listreceivedbyaddress  ervery time?
+
+[28-Sep-19 08:21 AM] Oszy#5734
+it's the only way to do it
+
+[28-Sep-19 08:21 AM] Oszy#5734
+that is how z works
+
+[28-Sep-19 08:23 AM] lc123456#5516
+zcash is private
+
+[28-Sep-19 08:23 AM] Oszy#5734
+zcash is both private and transparent, it's optional
+
+[28-Sep-19 08:23 AM] Oszy#5734
+Pirate is only private
+
+[28-Sep-19 08:23 AM] lc123456#5516
+xmr
+
+[28-Sep-19 08:23 AM] lc123456#5516
+grin
+
+[28-Sep-19 08:24 AM] Oszy#5734
+where is this conversation going now?
+
+[28-Sep-19 08:24 AM] CrisF#3405
+I'm not understanding @lc123456.
+
+[28-Sep-19 08:25 AM] gcharang#6833
+xmr and grin are completely different protocols
+you can see in this page: <https://zcash.readthedocs.io/en/latest/rtd_pages/payment_api.html>
+all the available z- commands
+
+[28-Sep-19 08:25 AM] gcharang#6833
+z-cash doesn't have any more methods to deal with z-addresses
+
+[28-Sep-19 08:25 AM] lc123456#5516
+can you support a good suggestion?
+
+[28-Sep-19 08:26 AM] gcharang#6833
+
+{Attachments}
+https://cdn.discordapp.com/attachments/463445317136809984/627420754698567680/Screenshot_from_2019-09-28_13-55-56.png
+
+[28-Sep-19 08:26 AM] lc123456#5516
+no, repeat this same command thousands of times
+
+[28-Sep-19 08:26 AM] lc123456#5516
+this not good idea
+
+[28-Sep-19 08:27 AM] gcharang#6833
+```
+can you support a good suggestion?
+```
+what do you mean?
+we have given you what we think are the only methods to do it
+maybe join the Pirate discord? they have helped many exchanges integrate z-addresses
+they might have better methods
+https://discord.gg/rtWbQDk
+
+[28-Sep-19 08:28 AM] CrisF#3405
+A script to implement gcharang's suggestion is what I would try.
+
+[28-Sep-19 08:28 AM] CrisF#3405
+Also check other sources like ☝ and see how they are doing it.
+
+[28-Sep-19 08:29 AM] lc123456#5516
+i need you help
+
+[28-Sep-19 08:30 AM] Oszy#5734
+good idea or not, you have to do it, there is no other way
+
+[28-Sep-19 08:31 AM] Oszy#5734
+which exchange are you from?
+
+[28-Sep-19 08:31 AM] lc123456#5516
+😋
+
+[28-Sep-19 08:31 AM] lc123456#5516
+tks
+
+[28-Sep-19 08:53 AM] gcharang#6833
+@jl777c @Decker 
+windows build for komodod is failing
+same error: https://paste.ubuntu.com/p/MBBVbF4Y4z/
+in repo: jl777/komodo, branch: jl777
+and
+repo: KomodoPlatform/komodo, branch: dev
+
+[28-Sep-19 09:05 AM] lc123456#5516
+url: (56) OpenSSL SSL_read: SSL_ERROR_SYSCALL, errno 104
+funcs.mk:257: recipe for target '/node/arrr/pirate/depends/sources/download-stamps/.stamp_fetched-rust-rust-1.32.0-x86_64-unknown-linux-gnu.tar.gz.hash' failed
+make: *** [/node/arrr/pirate/depends/sources/download-stamps/.stamp_fetched-rust-rust-1.32.0-x86_64-unknown-linux-gnu.tar.gz.hash] Error 56
+make: Leaving directory '/node/arrr/pirate/depends'
+
+[28-Sep-19 09:05 AM] lc123456#5516
+hs error
+

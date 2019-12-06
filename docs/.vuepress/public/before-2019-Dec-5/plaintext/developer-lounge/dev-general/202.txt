@@ -1,0 +1,434 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[10-Aug-19 03:51 PM] dukeleto#7326
+case closed
+
+[10-Aug-19 03:53 PM] jl777c#5810
+aha, Mar 24th
+
+[10-Aug-19 03:53 PM] jl777c#5810
+probably i didnt like the divergence of mempools
+
+[10-Aug-19 03:53 PM] dukeleto#7326
+where were you on the evening of March 24th, sir?
+
+[10-Aug-19 03:53 PM] jl777c#5810
+in the library
+
+[10-Aug-19 03:54 PM] dukeleto#7326
+😅
+
+[10-Aug-19 03:58 PM] dukeleto#7326
+@jl777c one more thing I want to explain. In BTC internals, "dust" is defined with "<" operator. Less than. There is no lower limit, in internals. There is no definition of "spam", in the internals spam is included in the definition of "dust"
+
+[10-Aug-19 03:59 PM] dukeleto#7326
+So that means, purely mathematically, all spam attacks are dust attacks, but not all dust attacks are  spam attacks
+
+[10-Aug-19 03:59 PM] dukeleto#7326
+and some are de-anon'ing, some aren't. And you can do both at the same time
+
+[10-Aug-19 03:59 PM] jl777c#5810
+yes
+
+[10-Aug-19 03:59 PM] dukeleto#7326
+I will try to explain this as best I can to the lovely people on Twitter
+
+[10-Aug-19 04:00 PM] jl777c#5810
+actually if you send a bigger amount, it is more likely to deanonymize
+
+[10-Aug-19 04:00 PM] jl777c#5810
+as it is more likely bitcoind logic includes it in the transaction
+
+[10-Aug-19 04:00 PM] jl777c#5810
+but the simple workaround is to just combine all dust from the same address to the same address
+
+[10-Aug-19 04:00 PM] jl777c#5810
+then 0 information is leaked!
+
+[10-Aug-19 04:01 PM] jl777c#5810
+just free money as long as the increased txfee is not more expensive than the dust
+
+[10-Aug-19 04:01 PM] jl777c#5810
+it would divulge when you did this merging and if you are under surveillance at the router level, maybe your ip can be deanonymized, but that can be done independently of the dust attack
+
+[10-Aug-19 04:03 PM] dukeleto#7326
+Well, the dude deleted his tweet, but didn't block me
+
+[10-Aug-19 04:03 PM] dukeleto#7326
+Weird when you retweet a thing that is deleted
+
+[10-Aug-19 04:08 PM] dukeleto#7326
+https://twitter.com/dukeleto/status/1160221249529888768
+
+{Embed}
+Duke Leto (@dukeleto)
+https://twitter.com/dukeleto/status/1160221249529888768
+To clarify, there are de-anonymizing dust/spam attacks and those purely for Denial-of-Service. I was speaking of the DoS kind, which all coins inheriting $BTC protocol are vulnerable to.
+No $ZEC protocol coin is vulnerable to de-anon dusting. 
+My bad for using imprecise la...
+Twitter
+
+[10-Aug-19 04:08 PM] dukeleto#7326
+`My bad for using imprecise language!` - I even apologized for imprecise language, bane of all mathematicians
+
+[10-Aug-19 04:09 PM] jl777c#5810
+nice correction!
+
+[12-Aug-19 02:12 PM] dukeleto#7326
+```
+ht.69389, ShieldedPayments=1, ShieldedTx=1, FullyShieldedTx=0
+ht.69390, ShieldedPayments=0, ShieldedTx=0, FullyShieldedTx=0
+ht.69391, ShieldedPayments=0, ShieldedTx=0, FullyShieldedTx=0
+ht.69392, ShieldedPayments=1, ShieldedTx=1, FullyShieldedTx=0
+[HUSH3] ht.69392 txi.3 signedmask.185102110700221 numvins.13 numvouts.2 <<<<<<<<<<<  notarized
+```
+
+[12-Aug-19 02:13 PM] dukeleto#7326
+@CHMEX starting to get raw data about shielded transactions/payments. I need to make the RPC return data in a nice json format, and use the basic stats to derive more useful metrics/etc. But it's moving along nicely
+
+[12-Aug-19 02:14 PM] dukeleto#7326
+if we look at block 69392 at https://explorer.myhush.org/block/000000000d74e0020b50096a29204fb2ffdda77ffbde057d974e291ebd68e4e0
+
+[12-Aug-19 02:14 PM] CHMEX#0686
+Nice! I m very excited about that not to have to parse each trx
+
+[12-Aug-19 02:14 PM] dukeleto#7326
+we see it has 1 joinsplit, which counts as 1 zpayment, which was not fully shielded
+
+[12-Aug-19 02:15 PM] dukeleto#7326
+@CHMEX have a look at the definitions of things here (don't worry about the low-level C++ stuff) and let me know if stuff makes sense to you: `https://github.com/MyHush/hush3/pull/27/files`
+
+[12-Aug-19 02:15 PM] dukeleto#7326
+there are some weird edge cases, but I think I defined things "correctly"
+
+[12-Aug-19 02:16 PM] dukeleto#7326
+i.e. how many shielded payments is a (z,z,t,t) => (z,t) transaction? That kind of breaks your brain.
+
+[12-Aug-19 02:17 PM] dukeleto#7326
+those don't even occur (z_sendmany can't make them) but when raw xtns are easier, they can happen
+
+[12-Aug-19 02:21 PM] CHMEX#0686
+Looks good
+
+[12-Aug-19 02:21 PM] dukeleto#7326
+I am pretty sure my heuristics are 99.99% correct, most of the time. But I might have some bugs in implementing my heuristics. That needs to be tested
+
+[12-Aug-19 02:22 PM] dukeleto#7326
+soon I will run this on Pirate, which will give me much more data. Running it on HUSH mainnet now
+
+[12-Aug-19 02:22 PM] CHMEX#0686
+is it very cpu intensive?
+
+[12-Aug-19 02:23 PM] dukeleto#7326
+not sure, but my guess is no. I didn't add any new loops
+
+[12-Aug-19 02:23 PM] dukeleto#7326
+I just do a few extra integer math ops for every transaction in the chain
+
+[12-Aug-19 02:23 PM] dukeleto#7326
+What is more, is RAM usage
+
+[12-Aug-19 02:24 PM] dukeleto#7326
+Let's estimate it's 100 bytes more RAM for every instance of `pindex`
+
+[12-Aug-19 02:24 PM] dukeleto#7326
+I have no idea how many instances of pindex KMD internals keeps at a time
+
+[12-Aug-19 02:25 PM] dukeleto#7326
+all in all, it's not going to increase RAM drastically. But it could increase it a few megabytes?
+
+[12-Aug-19 02:25 PM] dukeleto#7326
+it uses no disk space
+
+[12-Aug-19 02:25 PM] dukeleto#7326
+everything is memory-only
+
+[12-Aug-19 02:26 PM] dukeleto#7326
+also, maybe I slowed down transaction validation time a bit, not sure. But that usually is not a bottleneck
+
+[12-Aug-19 02:29 PM] dukeleto#7326
+and that is not quite accurate. I might have slowed down the time it takes for a node to "receive" blocks, not validate xtns. I hooked into the code that receives blocks and keeps stats about taddrs
+
+{Reactions}
+👍 
+
+[12-Aug-19 02:29 PM] dukeleto#7326
+TLDR: I have no idea of performance effects, only guesses 😃
+
+[13-Aug-19 05:43 PM] dukeleto#7326
+https://twitter.com/dukeleto/status/1161332207664934912
+
+{Embed}
+Duke Leto (@dukeleto)
+https://twitter.com/dukeleto/status/1161332207664934912
+Does anybody know of a Go language library that can build shielded Zcash transactions directly, not via the RPC interface? There are some in Rust, but what about Go? #golang
+https://pbs.twimg.com/media/EB3hfIdXoAAfhLB.jpg:large
+Twitter
+
+[13-Aug-19 05:43 PM] dukeleto#7326
+@grewalsatinder you know anything about the above?
+
+[13-Aug-19 10:41 PM] grewalsatinder#9653
+No mate @dukeleto 
+Haven't came across that yet
+
+[14-Aug-19 01:07 AM] grewalsatinder#9653
+Nice! I can practice my go code on the go too! 😅 😎
+
+[14-Aug-19 01:07 AM] grewalsatinder#9653
+
+{Attachments}
+https://cdn.discordapp.com/attachments/463445317136809984/611002916689412101/Screenshot_20190814-130642_Termux.jpg
+
+[14-Aug-19 01:15 AM] grewalsatinder#9653
+Currently working with a friend learning some basic things about bitcoin from mathematicians point of view which is my weakest point, and converting his example python code to golang code learning things to do without 3rd party libs, and only using language's own built-in libs. elliptic curves and base58 of own code. My work in progress practice code is here: https://github.com/satindergrewal/btc-practice
+
+{Embed}
+https://github.com/satindergrewal/btc-practice
+satindergrewal/btc-practice
+Practicing BTC code. Contribute to satindergrewal/btc-practice development by creating an account on GitHub.
+https://avatars3.githubusercontent.com/u/12998093?s=400&v=4
+
+[14-Aug-19 01:15 AM] grewalsatinder#9653
+
+{Attachments}
+https://cdn.discordapp.com/attachments/463445317136809984/611004974851293339/Screenshot_20190814-131021_Termux.jpg
+
+[14-Aug-19 01:15 AM] grewalsatinder#9653
+
+{Attachments}
+https://cdn.discordapp.com/attachments/463445317136809984/611004989191618600/Screenshot_20190814-131134_Termux.jpg
+
+[14-Aug-19 02:54 AM] dukeleto#7326
+@grewalsatinder doing that stuff is truly the only way to really learn how everything works 👍
+
+[14-Aug-19 03:20 AM] grewalsatinder#9653
+Agree 👍 🙂
+
+[14-Aug-19 05:39 AM] Slyris#2880
+I know there is the library https://github.com/renproject/libzec-go @dukeleto not sure if you can do what you want there is no readme
+
+{Embed}
+https://github.com/renproject/libzec-go
+renproject/libzec-go
+A decent ZCash library, written in Golang. Contribute to renproject/libzec-go development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/44991428?s=400&v=4
+
+[14-Aug-19 06:42 AM] grewalsatinder#9653
+https://godoc.org/github.com/renproject/libzec-go
+
+{Embed}
+https://godoc.org/github.com/renproject/libzec-go
+Package libzec
+A decent ZCash library, written in Golang.
+
+[14-Aug-19 12:24 PM] Mylo#8306
+@dukeleto have you ever worked with xml schemas?
+
+[14-Aug-19 12:24 PM] Mylo#8306
+In your science and maths coding journey
+
+[14-Aug-19 12:24 PM] Mylo#8306
+Or any other dev work
+
+[14-Aug-19 12:25 PM] Mylo#8306
+Also anyone that has interfaced to xml schemas or soap.
+I’m after a good description of “stuff”
+
+[14-Aug-19 12:26 PM] Mylo#8306
+Banking, telco, geo spatial etc.
+
+[14-Aug-19 12:33 PM] smk762 -  dracocanis ominator#7640
+it pops up in GIS, but I much prefer (geo)json.
+
+[14-Aug-19 12:34 PM] smk762 -  dracocanis ominator#7640
+KML is a good example - https://developers.google.com/kml/documentation/kmlreference
+
+{Embed}
+https://developers.google.com/kml/documentation/kmlreference
+KML Reference  |  Keyhole Markup Language
+       |  Google Dev...
+https://developers.google.com/_static/372b09f1d2/images/share/devsite-cyan.png
+
+[14-Aug-19 01:44 PM] dukeleto#7326
+@Mylo yes, XML is pretty old stuff 😃
+
+[14-Aug-19 01:44 PM] dukeleto#7326
+XML is HTML for data, basically. It's a very general thing
+
+[14-Aug-19 01:45 PM] dukeleto#7326
+@Mylo JSON tried to replace XML, but only won on the web. XML pretty much reigns king in most fields
+
+[14-Aug-19 01:45 PM] dukeleto#7326
+or proprietary plaintext/binary formats, joy
+
+[14-Aug-19 06:49 PM] polycryptoblog#1173
+I hate xml ,  json is so much easier
+
+[14-Aug-19 06:59 PM] Oszy#5734
+same shit, you have {} instead of <> 😄
+
+[14-Aug-19 07:22 PM] ComputerGenie 👴🏼📢#7004
+```Why JSON is Better Than XML
+
+XML is much more difficult to parse than JSON.
+JSON is parsed into a ready-to-use JavaScript object.
+
+For AJAX applications, JSON is faster and easier than XML:
+
+Using XML
+
+    Fetch an XML document
+    Use the XML DOM to loop through the document
+    Extract values and store in variables
+
+Using JSON
+
+    Fetch a JSON string
+    JSON.Parse the JSON string```
+-w3schools.com
+
+[14-Aug-19 07:25 PM] ComputerGenie 👴🏼📢#7004
+1996 is over, let it die
+
+[14-Aug-19 11:59 PM] Mylo#8306
+Yes, thanks for the opinions folks!  try to find JSON standards though!!
+I made some initial queries with JSON schemas standardization and parsers, there are two aiming for acceptance as RFC but they offer the implementation with it.
+
+This is a problem because KMD codebase already has 2 JSON parsers, the btc one and one in C for The cryptocondition stuff.
+
+I’m looking for use cases to interconnect systems.  Currently my best two finds are landxml which is a huge system of data used by surveyors, civil & other engineers, architects and government.  Supported by high tech engineering tools as well as autocad, autodesk etc.
+
+The other is Shopify products and orders.
+
+A third is booking.com and the entire travel industry.
+
+I really want an “easy” integration example, not so much of a learn a whole discipline to extract a small part of data.
+
+XML standards offer many implementations into legacy systems, payroll, education etc.   JSON little interoperability amongst disparate systems.
+
+It’s for a CClib example with oracles at the end of the day.  Possibly tokens.  I want to be able to show new levels of interoperability.
+
+Finding a small and useful existing schema with an easy to explain use case 🙏
+
+[15-Aug-19 12:01 AM] Mylo#8306
+KML might do, thanks @smk762 -  dracocanis ominator  still open to other examples 😃
+
+[15-Aug-19 12:11 AM] Mylo#8306
+https://kotaku.com/where-on-google-earth-is-carmen-sandiego-1833268118
+
+{Embed}
+https://kotaku.com/where-on-google-earth-is-carmen-sandiego-1833268118
+Where On Google Earth Is Carmen Sandiego?
+We’ve been hunting Carmen Sandiego across the globe and through space and time for nearly 35 years. Now the notorious thief launches the first in a series of capers within the virtual world of Google Earth. Can you find her before she makes off with the Crown Jewels? Probab...
+https://i.kinja-img.com/gawker-media/image/upload/s--K5Z8k1eW--/c_fill,fl_progressive,g_center,h_900,q_80,w_1600/rnivu9hecwfej1nvnuaa.jpg
+
+[15-Aug-19 12:12 AM] Mylo#8306
+Something like this is quite palatable and nostalgic 👮‍♂️
+
+[15-Aug-19 12:24 AM] Mylo#8306
+There are cpp xml xslt transformations to json, so storing xml not required, and transformations are validated against the schema.
+
+[15-Aug-19 09:26 AM] CMaurice#1685
+@Mylo not sure if https://jwt.io/ of interest
+
+{Embed}
+https://jwt.io/
+JWT.IO
+JSON Web Tokens are an open, industry standard RFC 7519 method for representing claims securely between two parties.
+http://jwt.io/img/twitter-card.png
+
+[15-Aug-19 09:26 AM] CMaurice#1685
+more to do with id, credentials it seems
+
+[15-Aug-19 09:46 AM] Mylo#8306
+Yeah different thing.   Data schema/descriptions. 
+
+As an aside jwt is abused by developers - doing more than what it’s designed for (because devs are not security experts) and leaves applications vulnerable
+
+[15-Aug-19 09:47 AM] Mylo#8306
+I am neither so take it with a grain of salt 😃
+
+[15-Aug-19 11:37 AM] ns408#8889
+any particular channel where people are discussing cloud (aws, gcp) use or linux sysadmin related tasks for komodo ecosystem?
+And who are the people generally involved in those conversations?
+
+[15-Aug-19 11:45 AM] Mylo#8306
+#dev-ops probably best
+
+[15-Aug-19 11:45 AM] Mylo#8306
+can be renamed to devops or something
+
+{Reactions}
+👍 
+
+[15-Aug-19 11:47 AM] ns408#8889
+thanks Mylo!
+
+{Reactions}
+👍 
+
+[15-Aug-19 12:51 PM] grewalsatinder#9653
+```python
+def ec_point_add(P, Q):
+    if not P:
+        return Q
+```
+what does if not P means?
+
+[15-Aug-19 12:52 PM] grewalsatinder#9653
+I don't understand what this python logic saying
+
+[15-Aug-19 12:54 PM] blackjok3r#3181
+I think it means P doesnt exist at all.. wasnt declared.
+
+[15-Aug-19 12:55 PM] grewalsatinder#9653
+converting this python code to Go
+https://github.com/satindergrewal/btc-practice/blob/master/gareth_file04.py
+https://github.com/satindergrewal/btc-practice/blob/master/btcbook_addr_02.go
+
+[15-Aug-19 12:56 PM] grewalsatinder#9653
+it is for elliptic curve point doubling and point multiplication
+
+[15-Aug-19 12:56 PM] grewalsatinder#9653
+https://en.wikipedia.org/wiki/Elliptic_curve_point_multiplication#Double-and-add
+
+{Embed}
+https://en.wikipedia.org/wiki/Elliptic_curve_point_multiplication
+Elliptic curve point multiplication
+Elliptic curve point multiplication is the operation of successively adding a point along an elliptic curve to itself repeatedly.  It is used in elliptic curve cryptography (ECC) as a means of producing a one-way function.
+The literature presents this operation as scalar mult...
+
+[15-Aug-19 01:02 PM] Oszy#5734
+`if not something` is like `if(!something)` in c
+
+[15-Aug-19 01:03 PM] grewalsatinder#9653
+okay, thanks for hints guys 🙂 👍
+
+[15-Aug-19 01:03 PM] Oszy#5734
+in common cases it refers to the var being empty
+
+[15-Aug-19 01:03 PM] grewalsatinder#9653
+got it
+
+[15-Aug-19 01:06 PM] Oszy#5734
+regards to what blackjoker said, python doesn't have a specific function to see if a variable is defined or not, as it's expected to be defined, tho it can be checked with exception handling trough`try`
+
+[15-Aug-19 01:07 PM] grewalsatinder#9653
+cool 🙂 👍
+
+[15-Aug-19 01:27 PM] dukeleto#7326
+@grewalsatinder `not P` is true if P is false, i.e. it's "negation" the same operator as `!` in C/C++
+
+{Reactions}
+👍 
+
+[15-Aug-19 01:35 PM] grewalsatinder#9653
+yep, got the idea. I see if the value is returned 1 only then it goes past that condition.
+

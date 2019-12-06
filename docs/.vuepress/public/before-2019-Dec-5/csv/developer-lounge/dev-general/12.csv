@@ -1,0 +1,169 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"365714438864633856";"dukeleto#7326";"21-Aug-18 01:19 PM";"it's easy to accidentally create more than 1, even with a lib. The codebase I inherited created 1 RPC connection per file that needed to touch RPC, it wasn't cached somewhere globally";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-18 01:20 PM";"i noticed stuff was really slow, it was creating new connections and  they were fighting each other, locking each other, since they were polling";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"21-Aug-18 01:20 PM";"but when it gives me:
+`{""version"":1,""locktime"":1534857218,""ins"":[{""hash"":{""type"":""Buffer"",""data"":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},""index"":4294967295,""script"":{""type"":""Buffer"",""data"":[2,239,6,0]},""sequence"":4294967295,""witness"":[]}],""outs"":[{""value"":1000000000,""script"":{""type"":""Buffer"",""data"":[33,2,194,197,21,14,199,209,14,190,91,191,236,83,213,194,44,252,233,252,91,162,8,61,111,214,55,205,233,233,153,237,59,148,172]}},{""value"":11705480,""script"":{""type"":""Buffer"",""data"":[33,3,189,34,24,104,171,192,99,181,74,63,206,175,185,137,139,25,49,237,118,114,152,161,122,192,201,146,53,0,167,198,14,75,172]}}],""joinsplits"":[],""zcash"":false}`
+as the cb tx, I'm feked 😛";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-18 01:20 PM";"weird";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-18 01:21 PM";"gives you a Buffer of hex values, instead of one string";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-18 01:21 PM";"which are decimal numbers, lol";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-18 01:21 PM";"you need to convert all those to hex and concatenate";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"21-Aug-18 01:21 PM";"yeah, they worked that lib really strange to me";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-18 01:21 PM";"hopefully no big/little endian bullshit";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-18 01:22 PM";"`zcash: false` is interesting, what adds that?";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"21-Aug-18 01:22 PM";"the zcash branch of the fork of bitcoinjs lib";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"21-Aug-18 01:24 PM";"https://github.com/karel-3d/bitcoinjs-lib#zcash";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-18 01:26 PM";"i maybe tried to look at bitcoinjs but my codebase already uses `bitcoin` when I inherited it, which is deprecated but also more battle-tested, imho";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"21-Aug-18 01:27 PM";"I mainly went with it because it's what znomp already has/uses";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-18 01:27 PM";"it seems to be the new default";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"21-Aug-18 01:28 PM";"this is one of those times where a 3 minute patch is taking a week because I have 0 clue how to get from pointA to pointB";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-18 01:34 PM";"i haven't actually used raw xtns from the lib I am using, and I just looked at the tests of bitcoinjs-lib and didn't see anything relating to raw xtns, fyi";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"21-Aug-18 01:38 PM";"well the issue is that the template has cb tx as hex
+with the use of `-ac_perc` and `-ac_pubkey` there's a specific required cb tx out like:
+`    {
+      ""value"": 0.11705480,
+      ""valueSat"": 11705480,
+      ""n"": 1,
+      ""scriptPubKey"": {
+        ""asm"": ""03bd221868abc063b54a3fceafb9898b1931ed767298a17ac0c9923500a7c60e4b OP_CHECKSIG"",
+        ""hex"": ""2103bd221868abc063b54a3fceafb9898b1931ed767298a17ac0c9923500a7c60e4bac"",
+        ""reqSigs"": 1,
+        ""type"": ""pubkey"",
+        ""addresses"": [
+          ""RBvk8QYW1o7ArCMdQEJJNP64DxUFbAoZr9""
+        ]
+      }
+    }`";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"21-Aug-18 01:39 PM";"if that isn't included in the block, the block is invalid";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"21-Aug-18 01:42 PM";"I may just add 1 more daemon call per block and be done with it, before I drive myself insane with trying to get libs to decode it";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"21-Aug-18 02:10 PM";"heh";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"21-Aug-18 02:10 PM";"finally googled the right answer I need 😀 
+https://github.com/bitcoinjs/bitcoinjs-lib/issues/822#issue-244447186";"";"";
+"375949808772579339";"bartwr#6773";"21-Aug-18 04:16 PM";"Q: If I launch an asset chain today without `-cc=1`, can I easily upgrade to `-cc=1` later ?";"";"";
+"375949808772579339";"bartwr#6773";"21-Aug-18 04:16 PM";"(I think it's mostly miners that decide if they run the flag or not, right?)";"";"";
+"457211594137534465";"xRobeSx#5136";"21-Aug-18 04:17 PM";"I'm pretty sure it requires a hardfork. James just added a -cc height activation yesteray though. I don't see why not just launch it with `-cc=2` from the start so you don't have to worry if you want it later";"";"👍🏽 (1)";
+"455741312273219595";"jl777c#5810";"21-Aug-18 04:25 PM";"-ac_ccactivate is in testing now, it will allow to enable CC contracts after a certain height, but keep in mind it is a hardforking change even if it is a runtime hardfork and all nodes must update or go onto a fork";"";"";
+"455741312273219595";"jl777c#5810";"21-Aug-18 04:25 PM";"all nodes must have the same -ac_cc or -ac_ccactivate";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-18 05:45 PM";"that sounds useful to ease-into CC contracts after a pre-determined time 👍";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-18 05:46 PM";"`-ac_cc=2 -ac_activate=HEIGHT` where HEIGHT gives you enough time to prepare for CC contracts, would be a reasonable default for new asset chains";"";"";
+"375949808772579339";"bartwr#6773";"21-Aug-18 05:47 PM";"Re: jl777c & dukeleto:
+
+Clear. So if I want smart contract capabilities for my asset chain I have to add `-cc=2`. It seems better to start immediately with smart contract capabilities enabled.
+
+Q: Are there any disadvantages for running an asset chain with smart contract capabilities? For example security wise?";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-18 05:47 PM";"@jl777c is there any reason to not recommend that new AC's use `cc=2` by default?";"";"";
+"375949808772579339";"bartwr#6773";"21-Aug-18 05:47 PM";"^";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-18 05:48 PM";"James probably has a better answer than me";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-18 05:49 PM";"i think it's very small risk to enable CC and not need it or want it, than to not create your AC and then down the line want to enable it";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-18 05:50 PM";"there are things that you will want to access, as an asset chain, where you will need to have `cc=1 or cc=2` to do certain things";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-18 05:51 PM";"for example, BTCH will store BTC headers in the future, and an asset chain with cryptoconditions will be able to utilize BTCH information, while those without it will not. If i understand correctly";"";"";
+"455741312273219595";"jl777c#5810";"21-Aug-18 05:51 PM";"now the initial CC contracts are tested, it seems reasonable to just enable it, -ac_cc=2 will allow cross chain things if notarized";"";"";
+"375949808772579339";"bartwr#6773";"21-Aug-18 05:53 PM";"Great, thank you for your advice @dukeleto @jl777c 😃
+(I will enable smart contracts immediately when creating my asset chain, using the `-ac_cc` parameter)";"";"👍🏽 (2)";
+"371114647052615681";"Mylo#8306";"22-Aug-18 02:50 AM";"wrap it in "" "" ?";"";"";
+"371114647052615681";"Mylo#8306";"22-Aug-18 06:19 AM";"https://medium.com/@imylomylo/pre-alpha-komodo-utxo-smart-contracts-notes-7c5e8f49206";"";"👍 (4),😎 (4),😃 (3)";
+"371114647052615681";"Mylo#8306";"22-Aug-18 06:19 AM";"sharing my hackery";"";"";
+"405380797537976320";"Cryptoon#3362";"22-Aug-18 07:12 AM";"Shared on twitter, good post!";"";"";
+"455741312273219595";"jl777c#5810";"22-Aug-18 07:36 AM";"@Mylo you dont have to do anything special to sign it. when you call faucetget,it returns an already signed transaction, ready to be broadcast.";"";"";
+"455741312273219595";"jl777c#5810";"22-Aug-18 07:36 AM";"the only thing about rawtransactions you need to do is sendrawtransaction. I have it not do it automatically, so during testing you can decoderawtransaction to make sure it looks ok";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Aug-18 10:13 AM";"@jl777c @dukeleto @ca333 @Decker 
+not sure which other channel I could ask.
+does any of you know that zcash v2.0.0 already compiles for mac os ?
+I remember reading somewhere that there is support added for mac but I couldn't find `build-mac.sh` in `zcutils`";"";"";
+"369380496062283776";"ralea1313#2321";"22-Aug-18 10:24 AM";"can anyone help with this issue?
+unable to establish RPC connection
+i've already tried to delete chainstate and block folders
+still the same issue";"";"";
+"455741312273219595";"jl777c#5810";"22-Aug-18 10:31 AM";"unable to establish RPC connection
+means komodod isnt running";"";"";
+"455741312273219595";"jl777c#5810";"22-Aug-18 10:32 AM";"at least not on the port it is checking";"";"";
+"455741312273219595";"jl777c#5810";"22-Aug-18 10:33 AM";"to send rpc calls to chain called XYZ, do ./komodo-cli -ac_name=XYZ getinfo";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Aug-18 11:11 AM";"cool! didn't had to do anything. just ran `./zcbuild/build.sh -j6` command it compiled on mac without any issues. 🙂";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Aug-18 11:11 AM";"followed this doc
+https://zcash.readthedocs.io/en/latest/rtd_pages/rtd_docs/user_guide.html";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Aug-18 11:12 AM";"@gcharang @SHossain please keep note of the docs/updates from this zcash doc.
+we should utilise same structure for komodo too.";"";"👍🏽 (2)";
+"455741312273219595";"jl777c#5810";"22-Aug-18 11:13 AM";"I wonder if they made windows build also";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Aug-18 11:14 AM";"doc points to this issue for windows help:
+https://github.com/zcash/zcash/pull/3172";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Aug-18 11:15 AM";"and it's not merged yet";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Aug-18 11:15 AM";"so I assume it's not completed";"";"";
+"371114647052615681";"Mylo#8306";"22-Aug-18 09:06 PM";"@TonyL 
+Try something like this as well for testing, if you scross up from 2 days ago, @dukeleto replied to a question i posted.
+```
+PYTHON_DEBUG=1 ./qa/pull-tester/rpc-tests.sh cryptoconditions --tracerpc
+PYTHON_DEBUG and --tracerpc are optional, give you more details
+the tests are failing right now, because of a change James made to protect against evil faucet leechers
+patches welcome!
+```
+Also, duke - https://github.com/tonymorony/kmd_cc_qa <-- tony getting started on some tests for tokens, details in #cc-general a few hours ago fyi.";"";"🌈 (1)";
+"272003866906722306";"TonyL#3577";"22-Aug-18 09:18 PM";"Thanks! @Mylo";"";"👍 (1)";
+"371114647052615681";"Mylo#8306";"23-Aug-18 02:54 AM";"@Deleted User i've got a docker image, and when i mount the volume the owner is root (back on my host) which is not what i want other people to have to deal with when they follow my instructions.  How do i make the user inside the docker still be root but back on the host, perms stay with real user (e.g. mylo)";"";"";
+"371114647052615681";"Mylo#8306";"23-Aug-18 02:58 AM";"https://denibertovic.com/posts/handling-permissions-with-docker-volumes/";"";"";
+"371114647052615681";"Mylo#8306";"23-Aug-18 02:58 AM";"gonna try this.  i don't think docker would be so stubborn.  it really mucks up with my workflow 😃";"";"";
+"371114647052615681";"Mylo#8306";"23-Aug-18 03:10 AM";"nah not happy with that answer lol 😄";"";"😁 (1)";
+"371114647052615681";"Mylo#8306";"23-Aug-18 04:33 AM";"@Deleted User do you use a Makefile for your docker stuff?  started yesterday.  not going back to hacky scripts. `make build` 😻  https://github.com/imylomylo/docker-komodo-smartcontracts/blob/master/src/Makefile";"";"";
+"371114647052615681";"Mylo#8306";"23-Aug-18 05:32 AM";"yeah baby";"https://cdn.discordapp.com/attachments/463445317136809984/482059659394678785/Screen_Shot_2018-08-23_at_3.32.25_pm.png";"";
+"371114647052615681";"Mylo#8306";"23-Aug-18 05:33 AM";"@Deleted User 👆";"";"";
+"371114647052615681";"Mylo#8306";"23-Aug-18 05:33 AM";"will push later";"";"🆒 (3)";
+"481967433037381652";"Kyung-Nam Park#1723";"23-Aug-18 07:23 AM";"Hellow";"";"";
+"481967433037381652";"Kyung-Nam Park#1723";"23-Aug-18 07:23 AM";"Hello";"";"👋 (6)";
+"412323938782150658";"SHossain#0007";"23-Aug-18 02:58 PM";"Hello @Kyung-Nam Park";"";"";
+"481967433037381652";"Kyung-Nam Park#1723";"23-Aug-18 11:15 PM";"Hi SHossain";"";"";
+"455741312273219595";"jl777c#5810";"24-Aug-18 12:57 PM";"I will be writing a document explaining how to write KMD CC contracts, so if you have any questions about this, please ask in #ask-jl777";"";"👍 (4)";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-18 12:57 PM";"perfect! 👍";"";"";
+"264236295432175616";"Gordon Komodo#7477";"24-Aug-18 06:06 PM";"hush is looking for help with binaries for packaging Hush-NG for release - there is probably bounty, join #hush  for more info";"";"";
+"365714438864633856";"dukeleto#7326";"25-Aug-18 03:05 PM";"300 hush bounty";"";"";
+"371114647052615681";"Mylo#8306";"26-Aug-18 09:18 AM";"_wants this setup https://coderoncode.com/tools/2017/04/16/vim-the-perfect-ide.html_";"";"";
+"405011811511828481";"Alright#0419";"26-Aug-18 06:02 PM";"Does anyone know how to properly use `-rewind=`? I thought it was just `-rewind=<height>` but that doesn't seem to be working";"";"";
+"405011811511828481";"Alright#0419";"26-Aug-18 06:03 PM";"thinking it may have broke somewhere along the line and we didn't notice :/";"";"";
+"405011811511828481";"Alright#0419";"26-Aug-18 06:04 PM";"```
+7622 would have decremented STAKED2 nWitnessCacheSize.1
+would have decremented STAKED2 nWitnessCacheSize.1
+7620 would have decremented STAKED2 nWitnessCacheSize.1
+would have decremented STAKED2 nWitnessCacheSize.1
+7618 would have decremented STAKED2 nWitnessCacheSize.1
+would have decremented STAKED2 nWitnessCacheSize.1
+7616 would have decremented STAKED2 nWitnessCacheSize.1
+would have decremented STAKED2 nWitnessCacheSize.1
+7614 would have decremented STAKED2 nWitnessCacheSize.1
+would have decremented STAKED2 nWitnessCacheSize.1
+7612 would have decremented STAKED2 nWitnessCacheSize.1
+would have decremented STAKED2 nWitnessCacheSize.1
+reached rewind.7610, best to do: ./komodo-cli -ac_name=STAKED2 stop
+resuming normal operations
+komodod: main.cpp:3442: bool ConnectTip(CValidationState&, CBlockIndex*, CBlock*): Assertion `pindexNew->pprev == chainActive.Tip()' failed.
+Aborted (core dumped)
+```
+Starting working, got to the block and crashed";"";"";
+"405011811511828481";"Alright#0419";"26-Aug-18 06:07 PM";"Ah, sending any rpc command is what causes it to crash even `stop` crashes it";"";"";
+"405011811511828481";"Alright#0419";"26-Aug-18 06:08 PM";"```
+reached rewind.7610, best to do: ./komodo-cli -ac_name=STAKED2 stop
+resuming normal operations
+komodod: main.cpp:3442: bool ConnectTip(CValidationState&, CBlockIndex*, CBlock*): Assertion `pindexNew->pprev == chainActive.Tip()' failed.
+Aborted (core dumped)
+```";"";"";
+"382255826674647041";"vz#1048";"28-Aug-18 01:30 AM";"can we build dapp on top of Komodo, if we can, any doc or guideline?";"";"";
+"303794669945618442";"PTYX#6840";"28-Aug-18 01:39 AM";"Yes you can all docs are at docs.komodoplatform.com";"";"";
+"382255826674647041";"vz#1048";"28-Aug-18 02:58 AM";"ok, will take a look";"";"";
+"382255826674647041";"vz#1048";"28-Aug-18 03:56 AM";"@PTYX documents are  not for building dapps, i don't think you can do that yet.";"";"";
+"303794669945618442";"PTYX#6840";"28-Aug-18 03:58 AM";"What type of dapp are you trying to build?";"";"";
+"371114647052615681";"Mylo#8306";"28-Aug-18 04:34 AM";"@vz i'm building out an rpc lib in javascript first (then maybe python / go etc.) simpler to what web3 is for eth (i guess, i don't know).  I've fallen behind with completion but it will be used within komodo-cakeshop for examples.
+
+1.  https://github.com/imylomylo/komodo-rpc-lib
+
+2.  https://github.com/imylomylo/komodo-cakeshop";"";"";
+"371114647052615681";"Mylo#8306";"28-Aug-18 04:35 AM";"If you want to build a DEX front end, quite different to interface to marketmaker.  You'd be best to look at how BarterDEX GUI and Agama interface to both Marketmaker and Komodod respectively.";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 05:28 AM";"@vz and others that didnt respond with https://github.com/jl777/komodo/blob/FSM/src/cc/CC%20made%20easy";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 05:28 AM";"the above is the best we have now as to how to make dapps, aka CC contracts";"";"🙏 (2)";
+"371114647052615681";"Mylo#8306";"28-Aug-18 05:37 AM";"cool thanks";"";"";
+"371114647052615681";"Mylo#8306";"28-Aug-18 05:41 AM";"added to tech community post for fri 😃";"";"";
+"382255826674647041";"vz#1048";"28-Aug-18 08:00 AM";"thank you everyone!";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 08:03 AM";"plz feel free to ask any questions about writing CC contracts, I know it is totally different from everything else, so my reference CC contracts are all that exists";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 08:03 AM";"for now";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 08:03 AM";"I think there will be a bounty for the first non-jl777 CC contract";"";"";
+"382255826674647041";"vz#1048";"28-Aug-18 08:08 AM";"i know c++ pretty well, however, don't know much about blockchain.   i was able to go through EOS contract tutorial without much trouble during the weekend.   KMD contract would be difficult for me.";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 08:08 AM";"the utxo CC contracts are all about constraining the vins and vouts";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 08:09 AM";"which means you do need to be very familiar with bitcoin transactions";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 08:09 AM";"not easy, but a lot of documentation on it";"";"";
+"382255826674647041";"vz#1048";"28-Aug-18 08:10 AM";"any good ones you can recommend?";"";"";

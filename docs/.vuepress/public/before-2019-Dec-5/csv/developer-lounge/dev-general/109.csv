@@ -1,0 +1,283 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"365714438864633856";"dukeleto#7326";"26-Jan-19 04:21 PM";"so we should not see xtns with confirmations=1 when we ask an RPC to use minconf=2 (which means notarized, since minconfs now use dpowconfs, in my branch)";"";"";
+"365714438864633856";"dukeleto#7326";"26-Jan-19 04:22 PM";"the issue is, RPCs that take minconf param, they filter data on raw confs, not dpowconfs. They need to filter on dpowconfs (except sometimes when we can just filter the data at the very end)";"";"";
+"365714438864633856";"dukeleto#7326";"26-Jan-19 04:23 PM";"if an RPC returns a `confirmations` key, we can filter out confirmations=1 at the very end, and leave the current filtering code alone (it's faster to not filter on dpowconfs)";"";"";
+"365714438864633856";"dukeleto#7326";"26-Jan-19 04:23 PM";"but some RPCs do not return that key, or aggregate data. They must filter on dpowconfs";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"26-Jan-19 04:23 PM";"it's ""long ended"", but couldn't you use `gettransaction` and then go by that? I'm a bit confused or reading wrong";"";"";
+"365714438864633856";"dukeleto#7326";"26-Jan-19 04:24 PM";"these bugs only effect RPCs that take a `minconf` param";"";"";
+"365714438864633856";"dukeleto#7326";"26-Jan-19 04:24 PM";"my code to filter on dpowconfs do indeed use GetTransaction()";"";"";
+"365714438864633856";"dukeleto#7326";"26-Jan-19 04:24 PM";"the code seems to work, it's the regtests are non-deterministic, due to race conditions, it seems";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"26-Jan-19 04:28 PM";"if (GetTransaction().confirmations = 1 && minconf >1) {
+return null
+} else {
+do intended stuff
+}";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"26-Jan-19 04:28 PM";"?";"";"";
+"365714438864633856";"dukeleto#7326";"26-Jan-19 04:28 PM";"it's a lot more annoying C++, but that is the gist 😃";"";"";
+"365714438864633856";"dukeleto#7326";"26-Jan-19 04:28 PM";"```
+                int nDepth    = wtx.GetDepthInMainChain();
+                if( nMinDepth > 1 ) {
+                    int nHeight    = tx_height(wtx.GetHash());
+                    int dpowconfs  = komodo_dpowconfs(nHeight, nDepth);
+                    if (dpowconfs >= nMinDepth) {
+                        nAmount   += txout.nValue; // komodo_interest?
+                    }
+                } else {
+                    if (nDepth  >= nMinDepth) {
+                        nAmount += txout.nValue; // komodo_interest?
+                    }
+```";"";"";
+"365714438864633856";"dukeleto#7326";"26-Jan-19 04:29 PM";"tx_height calles GetTransaction, to get a height, to give to komodo_dpowconfs()";"";"";
+"365714438864633856";"dukeleto#7326";"26-Jan-19 04:29 PM";"that is from here: https://github.com/letolabs/komodo/blob/dpowminconfs/src/wallet/rpcwallet.cpp#L955";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"26-Jan-19 04:33 PM";"OK, now I'm even more lost...
+Are you wanting to run something external or trying to add notarized confs to internal code to add to RPC replies?";"";"";
+"365714438864633856";"dukeleto#7326";"26-Jan-19 04:48 PM";"I am modifying RPC internals like a boss, to make sure dpowconfs are used *everywhere*, in the RPC interface";"";"";
+"365714438864633856";"dukeleto#7326";"26-Jan-19 04:48 PM";"@ComputerGenie 👴🏼📢 https://gist.github.com/leto/13ba2370b2f666d59c487be9388ee3c8";"";"";
+"365714438864633856";"dukeleto#7326";"26-Jan-19 04:48 PM";"maybe that will explain it a bit more";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"26-Jan-19 04:51 PM";"`I am modifying RPC internals...to make sure dpowconfs are used everywhere, in the RPC interface`
+OK, now I have a better understanding of what you're after (and not sure I'm much help, to say my C++ knowledge is ""limited"" would be generous), I thought you were working on an external py";"";"";
+"365714438864633856";"dukeleto#7326";"26-Jan-19 05:06 PM";"yeah, it's confusing. our automated integration tests, which spin up an AC called REGTEST in regtest mode, are written in python 2.x, inherited from upstream. so I modify C++ and then test it from Python, with all the problems of things that can go wrong in the middle";"";"";
+"365714438864633856";"dukeleto#7326";"26-Jan-19 06:11 PM";"This commit fixes my non-determinism problem, or at least makes it a lot less likely to happen: https://github.com/letolabs/komodo/commit/bad680528e504c4cbc29c641121068ee46a339bc";"";"3040_kingpeepo (1)";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"26-Jan-19 06:19 PM";"`if thing1 < thing2:`
+I feken ❤ that!";"";"";
+"365714438864633856";"dukeleto#7326";"27-Jan-19 01:35 AM";"my tests still fail sometimes, argh";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jan-19 01:36 AM";"maybe it needs 
+` if thingisbroken `";"";"😂 (1),troll_king (1)";
+"365714438864633856";"dukeleto#7326";"27-Jan-19 01:40 AM";"race conditions";"";"";
+"365714438864633856";"dukeleto#7326";"27-Jan-19 01:40 AM";"in the notarization DB being updated";"";"";
+"365714438864633856";"dukeleto#7326";"27-Jan-19 01:41 AM";"`generate` returns before notarization data gets updated";"";"";
+"365714438864633856";"dukeleto#7326";"27-Jan-19 01:50 AM";"`Assertion failed: (nThreadsServicingQueue == 0), function ~CScheduler, file scheduler.cpp, line 34.`";"";"";
+"365714438864633856";"dukeleto#7326";"27-Jan-19 01:50 AM";"anybody ever seen that?";"";"";
+"365714438864633856";"dukeleto#7326";"27-Jan-19 02:11 AM";"can't seem to easily reproduce, but it happened in regtest mode to me";"";"";
+"365714438864633856";"dukeleto#7326";"27-Jan-19 02:12 AM";"the daemon hangs, but does not exit";"";"";
+"272003866906722306";"TonyL#3577";"27-Jan-19 09:27 AM";"I've faced it yes, with our framework mostly - getting this when daemon from previous test not exited correctly and I'm trying to start one more.
+ ```rm -rf /tmp
+pkill komodod
+```
+helped me to ""solve"" it";"";"";
+"365714438864633856";"dukeleto#7326";"27-Jan-19 01:48 PM";"maybe i had another daemon still running in another tab, i got too many terminal tabs";"";"";
+"365714438864633856";"dukeleto#7326";"27-Jan-19 01:48 PM";"i think i came up with a solution for my problem, which is ""wait until the conditions are right""";"";"";
+"365714438864633856";"dukeleto#7326";"27-Jan-19 01:49 PM";"so my tests sleep for 1 second, repeatedly, until RPC interface reports what we expect (i.e. correct number of blocks and correct notarized block), then further tests are run";"";"";
+"365714438864633856";"dukeleto#7326";"27-Jan-19 01:52 PM";"```
++        # try to allow notarization data to update
++        print ""Sleeping""
++        while (getinfo['blocks'] != 106) or (getinfo['notarized'] != 105):
++            printf(""."")
++            time.sleep(1)
++            getinfo = rpc.getinfo()
+```";"";"";
+"365714438864633856";"dukeleto#7326";"27-Jan-19 01:53 PM";"that bit of hacky code seems to be doing the job. Sleeping for a fixed time didn't seems to work reliably";"";"";
+"369608312955731968";"Bryan_Beus#6442";"27-Jan-19 11:49 PM";"@dukeleto @jl777c 
+
+There's something off with the regtest chains and z addresses.
+
+Look at this sequence:
+
+```
+./komodo-cli z_getnewaddress
+zs1umhaattx6lna933m9zwfqlmkm2qj49hpa9lnymtj5h5c7cwtd3evfpu29hppprax9cs45fzeyqg
+```
+```
+sidd@sidd:~/komodo/src$ ./komodo-cli z_exportkey ""zs1umhaattx6lna933m9zwfqlmkm2qj49hpa9lnymtj5h5c7cwtd3evfpu29hppprax9cs45fzeyqg""
+secret-extended-key-main1q0v7ahsmqqqqpqq0y3ed22gf07rckq285gx53sd2ugs84wqqq7cxhnyzfdpnw2w6wjvs8gxjg9zegemnsjqgna3hmqemnl27rwkqr83hq20uwz4u22aqkrddtkd7kujcd3jh7g6zkruavcyhst8htt4h78t5aswmfwkcy5szex9c472lj6evval5aj9nnspy73dphl7hzpnl0kpcsm86knntjf09292jqrspmjrgwa4kc8na0whpg6n77qzn870g5w0tcv6lhu85ecg0pjvww
+```
+```
+sidd@sidd:~/komodo/src$ ./komodo-cli z_importkey ""secret-extended-key-main1q0v7ahsmqqqqpqq0y3ed22gf07rckq285gx53sd2ugs84wqqq7cxhnyzfdpnw2w6wjvs8gxjg9zegemnsjqgna3hmqemnl27rwkqr83hq20uwz4u22aqkrddtkd7kujcd3jh7g6zkruavcyhst8htt4h78t5aswmfwkcy5szex9c472lj6evval5aj9nnspy73dphl7hzpnl0kpcsm86knntjf09292jqrspmjrgwa4kc8na0whpg6n77qzn870g5w0tcv6lhu85ecg0pjvww""
+```";"";"";
+"369608312955731968";"Bryan_Beus#6442";"27-Jan-19 11:49 PM";"```
+sidd@sidd:~/komodo/src$ ./komodo-cli -ac_name=BEER z_importkey ""secret-extended-key-main1q0v7ahsmqqqqpqq0y3ed22gf07rckq285gx53sd2ugs84wqqq7cxhnyzfdpnw2w6wjvs8gxjg9zegemnsjqgna3hmqemnl27rwkqr83hq20uwz4u22aqkrddtkd7kujcd3jh7g6zkruavcyhst8htt4h78t5aswmfwkcy5szex9c472lj6evval5aj9nnspy73dphl7hzpnl0kpcsm86knntjf09292jqrspmjrgwa4kc8na0whpg6n77qzn870g5w0tcv6lhu85ecg0pjvww""
+```
+```
+sidd@sidd:~/komodo/src$ ./komodo-cli -ac_name=BEER z_listaddresses
+[
+  ""zs1pu88y453jqyfdnasjtflm2wy5gdyq75uyh0dhc4nzgm8xrxe6374gkzhg4w9fdd92pe4yur64qg"",
+  ""zs1wqykmk74mv2ezjscpxsgzrn4fasqwh50tgk0ym64m45c5yw5fjtpkps64gle963veqzuj04872z"",
+  ""zs1umhaattx6lna933m9zwfqlmkm2qj49hpa9lnymtj5h5c7cwtd3evfpu29hppprax9cs45fzeyqg""
+]
+```
+(Now, with the regtest chain)
+```
+sidd@sidd:~/komodo/src$ ./komodo-cli -ac_name=HELLO z_importkey ""secret-extended-key-main1q0v7ahsmqqqqpqq0y3ed22gf07rckq285gx53sd2ugs84wqqq7cxhnyzfdpnw2w6wjvs8gxjg9zegemnsjqgna3hmqemnl27rwkqr83hq20uwz4u22aqkrddtkd7kujcd3jh7g6zkruavcyhst8htt4h78t5aswmfwkcy5szex9c472lj6evval5aj9nnspy73dphl7hzpnl0kpcsm86knntjf09292jqrspmjrgwa4kc8na0whpg6n77qzn870g5w0tcv6lhu85ecg0pjvww""
+error code: -5
+error message:
+Invalid spending key
+```";"";"";
+"369608312955731968";"Bryan_Beus#6442";"27-Jan-19 11:50 PM";"Maybe it's just me?";"";"";
+"369608312955731968";"Bryan_Beus#6442";"27-Jan-19 11:51 PM";"If not, I'll submit an issue.";"";"";
+"369608312955731968";"Bryan_Beus#6442";"28-Jan-19 12:22 AM";"@dukeleto 
+
+Another question.
+
+I was able to get a curl command working for `z_listunspent` on the BEER chain. 
+
+The returned value has more in it than I expected.
+
+Command:
+
+```
+curl --user rpcuser:rpcpassword --data-binary '{""jsonrpc"": ""1.0"", ""id"":""curltest"", ""method"": ""z_listunspent"", ""params"": [1, 9999999, false, [""zs1umhaattx6lna933m9zwfqlmkm2qj49hpa9lnymtj5h5c7cwtd3evfpu29hppprax9cs45fzeyqg""] ] }' -H 'content-type: text/plain;' http://127.0.0.1:rpcport/
+```
+
+Response:
+
+```
+blockHash 0a4f15fe5425ef8bc6eb84e7bc3625c1ceccb3e49132b696a1841ab17a75a705 height 55200
+{""result"":[{""txid"":""23d33c0c12ba2224b2c9c252e304f491bf76ca05670c8f00d48300776c10850f"",""outindex"":0,""confirmations"":1,""rawconfirmations"":1,""spendable"":true,""address"":""zs1umhaattx6lna933m9zwfqlmkm2qj49hpa9lnymtj5h5c7cwtd3evfpu29hppprax9cs45fzeyqg"",""amount"":100.00000000,""memo"":""f60 [... abbreviated by me ]"",""change"":false}],""error"":null,""id"":""curltest""}
+```
+
+
+Look at the first line after the command:
+
+```
+blockHash 0a4f15fe5425ef8bc6eb84e7bc3625c1ceccb3e49132b696a1841ab17a75a705 height 55200
+```
+
+It looks self explanatory, but can you tell me more about this?
+
+Why isn't this showing up in a non-curl command? Is it something unique to z_listunspent commands, or did something change application-wide?";"";"";
+"369608312955731968";"Bryan_Beus#6442";"28-Jan-19 12:49 AM";"By the way, @smk762 -  dracocanis ominator, thanks for noticing the missing `]`, and also, welcome to the team!";"";"👍 (1),rum (1)";
+"365714438864633856";"dukeleto#7326";"28-Jan-19 01:38 AM";"@Bryan_Beus that printout is a debug printout, that i think i added. it only prints to stdout of the daemon. You happen to be running curl in the same terminal that has the STDOUT of your daemon. that printout should probably be commented out, too";"";"";
+"365714438864633856";"dukeleto#7326";"28-Jan-19 01:40 AM";"@Bryan_Beus you need to specify -regtest on the CLI command-line, so what you did was try to import a mainnet private into regtest, which won't work";"";"";
+"365714438864633856";"dukeleto#7326";"28-Jan-19 01:41 AM";"@Bryan_Beus for additional complexity, regtest starts as sprout, and changes to sapling at block 61. Sprout and sapling private keys are different and incompatible, so watch out for that";"";"";
+"369608312955731968";"Bryan_Beus#6442";"28-Jan-19 02:03 AM";"ok, that's interesting...
+
+so, for every `komodo-cli` command, I need to add `-regtest`, and sapling addresses are not valid until after block 61...
+
+Seems like I ought to document that somewhere... but where... hmmm.....";"";"";
+"365714438864633856";"dukeleto#7326";"28-Jan-19 02:12 AM";"not sure it's documented anywhere, it's just what happens in James's sapling change-over code, it selects a ""reasonable"" block, and it regtest, it always seems to choose 61";"";"";
+"365714438864633856";"dukeleto#7326";"28-Jan-19 02:13 AM";"```
+=== Running testscript dpowconfs.py ===
+Initializing DPoWconfs test directory /var/folders/k0/s6fw3wld56j9bx2h_kfvp_x80bj2wq/T/testx8B5Jd
+Writing to /var/folders/k0/s6fw3wld56j9bx2h_kfvp_x80bj2wq/T/testx8B5Jd/node0/komodo.conf
+Setting up network...
+cmd=/Users/jonathanleto/git/komodo/qa/pull-tester/run-bitcoin-cli
+Running /Users/jonathanleto/git/komodo/qa/pull-tester/run-bitcoin-cli -ac_name=REGTEST -conf=/var/folders/k0/s6fw3wld56j9bx2h_kfvp_x80bj2wq/T/testx8B5Jd/node0/REGTEST.conf -port=64367 -rpcport=64368 -regtest -addressindex=1 -spentindex=1 -ac_supply=5555555 -ac_reward=10000000000000 -ac_cc=2 -whitelist=127.0.0.1 -debug --daemon -rpcuser=rt -rpcpassword=rt -rpcwait getblockcount
+perc 0.0000% ac_pub=[000000...] acsize.0
+ERA0: end.0 reward.10000000000000 halving.0 decay.0
+000000000000000000000000000000000000000000000000000000000000000000000000000000000000a0724e18090000000000000000000000000000000000000000000000020000 extralen.73 crc0.10646e3b
+set p2pport.64367
+call komodo_args.(/Users/jonathanleto/git/komodo/src/komodod) NOTARY_PUBKEY.()
+>>>>>>>>>> REGTEST: p2p.64367 rpc.64368 magic.522f2cea 1378823402 5555555 coins
+initialized REGTEST at 1548600786
+Komodo REGTEST server starting
+set addressindex, will reindex. could take a while.
+set spentindex, will reindex. could take a while.
+finished loading blocks REGTEST
+fAddressIndex.1/1 fSpentIndex.1/1
+fAddressIndex.1/1 fSpentIndex.1/1
+height.0 slowflag.1 possible.1 cmp.0
+0
+connecting to http://rt:rt@127.0.0.1:64368
+created proxy
+REGTEST transition at 1 (0, 1296688602) -> (1, 1548600789)
+SET SAPLING ACTIVATION height.61
+REGTEST sapling activation at 61
+```";"";"";
+"365714438864633856";"dukeleto#7326";"28-Jan-19 02:13 AM";"sorry for the huge paste, but that shows a regtest chain starting up @Bryan_Beus";"";"";
+"369608312955731968";"Bryan_Beus#6442";"28-Jan-19 02:17 AM";"Ok. 
+
+I'm thinking that I don't want newcomers to Komodo to use a regtest chain just yet, then, so I don't know that I want this on developers.komodoplatform.com (which is only for newcomers, for now).
+
+If we put this anywhere, it would go on docs.komodoplatform.com ...
+
+I don't deal with that repo much -- I'm not sure how the sidebar is structured.
+
+@SHossain 
+
+If you want to get me just a section on docs.komodoplatform.com with a title ""Using a regtest asset chain for testing"" and then just point me to it, I can write a quick description of how all this works and make these notes before we lose them.";"";"";
+"369608312955731968";"Bryan_Beus#6442";"28-Jan-19 02:17 AM";"I can add this as an issue to the repo, if you're busy right now.";"";"";
+"365714438864633856";"dukeleto#7326";"28-Jan-19 02:43 AM";"@Bryan_Beus i understand that regtest is not newcomer friendly, it's mostly for KMD core devs, and also devs of asset chains and devs of external coins that use dpow";"";"";
+"365714438864633856";"dukeleto#7326";"28-Jan-19 02:45 AM";"we probably need some docs of how to run some of our tests, which use regtest mode";"";"";
+"365714438864633856";"dukeleto#7326";"28-Jan-19 02:45 AM";"to run my dpowconfs tests, you run `./qa/pull-tester/rpc-tests.sh dpowconfs` from the root of the komodo git repo";"";"";
+"365714438864633856";"dukeleto#7326";"28-Jan-19 02:46 AM";"that takes care of all the details, and if somebody wants to know more, they can read the source of a test file 😃";"";"";
+"365714438864633856";"dukeleto#7326";"28-Jan-19 02:46 AM";"we also have cryptoconditions tests";"";"";
+"365714438864633856";"dukeleto#7326";"28-Jan-19 02:47 AM";"and all the tests we inherited from zec, some pass, some don't";"";"";
+"365714438864633856";"dukeleto#7326";"28-Jan-19 02:57 AM";"There you go, the inventor of Javascript calling it a mistake. At least he is honest: https://twitter.com/BrendanEich/status/1089655469319192577";"";"";
+"369608312955731968";"Bryan_Beus#6442";"28-Jan-19 03:57 AM";"😃 
+
+Why does it have to be so necessary? 😛 
+
+I'm coming out of a career change, and JavaScript is the thing so many dev teams are hungry for.";"";"";
+"232679450301431808";"blackjok3r#3181";"28-Jan-19 04:56 AM";"Its terrible";"";"";
+"232679450301431808";"blackjok3r#3181";"28-Jan-19 04:56 AM";"I hate it";"";"";
+"232679450301431808";"blackjok3r#3181";"28-Jan-19 04:56 AM";"The most non sensical language ever";"";"";
+"232679450301431808";"blackjok3r#3181";"28-Jan-19 04:56 AM";"Not to mention insecure";"";"";
+"369608312955731968";"Bryan_Beus#6442";"28-Jan-19 05:27 AM";"Have you used es6?
+
+I only started learning javascript after es6 was released. 
+
+It got rid of many of the worst things, like scoping, semi-colons, and all the weird syntax
+
+As long as you don't get into async stuff or recursive stuff, I find it to be rather straight forward. 
+
+Nothing much else to compare to, though.
+
+I'm avoiding php for now. However much you may hate javascript, php appears to be far worse.";"";"";
+"455741312273219595";"jl777c#5810";"28-Jan-19 06:37 AM";"async and recursive stuff is the type of code that is the most powerful and difficult to get working. not being able to do this reliably makes it a toy";"";"";
+"423176312354635779";"gcharang#6833";"28-Jan-19 10:15 AM";"@Bryan_Beus Hey you can add it here: https://github.com/KomodoPlatform/Documentation/blob/dev/docs/source/komodo/regtest-assetchain.rst
+I have replied to the issue here: https://github.com/KomodoPlatform/Documentation/issues/70#issuecomment-458070646";"";"👌 (1)";
+"371114647052615681";"Mylo#8306";"28-Jan-19 10:22 AM";"yeah stay away from regtest for newbies @Bryan_Beus it started off like but it's got a few idiosyncrasies that are solved with containers on a host running a real blockchain.";"";"";
+"371114647052615681";"Mylo#8306";"28-Jan-19 10:22 AM";"* s/like/well";"";"";
+"412323938782150658";"SHossain#0007";"28-Jan-19 11:24 AM";"@Bryan_Beus new comers don't need regtest. that would be waste of time for them and will likely get lost in the process. they should use only the normal assetchain creaion. regtest only used by couple of devs and this is specifically for core testing. external developers will not perform core-testing for us.";"";"";
+"424224648889106444";"Mihailo#5902";"28-Jan-19 12:09 PM";"here I would like to suggest to all devs that all commits to FSM and other big branches in Komodo repo are done with PR from other branch with squash commit. It will be much easier to track what changes are done by someone instead of trying to locate the commit which made some change from a bunch of them.";"";"👍 (6)";
+"424224648889106444";"Mihailo#5902";"28-Jan-19 12:15 PM";"My flow when merging changes to Komodo FSM is usually: PR from mybranch to FSM on my Komodo repo with squash, then PR from my FSM to JL777 FSM. This way I have clean merges and it is easy to find my modifications (if something is broken 😉 )";"";"";
+"365714438864633856";"dukeleto#7326";"28-Jan-19 01:11 PM";"Very much +1 to PR's in general. I think squashed commits are good when you have a messy history, but I don't think we need to make that a hard rule, like other projects do. If you have 2 sensible commits in your branch, each with a good commit message and atomic change, that is fine. Some projects force all changes to be squashed to one commit, and that makes it harder for newcomers";"";"";
+"365714438864633856";"dukeleto#7326";"28-Jan-19 01:13 PM";"Write good commit messages. Don't change whitespace and function in the same commit (looking at you @blackjok3r :abusedsmily: ). Don't include lots of useless commits that churn code, when 1 cleaner commit will suffice. Use pull requests. Run tests if available. I guess those are some of my ""golden rules""";"";"";
+"424224648889106444";"Mihailo#5902";"28-Jan-19 02:07 PM";"@dukeleto I agree. I didn't mean to be a hard rule. Ofc if you have good commit message and you have two or three commits then it is ok to merge it without squash. But my point is to avoid merging a lot of commits from local development and put them in a major branch like FSM. When I develop most of the time I make commit with 'Fix' message as I'm trying something. When I finish I squash everything in my FSM with good commit message, and then merge it in Komodo FSM.";"";"";
+"369608312955731968";"Bryan_Beus#6442";"28-Jan-19 05:13 PM";"@jl777c 
+
+I agree. I'm aware of the incentive many developers get for learning Lisp. I'd like to take a look at it at some point. My to-do list is quite long, and I only get about 15 or so hours a week of personal study time.
+
+But as an easy entry into programming, beyond JavaScript, I'm not aware of anything that's easier to pick up and to make something useful out of it. 
+
+The only thing that comes close is Python, but you can't be as useful on the web with Python. You have to be in the geographical location where your desired line of study is desired.
+
+If WASM changes that, I wouldn't be surprised. 
+
+But I've looked into WASM a bit, and I think the real power from WASM in non-C++, Rust, or Go languages is still a few years away. Maybe two or three, or more.
+
+WASM has some limitations that makes it currently unsuitable for high-level programming tasks -- namely, stitching things together and tying together many disparate resources. This makes WASM good for super powerful and computational intensive stuff, but the ""lego"" effect that you find in other languages is currently easier to achieve elsewhere .
+
+I'd like to head to C++, whenever I feel moderately comfortable with JavaScript and ready to try something new. I really hope to skip Php, even as a web developer, but it may not be possible. Anyway, WASM does look exciting.
+
+Most likely though, I'll probably wind up doing Python next, if anything.";"";"";
+"369608312955731968";"Bryan_Beus#6442";"28-Jan-19 05:21 PM";"Also, JavaScript handles async stuff fairly well, as far as I can tell. 
+
+The `async` and `await` commands that arrived with es6 make it fairly easy, but you still have to be careful. 
+
+My point is that it's not as straight forward. 
+
+Recursive stuff, however -- JavaScript doesn't seem to be built for it as much as you might find in a language like Lisp.";"";"";
+"371114647052615681";"Mylo#8306";"28-Jan-19 10:54 PM";"i think the saying goes, ""... learn C, then you can learn anything....""";"";"👍 (2),💯 (1)";
+"365714438864633856";"dukeleto#7326";"28-Jan-19 11:41 PM";"If people want to learn a new language that is maybe something different, I had a lot of fun with this language: https://factorcode.org/";"";"";
+"371114647052615681";"Mylo#8306";"29-Jan-19 03:42 AM";"@dukeleto i'm taking a guess you've seen a few crypto codebases.   are there any standout ones with lots of comments?";"";"";
+"371114647052615681";"Mylo#8306";"29-Jan-19 03:42 AM";"""good"" comments";"";"";
+"371114647052615681";"Mylo#8306";"29-Jan-19 03:42 AM";"well commented...etc.";"";"";
+"371114647052615681";"Mylo#8306";"29-Jan-19 04:15 AM";"@grewalsatinder how's your go commenting going? :P
+Check this out https://godoc.org/";"";"";
+"347922216429813760";"grewalsatinder#9653";"29-Jan-19 05:27 AM";"I have not put much comments in my go code. Godoc is part of Go's programming fundamentals. I will write my examples and documentation in my go code as I will progress.";"";"";
+"371114647052615681";"Mylo#8306";"29-Jan-19 06:29 AM";"yeah it's quite impressive that they provide that in the workflow";"";"";
+"371114647052615681";"Mylo#8306";"29-Jan-19 06:30 AM";"well organized, pulls from github etc. and if your package is in the go repos, looks very pro";"";"";
+"365714438864633856";"dukeleto#7326";"29-Jan-19 07:15 AM";"@Mylo most cryptocoin code i read has no comments";"";"";
+"365714438864633856";"dukeleto#7326";"29-Jan-19 07:17 AM";"i seem to be a rebel, but i like to leave comments about design/intent and bugs, but as a former $job hammered into us, ""write intention-revealing code"". They had at least half a million lines of Perl + C++ code, and we were not allowed to add comments to source control";"";"";
+"365714438864633856";"dukeleto#7326";"29-Jan-19 07:17 AM";"we used comments ourselves in personal branches, and then removed them all for the final squash/merge";"";"";
+"365714438864633856";"dukeleto#7326";"29-Jan-19 07:17 AM";"so we mostly used comments as temporary TODOs";"";"";
+"365714438864633856";"dukeleto#7326";"29-Jan-19 09:40 AM";"I could use somebody's fresh 👀 to tell me how dumb I am being";"";"";
+"365714438864633856";"dukeleto#7326";"29-Jan-19 09:40 AM";"```
+Undefined symbols for architecture x86_64:
+  ""ImportAddress(CWallet*, CBitcoinAddress const&, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > const&)"", referenced from:
+      komodo_importaddress(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >) in libbitcoin_server.a(libbitcoin_server_a-validation.o)
+ld: symbol(s) not found for architecture x86_64
+```";"";"";
+"365714438864633856";"dukeleto#7326";"29-Jan-19 09:41 AM";"what is that madness trying to tell me? stuff compiles, but linking fails, that I know for sure";"";"";
+"365714438864633856";"dukeleto#7326";"29-Jan-19 09:44 AM";"` ImportAddress(pwallet, address, addr);` is the line, and this is adding dpow to the GIN codebase, which is a DASH fork with btc 0.12.1 internals. Various wallet changes happened, so I think `pwallet` is the culprit";"";"";
+"365714438864633856";"dukeleto#7326";"29-Jan-19 09:46 AM";"maybe this requires a change to a Makefile, but I feel pretty stuck";"";"";
+"365714438864633856";"dukeleto#7326";"29-Jan-19 09:47 AM";"50HUSH to whoever can get me over this hump, this is my branch: https://github.com/gin-stuff/gincoin-core/tree/dpow";"";"";
+"455741312273219595";"jl777c#5810";"29-Jan-19 09:56 AM";"ImportAddress is not there";"";"";
+"365714438864633856";"dukeleto#7326";"29-Jan-19 09:58 AM";"```
+src/komodo_validation012.h
+88:void ImportAddress(CWallet* const pwallet, const CBitcoinAddress& address, const std::string& strLabel);
+146:                ImportAddress(pwallet, address, addr);
+```";"";"";
+"365714438864633856";"dukeleto#7326";"29-Jan-19 09:58 AM";"feels like i need to add a link target in some makefile template inside a dungeon somewhere";"";"";
+"455741312273219595";"jl777c#5810";"29-Jan-19 10:00 AM";"where is Importaddress actually located?";"";"";

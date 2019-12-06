@@ -1,0 +1,425 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[26-Nov-18 08:47 AM] Mihailo#5902
+👍
+
+[26-Nov-18 01:04 PM] KNOX#9338
+**Test CC on a Sapling Activated Chain**
+
+**1.** Clone, fetch zcash sapling params and compile
+```
+git clone https://github.com/PirateNetwork/komodo
+cd komodo
+git checkout FSM
+./zcutil/fetch-params.sh
+./zcutil/build.sh -j$(nproc)
+```
+**2.** Chain params
+```
+./komodod -ac_name=SPLTEST -pubkey=<yourpubkey> -ac_supply=5555555 -ac_reward=10000000000000 -ac_cc=2 -addressindex=1 -spentindex=1 -addnode=54.36.126.42 -addnode=94.130.224.11 &
+```
+
+**3.** Start CC testing as you did before. Sapling is already activated on this chain. Just mine a block or two and use the funds.
+
+P.S.: Make sure you use this specific repo as this already contains sapling activation code and no need for you to manually edit source and compile.
+
+Can, anyone pin this please?
+
+{Reactions}
+👌 (2) 
+
+[26-Nov-18 01:05 PM] KNOX#9338
+@TonyL @Mihailo @dukeleto @siu - Chainmakers @Alright ^^
+
+[26-Nov-18 01:43 PM] SHossain#0007
+@CHMEX do you mind to setup an explorer for SPLTEST chain as well? it would be beneficial for the CC testing on sapling activated chain
+
+[26-Nov-18 01:43 PM] siu - Chainmakers#3920
+testing
+
+[26-Nov-18 01:50 PM] SHossain#0007
+```
+./komodo-cli -ac_name=SPLTEST faucetfund 10000
+{
+  "result": "success",
+  "hex": "01000000010227e4541ebe730fa14c48c8bfdf41348c495de676c3db36a5d48cfed949e347000000004847304402204872e032960e1c441219e5c0121786e2001d136749d7cacbd86a0f99d51ab1bc0220562044dbbdcb7de1d9cf53fc3fc7b1cde7d2a8181ee1bff8ae9da29ccfd4946d01ffffffff020010a5d4e8000000302ea22c8020e029c511da55523565835887e412e5a0c9b920801b007000df45e545f25028248103120c008203000401ccf068cd792f0800002321023bf8ba872e3e4a6d60455354efc1b7daf4f87e942d8d9f2c2b9942ff91df6e0fac00000000"
+}
+```
+
+[26-Nov-18 01:50 PM] SHossain#0007
+```
+./komodo-cli -ac_name=SPLTEST sendrawtransaction 01000000010227e4541ebe730fa14c48c8bfdf41348c495de676c3db36a5d48cfed949e347000000004847304402204872e032960e1c441219e5c0121786e2001d136749d7cacbd86a0f99d51ab1bc0220562044dbbdcb7de1d9cf53fc3fc7b1cde7d2a8181ee1bff8ae9da29ccfd4946d01ffffffff020010a5d4e8000000302ea22c8020e029c511da55523565835887e412e5a0c9b920801b007000df45e545f25028248103120c008203000401ccf068cd792f0800002321023bf8ba872e3e4a6d60455354efc1b7daf4f87e942d8d9f2c2b9942ff91df6e0fac00000000
+error code: -26
+error message:
+16: tx-overwinter-active
+```
+
+[26-Nov-18 01:50 PM] SHossain#0007
+@jl777c ^^
+
+[26-Nov-18 01:54 PM] jl777c#5810
+it is good we tested this, yes it needs to be type 4 tx
+
+{Reactions}
+👍🏽 
+
+[26-Nov-18 01:55 PM] SHossain#0007
+decoderawtransacion says version 1
+
+[26-Nov-18 01:55 PM] SHossain#0007
+```
+./komodo-cli -ac_name=SPLTEST decoderawtransaction 01000000010227e4541ebe730fa14c48c8bfdf41348c495de676c3db36a5d48cfed949e347000000004847304402204872e032960e1c441219e5c0121786e2001d136749d7cacbd86a0f99d51ab1bc0220562044dbbdcb7de1d9cf53fc3fc7b1cde7d2a8181ee1bff8ae9da29ccfd4946d01ffffffff020010a5d4e8000000302ea22c8020e029c511da55523565835887e412e5a0c9b920801b007000df45e545f25028248103120c008203000401ccf068cd792f0800002321023bf8ba872e3e4a6d60455354efc1b7daf4f87e942d8d9f2c2b9942ff91df6e0fac00000000
+{
+  "txid": "27e0a64887dcb8a190d8577e69f271b246c4778bac7ac060216015e07b3a3ebd",
+  "overwintered": false,
+  "version": 1,
+  "locktime": 0,
+```
+
+[26-Nov-18 01:57 PM] jl777c#5810
+@Decker can you look at cc/CCtx.cpp? it uses the built infunctions to make a tx, so hopefully it is a matter of changing a setting in the CMutableTransaction
+
+[26-Nov-18 01:59 PM] jl777c#5810
+the CC vouts are signed using the same cryptoconditions signing, so it must be the tx version (and the normal vouts that are not signed using sapling)
+
+[26-Nov-18 02:04 PM] TonyL#3577
+Seems all CC transactions have same 1 version now.
+So seems `-regtest`  chain wasn't the best way to test CCs on sapling 🤕
+
+[26-Nov-18 02:04 PM] jl777c#5810
+@Decker I think the problem is     auto consensusBranchId = CurrentEpochBranchId(chainActive.Height() + 1, Params().GetConsensus());
+it isnt updating based on the ASSETCHAINS_SAPLING, need to add a new epoch or something like that
+
+[26-Nov-18 02:09 PM] CHMEX#0686
+@SHossain spltest.explorer.dexstats.info/
+Ping me when it needs a new one / new parameters
+
+[26-Nov-18 02:10 PM] SHossain#0007
+Thank you very much again. Much appriciated 😃
+
+[26-Nov-18 02:10 PM] SHossain#0007
+you may need to update the daemon once we have fixes for the bug found.
+
+[26-Nov-18 02:38 PM] TonyL#3577
+CC tests passing on `PirateNetwork`without errors as well, and daemon told me that sapling activated:
+```SET SAPLING ACTIVATION height.61
+REGTEST sapling activation at 61```
++ when I started `-regtest` not in tests framework (when daemon crashed) CCs worked fine. 
+Just checked and sapling activating fine (transactions "version": 4) in regtest mode
+
+[26-Nov-18 02:39 PM] TonyL#3577
+So `regtest` seems fooled me 😰
+
+[26-Nov-18 02:43 PM] jl777c#5810
+wait, so without -regtest, is there a problem or no?
+
+[26-Nov-18 02:46 PM] SHossain#0007
+the output i provided with normal mode. no regtest
+
+[26-Nov-18 03:07 PM] Mihailo#5902
+Hey guys, I have built KMD from master branch in order to run KMD node (I wanted to avoid sapling changes to maybe make some problems). But when I start the daemon I get :
+`komodod: main.cpp:3640: void PruneBlockIndexCandidates(): Assertion `!setBlockIndexCandidates.empty()' failed.`
+
+[26-Nov-18 03:08 PM] Mihailo#5902
+Even tried with FSM branch to run pure KMD node: `komodod: chain.cpp:147: CBlockIndex* CBlockIndex::GetAncestor(int): Assertion `pindexWalk->pprev' failed.`
+
+[26-Nov-18 03:08 PM] blackjok3r#3181
+You need to -reindex it
+
+[26-Nov-18 03:08 PM] blackjok3r#3181
+long standing bug, unreproducable
+
+[26-Nov-18 03:09 PM] Mihailo#5902
+Ok, will try to trnasfer chain from other node where it works. Reindex will last too long
+
+[26-Nov-18 03:09 PM] blackjok3r#3181
+Usually happens syncing on system with too low ram, or a bad quality VPS where ram was over provisioned and runs out.
+
+[26-Nov-18 03:09 PM] Mihailo#5902
+Thnx 👍
+
+[26-Nov-18 03:10 PM] Mihailo#5902
+Hmmm, interesting. I have 4GB ram on that VPS, but I was compling while chain synced and was out of memory on build, and also saw in get info something about memory. Good I have one node which synced good
+
+[26-Nov-18 03:10 PM] blackjok3r#3181
+Just use a boot strap yeah.. thats how we been doing staked notaries msotly, as they dont need that much ram to run.
+
+[26-Nov-18 03:11 PM] Mihailo#5902
+Bootstrap? Like transfering chain from other node?
+
+[26-Nov-18 03:12 PM] gcharang#6833
+https://bootstrap.0x03.services/komodo/KMD.html theres a tar file of KMD chain here
+
+{Reactions}
+👍 (2) 
+
+[26-Nov-18 03:12 PM] blackjok3r#3181
+beat me to it
+
+[26-Nov-18 03:17 PM] Mihailo#5902
+Great, didn't knew we had that!
+
+[26-Nov-18 03:22 PM] SHossain#0007
+@gcharang it would be better if you please put that bootstrap link to compile komodo doc
+
+{Reactions}
+👍 
+
+[26-Nov-18 03:23 PM] gcharang#6833
+But do we wnat to provide a bootstrap through official resources?
+
+[26-Nov-18 03:25 PM] SHossain#0007
+🤔
+
+[26-Nov-18 03:27 PM] blackjok3r#3181
+Probably not IMO ... its not liek it takes 48H to sync
+
+[26-Nov-18 03:27 PM] blackjok3r#3181
+its really good for testing
+
+[26-Nov-18 03:27 PM] blackjok3r#3181
+but everyone should not use bootstrap...
+
+[26-Nov-18 03:27 PM] SHossain#0007
+ok. ignore my lpost then
+
+[26-Nov-18 03:28 PM] SHossain#0007
+actually, it takes about 1.5 - 2 hours for a full sync for me
+
+[26-Nov-18 03:29 PM] blackjok3r#3181
+Yes with very fast internet its not bad ... I was inernet limited at 50Mibt on last sync here, and it took many hours... for a ~10GB chain, it pulled in somehting lilke 100GB or more of traffic...
+
+[26-Nov-18 04:02 PM] siu - Chainmakers#3920
+```komodo_activate_sapling.31 starting blocktime 1543234307 cmp.1
+SPLTEST transition at 1 (0, 1231006505) -> (1, 1543234150)
+SET SAPLING ACTIVATION height.61
+SPLTEST sapling activation at 61
+```
+
+[26-Nov-18 04:02 PM] SHossain#0007
+yes, it has already been activated
+
+[26-Nov-18 04:11 PM] dukeleto#7326
+@KNOX this is a good time to run the automated python tests in the PirateChain fork of komodo: `./qa/pull-tester/rpc-tests.sh cryptoconditions --tracerpc`
+
+[26-Nov-18 04:11 PM] dukeleto#7326
+if they don't pass, something is wrong
+
+[26-Nov-18 04:18 PM] dukeleto#7326
+@KNOX just some advice, that renaming the repo to `pirate-komodo` or `pirate` makes more sense, so that somebody can clone `komodo` and this pirate version of KMD into the same directory. Right now, I have to choose a custom name for it. And because I already have hundreds of repos, and every person will make their own name for the repo, it's just not ideal
+
+[26-Nov-18 04:19 PM] Mihailo#5902
+@jl777c @miketout Hey guys, I just figured out tokenconvert RPC is missing from the new FSM after sapling changes are added. Before there was rpcserver.cpp in src directory, but now I see it is moved to rpc/server.cpp and tokenconvert is not there. I'm worried that maybe something else is could also slipped with new changes...
+https://github.com/jl777/komodo/blob/FSM/src/rpc/server.cpp
+
+https://github.com/jl777/komodo/blob/572db45f9d5c80aceb2754964b40f628d57ad090/src/rpcserver.cpp
+
+{Embed}
+https://github.com/jl777/komodo/blob/FSM/src/rpc/server.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+{Embed}
+https://github.com/jl777/komodo/blob/572db45f9d5c80aceb2754964b40f628d57ad090/src/rpcserver.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[26-Nov-18 04:20 PM] dukeleto#7326
+maybe it was removed on purpose
+
+[26-Nov-18 04:21 PM] jl777c#5810
+i think when you do a pull request, anything else missing will come back?
+
+[26-Nov-18 04:21 PM] dukeleto#7326
+depends on how branches branched from each other, and which branch you are sending the PR to
+
+[26-Nov-18 04:22 PM] dukeleto#7326
+```src/wallet/rpcwallet.cpp
+6864:UniValue tokenconvert(const UniValue& params, bool fHelp)
+6868:        throw runtime_error("tokenconvert evalcode tokenid pubkey amount\n");```
+
+[26-Nov-18 04:22 PM] dukeleto#7326
+latest KMD FSM branch, it's right there
+
+[26-Nov-18 04:22 PM] dukeleto#7326
+let me introduce people to a think called `grep -r`, or even better `ack` 😃
+
+[26-Nov-18 04:22 PM] dukeleto#7326
+also, if we had a test for it, you could run the test to see if it works 😃
+
+[26-Nov-18 04:22 PM] Mihailo#5902
+@dukeleto, it is in rpcwallet.cpp, but not server.cpp where all other commands are...
+
+[26-Nov-18 04:23 PM] dukeleto#7326
+@Mihailo and if you understand why, you will reach enlightenment
+
+[26-Nov-18 04:23 PM] Mihailo#5902
+@jl777c I rebased my changes on latest FSM so I do not have it either
+
+[26-Nov-18 04:23 PM] dukeleto#7326
+@Mihailo things are put in places that make the compilation work, that is all
+
+[26-Nov-18 04:23 PM] jl777c#5810
+tokenconvert is in my tree
+
+[26-Nov-18 04:23 PM] dukeleto#7326
+any other logic or sanity or "order" is an accident 😃
+
+[26-Nov-18 04:23 PM] jl777c#5810
+from jl777 repo?
+
+[26-Nov-18 04:24 PM] dukeleto#7326
+jl777/komodo has that RPC, I don't think there is an issue
+
+[26-Nov-18 04:25 PM] Mihailo#5902
+Hmmm, I'm looking at correct repo I think: https://github.com/jl777/komodo/blob/FSM/src/rpc/server.cpp
+
+{Embed}
+https://github.com/jl777/komodo/blob/FSM/src/rpc/server.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[26-Nov-18 04:26 PM] jl777c#5810
+oh. the code is there, but you are right not in the list of rpc calls!
+
+[26-Nov-18 04:26 PM] Mihailo#5902
+Yep
+
+[26-Nov-18 04:27 PM] dukeleto#7326
+oh, it was lost from the rpc method list, so it won't be found
+
+[26-Nov-18 04:27 PM] dukeleto#7326
+@Mihailo good find. something that could be easily caught with automated tests.... Yes, I will be the broken record about automated tests 🤓
+
+[26-Nov-18 04:28 PM] Mihailo#5902
+My worries are that merging the changes for sapling was used from some other branch that could had some other stuff missing...
+
+[26-Nov-18 04:29 PM] dukeleto#7326
+yes, if it happened to 1 RPC, it probably happened to more than 1
+
+[26-Nov-18 04:29 PM] Mihailo#5902
+And not just RPC...
+
+[26-Nov-18 04:29 PM] dukeleto#7326
+verus does not have many RPCs that KMD does
+
+[26-Nov-18 04:29 PM] dukeleto#7326
+@Mihailo shouldn't be too hard to diff the file that lists all RPCs
+
+[26-Nov-18 04:29 PM] dukeleto#7326
+and see if there is anything missing
+
+[26-Nov-18 04:31 PM] jl777c#5810
+so far, most all the tests are working. signing CC is the only known issue, other than missing rpc def
+
+[26-Nov-18 04:36 PM] dukeleto#7326
+I am syncing SPLTEST now
+
+[26-Nov-18 04:37 PM] SHossain#0007
+@dukeleto you need to use FSM branch from PirateNetwork repo
+
+[26-Nov-18 04:37 PM] dukeleto#7326
+yup, I did, as described above
+
+[26-Nov-18 04:37 PM] dukeleto#7326
+```  "blocks": 397,
+  "longestchain": 397,```
+
+{Reactions}
+👍🏽 
+
+[26-Nov-18 04:37 PM] SHossain#0007
+hope you already know 😃
+
+[26-Nov-18 04:39 PM] dukeleto#7326
+i am running the CC tests now, on pirate-komodo
+
+[26-Nov-18 04:40 PM] dukeleto#7326
+we really need to setup Travis CI to report this stuff, maybe even on Discord, but on a "badge" on Github would be a huge improvement too
+
+[26-Nov-18 04:40 PM] dukeleto#7326
+sapling activated correctly in regtest, yay
+
+[26-Nov-18 04:42 PM] dukeleto#7326
+`./qa/pull-tester/rpc-tests.sh cryptoconditions.py --tracerpc`
+
+[26-Nov-18 04:42 PM] dukeleto#7326
+```Tests successful
+--- Success: cryptoconditions.py ---
+
+Tests completed: 1
+successes 1; failures: 0```
+
+[26-Nov-18 04:43 PM] dukeleto#7326
+sweet, the tests pass
+
+[26-Nov-18 04:43 PM] Mihailo#5902
+Am I retarded or what? I have added the tokenconvert in RPClist and I cannot get it to show up in komodo-cli help or for komodo-cli to execute it. I've even done make clean and then make....
+```
+// tokens
+    { "tokens",       "tokeninfo",        &tokeninfo,         true },
+    { "tokens",       "tokenlist",        &tokenlist,         true },
+    { "tokens",       "tokenorders",      &tokenorders,       true },
+    { "tokens",       "tokenaddress",     &tokenaddress,      true },
+    { "tokens",       "tokenbalance",     &tokenbalance,      true },
+    { "tokens",       "tokencreate",      &tokencreate,       true },
+    { "tokens",       "tokentransfer",    &tokentransfer,     true },
+    { "tokens",       "tokenbid",         &tokenbid,          true },
+    { "tokens",       "tokencancelbid",   &tokencancelbid,    true },
+    { "tokens",       "tokenfillbid",     &tokenfillbid,      true },
+    { "tokens",       "tokenask",         &tokenask,          true },
+    //{ "tokens",       "tokenswapask",     &tokenswapask,      true },
+    { "tokens",       "tokencancelask",   &tokencancelask,    true },
+    { "tokens",       "tokenfillask",     &tokenfillask,      true },
+    //{ "tokens",       "tokenfillswap",    &tokenfillswap,     true },
+    { "tokens",       "tokenconvert",     &tokenconvert,      true },
+```
+
+[26-Nov-18 04:43 PM] Mihailo#5902
+I hope I'm "what"... 😃
+
+[26-Nov-18 04:43 PM] dukeleto#7326
+there is another place where you have to specify how many arguments the RPC gets
+
+[26-Nov-18 04:43 PM] Mihailo#5902
+Oh, ok.
+
+[26-Nov-18 04:44 PM] dukeleto#7326
+and/or if special things happen to some arguments, like integer or stringification. It's confusing
+
+[26-Nov-18 04:45 PM] Mihailo#5902
+Do you happen to know by heart where is that place? 😉
+
+[26-Nov-18 04:45 PM] dukeleto#7326
+@Mihailo src/rpc/client.cpp
+
+[26-Nov-18 04:45 PM] dukeleto#7326
+vRPCConvertCommands
+
+[26-Nov-18 04:45 PM] dukeleto#7326
+only RPCs that require conversion need to be listed. If you are getting an error about method not found, that is not it.
+
+[26-Nov-18 04:46 PM] dukeleto#7326
+exactly what error do you get?
+
+[26-Nov-18 04:46 PM] Mihailo#5902
+```
+error code: -32601
+error message:
+Method not found
+```
+
+[26-Nov-18 04:46 PM] dukeleto#7326
+ok, that is not related to not being in that conversion list
+

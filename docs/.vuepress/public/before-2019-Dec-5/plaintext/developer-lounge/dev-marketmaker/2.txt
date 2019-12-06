@@ -1,0 +1,367 @@
+==============================================================
+Guild: Komodo
+Channel: dev-marketmaker
+Topic: Discussion about AtomiAPI and its market making tech.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[30-Jun-18 07:30 AM] jl777c#5810
+those are the two critical datapoints
+
+[30-Jun-18 02:22 PM] barv#0867
+setting up a barterdex bob and the chips  electrum doesn't seem to work. feedback from ./setpassphrase: {"coin":"CHIPS","installed":false,"height":-1,"balance":0,"status":"active","electrum":"electrum2.cipig.net:10053"
+any idea what could wring here?
+
+[30-Jun-18 02:22 PM] tolken#2655
+Calling balance and the sum of listspent are the same, both lower than they should be. Listspent was missing a couple 65kmd UTXOs, restarting bdex, the UTXOs reappeared via listunspent. The sum of listunspent and balance remain equal. @jl777c
+
+[30-Jun-18 02:24 PM] jl777c#5810
+native?
+
+[30-Jun-18 02:24 PM] jl777c#5810
+its possible some utxo are being resrved
+
+[30-Jun-18 02:24 PM] tolken#2655
+yes all native
+
+[30-Jun-18 02:26 PM] tolken#2655
+I believe they were reserved at some point in the day.  But it was likely many hours earlier. Didn’t seem like any recent trades we’re starting.
+
+[30-Jun-18 02:31 PM] tolken#2655
+could i safety do something like check for pending swaps - if there are none and “balance” != actual balance... purge some data file and/or restart BarterDex?
+
+[30-Jun-18 02:31 PM] tolken#2655
+not sure what bdex data file may exist that i could safely delete, if any.
+
+[30-Jun-18 02:32 PM] jl777c#5810
+recentswaps
+
+[30-Jun-18 02:32 PM] jl777c#5810
+that would show the ones that are pending
+
+[30-Jun-18 02:33 PM] ComputerGenie#2331
+_uses_
+`    pending=$(curl -s --url "http://127.0.0.1:$port" --data "{\"userpass\":\"$userpass\",\"method\":\"recentswaps\",\"limit\":3}" | jq '.pending.timeleft') # check if awiting a swap process for any of our last 3 swaps`
+
+[30-Jun-18 02:33 PM] tolken#2655
+Alright, if zero pending, but old reserved UTXOs, that might be a good time to restart bdex to flush this out.
+
+[30-Jun-18 02:35 PM] tolken#2655
+Is Pending Swaps info directly derived from the SWAPS data files?
+
+[30-Jun-18 02:36 PM] tolken#2655
+Or is that unique data from SWAP stages data?
+
+[30-Jun-18 02:41 PM] jl777c#5810
+recent swaps uses DB/SWAPS and data in RAM
+
+[30-Jun-18 02:42 PM] jl777c#5810
+yes, if there are missing utxo, good time to restart
+
+[30-Jun-18 02:55 PM] tolken#2655
+Thanks, I’ll see if I can clearly detect when this discrepancy manifests and handle it.
+
+[30-Jun-18 03:00 PM] CrisF#3405
+Hi, I'm getting this
+ ```~/SuperNET/iguana/dexscripts$ ./client
+curl: (7) Failed to connect to 127.0.0.1 port 7783: Connection refused```
+Anyone know what I can do to fix it?
+
+[30-Jun-18 03:01 PM] CrisF#3405
+I've also been seeing this
+```max rpc threads spawned and alive 0 <- 1```
+
+[30-Jun-18 03:11 PM] tolken#2655
+@CrisF the first one typically just means your bdex isn’t running.
+
+[30-Jun-18 03:12 PM] tolken#2655
+might mean misconfig, might mean many things,  but you’ll certainly get that if bdex is offline.
+
+[30-Jun-18 03:13 PM] CrisF#3405
+It pauses there and then continues
+```./client
+curl: (7) Failed to connect to 127.0.0.1 port 7783: Connection refused
+Already up-to-date.
+Already up-to-date.
+RPCport.0 remoteport.-1, nanoports 7793 7803 7813
+showwif.0 Marketmaker 0.1 27774 rsize.248 1405454238
+>>>>>>>>>>> set LP_canbind.1
+BTC, cant open.(/home/tex/.bitcoin/bitcoin.conf)
+BTC inactive.1530371494
+KMD, PAT.2 cant open.(/home/tex/.pat/pat.conf)
+PRLPAY.3 cant open.(/home/tex/.komodo/PRLPAY/PRLPAY.conf)
+MLM.4 cant open.(/home/tex/.mktcoin/mktcoin.conf)
+CRDS.5 cant open.(/home/tex/.credits/credits.conf)
+...```
+
+[30-Jun-18 03:13 PM] tolken#2655
+I actually use that failed response as a means to detect if bdex has died and restart it automatically.
+
+[30-Jun-18 03:15 PM] ComputerGenie#2331
+`./client
+curl: (7) Failed to connect to 127.0.0.1 port 7783: Connection refused
+Already up-to-date.`
+In that context, it means that the "just in case" kill of mm found no running mm to kill
+
+[30-Jun-18 03:16 PM] tolken#2655
+I’d just kill market maker anyway. That client script is too compassionate.
+
+[30-Jun-18 03:20 PM] CrisF#3405
+Could this be related to why I get these messages when trying to run native?
+```max rpc threads spawned and alive 0 <- 1
+userpass.(7xxxxxxxxxxxxxxxxxxxxx7e)
+<<<<<<<<<<< A bitcoind_RPC: KMD post_process_bitcoind_RPC.getinfo
+<<<<<<<<<<< A bitcoind_RPC: BCH post_process_bitcoind_RPC.getinfo
+<<<<<<<<<<< A bitcoind_RPC: KMD post_process_bitcoind_RPC.getinfo
+<<<<<<<<<<< A bitcoind_RPC: KMD post_process_bitcoind_RPC.listunspent
+<<<<<<<<<<< A bitcoind_RPC: BCH post_process_bitcoind_RPC.getinfo
+<<<<<<<<<<< A bitcoind_RPC: BCH post_process_bitcoind_RPC.listunspent
+<<<<<<<<<<< A bitcoind_RPC: KMD post_process_bitcoind_RPC.getinfo
+<<<<<<<<<<< A bitcoind_RPC: KMD post_process_bitcoind_RPC.validateaddress
+...```
+
+[30-Jun-18 03:21 PM] ComputerGenie#2331
+You get a debug for what it did, because that's how a debug output works
+
+[30-Jun-18 03:23 PM] CrisF#3405
+Like this `tail -f debug.log`?
+
+[30-Jun-18 03:25 PM] ComputerGenie#2331
+no
+
+[30-Jun-18 03:25 PM] ComputerGenie#2331
+the output you see in terminal when you run marketmaker from a terminal is known as a 'debug output'
+
+[30-Jun-18 03:27 PM] ComputerGenie#2331
+some things in the debug are displayed for no other reason than to allow for debugging of issues
+
+[30-Jun-18 03:30 PM] CrisF#3405
+I've not been able to figure out what is wrong from that.
+
+[30-Jun-18 03:30 PM] ComputerGenie#2331
+I'm still not sure what you think is "wrong"
+
+[30-Jun-18 03:30 PM] tolken#2655
+Is this your new Linux install chris?
+
+[30-Jun-18 03:31 PM] CrisF#3405
+Yes, and on my other system too.
+
+[30-Jun-18 03:31 PM] CrisF#3405
+@ComputerGenie  I can't see my balances in native.
+
+[30-Jun-18 03:32 PM] ComputerGenie#2331
+@CrisF what call are you using?
+
+[30-Jun-18 03:32 PM] tolken#2655
+balances for all (which coins) or just some?
+
+[30-Jun-18 03:32 PM] ComputerGenie#2331
+`curl -s --url "http://127.0.0.1:$port" --data "{\"userpass\":\"$userpass\",\"method\":\"balance\",\"coin\":\"$Coin\",\"address\":\"$smartAddy\"}"`
+
+[30-Jun-18 03:33 PM] ComputerGenie#2331
+?
+
+[30-Jun-18 03:34 PM] CrisF#3405
+getcoin, balances, getwalletinfo. basically every call I could find.
+
+[30-Jun-18 03:34 PM] SHossain#0007
+this looks ok @CrisF
+
+[30-Jun-18 03:35 PM] ComputerGenie#2331
+"getcoin, balances, getwalletinfo. basically every call I could find."
+Are you using calls or the local scripts?
+
+[30-Jun-18 03:35 PM] CrisF#3405
+previously only KMD showed a balance, but now not that.
+
+[30-Jun-18 03:35 PM] SHossain#0007
+the `./client` script has a kill command of marketmaker in the beginning fo the script that ensures clean start of marketmaker
+
+[30-Jun-18 03:36 PM] SHossain#0007
+this message while startup is ok `curl: (7) Failed to connect to 127.0.0.1 port 7783: Connection refused`
+
+{Reactions}
+👍 
+
+[30-Jun-18 03:36 PM] ComputerGenie#2331
+The msg comes from attempt to call the stop api before the kill
+
+[30-Jun-18 03:36 PM] ComputerGenie#2331
+no mm to stop = no connection to mm
+
+[30-Jun-18 03:37 PM] CrisF#3405
+{
+    "userpass": "{{ myuserpass  }}",
+    "method": "getcoin",
+    "coin": "KMD"
+}
+
+[30-Jun-18 03:37 PM] ComputerGenie#2331
+the json is connected to what?
+
+[30-Jun-18 03:38 PM] CrisF#3405
+That's from insomnia connected to barterdex after `./client``setpassphrase``enable`
+
+[30-Jun-18 03:39 PM] tolken#2655
+When you call “balance” where are you getting your kmd/bch addresses from?
+
+[30-Jun-18 03:40 PM] ComputerGenie#2331
+@CrisF have you tried *not* using insomnia and just the actual scripts?
+
+[30-Jun-18 03:40 PM] CrisF#3405
+Originally, but not recently.
+
+[30-Jun-18 03:42 PM] ComputerGenie#2331
+the 1st step to sorting out issues is almost always to remove any extraneous things - i.e., how do you know mm is having an issue and not layer2 app if you only use layer 2 app?
+
+[30-Jun-18 03:44 PM] CrisF#3405
+@tolken I got the addresses from bdex gui that I imported into cli. (edit: I used the same passphrase)
+
+[30-Jun-18 03:45 PM] CrisF#3405
+@ComputerGenie  I will do it without insomnia.
+
+{Reactions}
+👍🏿 
+
+[30-Jun-18 03:49 PM] CrisF#3405
+The smartaddress shows a balance in electrum for ltc and bch but I've never been able to get it to show up in native.
+
+[30-Jun-18 03:49 PM] CrisF#3405
+What address should I be using for those coins?
+
+[30-Jun-18 03:51 PM] ComputerGenie#2331
+`curl --url "http://127.0.0.1:7783" --data "{\"userpass\":\"$userpass\",\"method\":\"calcaddress\",\"passphrase\":\"$passphrase\",\"coin\":\"COINX\"}"`
+
+[30-Jun-18 03:51 PM] tolken#2655
+@CrisF and these balances are the same ones you see when you do a “getcoins” ? I’d double check/ verify they are the same
+
+[30-Jun-18 03:52 PM] CrisF#3405
+KMD was and nothing for other coins (0 balance)
+
+[30-Jun-18 03:56 PM] ComputerGenie#2331
+and you're pulling from the latest dev/jl777 git?
+
+[30-Jun-18 03:56 PM] ComputerGenie#2331
+You should get like:
+`$ curl --url "http://127.0.0.1:7783" --data "{\"userpass\":\"$userpass\",\"method\":\"balances\"}"
+[{"coin":"KMD","balance":10187.31266256,"KMDvalue":10187.31266256,"zcredits":0}, {"coin":"COQUI","balance":24294.35793251,"KMDvalue":3606.85162441}, {"coin":"SUPERNET","balance":45.33400204,"KMDvalue":1399.85278199}, {"coin":"total","balance":15194.01706896}]`
+
+`$ curl -s --url "http://127.0.0.1:7783" --data "{\"userpass\":\"$userpass\",\"method\":\"balance\",\"coin\":\"KMD\",\"address\":\"RUdNzKNzsyebRdDoprrkDZum1PkGoMY4RP\"}"
+{"result":"success","coin":"KMD","address":"RUdNzKNzsyebRdDoprrkDZum1PkGoMY4RP","balance":10189.33835242,"zcredits":0,"zdebits":{"swaps":[.......],"pendingswaps":10.81792440}}`
+
+[30-Jun-18 03:57 PM] tolken#2655
+@CrisF sorry to clarify, by doing a getcoins, I mean to check the addresses associated with each coin. See if each respective address is the one you expect it to be.
+
+[30-Jun-18 04:05 PM] CrisF#3405
+@ComputerGenie  `calcaddress` finished
+
+[30-Jun-18 04:05 PM] ComputerGenie#2331
+and?
+
+[30-Jun-18 04:11 PM] CrisF#3405
+`balances` 
+`[]`
+
+[30-Jun-18 04:13 PM] CrisF#3405
+`balance`
+`{"result":"success","coin":"LTC","address":"LZGArBt9CtEt5eg2N13FERZJeKPtW8ZSKC","balance":0}`
+
+[30-Jun-18 04:15 PM] ComputerGenie#2331
+and you've done an "init" whereby you enabled coins?
+
+[30-Jun-18 04:16 PM] CrisF#3405
+Oh, sorry I messed that up.
+
+[30-Jun-18 04:16 PM] CrisF#3405
+That was the wrong calcaddress passphrase I used.
+
+[30-Jun-18 04:17 PM] CrisF#3405
+Yes, I enabled it.
+
+[30-Jun-18 04:17 PM] CrisF#3405
+Will calcaddress again.
+
+[30-Jun-18 04:17 PM] tolken#2655
+Have you verified getcoins addresses are what you expect them to be yet?
+
+[30-Jun-18 04:18 PM] tolken#2655
+I think that shows all the addresses you need.
+
+[30-Jun-18 04:30 PM] CrisF#3405
+`{"result":"success","coin":"LTC","address":"LZ8v9pR7a4j2zy7BDRU5MdQztwBDWmm8YD","balance":0}`
+The correct passphrase also shows no balance.
+
+[30-Jun-18 04:30 PM] CrisF#3405
+I'll check getcoin now.
+
+[30-Jun-18 04:32 PM] ComputerGenie#2331
+Is the passphrase for that addy the same passphrase you're logged into marketmaker with?
+
+[30-Jun-18 04:34 PM] tolken#2655
+If this doesn’t work; go full vanilla. Don’t try and link up your existing bdex passphrase/address. Create a new one from scratch, send some test funds, verify that works first. I suspect you aren’t getting the right addr.
+
+[30-Jun-18 04:34 PM] CrisF#3405
+`{"result":"success","enabled":2,"disabled":84,"coin":{"coin":"LTC","installed":true,"height":0,"balance":0,"KMDvalue":0,"status":"active","smartaddress":"LZ8v9pR7a4j2zy7BDRU5MdQztwBDWmm8YD","rpc":"127.0.0.1:9332","pubtype":48,"p2shtype":5,"wiftype":176,"txfee":100000}}`
+
+[30-Jun-18 04:34 PM] CrisF#3405
+getcoin
+
+[30-Jun-18 04:36 PM] tolken#2655
+that’s using getcoin or getcoins?
+
+[30-Jun-18 04:37 PM] CrisF#3405
+The address passphrase and setpassphrase passphrase are not the same.
+
+[30-Jun-18 04:37 PM] ComputerGenie#2331
+going way back to way back; do you have your LTC wallet config set to daemon/server = 1?
+
+[30-Jun-18 04:38 PM] CrisF#3405
+@ tolken, it was getcoin.
+
+[30-Jun-18 04:38 PM] tolken#2655
+Use getcoins, not getcoin
+
+[30-Jun-18 04:39 PM] ComputerGenie#2331
+"The address passphrase and setpassphrase passphrase are not the same."
+Then that's likely 1/2 or all of your issue
+
+[30-Jun-18 04:39 PM] tolken#2655
+Agreed
+
+[30-Jun-18 04:40 PM] ComputerGenie#2331
+mm will use the pass that's in the file; if that pass is not the pass for the addy you want to use, then mm doesn't have access to the one you want to use
+
+[30-Jun-18 04:41 PM] CrisF#3405
+Oh, I hope so.  I'll try now.
+
+[30-Jun-18 04:42 PM] ComputerGenie#2331
+think of it as a house
+Just because George knows your address, doesn't mean  he can get through your locked door without the correct key
+
+[30-Jun-18 04:44 PM] CrisF#3405
+Will the userpass change now, too?
+
+[30-Jun-18 04:44 PM] ComputerGenie#2331
+userpass will be passphrase specific
+
+[30-Jun-18 04:45 PM] CrisF#3405
+Ok,
+
+[30-Jun-18 04:50 PM] CrisF#3405
+Does the userpass come from my `komodo.conf rpcpassword=`
+
+[30-Jun-18 04:52 PM] ComputerGenie#2331
+userpass comes from an encryption of passphrase (in the simplest of terms)
+not related to any coin's config
+
+[30-Jun-18 04:52 PM] tolken#2655
+@CrisF no
+
+[30-Jun-18 04:56 PM] CrisF#3405
+I might have misunderstood @ComputerGenie .
+```ComputerGenie - Today at 1:32 AM
+Is the passphrase for that addy the same passphrase you're logged into marketmaker with?
+```
+

@@ -1,0 +1,359 @@
+==============================================================
+Guild: Komodo
+Channel: notarynode
+Topic: Setup Guide: https://docs.komodoplatform.com/notary/setup-Komodo-Notary-Node.html
+Stats: https://komodostats.com
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[05-Apr-19 09:37 AM] newvulcan#4719
+Yeh, its indeed slowed right up now
+
+[05-Apr-19 09:42 AM] NNoperator#3835
+oh, scratch that number we just added another block...
+
+[05-Apr-19 10:00 AM] blackjok3r#3181
+Kmd was taking 6h for me on last test, I think the jl777 branch has a fix which may significantly speed up blocks after the sapling activation.
+
+[05-Apr-19 10:02 AM] CHMEX#0686
+if somebody needs them or want to run it on the testnode
+https://bootstrap3rd.dexstats.info/BTC-bootstrap.tar.gz          BTC
+https://bootstrap3rd.dexstats.info/CHIPS-bootstrap.tar.gz      CHIPS
+https://bootstrap3rd.dexstats.info/EMC2-bootstrap.tar.gz      EMC2
+https://bootstrap3rd.dexstats.info/GIN-bootstrap.tar.gz          GIN
+https://bootstrap3rd.dexstats.info/VRSC-bootstrap.tar.gz       VRSC
+Hush to come
+
+{Reactions}
+3040_kingpeepo (4) 
+
+[05-Apr-19 10:03 AM] CrisF#3405
+Cool, thanks @CHMEX !
+
+[05-Apr-19 10:10 AM] gt#2812
+@CHMEX  🙏
+
+[05-Apr-19 10:14 AM] zatJUM#9924
+I have no more notarizations on PIZZA for 8 hours now and don't understand why
+
+[05-Apr-19 10:15 AM] zatJUM#9924
+blocks=longestchain
+
+[05-Apr-19 10:18 AM] bitcross#0905
+Hi all! am I on time to apply to the candidature yet?
+
+[05-Apr-19 10:32 AM] blackjok3r#3181
+Yes you can still join
+
+[05-Apr-19 10:33 AM] zatJUM#9924
+How can I check for PIZZA problem?
+
+[05-Apr-19 10:37 AM] CHMEX#0686
+if you have enough utxo than it's maybe just bad luck maybe clean the wallet
+
+[05-Apr-19 10:39 AM] Alright#0419
+@zatJUM are you using LABS komodod?
+
+[05-Apr-19 10:39 AM] Alright#0419
+ping
+
+[05-Apr-19 10:40 AM] Alright#0419
+you receive a block, you search for a UTXO, you broadcast to iguana peers
+
+[05-Apr-19 10:40 AM] Alright#0419
+if you do that first, you get a notarization
+
+[05-Apr-19 10:41 AM] PHBA2061#2530
+why do I feel like notarizations usually hapeens between the same group of people.
+Like me and Alright we rarely notarize together, (may be partially because  we're not in the other's peers list)
+
+[05-Apr-19 10:43 AM] zatJUM#9924
+@Alright No, I use komodod on jl777 repo (dev branch)
+
+[05-Apr-19 10:43 AM] Alright#0419
+@PHBA2061 ping
+
+[05-Apr-19 10:43 AM] Alright#0419
+ping ping ping ping 😂
+
+[05-Apr-19 10:46 AM] zatJUM#9924
+Just removed 128 tx from my pizza wallet
+
+[05-Apr-19 10:46 AM] newvulcan#4719
+If you're using Windows with Putty and keep getting disconnects, try some of the hints on this page - Worked for me. https://superuser.com/questions/294824/putty-network-error-software-caused-connection-abort
+
+{Embed}
+https://superuser.com/questions/294824/putty-network-error-software-caused-connection-abort
+PuTTY Network Error: Software caused connection abort
+I have a strange problem: When I'm using PuTTY with SSH connecting to a Linux server hosted in VMware on my local Windows 7, I often get the error saying "Network error: Software caused connec...
+https://cdn.sstatic.net/Sites/superuser/img/apple-touch-icon@2.png?v=e869e4459439
+
+[05-Apr-19 10:48 AM] Alright#0419
+@PHBA2061 it's a matter of how quickly you receive the block to be notarized (height % 10) and how quickly you can agree with iguana peers
+
+[05-Apr-19 10:48 AM] Alright#0419
+so not just ping between participants but ping between miners as well
+
+[05-Apr-19 10:49 AM] Alright#0419
+Along with how quickly iguana can select a UTXO
+
+{Reactions}
+👍 
+
+[05-Apr-19 10:52 AM] PHBA2061#2530
+got that, anyway I don't understand why our nodes can't connect, the ping is not even 4ms
+
+[05-Apr-19 10:52 AM] Alright#0419
+"the weather" I'm told
+
+{Reactions}
+troll troll_hmm 😭 
+
+[05-Apr-19 10:53 AM] blackjok3r#3181
+The slowest part of the process is selecting utxo, this was the first thing I optimised and is still the main thing. You need a good receive mask though otherwise not much happens as other nodes can't see you are there. The goal is to enter receive mask first by responding yo your peers first.
+
+[05-Apr-19 10:54 AM] blackjok3r#3181
+How you go about that is up to you lol, I think I may add some comments to iguana for the places I found that seem to affect things and see what others can come up with.
+
+{Reactions}
+👍 (3) 
+
+[05-Apr-19 10:58 AM] bitcross#0905
+@blackjok3r  Thanks
+
+[05-Apr-19 11:01 AM] blackjok3r#3181
+My iguana basically just selects a utxo randomly without counting the entire wallet... Also `time komodo-cli listunspent > /dev/null` get that as fast as possible. A wallet with 700+ utxos will take longer than any meaningful ping time, and is usually the cause of a poor preforming node.
+
+[05-Apr-19 11:02 AM] blackjok3r#3181
+Also we can speed up the rate at which iguana is checking the block heights, so it starts a round as quickly as possible after receiving the block.
+
+[05-Apr-19 11:02 AM] blackjok3r#3181
+But go too fast and u will crash your kmd daemon
+
+[05-Apr-19 11:06 AM] blackjok3r#3181
+The other option we may have is to slow down the receive mask so that nodes have longer to respond... But it will hard fork the iguana consensus. This will result in a mor "fair" distribution of notarizations.
+
+[05-Apr-19 11:08 AM] CrisF#3405
+I've got 85 KMD connections, but no notarisations since changing :abusedsmily:
+
+[05-Apr-19 11:08 AM] CrisF#3405
+(only 23 before changing)
+
+[05-Apr-19 11:09 AM] blackjok3r#3181
+The most important thing is to not restart iguana... If yournnode is down it will be ignored by the other nodes for a while after restarting. Not sure how that works but its defiantly something that seems to happen, like some kind of banned mode... Doesn't appear to be anything that does that in the code though lol.
+
+[05-Apr-19 11:12 AM] CrisF#3405
+I was wondering why I was taking so long to start notarising after updatg, while others get backu right away.
+
+[05-Apr-19 11:12 AM] PHBA2061#2530
+@CrisF  can you do me a favor , try this command`komodo-cli getpeerinfo | grep 195.201.137.5` to see if it return anything ?
+
+[05-Apr-19 11:13 AM] CrisF#3405
+Nothing.
+
+[05-Apr-19 11:13 AM] CHMEX#0686
+also not here.
+but I see you on the explorer node
+
+[05-Apr-19 11:14 AM] PHBA2061#2530
+ok, how about  `komodo-cli getpeerinfo -ac_name=BEER | grep 195.201.137.5`
+
+[05-Apr-19 11:14 AM] PHBA2061#2530
+then try the same with PIZZA and TXSCLCC
+
+[05-Apr-19 11:14 AM] blackjok3r#3181
+Connection to other notaries on the coin daemons isn't that important... I tried it. What I attempted was to connect my daemons only to nodes close to me to seen if that made a difference of how many notarizations that group of nodes made... In short it didn't make much diff at all.
+
+[05-Apr-19 11:15 AM] CrisF#3405
+See you on TXSCLCC
+
+[05-Apr-19 11:15 AM] CrisF#3405
+not others
+
+[05-Apr-19 11:15 AM] CHMEX#0686
+none for me
+
+[05-Apr-19 11:15 AM] blackjok3r#3181
+You need to be starting your dpow state machine thread at the same time as min SIG's of other nodes.
+
+[05-Apr-19 11:16 AM] PHBA2061#2530
+no it's not me, it's Alright 's IP 😃
+
+[05-Apr-19 11:16 AM] blackjok3r#3181
+Then entre the receive mask the fastest... Which is pretty much utxo selection.
+
+[05-Apr-19 11:18 AM] blackjok3r#3181
+So you need the block at the same time as min SIG's of other nodes, then act on that at the same time as them, or even before them, which is how my iguana is able to preform better. Its waiting already for other nodes to join the round.
+
+[05-Apr-19 11:19 AM] Strob#3417
+My connections increased a bit except for TXS...
+```css
+-CHAIN-     -NOTR- -LASTN- -UTXO-    -BAL-   -BLOX- -LASTB- -CON- -SIZE-
+KMD                     5m     17    2.817  1299852      1m    74   2.0M 
+BEER            52      8m     18    2.953    81813     25s    48   860K       
+PIZZA           39      6m     10    2.288    73070     54s    51   820K 
+TXSCLCC         83      5m     15    2.978   184618     40s    28   872K @ 07:17
+```
+
+[05-Apr-19 11:20 AM] CrisF#3405
+There probably aren't that many TXSCLCC nodes out there.
+
+[05-Apr-19 11:20 AM] CrisF#3405
+I'm on 27.
+
+[05-Apr-19 11:20 AM] CHMEX#0686
+Conn 33 here
+
+[05-Apr-19 11:21 AM] blackjok3r#3181
+You can only get as many connection as there are open ports out there, the best way to get more is to open the port then never ever restart the daemon.
+
+[05-Apr-19 11:21 AM] Alright#0419
+I'm wondering if the first people to update have a significant advantage. I will wait ~1 hour myself before I update my node today
+
+[05-Apr-19 11:21 AM] CrisF#3405
+I have died after every update.
+
+[05-Apr-19 11:21 AM] Alright#0419
+I've been the first node to update most days, as I test that it starts up properly before pinging you guys
+
+[05-Apr-19 11:21 AM] blackjok3r#3181
+Updating first is a disadvantage ;)
+
+[05-Apr-19 11:22 AM] CrisF#3405
+A few times I was flying, then update, then dead in the water.
+
+[05-Apr-19 11:22 AM] CHMEX#0686
+are there planed changes for today? no PR yet
+
+[05-Apr-19 11:22 AM] blackjok3r#3181
+That is unless 100% of nodes update at the same time
+
+[05-Apr-19 11:22 AM] Alright#0419
+yes, SHo merged one earlier today that I had to remove
+
+[05-Apr-19 11:23 AM] Alright#0419
+going to add it back
+
+[05-Apr-19 11:23 AM] CHMEX#0686
+ok
+
+[05-Apr-19 11:23 AM] PHBA2061#2530
+@Alright  then should we pre-define the person  who will update first today ? so we can track the stats easily ?
+
+[05-Apr-19 11:23 AM] blackjok3r#3181
+I'll be home soon and will upgrade my nodes vps see if I can get it to work again... May need to snapshot it and move it overseas, as there are 0 other nodes in aus
+
+[05-Apr-19 11:24 AM] CrisF#3405
+@Alright Any idea on the time for update?
+
+[05-Apr-19 11:24 AM] Alright#0419
+sure, you want to do it? 😛
+
+[05-Apr-19 11:24 AM] PHBA2061#2530
+well if noone want to do it, then I will 😃
+
+[05-Apr-19 11:24 AM] Alright#0419
+~+3.5 hours @CrisF
+
+[05-Apr-19 11:25 AM] CrisF#3405
+Ok, thanks.
+
+[05-Apr-19 11:29 AM] CrisF#3405
+To try out a new node I just need to change my ip and wait for an update, right?
+
+[05-Apr-19 11:29 AM] blackjok3r#3181
+You will add to the IP list in either case when u add all the other nodes
+
+[05-Apr-19 11:30 AM] blackjok3r#3181
+Your IP is broadcast randomly in each packet
+
+[05-Apr-19 11:30 AM] blackjok3r#3181
+The problem mainney had was that more IPS were in the list than would fit, and it was segregating the network, but that has been fixed
+
+{Reactions}
+👍 
+
+[05-Apr-19 11:33 AM] CrisF#3405
+I have a lot to figure out here first.  Get this one running better. Then try another closer to what would be used on mainnet.
+
+[05-Apr-19 11:37 AM] gt#2812
+i’m going to switch nodes too. might wait another day or two
+
+[05-Apr-19 12:44 PM] VoskCoin#1869
+@ComputerGenie 👴🏼📢 you're evil man, evil! :realpirate: lol
+
+[05-Apr-19 12:46 PM] ComputerGenie 👴🏼📢#7004
+🤔
+
+[05-Apr-19 12:46 PM] ComputerGenie 👴🏼📢#7004
+what'd I do now?
+
+[05-Apr-19 12:49 PM] VoskCoin#1869
+was just messing w/ you
+
+[05-Apr-19 12:49 PM] VoskCoin#1869
+in response to your me bringing everyone to pirate comment lol
+
+[05-Apr-19 12:50 PM] VoskCoin#1869
+@Alright can you please add @Greer to  at 2019NNtestnetOps (he's on my team)
+
+[05-Apr-19 12:50 PM] ComputerGenie 👴🏼📢#7004
+oh, LOL 😛
+
+{Reactions}
+pirate 
+
+[05-Apr-19 12:51 PM] SHossain#0007
+@Greer got tag
+
+[05-Apr-19 12:54 PM] NutellaLicka#4241
+@blackjok3r I have a node in Brisbane 😛
+
+[05-Apr-19 12:55 PM] ComputerGenie 👴🏼📢#7004
+I had one in Sydney and the ping times sucked so bad I killed it
+
+[05-Apr-19 12:55 PM] blackjok3r#3181
+with a larger more spread out network that problem goes away... but its counter productive to place a node far from other nodes... However if 50% of nodes do this the "ping" problem goes away
+
+[05-Apr-19 12:56 PM] NutellaLicka#4241
+Well I have my node where I plan to have it on the mainnet, so I guess I shouldn't have too bad a ping problem there
+
+[05-Apr-19 12:57 PM] blackjok3r#3181
+Brisbane should be fine, mines in Perth lol... but Perth does have pretty good pings to singapore and there is lots of nodes there
+
+[05-Apr-19 12:57 PM] blackjok3r#3181
+testnet is in sydney atm... just snapshotted it going to try EU and see if I go directly to the top 😄
+
+[05-Apr-19 12:59 PM] NutellaLicka#4241
+Would `addnode`ing our nodes together help at all
+
+[05-Apr-19 01:00 PM] NutellaLicka#4241
+Also, do the UTXO's in your KMD wallet matter at all?
+
+[05-Apr-19 01:01 PM] blackjok3r#3181
+dont beleive so, iguana adds all nodes anyway, and the daemon is not that important. these chains have not many miners. So adding the miners would be the best strategy there I think... 
+UTXOs in KMD wallet are the most important. `time komodo-cli listunspent > /dev/null`
+
+[05-Apr-19 01:01 PM] blackjok3r#3181
+try to get that as fast as you can. that is the goal to have a good node
+
+[05-Apr-19 01:02 PM] ComputerGenie 👴🏼📢#7004
+```real    0m0.011s
+user    0m0.000s
+sys     0m0.000s```
+
+[05-Apr-19 01:03 PM] Audo#5667
+FYI, we plan to mention https://komodoelection.com/candidates/ on todays Five Bullet Friday
+
+{Embed}
+https://komodoelection.com/candidates/
+Komodo Election
+Komodo election for notary nodes
+
+{Reactions}
+👍🏽 (3) 🚀 (2) 
+
+[05-Apr-19 01:03 PM] Audo#5667
+everyone should send their profile to github
+

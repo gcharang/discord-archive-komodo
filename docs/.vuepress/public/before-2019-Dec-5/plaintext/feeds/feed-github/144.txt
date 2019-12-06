@@ -1,0 +1,910 @@
+==============================================================
+Guild: Komodo
+Channel: feed-github
+Topic: Auto feed for all activities in GitHub. New notification as they happen in real-time.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[18-Jul-19 12:07 AM] GitHub#0000
+
+{Embed}
+jorisvial
+https://github.com/KomodoPlatform/atomicDEX/issues/22#issuecomment-512613832
+[KomodoPlatform/atomicDEX] New comment on issue #22: Swap completed but UI shows failed
+Could be related to https://github.com/KomodoPlatform/atomicDEX-API/commit/fef7e1d8bca142f72efe3497cfb0c2c149a62ce7 according to user cipi#4502 on Discord.
+
+[18-Jul-19 02:21 AM] GitHub#0000
+
+{Embed}
+cipig
+https://github.com/KomodoPlatform/atomicDEX-API/issues/473
+[KomodoPlatform/atomicDEX-API] Issue opened: #473 add minvolume to setprice
+https://etherscan.io/tx/0x91ad987b51e9cf2838764150ab0c1d1b95ddef9e45f3d61bdd4548d5924332bb
+
+value of transferred tokens: $1.33
+txfee: $0.37 (with 21 gwei)
+
+in order to avoid such swaps, it would be nice if `setprice` would support `minvolume`, so people can't start such swaps
+the only other solution to this is to set the margin to 50% and higher, or to remove all ERC20-orders from orderbook when gasprice > 5 gwei (currently > 20 gwei)
+
+[18-Jul-19 03:30 AM] GitHub#0000
+
+{Embed}
+DeckerSU
+https://github.com/jl777/komodo/pull/1622
+[jl777/komodo] Pull request opened: #1622 createrawtransaction enchancement
+- allowing create OP_RETURN vouts (field "data" in "outputs" json)
+- allowing using script (hex), in "outputs" (for example, you can use any P2PK, P2PKH or P2SH script as destination)
+- advanced duplicates checking (users can't use same destination in various forms, for example, you can't make one vout as address and second vout, same address, but coded with P2PK script)
+- allowing to bypass duplicates check for notaries (for example, to manually create splitfunds txes, using daemon RPC on...
+
+[18-Jul-19 04:46 AM] GitHub#0000
+
+{Embed}
+cipig
+https://github.com/KomodoPlatform/atomicDEX-API/issues/474
+[KomodoPlatform/atomicDEX-API] Issue opened: #474 taker does not claim TUSD sent by maker
+tried a TUSD/KMD swap
+maker (TUSD) is showing the swap as completed
+but taker does not claim the sent TUSD
+maker payment: https://etherscan.io/tx/0xb72c1ff3470d9893ef9a265d9a513d10b54734638b8941254c31e4779ef3799b
+
+strange thing is that a second tx was created by maker at the same time as "maker payment"
+this tx: https://etherscan.io/tx/0x789da8713d1575d7fd95ffe59125e5bd6e090392bf01c0aa2eabab32e13cb1b7
+no idea what this tx is about or if it is related to the problem
+
+last console outp...
+
+[18-Jul-19 04:48 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/473#issuecomment-512663493
+[KomodoPlatform/atomicDEX-API] New comment on issue #473: add minvolume to setprice
+@cipig Hi, thanks for your report!
+Please ensure that you're setting `gas_station_url` on ETH/ERC20 `enable`: https://developers.atomicdex.io/basic-docs/atomicdex/atomicdex-api.html#enable, MM2 uses ETH node RPC API to get gas price by default. It usually results into higher fees.
+
+The `minvolume` is easy to implement from MM2 side, but we will also need to handle this in GUI apps.
+
+The gasprice limitation is much harder and error prone:
+1. 0.37$ is too much for 1$ trade but it will be ...
+
+[18-Jul-19 04:54 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/474#issuecomment-512664435
+[KomodoPlatform/atomicDEX-API] New comment on issue #474: taker does not claim TUSD sent by maker
+Hi, thanks for the report!
+https://etherscan.io/tx/0x789da8713d1575d7fd95ffe59125e5bd6e090392bf01c0aa2eabab32e13cb1b7 - is token `aprrove` call. It's required to allow swap smart contract to transfer tokens from your address and lock them. It will always happen if smart contract is allowed to transfer less than trade amount.
+
+Please provide and always include `swap_status` from both Maker and Taker (if possible) in failed swap reports. Logs are not displaying all the required information t...
+
+[18-Jul-19 04:58 AM] GitHub#0000
+
+{Embed}
+cipig
+https://github.com/KomodoPlatform/atomicDEX-API/issues/473#issuecomment-512665061
+[KomodoPlatform/atomicDEX-API] New comment on issue #473: add minvolume to setprice
+gas_station is set, i use
+`curl --url "http://127.0.0.1:7783" --data "{\"userpass\":\"$userpass\",\"method\":\"enable\",\"coin\":\"USDC\",\"urls\":[\"http://eth1.cipig.net:8555\",\"http://eth2.cipig.net:8555\",\"http://eth3.cipig.net:8555\"],\"swap_contract_address\":\"0x8500AFc0bc5214728082163326C2FF0C73f4a871\",\"gas_station_url\":\"https://ethgasstation.info/json/ethgasAPI.json\",\"mm2\":1}"`
+for all erc20 tokens
+
+no need to implement the gas price limitation in mm2, i do this in my sc...
+
+[18-Jul-19 05:04 AM] GitHub#0000
+
+{Embed}
+cipig
+https://github.com/KomodoPlatform/atomicDEX-API/issues/474#issuecomment-512666106
+[KomodoPlatform/atomicDEX-API] New comment on issue #474: taker does not claim TUSD sent by maker
+[08a6e1d9-ea91-44f2-baa6-ff2758c11172.maker.txt](https://github.com/KomodoPlatform/atomicDEX-API/files/3404818/08a6e1d9-ea91-44f2-baa6-ff2758c11172.maker.txt)
+[08a6e1d9-ea91-44f2-baa6-ff2758c11172.taker.txt](https://github.com/KomodoPlatform/atomicDEX-API/files/3404819/08a6e1d9-ea91-44f2-baa6-ff2758c11172.taker.txt)
+
+the "approve" tx irritated me because the other swaps didn't create such a tx, at least it is not shown in explorer, only this one: https://etherscan.io/address/0x98298409c949...
+
+[18-Jul-19 05:06 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/472#issuecomment-512666379
+[KomodoPlatform/atomicDEX-API] New comment on issue #472: show balances of all enabled coins
+`get_enabled_coins` purpose is to display currently enabled tickers. Please note that `my_balance` always sends the request to coin RPC as of now. So imagine if you have 100+ coins and all balances are requested at same time, it might take long time and cause some other issues. We might cache the balance of coins for such cases, but cache invalidation will be not really feasible. I prefer to avoid caching such essential data as long as possible.
+
+You can easily do similar thing on client si...
+
+[18-Jul-19 05:06 AM] GitHub#0000
+
+{Embed}
+leto
+https://github.com/jl777/komodo/pull/1622#issuecomment-512666455
+[jl777/komodo] New comment on pull request #1622: createrawtransaction enchancement
+@DeckerSU this looks awesome! It will make NN op daily routines so much easier.
+
+It seems you sent the PR to a different base branch than you branched from, because there are some unrelated commits about ac.json and COQUICASH
+
+[18-Jul-19 05:09 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/474#issuecomment-512666855
+[KomodoPlatform/atomicDEX-API] New comment on issue #474: taker does not claim TUSD sent by maker
+`approve` tx is created every time when `allowance` is lower than required. It will `approve` the entire balance of the token so it will be always sent for first swap of the coin and then might not happen for long time.
+Thanks for swap statuses, checking.
+
+[18-Jul-19 05:13 AM] GitHub#0000
+
+{Embed}
+cipig
+https://github.com/KomodoPlatform/atomicDEX-API/issues/472#issuecomment-512667652
+[KomodoPlatform/atomicDEX-API] New comment on issue #472: show balances of all enabled coins
+You are right, i think it is better to "solve" this locally, without modification to mm2 code.
+I already figured out a way (bash-script) of doing this.
+Closing the "issue" now.
+
+[18-Jul-19 05:13 AM] GitHub#0000
+
+{Embed}
+cipig
+https://github.com/KomodoPlatform/atomicDEX-API/issues/472
+[KomodoPlatform/atomicDEX-API] Issue closed: #472 show balances of all enabled coins
+
+[18-Jul-19 05:15 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/474#issuecomment-512668057
+[KomodoPlatform/atomicDEX-API] New comment on issue #474: taker does not claim TUSD sent by maker
+@cipig Is taker using native or electrum mode for KMD?
+
+[18-Jul-19 05:18 AM] GitHub#0000
+
+{Embed}
+cipig
+https://github.com/KomodoPlatform/atomicDEX-API/issues/474#issuecomment-512668558
+[KomodoPlatform/atomicDEX-API] New comment on issue #474: taker does not claim TUSD sent by maker
+taker is using native...
+but i saw something else, which could explain what happened: the maker got stuck after this swap, not accepting API calls any more (console output was still showing though)
+i had to restart it
+think it could be related to the issue
+problem is that it didn't show any errors or backtraces
+
+[18-Jul-19 05:30 AM] GitHub#0000
+
+{Embed}
+leto
+https://github.com/jl777/komodo/pull/1575#issuecomment-512670638
+[jl777/komodo] New comment on pull request #1575: Add the ability to import different WIF formats
+@Alrighttt I have merged this into Hush and will be testing it soon. Thanks! 👍
+
+[18-Jul-19 05:31 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/474#issuecomment-512670855
+[KomodoPlatform/atomicDEX-API] New comment on issue #474: taker does not claim TUSD sent by maker
+Swap was successfully finished on maker side, payment was spent so should be something different. Might be related to the most recent changes in `wait_for_taker_payment_spend`, I will recheck the taker side swap in native mode now and get back to you.
+
+[18-Jul-19 06:03 AM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/pull/1622
+[jl777/komodo] Pull request closed: #1622 createrawtransaction enchancement
+
+[18-Jul-19 06:03 AM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/compare/bd1fdc15af7a...d2f4ef051961
+[komodo:FSM] 13 new commits
+[`88b5480`](https://github.com/jl777/komodo/commit/88b54809247be55f2ca570d317cffd5c799ed8a0) Merge pull request #1608 from jl777/dev - jl777
+[`bb2a167`](https://github.com/jl777/komodo/commit/bb2a16729cbb72d33359cd35f7b860dc1f80c412) Revert to coquicash magic, fix disable bits set... - jl777
+[`3f8485e`](https://github.com/jl777/komodo/commit/3f8485e4fa0550ceb2c56cbe2229c7a6d91d6dcc) Merge pull request #1613 from jl777/dev - jl777
+[`3661d19`](https://github.com/jl777/komodo/commit/3661d19dffe5b7db43aa46dc63dcb72aeb7d3850) Create ac.json - smk762
+[`2ed0359`](https://github.com/jl777/komodo/commit/2ed03590afec86ac57b278a9bc9604a37ce8ca7f) Update ac.json - smk762
+
+[18-Jul-19 06:04 AM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/SuperNET/pull/1097
+[jl777/SuperNET] Pull request closed: #1097 Update m\_notary\_run
+
+[18-Jul-19 06:04 AM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/SuperNET/compare/61f7c44c67cd...5346653a0c37
+[SuperNET:beta\_season3] 3 new commits
+[`272819b`](https://github.com/jl777/SuperNET/commit/272819bd1fb554f762e8ecc8c581a38d867b0bcf) Update m_notary_run - nn\-fullmoon
+[`85dd44e`](https://github.com/jl777/SuperNET/commit/85dd44ed09e2d9faa0ddf3910a30e409acde44d6) Update m_notary_run - nn\-fullmoon
+[`5346653`](https://github.com/jl777/SuperNET/commit/5346653a0c37be5d56533e038a1065108d1765f0) Merge pull request #1097 from nn-fullmoon/beta_... - jl777
+
+[18-Jul-19 06:05 AM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/compare/137586f463da...ad93ff4fdbd5
+[komodo:jl777] 15 new commits
+[`88b5480`](https://github.com/jl777/komodo/commit/88b54809247be55f2ca570d317cffd5c799ed8a0) Merge pull request #1608 from jl777/dev - jl777
+[`bd1fdc1`](https://github.com/jl777/komodo/commit/bd1fdc15af7a01ccacba8f793a6a93bbaaa108ce) Merge pull request #1612 from jl777/jl777 - jl777
+[`bb2a167`](https://github.com/jl777/komodo/commit/bb2a16729cbb72d33359cd35f7b860dc1f80c412) Revert to coquicash magic, fix disable bits set... - jl777
+[`3f8485e`](https://github.com/jl777/komodo/commit/3f8485e4fa0550ceb2c56cbe2229c7a6d91d6dcc) Merge pull request #1613 from jl777/dev - jl777
+[`3661d19`](https://github.com/jl777/komodo/commit/3661d19dffe5b7db43aa46dc63dcb72aeb7d3850) Create ac.json - smk762
+
+[18-Jul-19 06:07 AM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/compare/a24a1553e12f...94294cbee60b
+[komodo:nSPV] 19 new commits
+[`e4c67ed`](https://github.com/jl777/komodo/commit/e4c67ed018e99702aeac1833aa225281b7716a4b) sizeof(ASSETCHAINS_PEGSCCPARAMS)/sizeof(*ASSETC... - jl777
+[`e0d3cac`](https://github.com/jl777/komodo/commit/e0d3cac3dcd340971d24c9c842a0dfcca768f032) Merge branch 'FSM' into jl777 - jl777
+[`88b5480`](https://github.com/jl777/komodo/commit/88b54809247be55f2ca570d317cffd5c799ed8a0) Merge pull request #1608 from jl777/dev - jl777
+[`137586f`](https://github.com/jl777/komodo/commit/137586f463dad455ca8c0188424ee126238577d4) Merge pull request #1611 from jl777/nSPV - jl777
+[`bd1fdc1`](https://github.com/jl777/komodo/commit/bd1fdc15af7a01ccacba8f793a6a93bbaaa108ce) Merge pull request #1612 from jl777/jl777 - jl777
+
+[18-Jul-19 06:23 AM] GitHub#0000
+
+{Embed}
+mm6522011
+https://github.com/mm6522011/EasyDEX-GUI
+[KomodoPlatform/EasyDEX-GUI] Fork created: mm6522011/EasyDEX-GUI
+
+[18-Jul-19 06:47 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/commit/a11359dc01940fe112823fe3c17aa8fd69484397
+[atomicDEX-API:mm2] 1 new commit
+[`a11359d`](https://github.com/KomodoPlatform/atomicDEX-API/commit/a11359dc01940fe112823fe3c17aa8fd69484397) Fix endless loop on wait_for_payment_spend in n... - artemii235
+
+[18-Jul-19 06:55 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/474#issuecomment-512689987
+[KomodoPlatform/atomicDEX-API] New comment on issue #474: taker does not claim TUSD sent by maker
+The error was caused by coinbase tx deserialization error. MM2 performs block scan when searching for tx spend. The coinbase tx failed to deserialize so MM2 kept retrying in endless loop, fixed now. Swap will be kickstarted and finished after you update your node, however I think that TUSD payment won't be unlocked to you. Etomic swap smart contract has a constraint that payment can be spent only when time lock is not expired yet: https://github.com/artemii235/etomic-swap/blob/master/contract...
+
+[18-Jul-19 07:00 AM] GitHub#0000
+
+{Embed}
+tonymorony
+https://github.com/KomodoPlatform/atomicDEX-API/issues/475
+[KomodoPlatform/atomicDEX-API] Issue opened: #475 KMD/VRSC swap failed with negotiate failed
+[log-7.txt](https://github.com/KomodoPlatform/atomicDEX-API/files/3405166/log-7.txt)
+![image](https://user-images.githubusercontent.com/24797699/61436154-dfd93300-a942-11e9-88e8-b9fcd8e24747.png)
+
+[18-Jul-19 07:07 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/475#issuecomment-512693375
+[KomodoPlatform/atomicDEX-API] New comment on issue #475: KMD/VRSC swap failed with negotiate failed
+@tonymorony Thanks for the report!
+Looks like networking issue, should have been worked using HTTP fallback though, but didn't. We will investigate it.
+
+[18-Jul-19 07:13 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/475#issuecomment-512695223
+[KomodoPlatform/atomicDEX-API] New comment on issue #475: KMD/VRSC swap failed with negotiate failed
+```
+"data": {
+                            "error": "lp_swap:819] !check_i_have_enough_to_trade utxo:1194] VRSC balance 0.3741035000000000 is too low, required 0.37411348"
+                        },
+                        "type": "StartFailed"
+```
+Seems like maker side attempted to trade more than available or there's calculation error in MM2. Same as this one: https://github.com/KomodoPlatform/atomicDEX-API/issues/471
+
+[18-Jul-19 07:18 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/475#issuecomment-512696593
+[KomodoPlatform/atomicDEX-API] New comment on issue #475: KMD/VRSC swap failed with negotiate failed
+Closing as duplicate.
+
+[18-Jul-19 07:18 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/475
+[KomodoPlatform/atomicDEX-API] Issue closed: #475 KMD/VRSC swap failed with negotiate failed
+
+[18-Jul-19 07:26 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/471#issuecomment-512698829
+[KomodoPlatform/atomicDEX-API] New comment on issue #471: check\_i\_have\_enough\_to\_trade utxo: balance is too low
+@cipig Hi, thanks for the report!
+Did you setup the `setprice` orders with `max=true`?
+
+[18-Jul-19 08:20 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/476
+[KomodoPlatform/atomicDEX-API] Issue opened: #476 49547950\-ff80\-41ca\-ae24\-1654b3e78345 0\.02 BTC \-> 162\.6413 KMD swap stuck
+Taker payment is spent - https://www.blockchain.com/btc/tx/fbdd3a29fad8615efe5c1a035c5014a0a3c683e90866b56262df464dbefa653d
+But maker's payment neither spent, not refunded - https://kmdexplorer.io/tx/174629aadc295e300a15e2d3dca48a6900bb600f2ff32f5b505848f4001b3ac9
+
+[18-Jul-19 08:24 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/477
+[KomodoPlatform/atomicDEX-API] Issue opened: #477 Calculate order/swap amounts better\.
+Swap 2cb7f890-f49e-4482-8705-ccd18b0ce234
+Taker successfully sent fee, but failed to send the payment:
+```
+"event": {
+                        "data": {
+                            "error": "lp_swap:1888] eth:634] RPC error: Error { code: ServerError(-32010), message: \"Insufficient funds. The account you tried to send transaction from does not have enough funds. Required 12999999998380800 and got: 12258000000000000.\", data: None }"
+                        },
+                        "t...
+
+[18-Jul-19 08:35 AM] GitHub#0000
+
+{Embed}
+Acura360
+https://github.com/KomodoPlatform/atomicDEX/issues/23
+[KomodoPlatform/atomicDEX] Issue opened: #23 Multilingual Support
+Maybe we the Community can help to give AtomicDex a Multilingual Support in the future ?
+
+Support for the Key markets:
+
+Russia
+Indian
+China
+German
+etc.
+
+[18-Jul-19 08:40 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/478
+[KomodoPlatform/atomicDEX-API] Issue opened: #478 b4861fcd\-7821\-4669\-89a7\-d90533f62a9e taker payment stuck
+Maker sent and refunded his payment, but [taker payment remains unspent](https://explorer.redfoxlabs.io/tx/83d70353327c0f11c8902aeed02828919cee9bbc2395f3ef8e5fc2973746f545) and there's no taker swap status on seednode.
+@tonymorony could you please contact the user that reported this swap and ask if the swap is still displayed in GUI?
+
+[18-Jul-19 09:09 AM] GitHub#0000
+
+{Embed}
+sindresorhus
+https://github.com/sindresorhus/coins
+[jl777/coins] Fork created: sindresorhus/coins
+
+[18-Jul-19 09:15 AM] GitHub#0000
+
+{Embed}
+mikedemarais
+https://github.com/jl777/coins
+[jl777/coins] New star added
+
+[18-Jul-19 09:24 AM] GitHub#0000
+
+{Embed}
+sindresorhus
+https://github.com/jl777/coins/pull/333
+[jl777/coins] Pull request opened: #333 Ensure all the \`etomic\` addresses are using their checksummed version
+Fixes #332 
+
+// @cipig
+
+[18-Jul-19 09:28 AM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/coins/pull/333#issuecomment-512739451
+[jl777/coins] New comment on pull request #333: Ensure all the \`etomic\` addresses are using their checksummed version
+thanks! very good PR
+
+[18-Jul-19 09:30 AM] GitHub#0000
+
+{Embed}
+tonymorony
+https://github.com/KomodoPlatform/atomicDEX/issues/24
+[KomodoPlatform/atomicDEX] Issue opened: #24 Long app startup on Android
+start taking around 20 seconds, have quite good Wi-Fi connection, Xiaomi Redmi Note 5 phone
+
+adb log: https://paste.ubuntu.com/p/MYXBg5yYrQ/
+
+video: https://send.firefox.com/download/f5bf3b70d435216d/#DbYFPmTWRuCnRmnBtDS3zw
+
+[18-Jul-19 09:33 AM] GitHub#0000
+
+{Embed}
+Kiruel
+https://github.com/KomodoPlatform/atomicDEX/issues/24#issuecomment-512741301
+[KomodoPlatform/atomicDEX] New comment on issue #24: Long app startup on Android
+It's the normal process, mm2 need some time to start + activate all coins and get all balances.
+
+[18-Jul-19 09:33 AM] GitHub#0000
+
+{Embed}
+Kiruel
+https://github.com/KomodoPlatform/atomicDEX/issues/24
+[KomodoPlatform/atomicDEX] Issue closed: #24 Long app startup on Android
+
+[18-Jul-19 09:35 AM] GitHub#0000
+
+{Embed}
+Kiruel
+https://github.com/KomodoPlatform/atomicDEX/issues/21#issuecomment-512742080
+[KomodoPlatform/atomicDEX] New comment on issue #21: \[Feature Request\] PIN related\. 2 idea
+You can already remove the PIN if you want. But can be good to have this option right.
+
+[18-Jul-19 09:37 AM] GitHub#0000
+
+{Embed}
+Kiruel
+https://github.com/KomodoPlatform/atomicDEX/issues/20#issuecomment-512742864
+[KomodoPlatform/atomicDEX] New comment on issue #20: NoSuchMethodError: The getter 'coin' was called on null\.
+Thanks for the issue will be fix in the next release.
+
+[18-Jul-19 09:37 AM] GitHub#0000
+
+{Embed}
+Kiruel
+https://github.com/KomodoPlatform/atomicDEX/issues/20
+[KomodoPlatform/atomicDEX] Issue closed: #20 NoSuchMethodError: The getter 'coin' was called on null\.
+
+[18-Jul-19 09:40 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX/issues/24#issuecomment-512743780
+[KomodoPlatform/atomicDEX] New comment on issue #24: Long app startup on Android
+@Kiruel It's not normal for user experience. IIRC I was told that GUI should parallelize the enable requests to speed up them. Is it happening in latest version? I'm going to perform a benchmark with same coins activated in parallel and check what time it will take. I will post results here.
+
+[18-Jul-19 09:40 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX/issues/24
+[KomodoPlatform/atomicDEX] Issue reopened: #24 Long app startup on Android
+
+[18-Jul-19 09:42 AM] GitHub#0000
+
+{Embed}
+Kiruel
+https://github.com/KomodoPlatform/atomicDEX/issues/24#issuecomment-512744615
+[KomodoPlatform/atomicDEX] New comment on issue #24: Long app startup on Android
+Yes activatate part and get balance are parallelized.
+
+[18-Jul-19 09:58 AM] GitHub#0000
+
+{Embed}
+tonymorony
+https://github.com/KomodoPlatform/atomicDEX/issues/24#issuecomment-512750060
+[KomodoPlatform/atomicDEX] New comment on issue #24: Long app startup on Android
+https://paste.ubuntu.com/p/Fjzg4pqxvm/ 14 coins activation and balance checking one by one (without parallelization) took 20 seconds on my side
+
+[18-Jul-19 09:59 AM] GitHub#0000
+
+{Embed}
+Kiruel
+https://github.com/KomodoPlatform/atomicDEX/issues/19#issuecomment-512750474
+[KomodoPlatform/atomicDEX] New comment on issue #19: When trying to withdraw KMD and click on the icon for barcode scan it crashed\.
+Fixed on the master. Thx @SvetJordanov. Will be available for the next release.
+
+[18-Jul-19 09:59 AM] GitHub#0000
+
+{Embed}
+Kiruel
+https://github.com/KomodoPlatform/atomicDEX/issues/19
+[KomodoPlatform/atomicDEX] Issue closed: #19 When trying to withdraw KMD and click on the icon for barcode scan it crashed\.
+
+[18-Jul-19 10:04 AM] GitHub#0000
+
+{Embed}
+Kiruel
+https://github.com/KomodoPlatform/atomicDEX/issues/15#issuecomment-512752197
+[KomodoPlatform/atomicDEX] New comment on issue #15: way to show that 'swipe to the right' is enabled to reveal 'send', 'receive' and 'swap'
+I don't understand want you want ? Just showing the swipe the the right one time for like a "tutorial" ?
+
+[18-Jul-19 10:07 AM] GitHub#0000
+
+{Embed}
+Kiruel
+https://github.com/KomodoPlatform/atomicDEX/issues/9#issuecomment-512752960
+[KomodoPlatform/atomicDEX] New comment on issue #9: iOS FaceID login crashes or exits the app
+Fixed on master, available for next release.
+
+[18-Jul-19 10:07 AM] GitHub#0000
+
+{Embed}
+Kiruel
+https://github.com/KomodoPlatform/atomicDEX/issues/9
+[KomodoPlatform/atomicDEX] Issue closed: #9 iOS FaceID login crashes or exits the app
+
+[18-Jul-19 10:07 AM] GitHub#0000
+
+{Embed}
+Kiruel
+https://github.com/KomodoPlatform/atomicDEX/issues/7#issuecomment-512753113
+[KomodoPlatform/atomicDEX] New comment on issue #7: App crashes in iOS when I pull down my control center
+Fixed on master, available next release.
+
+[18-Jul-19 10:07 AM] GitHub#0000
+
+{Embed}
+Kiruel
+https://github.com/KomodoPlatform/atomicDEX/issues/7
+[KomodoPlatform/atomicDEX] Issue closed: #7 App crashes in iOS when I pull down my control center
+
+[18-Jul-19 10:10 AM] GitHub#0000
+
+{Embed}
+Kiruel
+https://github.com/KomodoPlatform/atomicDEX/issues/2#issuecomment-512754275
+[KomodoPlatform/atomicDEX] New comment on issue #2: 5 digits input issue base sell
+Because he probably don't have enough balance DOGE.
+
+[18-Jul-19 10:18 AM] GitHub#0000
+
+{Embed}
+ca333
+https://github.com/KomodoPlatform/atomicDEX/issues/19#issuecomment-512756754
+[KomodoPlatform/atomicDEX] New comment on issue #19: When trying to withdraw KMD and click on the icon for barcode scan it crashed\.
+we will close this when its confirmed
+
+[18-Jul-19 10:18 AM] GitHub#0000
+
+{Embed}
+ca333
+https://github.com/KomodoPlatform/atomicDEX/issues/19
+[KomodoPlatform/atomicDEX] Issue reopened: #19 When trying to withdraw KMD and click on the icon for barcode scan it crashed\.
+
+[18-Jul-19 10:21 AM] GitHub#0000
+
+{Embed}
+Mixa84
+https://github.com/Mixa84/komodo/commit/8a8ffc3284540a92eb562c18e4a5f7102c73e18b
+[komodo:pegsCC] 1 new commit
+[`8a8ffc3`](https://github.com/Mixa84/komodo/commit/8a8ffc3284540a92eb562c18e4a5f7102c73e18b) Fix - Mixa84
+
+[18-Jul-19 10:49 AM] GitHub#0000
+
+{Embed}
+DeckerSU
+https://github.com/jl777/komodo/pull/1622#issuecomment-512766390
+[jl777/komodo] New comment on pull request #1622: createrawtransaction enchancement
+@leto yep. it was based on beta, but as we should have following path of branches merge:
+```
+jl777 -> FSM -> dev -> beta -> master
+```
+i'm just guess that current FSM branch already had all commits that exists in beta. That's why i did PR in FSM from branch based on beta.
+
+**p.s.** Btw, first real script that uses new `createrawtransaction` behaviour is here - https://github.com/DeckerSU/komodo_scripts/commit/addecc0db5c022360571c549391050168d604ca1 . This can be very useful for NN ops.
+
+[18-Jul-19 12:09 PM] GitHub#0000
+
+{Embed}
+mkamranhamid
+https://github.com/jl777/coins
+[jl777/coins] New star added
+
+[18-Jul-19 12:15 PM] GitHub#0000
+
+{Embed}
+Mixa84
+[Mixa84/komodo] New branch created: nSPV
+
+[18-Jul-19 12:15 PM] GitHub#0000
+
+{Embed}
+Mixa84
+https://github.com/Mixa84/komodo/compare/23df289f7023^...e32a6260d989
+[komodo:nSPV] 17 new commits
+[`23df289`](https://github.com/Mixa84/komodo/commit/23df289f70236cdeabca5adee79553cb86b64450) CC address support for nspv_listunspent - jl777
+[`b9cb5e7`](https://github.com/Mixa84/komodo/commit/b9cb5e7b4be3ac6573cd90f4a6c185f9bdf17bfe) Full CCflag support - jl777
+[`80d02fb`](https://github.com/Mixa84/komodo/commit/80d02fbb42ff45e6bda718e9dd4d67f19b22ca56) Query CC - jl777
+[`c9a6b62`](https://github.com/Mixa84/komodo/commit/c9a6b6218a3878d6053c3eee190aeda470e51250) +print - jl777
+[`80377eb`](https://github.com/Mixa84/komodo/commit/80377ebdc938d49d2f9a4dfd8fe6e70471b73d88) SIG_TXHASH - jl777
+
+[18-Jul-19 12:25 PM] GitHub#0000
+
+{Embed}
+Mixa84
+https://github.com/Mixa84/komodo/compare/e32a6260d989...94294cbee60b
+[komodo:nSPV] 345 new commits
+[`b21eb99`](https://github.com/Mixa84/komodo/commit/b21eb999567115594f7e1f686c80fdea9eb9a16d) Cosmetics for legacy view - Metaphilibert
+[`6ec800b`](https://github.com/Mixa84/komodo/commit/6ec800b58a58ccf16e9af1a977d8dfd74e0d5aca) Merge pull request #1562 from Metaphilibert/beta - jl777
+[`fc18cda`](https://github.com/Mixa84/komodo/commit/fc18cda52252c11d33cc438ba84f93ea6767d495) Merge pull request #1574 from jl777/dev - jl777
+[`71e80cc`](https://github.com/Mixa84/komodo/commit/71e80ccf282fb776b9e7980d20a2ec9786c157a6) Merge pull request #1580 from jl777/FSM - jl777
+[`793f0e3`](https://github.com/Mixa84/komodo/commit/793f0e3227a65c97cc2f9e0022dd10b4fd784641) jokers payments fix - Alrighttt
+
+[18-Jul-19 12:26 PM] GitHub#0000
+
+{Embed}
+gregdeane
+https://github.com/jl777/coins
+[jl777/coins] New star added
+
+[18-Jul-19 12:39 PM] GitHub#0000
+
+{Embed}
+Alrighttt
+https://github.com/KomodoPlatform/developer-docs/pull/110
+[KomodoPlatform/developer-docs] Pull request opened: #110 remove comments on newly added info
+Everything is fine. I added a small snippet to `-testnode` description and fixed a small typo in Dilithium doc as well. `opreturn_burn` is still commented, and is likely to remain this way until that code reaches at least `dev` branch of jl777/komodo
+
+[18-Jul-19 12:43 PM] GitHub#0000
+
+{Embed}
+smk762
+https://github.com/KomodoPlatform/atomicDEX/issues/25
+[KomodoPlatform/atomicDEX] Issue opened: #25 tx history not displaying
+User Oszy reports, all coins affected. 
+User yorklab resolved issue with clearing data and cache (but reappears after viewing MARTY tx history). Did not resolve for Oszy. Reboot phone also not helping. 
+Logs end with `18 10:49:05, common:470] CORE panic! Some("attempt to subtract with overflow")`
+Version - BarterDEX MarketMaker 7fc26fff2
+
+[18-Jul-19 12:44 PM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/479
+[KomodoPlatform/atomicDEX-API] Issue opened: #479 Mutex lock prevents the concurrent coins activation\.
+GUI attempts to activate coins concurrently, but MM2 locks the coins mutex and keeps it locked during initialization and some IO operations which might take significant time. It results in coins being activated sequentially and long start up time: https://github.com/KomodoPlatform/atomicDEX/issues/24.
+
+[18-Jul-19 12:47 PM] GitHub#0000
+
+{Embed}
+Alrighttt
+https://github.com/KomodoPlatform/developer-docs/pull/110#issuecomment-512800388
+[KomodoPlatform/developer-docs] New comment on pull request #110: remove comments on newly added info
+Will be adding additional things to this PR if you leave it open. Consider them notes. Again, don't actually have to merge it. 
+
+referenced `testnode` param in "Creating a Smart Chain on a Single Node"
+
+[18-Jul-19 12:55 PM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/commit/582352f356701dce388d7418dfbb7901b8d878bd
+[atomicDEX-API:mm2] 1 new commit
+[`582352f`](https://github.com/KomodoPlatform/atomicDEX-API/commit/582352f356701dce388d7418dfbb7901b8d878bd) Do not keep coins mutex lock during the entire ... - artemii235
+
+[18-Jul-19 12:57 PM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/480
+[KomodoPlatform/atomicDEX-API] Issue opened: #480 Transaction history can have block height == u64::MAX
+It happens when MM2 receive electrum history item with block number == -1 (not confirmed/mempool transaction). It then attempts to cast it to u64 which results to underflow.
+
+[18-Jul-19 01:02 PM] GitHub#0000
+
+{Embed}
+thanhtoan1196
+https://github.com/jl777/coins
+[jl777/coins] New star added
+
+[18-Jul-19 01:24 PM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/commit/7d37df744c86928dc3d03eccf2db5aaebe24cc48
+[atomicDEX-API:mm2] 1 new commit
+[`7d37df7`](https://github.com/KomodoPlatform/atomicDEX-API/commit/7d37df744c86928dc3d03eccf2db5aaebe24cc48) Prevent underflow for tx history block_height. ... - artemii235
+
+[18-Jul-19 01:39 PM] GitHub#0000
+
+{Embed}
+mreram
+https://github.com/jl777/coins
+[jl777/coins] New star added
+
+[18-Jul-19 01:43 PM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/commit/730ad7e6e84e4f8e566c7bf97439e559fa1f499d
+[komodo:nSPV] 1 new commit
+[`730ad7e`](https://github.com/jl777/komodo/commit/730ad7e6e84e4f8e566c7bf97439e559fa1f499d) NSPV_MEMPOOL_CCEVALCODE - jl777
+
+[18-Jul-19 01:45 PM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/commit/f3a16b7765b11e022cc58e4d7b5d0d4874a1d1d1
+[komodo:nSPV] 1 new commit
+[`f3a16b7`](https://github.com/jl777/komodo/commit/f3a16b7765b11e022cc58e4d7b5d0d4874a1d1d1) Fix - jl777
+
+[18-Jul-19 01:48 PM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX/issues/24#issuecomment-512823645
+[KomodoPlatform/atomicDEX] New comment on issue #24: Long app startup on Android
+Should be fixed in https://github.com/KomodoPlatform/atomicDEX-API/commit/582352f356701dce388d7418dfbb7901b8d878bd, please test when GUI with updated MM2 is available.
+
+[18-Jul-19 01:50 PM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/commit/a2a6732a18530f94b1bce3a05143436cfed05ac5
+[komodo:nSPV] 1 new commit
+[`a2a6732`](https://github.com/jl777/komodo/commit/a2a6732a18530f94b1bce3a05143436cfed05ac5) Sytax - jl777
+
+[18-Jul-19 01:51 PM] GitHub#0000
+
+{Embed}
+cipig
+https://github.com/KomodoPlatform/atomicDEX-API/issues/471#issuecomment-512824447
+[KomodoPlatform/atomicDEX-API] New comment on issue #471: check\_i\_have\_enough\_to\_trade utxo: balance is too low
+yes, all  my setprice orders are with max=true
+
+[18-Jul-19 01:53 PM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/commit/d08c7516682832ad903654f3309c05984658ada7
+[komodo:nSPV] 1 new commit
+[`d08c751`](https://github.com/jl777/komodo/commit/d08c7516682832ad903654f3309c05984658ada7) Test - jl777
+
+[18-Jul-19 01:54 PM] GitHub#0000
+
+{Embed}
+Mixa84
+https://github.com/Mixa84/komodo/compare/94294cbee60b...d08c75166828
+[komodo:nSPV] 4 new commits
+[`730ad7e`](https://github.com/Mixa84/komodo/commit/730ad7e6e84e4f8e566c7bf97439e559fa1f499d) NSPV_MEMPOOL_CCEVALCODE - jl777
+[`f3a16b7`](https://github.com/Mixa84/komodo/commit/f3a16b7765b11e022cc58e4d7b5d0d4874a1d1d1) Fix - jl777
+[`a2a6732`](https://github.com/Mixa84/komodo/commit/a2a6732a18530f94b1bce3a05143436cfed05ac5) Sytax - jl777
+[`d08c751`](https://github.com/Mixa84/komodo/commit/d08c7516682832ad903654f3309c05984658ada7) Test - jl777
+
+[18-Jul-19 01:56 PM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/commit/be93e8049fcdd76da1eee3807ab50ede71bc8e33
+[komodo:nSPV] 1 new commit
+[`be93e80`](https://github.com/jl777/komodo/commit/be93e8049fcdd76da1eee3807ab50ede71bc8e33) Syntax - jl777
+
+[18-Jul-19 01:58 PM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/commit/580a4654365e410f090cc77d90b3d24c3559761f
+[komodo:nSPV] 1 new commit
+[`580a465`](https://github.com/jl777/komodo/commit/580a4654365e410f090cc77d90b3d24c3559761f) Syntax - jl777
+
+[18-Jul-19 01:58 PM] GitHub#0000
+
+{Embed}
+Mixa84
+https://github.com/Mixa84/komodo/compare/d08c75166828...580a4654365e
+[komodo:nSPV] 2 new commits
+[`be93e80`](https://github.com/Mixa84/komodo/commit/be93e8049fcdd76da1eee3807ab50ede71bc8e33) Syntax - jl777
+[`580a465`](https://github.com/Mixa84/komodo/commit/580a4654365e410f090cc77d90b3d24c3559761f) Syntax - jl777
+
+[18-Jul-19 02:04 PM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/commit/bf40254a7e3738adface1578625725c238e7446d
+[komodo:beta] 1 new commit
+[`bf40254`](https://github.com/jl777/komodo/commit/bf40254a7e3738adface1578625725c238e7446d) Fix spurious prints of deactivate - jl777
+
+[18-Jul-19 02:24 PM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/471#issuecomment-512838137
+[KomodoPlatform/atomicDEX-API] New comment on issue #471: check\_i\_have\_enough\_to\_trade utxo: balance is too low
+I see thanks, I will test and fix this.
+
+[18-Jul-19 02:24 PM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/479
+[KomodoPlatform/atomicDEX-API] Issue closed: #479 Mutex lock prevents the concurrent coins activation\.
+
+[18-Jul-19 02:24 PM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/480
+[KomodoPlatform/atomicDEX-API] Issue closed: #480 Transaction history can have block height == u64::MAX
+
+[18-Jul-19 02:32 PM] GitHub#0000
+
+{Embed}
+cipig
+https://github.com/KomodoPlatform/atomicDEX-API/issues/471#issuecomment-512841516
+[KomodoPlatform/atomicDEX-API] New comment on issue #471: check\_i\_have\_enough\_to\_trade utxo: balance is too low
+If it's not easy to fix, i have an idea: simply lower the amount by something like 10% when `max=true`, it should be enough to cover fees and rounding errors
+
+[18-Jul-19 02:33 PM] GitHub#0000
+
+{Embed}
+smk762
+https://github.com/jl777/coins/pull/334
+[jl777/coins] Pull request opened: #334 Create KMD\-ETH
+swap KMD for ETH.
+
+[18-Jul-19 02:36 PM] GitHub#0000
+
+{Embed}
+cipig
+https://github.com/jl777/coins/pull/334#issuecomment-512843320
+[jl777/coins] New comment on pull request #334: Create KMD\-ETH
+swaps have a slightly different format, it goes
+1. taker fee
+2. maker payment
+3. taker payment
+4. taker payment spent
+5. maker payment spent
+each one has a txid. Infos are from the swap files in mm2.
+
+[18-Jul-19 02:43 PM] GitHub#0000
+
+{Embed}
+cipig
+https://github.com/jl777/coins/pull/333#issuecomment-512846091
+[jl777/coins] New comment on pull request #333: Ensure all the \`etomic\` addresses are using their checksummed version
+can this be merged? I am about to test some new coins (ERC20) and will need to make PRs when they work.
+
+[18-Jul-19 02:48 PM] GitHub#0000
+
+{Embed}
+imylomylo
+https://github.com/KomodoPlatform/atomicDEX/issues/26
+[KomodoPlatform/atomicDEX] Issue opened: #26 Typo for "name" in the i10n file may save you searching for bug one day
+https://github.com/KomodoPlatform/atomicDEX/blob/master/l10n.dart#L144
+
+
+On that line, the "name" attribute is spelled incorrectly, i guess the IDE auto checks things, but just in case you wanted to catch this before it's a hair pulling moment down the track :)
+
+`swapSucceful` should be `swapSuccessful` but any changes need correction where it's called.   If it ain't broke.....
+
+[18-Jul-19 02:48 PM] GitHub#0000
+
+{Embed}
+Kiruel
+https://github.com/KomodoPlatform/atomicDEX/issues/25#issuecomment-512848096
+[KomodoPlatform/atomicDEX] New comment on issue #25: tx history not displaying
+This one should be fix with the next release. We will keep you update.
+
+[18-Jul-19 02:49 PM] GitHub#0000
+
+{Embed}
+smk762
+https://github.com/jl777/coins/pull/334#issuecomment-512848453
+[jl777/coins] New comment on pull request #334: Create KMD\-ETH
+couldn't quite see all that with the ETH contract, will have another look.
+
+[18-Jul-19 02:52 PM] GitHub#0000
+
+{Embed}
+cipig
+https://github.com/jl777/coins/pull/334#issuecomment-512849820
+[jl777/coins] New comment on pull request #334: Create KMD\-ETH
+look in the json-file of the swap
+DB/<nodeid>/SWAPS/MY/<swapid>.json
+
+[18-Jul-19 02:54 PM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/coins/issues/332
+[jl777/coins] Issue closed: #332 Many of the \`etomic\` addresses are invalid
+
+[18-Jul-19 02:54 PM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/coins/pull/333
+[jl777/coins] Pull request closed: #333 Ensure all the \`etomic\` addresses are using their checksummed version
+

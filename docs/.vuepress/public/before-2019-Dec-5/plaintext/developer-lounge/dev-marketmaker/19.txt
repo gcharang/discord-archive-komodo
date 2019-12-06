@@ -1,0 +1,436 @@
+==============================================================
+Guild: Komodo
+Channel: dev-marketmaker
+Topic: Discussion about AtomiAPI and its market making tech.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[02-Aug-19 03:25 PM] allbits#5898
+Ok
+
+{Reactions}
+KMD 
+
+[02-Aug-19 03:26 PM] allbits#5898
+I'm afk for a couple of hours. I'll check back in. Thanks for digging into this for a couple of noobs
+
+[02-Aug-19 05:04 PM] allbits#5898
+As a follow up, I tested my own Bob by using Atomicdex mobile to swap with the Bob. Everything worked as expected so it's clear my Bob is working fine.  Of course, it was a different pair because DEX/KMD is not available on mobile yet
+
+[02-Aug-19 06:01 PM] allbits#5898
+Further update. Over four hours has passed and there is no return of funds from the b addresses.
+
+[02-Aug-19 06:02 PM] allbits#5898
+This now seems like a critical issue for marketmaker, right?
+
+[02-Aug-19 06:08 PM] allbits#5898
+Both maker and taker have lost funds on this swap. Taker was using hyperdex.  Maker was using atomicDEX-API.
+
+[02-Aug-19 06:21 PM] cipi#4502
+my maker has always refunded when a swap was interrupted. Which version do you use?
+
+[02-Aug-19 06:25 PM] cipi#4502
+question remians also why the swap info is not on the seed nodes? Do you use a different netid? We are on `\"netid\":9999`. If you are using a different netid, are there seed nodes on this netid running?
+
+[02-Aug-19 06:29 PM] allbits#5898
+See above. I tested this bob on a vrsc/kmd swap using my own mobile Atomicdex. It was fine. I'm on the main netid
+
+[02-Aug-19 06:30 PM] cipi#4502
+there is no info about the version used... but anyway, looks like we need to wait for @artem.pikulin to return so he can have a look at this
+
+[02-Aug-19 06:30 PM] allbits#5898
+Yes
+
+[02-Aug-19 06:32 PM] cipi#4502
+you can also look into `my_swap_status` again... could be there was an error with makerpaymentrefund
+
+[02-Aug-19 06:33 PM] allbits#5898
+This is atomicDEX-API that I downloaded according to documentation one week ago. It was performed fine on numerous other swaps both as maker and taker.
+
+[02-Aug-19 06:34 PM] cipi#4502
+downloaded from here?  https://github.com/KomodoPlatform/atomicDEX-API/releases
+
+{Embed}
+https://github.com/KomodoPlatform/atomicDEX-API/releases
+KomodoPlatform/atomicDEX-API
+This is the official AtomicAPI (atomicDEX API) repository - KomodoPlatform/atomicDEX-API
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[02-Aug-19 06:34 PM] allbits#5898
+Yes it says "makerpaymentrefundfailed"
+
+[02-Aug-19 06:34 PM] cipi#4502
+aha... and what is the error?
+
+[02-Aug-19 06:35 PM] allbits#5898
+I don't know where to look
+
+[02-Aug-19 06:36 PM] cipi#4502
+call `my_swap_status` with the id of the swap or look in the filesystem... every swap produces a json_file which is saved in `DB/c3f710deb7320b0efa6edb14e3ebeeb9155fa90d/SWAPS/MY/41f1964e-2344-4df1-8238-7c91871b05ed.json` where `c3f710deb7320b0efa6edb14e3ebeeb9155fa90d` is your nodeid and `41f1964e-2344-4df1-8238-7c91871b05ed` is the swapid
+
+[02-Aug-19 06:37 PM] allbits#5898
+https://pastebin.com/nKvSFXTx
+
+{Embed}
+https://pastebin.com/nKvSFXTx
+"result": {      "error_events": [        "StartFailed",        "N...
+https://pastebin.com/i/facebook.png
+
+[02-Aug-19 06:37 PM] allbits#5898
+That's the result of my_swap_status
+
+[02-Aug-19 06:40 PM] cipi#4502
+```        "event": {
+          "data": {
+            "error": "timeout (2690.3 > 2690.0)"
+          },
+          "type": "TakerPaymentValidateFailed"```
+so the maker was unable to see TakerPayment
+but this is the original error from the swap, MakerPaymentRefundfailed is not there
+
+[02-Aug-19 06:41 PM] allbits#5898
+Oh ok
+
+[02-Aug-19 06:41 PM] allbits#5898
+No refund has occurred
+
+[02-Aug-19 06:46 PM] cipi#4502
+i am not sure how long it takes till maker tries to spend his own MakerPayment... i thought it was 4h, maybe i am wrong
+
+[02-Aug-19 06:47 PM] cipi#4502
+is DEX still active on your maker and on the right chain?
+
+[02-Aug-19 06:51 PM] allbits#5898
+Yes active. On electrum. Also monitoring b address on explorer.
+
+[02-Aug-19 07:01 PM] cipi#4502
+MakerPayment was just returned to the maker: https://dex.kmdexplorer.io/address/bKZzZA59yhixwSw9gWzFeCKJ2CyijgREBo
+looks like it takes 4,5 h
+
+[02-Aug-19 07:04 PM] cipi#4502
+TakerPayment still in b-address, think it will stay there till this is fixed: https://github.com/KomodoPlatform/atomicDEX-API/issues/502
+
+{Embed}
+https://github.com/KomodoPlatform/atomicDEX-API/issues/502
+KMD-VRSC swap failed by timeout and not refunding to taker · Issu...
+mm2 version: 64bfd683c swap uuid: 8f5b267a-efa8-49d6-a92d-ec0523cca891 KMD-VRSC swap stuck by timeout on iOS user side (most probably app was closed or screen shut down what causing mm2 closing) th...
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[02-Aug-19 07:08 PM] allbits#5898
+K. Thanks so much cipi
+
+[02-Aug-19 07:18 PM] miles#6381
+thanks both @cipi and @allbits for looking into this - much appreciated
+
+[03-Aug-19 03:35 AM] webworker01#3884
+https://github.com/webworker01/mmtools/
+
+{Embed}
+https://github.com/webworker01/mmtools/
+webworker01/mmtools
+Bash CLI tools for MM2. Contribute to webworker01/mmtools development by creating an account on GitHub.
+https://avatars3.githubusercontent.com/u/3256000?s=400&v=4
+
+[03-Aug-19 03:36 AM] webworker01#3884
+one thing i added in my scripts is to automatically pull in the coin infos and stratums
+
+[03-Aug-19 08:54 PM] webworker01#3884
+the docs are really great btw, nice job
+
+[04-Aug-19 12:28 AM] allbits#5898
+I have a very noob question for cli marketmaker.
+
+I'll running it on a vps. I ssh in from my home machine and run the marketmaker. All good. But if I exit that ssh terminal, or shut down my home machine, the marketmaker stops running on my vps. How come? How can I make sure it keeps running on the vps no matter what happens to my home machine?
+
+[04-Aug-19 03:53 AM] cipi#4502
+@allbits you need to start it with `nohup`, eg like that `stdbuf -oL nohup ../../target/debug/mm2 "{\"netid\":9999,\"gui\":\"nogui\",\"client\":1, \"userhome\":\"/${HOME#"/"}\", \"passphrase\":\"$passphrase\",\"rpc_password\":\"$userpass\"}" > /tmp/mm.log &`
+then mm2 does not exit when the ssh session dies
+
+[04-Aug-19 05:24 AM] allbits#5898
+Thanks!
+
+[04-Aug-19 05:26 AM] allbits#5898
+@gcharang that might be a useful tidbit to add to documentation
+
+{Reactions}
+👍 
+
+[04-Aug-19 02:21 PM] jansako#3330
+Or use 'screen' and run it on a separate screen...
+
+[04-Aug-19 02:31 PM] blackjok3r#3181
+tmux 😃
+
+{Reactions}
+👆🏽 
+
+[04-Aug-19 03:36 PM] allbits#5898
+nohup works great - prints output into a file
+
+[04-Aug-19 09:47 PM] webworker01#3884
+```$ ./checkorderbooks rick morty
+--Bids--
+Coin    Address                                           Price           Max Volume            Ask Price
+----    -------                                           -----           ----------            ---------
+MORTY   RTpwruinq4GLbkGZg8NrJw5YPWUvMWnHYR           0.50000000         960.10476554           2.00000000
+MORTY   RT9MpMyucqXiX8bZLimXBnrrn2ofmdGNKd           0.50000000         886.40320698           2.00000000
+
+--Asks--
+Coin    Address                                           Price           Max Volume
+----    -------                                           -----           ----------
+RICK    RTpwruinq4GLbkGZg8NrJw5YPWUvMWnHYR           1.60000000         850.46360688
+RICK    RT9MpMyucqXiX8bZLimXBnrrn2ofmdGNKd           2.00000000         976.87179343
+
+$ ./checkorderbooks kmd btc
+--Bids--
+Coin    Address                                           Price           Max Volume            Ask Price
+----    -------                                           -----           ----------            ---------
+BTC     12fj3npPKwTNxUgDMN8XcCDcR2Z4DBehj6           0.00009017           0.05756468       11090.62159976
+BTC     1JsAjr6d21j9T8EMsYnQ6GXf1mM523JAv1           0.00009067           0.11416780       11028.68600904
+
+--Asks--
+Coin    Address                                           Price           Max Volume
+----    -------                                           -----           ----------
+KMD     RAwv8JhfvmFx2V3QpY7ehiYpBJ1eqxxdxR           0.00009116        1058.01444822
+KMD     RT9MpMyucqXiX8bZLimXBnrrn2ofmdGNKd           0.00009168       20774.91495409
+KMD     RHy2obsEHhAdTag4fDsC4SfCEqm5ZzTUSH           0.00012000         208.21649055
+```
+
+[04-Aug-19 10:54 PM] allbits#5898
+Oh that looks good
+
+[05-Aug-19 04:48 PM] LarryB#7202
+Could someone point me to what distinguishes seed nodes from non-seed nodes? If I understand correctly, MM2 can now do direct P2P with other MM2 nodes, and it starts by connecting with some MM2s configured as seed nodes. Are the roles of the seed nodes the same as described as full relay nodes in the 2018 whitepaper, like holding the order books and routing messages for non-seed nodes, or have things changed with the P2P support?
+
+[05-Aug-19 04:57 PM] ComputerGenie 👴🏼📢#7004
+seeds give a "starting point" to at least know some peer(s) that know valid peers
+otherwise, on 1st run, you'd just be randomly sending out to random addresses on the internet and hoping one of them responds with what you want
+
+[06-Aug-19 07:01 AM] artem.pikulin#0794
+Important notice for everyone who builds the atomicDEX-API from source: Rust version was updated https://github.com/KomodoPlatform/atomicDEX-API#how-to-build Please make sure that you install and default the nightly-2019-08-05 before attempting to build the most recent commit.
+
+{Embed}
+https://github.com/KomodoPlatform/atomicDEX-API
+KomodoPlatform/atomicDEX-API
+This is the official AtomicAPI (atomicDEX API) repository - KomodoPlatform/atomicDEX-API
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[06-Aug-19 07:41 AM] LarryB#7202
+Thanks ComputerGenine. It sounds like this aspect is similar to the Bitcoin P2P protocol, but in this case MM2 is trying to find some node who holds the order book. When I did a swap between two of my own MM2s, I didn't see them connect directly with each other, so the seed or some other node was relaying.
+
+[06-Aug-19 08:39 AM] artem.pikulin#0794
+@LarryB Hi, you're right, the seednodes also acts as relayers for orderbook messaging, Once swap starts MM2 attempts to use the Libtorrent DHT for swap message exchange falling back to relayers using HTTP protocol in case of DHT exchange timeouts (some providers "don't like" the P2P traffic and might limit it). We won't be able to get rid of "relayers" concept completely as direct communication between nodes is not always possible due to particular networking conditions.
+
+[06-Aug-19 06:02 PM] jansako#3330
+is that why I see a ton of "http_fallback:464] transmit... other stuff... time to use the HTTP fallback" and similar messages on swaps?
+
+[07-Aug-19 04:38 AM] LarryB#7202
+It makes sense about needing to fall back to seed nodes, thanks for the info. I also saw those messages.
+
+Since you're using the DHT instead of direct P2P, is it like maker and taker MM2s both publish messages using their private keys to the DHT, and they both just subscribe to the opposite's updates in the DHT? That sounds reasonable, and trading partners would only connect directly to seed nodes or DHT nodes, never to each other.
+
+[07-Aug-19 04:39 AM] LarryB#7202
+I'm also curious about the seed nodes and order books. Are the IPs of the seed nodes shared like Bitcoin's addrman database, so all MM2s eventually learn of all the seed nodes? Do seed nodes each hold their own order book, or do seed nodes share one synchronized order book database? Are the order books published to the DHT?
+
+[08-Aug-19 06:40 AM] artem.pikulin#0794
+@jansako `is that why I see a ton of "http_fallback:464] transmit... other stuff... time to use the HTTP fallback" and similar messages on swaps?` - yes
+
+[08-Aug-19 06:49 AM] artem.pikulin#0794
+@LarryB 
+`both publish messages using their private keys to the DHT, and they both just subscribe to the opposite's updates in the DHT?` - yes
+`Are the IPs of the seed nodes shared like Bitcoin's addrman database, so all MM2s eventually learn of all the seed nodes?` - as of now MM2 uses hardcoded list of seednode IPs, the plan is to add automatic seednode discovery possibly via DHT.
+`Do seed nodes each hold their own order book, or do seed nodes share one synchronized order book database?` - as of now seednodes receive the order messages like standard nodes and broadcast them to other connected clients. Every node (seed and non-seed) actually holds it's own orderbook collected from such messages and sometimes it might be out of sync.
+`Are the order books published to the DHT?` - no, and maybe we won't use DHT at all for this purpose. We're considering several options for P2P orderbook exchange improvement, mentioned in this issue: https://github.com/KomodoPlatform/atomicDEX-API/issues/373
+
+{Embed}
+https://github.com/KomodoPlatform/atomicDEX-API/issues/373
+p2p for ordermatching, plans · Issue #373 · KomodoPlatform/atomi...
+I&#39;ve learned from Artem that in the ordermatching we&#39;re using a feed of orders. This feed is traditional to exchanges and is transparent to users, we show it in the GUIs. The orders...
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[08-Aug-19 07:12 AM] LarryB#7202
+Thank you @artem.pikulin , informative and interesting! I'm sure all of this will make it into the next whitepaper.
+
+[09-Aug-19 05:41 PM] allbits#5898
+Noob cli question: of been up and running for a couple of weeks. Got some bobs running and they're doing well. I've had some issues doing buy and sell. I try to hit the maker orders but nothing happens. My order shows up in order book but doesn't seem to match the bobs that are there.  I know it's hard for anyone to say what I might be doing wrong because there's so many variables.just putting it out there.
+
+[09-Aug-19 06:42 PM] Oszy#5734
+does it work with rick/morty? is there enough liquidity for your buy order on the sell side?
+
+[09-Aug-19 06:43 PM] Oszy#5734
+specify which coin so we can try  to replicate
+
+[09-Aug-19 06:53 PM] allbits#5898
+Seeking to sell one DEX into the buy order of seven at 33
+
+[09-Aug-19 07:32 PM] Oszy#5734
+it works from gui, i don't have my unix fired up atm to check cli,  so how do you call the order?
+
+[09-Aug-19 07:35 PM] Oszy#5734
+maybe you swapped base/rel? or volume set too high?
+
+[09-Aug-19 08:05 PM] allbits#5898
+My order seemed fine because I checked it in my_orders and there it was, as expected. Just doesn't match with the maker order at same price, that has higher volume.
+
+[09-Aug-19 08:06 PM] allbits#5898
+Maybe when you're on cli we can look together. I'll make my order and you can see what you see from your end.  At the moment I'm afk
+
+[09-Aug-19 10:24 PM] Oszy#5734
+same. going to bed. laters
+
+[10-Aug-19 07:51 AM] jansako#3330
+@allbits that order is mine. You cannot match a bob with a bob, you need to do a 'sell' order, not a 'setprice'. That said, that order is a 7 KMD, NOT 7 DEXes...
+
+[10-Aug-19 07:52 AM] jansako#3330
+But if you create a sell order of 1 DEX, it should still partially fill taking all my KMD.
+
+[10-Aug-19 02:40 PM] allbits#5898
+I did do a sell order
+
+[10-Aug-19 02:41 PM] allbits#5898
+It did not fill. Tried several times. That's what I was asking about upthread
+
+[10-Aug-19 02:42 PM] allbits#5898
+Ahhh, 7 kmd!!! That might have been the issue. Will retry later today. Thanks!
+
+[11-Aug-19 03:46 AM] allbits#5898
+@jansako yes, the volume was the issue! Thanks :)
+
+{Reactions}
+👍 (2) 
+
+[14-Aug-19 04:19 AM] tolken#2655
+How’s mm2 doing reliability wise, have any significant funds been lost or have most / all been recoverable?
+
+[14-Aug-19 09:23 AM] Slyris#2880
+Hello as part of the development of mmbot I would like to know the most idiomatic way to launch mm2, I read the developer docs, but I can not find concrete instructions on the launch of the program. (I'm downloading the already build version directly from the github releases as part of my program)
+
+[14-Aug-19 09:30 AM] smk762 -  dracocanis ominator#7640
+populate MM2.json, in folder with mm2 binary, then run ./mm2
+
+{Reactions}
+✅ 
+
+[14-Aug-19 09:30 AM] Slyris#2880
+What is the content of the json?
+
+[14-Aug-19 09:30 AM] Slyris#2880
+(where i find those informations) ?
+
+[14-Aug-19 09:30 AM] smk762 -  dracocanis ominator#7640
+https://github.com/smk762/pytomicDEX/blob/master/MM2_example.json
+
+{Embed}
+https://github.com/smk762/pytomicDEX/blob/master/MM2_example.json
+smk762/pytomicDEX
+Contribute to smk762/pytomicDEX development by creating an account on GitHub.
+https://avatars3.githubusercontent.com/u/35845239?s=400&v=4
+
+[14-Aug-19 09:31 AM] Slyris#2880
+I want full CLI if it's possible ?
+
+[14-Aug-19 09:32 AM] Slyris#2880
+Just need to launch mm2 in background and play with the rpc call's in my case
+
+[14-Aug-19 09:32 AM] Slyris#2880
+(i dont know what is the best way to do this)
+
+[14-Aug-19 09:32 AM] smk762 -  dracocanis ominator#7640
+pytomicDEX repo is python wrapper for CLI usage
+
+[14-Aug-19 09:32 AM] smk762 -  dracocanis ominator#7640
+use like `./atomicDEX-cli method`
+
+[14-Aug-19 09:32 AM] Slyris#2880
+And what about the coins.json ?
+
+[14-Aug-19 09:33 AM] smk762 -  dracocanis ominator#7640
+if you dont have it in folder, it'll tell you to d/l from jl777/coins repo
+
+[14-Aug-19 09:33 AM] Slyris#2880
+But the coins.json file should be in the same directory of the mm2 binary ?
+
+[14-Aug-19 09:33 AM] smk762 -  dracocanis ominator#7640
+I've actually done some binance API integration last couple of days, will push to git in the next hour or so
+
+[14-Aug-19 09:33 AM] Slyris#2880
+i will not use external wrapper, just directly mm2 binary
+
+[14-Aug-19 09:34 AM] smk762 -  dracocanis ominator#7640
+folder contents -
+
+{Attachments}
+https://cdn.discordapp.com/attachments/449950331577565194/611130565621448705/unknown.png
+
+[14-Aug-19 09:35 AM] smk762 -  dracocanis ominator#7640
+makerbot will add curl methods to 127.0.0.1:7783?
+
+[14-Aug-19 09:36 AM] smk762 -  dracocanis ominator#7640
+so far I've just done price grabbing, will be adding buy/sell later in the week
+
+[14-Aug-19 09:38 AM] smk762 -  dracocanis ominator#7640
+
+{Attachments}
+https://cdn.discordapp.com/attachments/449950331577565194/611131550008082438/unknown.png
+
+[14-Aug-19 09:49 AM] ca333#0118
+just place `mm2` bin in the assets/ or bin/ folder and have makerbot launch it from there. Instead of passing the params through CLI you set up a mm2config.json that has all required parameters. And from there makerbot can easily interact with mm2.
+
+[14-Aug-19 09:49 AM] ca333#0118
+@Slyris ^
+
+[14-Aug-19 09:50 AM] Slyris#2880
+yeah thank's
+
+[14-Aug-19 09:50 AM] Slyris#2880
+i got it
+
+[14-Aug-19 09:54 AM] Slyris#2880
+Work's like a charm.
+
+[14-Aug-19 10:05 AM] Slyris#2880
+Regarding the electrum method, there is a way to enable all coins very easily?
+
+[14-Aug-19 10:06 AM] smk762 -  dracocanis ominator#7640
+I'm using an additional json file with the electrum params, and loop the activate method over them
+
+[14-Aug-19 10:07 AM] Slyris#2880
+I guess in Makerbot we're going to have to enable all the coins that are present in the coins file
+
+[14-Aug-19 10:40 AM] artem.pikulin#0794
+@Slyris Enabling all coins that are present in file in electrum mode requires to know valid electrum server addresses which are known only for few: https://github.com/jl777/coins/tree/master/electrums. Please also note that ETH/ERC20 coins use `enable` method instead with different parameter set: https://developers.atomicdex.io/basic-docs/atomicdex/atomicdex-api.html#enable. Do you also plan to use some specific coin config different from `coins` repo? The attempt to enable all coins from repo will fail for sure as some of them were not tested with MM2 yet (missing mm2 parameter), might have outdated config and have some other issues.
+
+{Embed}
+https://developers.atomicdex.io/basic-docs/atomicdex/atomicdex-api.html
+DEX API | AtomicDEX Documentation
+Documentation for developers building on AtomicDEX
+
+[14-Aug-19 12:09 PM] Slyris#2880
+I had in mind to activate a maximum of coins, but if you have the list of supported coins for now it would be much better then @artem.pikulin
+
+[14-Aug-19 12:18 PM] smk762 -  dracocanis ominator#7640
+coins with a verified swap here https://github.com/jl777/coins/tree/master/swaps
+or those with a `"mm2": 1` value in  https://github.com/jl777/coins/blob/master/coins would be reasonable list.
+
+{Embed}
+https://github.com/jl777/coins/tree/master/swaps
+jl777/coins
+coin parameters and all files needed for GUI support - jl777/coins
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+{Embed}
+https://github.com/jl777/coins/blob/master/coins
+jl777/coins
+coin parameters and all files needed for GUI support - jl777/coins
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[14-Aug-19 12:19 PM] smk762 -  dracocanis ominator#7640
+might not be all with electrums though (native only), so you might want to filter against https://github.com/jl777/coins/tree/master/electrums
+
+{Embed}
+https://github.com/jl777/coins/tree/master/electrums
+jl777/coins
+coin parameters and all files needed for GUI support - jl777/coins
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+

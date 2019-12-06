@@ -1,0 +1,350 @@
+==============================================================
+Guild: Komodo
+Channel: dev-nspv
+Topic: ./komodod -nSPV=1 -ac_reward=100000000  -ac_name=NSPV -ac_supply=10000000000 -ac_cc=2 -addressindex=1 -spentindex=1 -connect=5.9.102.210 &
+./komodod -nSPV=1 -addnode=5.9.253.195 &
+https://drive.google.com/drive/folders/1ZvzrhNBQgroejTKPl0kCOTJ8h7XMnO2M?usp=sharing
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[13-Nov-19 09:51 AM] jl777c#5810
+if you just use the html wallet, you can see a simple wallet in action
+
+[13-Nov-19 09:52 AM] Slyris#2880
+Ok great
+
+[13-Nov-19 09:52 AM] jl777c#5810
+https://drive.google.com/drive/folders/1ZvzrhNBQgroejTKPl0kCOTJ8h7XMnO2M?usp=sharing
+
+[13-Nov-19 09:52 AM] jl777c#5810
+that has screenshots of the html gui
+
+[13-Nov-19 09:53 AM] Slyris#2880
+Ideally here are the steps I'm trying to follow:
+
+The user starts his game with his own blockchain (create with the antara composer for example) He has setup his coin file and is now ready to spawn a new instance of nSPV directly from his game on his new blockchain. Once it's done, nSPV connects to the node of its blockchain, so far no problem. The idea is that the first time I start the game I will use the call rpc getnewaddress to create the portfolio of the player if I followed well. But the next time I log in I want to use my wallet with the address I just created. (so i use the login rpc call with the `wif` or the `seed` and there i'm ready to do anything i need
+
+[13-Nov-19 09:53 AM] jl777c#5810
+yes
+
+[13-Nov-19 09:53 AM] Slyris#2880
+Perfect. so far.
+
+[13-Nov-19 09:53 AM] jl777c#5810
+management of the actual seed/wif is left to the caller/user
+
+[13-Nov-19 09:53 AM] Slyris#2880
+Yeah that's what i'm thinking about i should not save the seed/wif
+
+[13-Nov-19 09:54 AM] jl777c#5810
+if you dont, then how will the user remember?
+
+[13-Nov-19 09:54 AM] Slyris#2880
+I should save it, but i need to think about exposing different solution to the user
+
+[13-Nov-19 09:54 AM] Slyris#2880
+just the save the seed into a file seem's dangerous no ?
+
+[13-Nov-19 09:55 AM] Slyris#2880
+I mean in terms of security, it's up to the user i guess.
+
+[13-Nov-19 09:55 AM] jl777c#5810
+yes, maybe if it is encrypted with a password/pin
+
+[13-Nov-19 09:55 AM] Slyris#2880
+Yeah i should ask for a password or smth like that
+
+[13-Nov-19 09:55 AM] jl777c#5810
+then some AES encrypted blob to store the seed locally
+
+[13-Nov-19 09:55 AM] Slyris#2880
+I guess it's exactly what is done in the AtomicDex
+
+[13-Nov-19 09:55 AM] jl777c#5810
+and the user could also copy down the seed
+
+[13-Nov-19 09:55 AM] Slyris#2880
+They store the seed that is accessible through a pin
+
+[13-Nov-19 09:56 AM] jl777c#5810
+yes
+
+[13-Nov-19 09:56 AM] Slyris#2880
+I will follow the same approach so.
+
+[13-Nov-19 09:57 AM] Slyris#2880
+Thank's for the clarification it's more clear now.
+
+[13-Nov-19 09:57 AM] Slyris#2880
+I guess that i have one seed / coin too
+
+[13-Nov-19 09:57 AM] Slyris#2880
+So i should probably ask only one pin for every seed
+
+[13-Nov-19 09:58 AM] Slyris#2880
+If the user in his game spawn an nSPV instance with KMD, one with RICK and create an address on both of them i will need to save both seed/wif (encrypted way) but ideally with an unique pin.
+
+[13-Nov-19 09:59 AM] jl777c#5810
+you can use the same seed/wif for all coins
+
+[13-Nov-19 09:59 AM] Slyris#2880
+So i create one the first time, and if the seed exist, use login instead of getnewaddress
+
+[13-Nov-19 09:59 AM] Slyris#2880
+for other coins.
+
+[13-Nov-19 10:00 AM] Slyris#2880
+first time game launch -> spawn instance -> create address only once -> use login for every other call once i have the seed.
+
+[13-Nov-19 10:00 AM] jl777c#5810
+makes sense. keep in mind the login lasts 777 seconds, after that the privkey is erased from memory
+
+[13-Nov-19 10:01 AM] Slyris#2880
+Means after login i should use the rpc calls for getting history stuff, etc and save it
+
+[13-Nov-19 10:01 AM] Slyris#2880
+And if the user want a refresh need to login again etc
+
+[13-Nov-19 10:02 AM] Slyris#2880
+I can i think run a dedicated thread for that, that login every 777 seconds and refresh information that the user need's.
+
+[13-Nov-19 10:03 AM] Slyris#2880
+If i understand correctly after a `login` rpc call, `logout` is automatically called after 777 seconds of activity.
+
+[13-Nov-19 10:07 AM] Slyris#2880
+Now i think about a real world usage let's say
+
+I'm in a rpg video games, and i have golds (which is my coins) let's say i have 2000 RICK in game
+
+I want to spend 1000, i will use `spent + broadcast` so i need to be `logged` here there is 2 solutions:
+
+- Ask the pin at the moment where the user whant to buy something in game
+- After the user logged in the game and enter his pin (once)  i automatically call `login` rpc call for him every 777 seconds for the session and don't ask pin anymore in game.
+
+What we will prefer here ? Should we let the choice to the user to configure this behavior ?
+
+[13-Nov-19 10:08 AM] Slyris#2880
+I guess that's will be boring to type our pin each time we want to buy something, so we can save the pin for one game session let's say.
+
+[13-Nov-19 10:09 AM] TonyL#3577
+Pin asking on every blockchain tx should be very annoying for user
+
+[13-Nov-19 10:09 AM] Slyris#2880
+Yeah so what i'm suggesting is to have a login scene with a create wallet button that will ask user the pin that he want to create for his game blabla
+
+[13-Nov-19 10:10 AM] Slyris#2880
+and a login button where you just type your pin
+
+[13-Nov-19 10:10 AM] Slyris#2880
+When we leave the game we expire the pin for the session.
+
+[13-Nov-19 10:10 AM] Slyris#2880
+something like that
+
+[13-Nov-19 10:11 AM] TonyL#3577
+yep, decryption once on login into the game sounds good
+
+[13-Nov-19 10:11 AM] jl777c#5810
+also, you can do almost everything without being logged in
+
+[13-Nov-19 10:11 AM] TonyL#3577
+maybe you can just make nspv without expiration
+
+[13-Nov-19 10:12 AM] jl777c#5810
+only signing the tx needs to be logged in
+
+[13-Nov-19 10:12 AM] TonyL#3577
+as an option so it'll be the same - one login call and then usage until logout call
+
+[13-Nov-19 10:12 AM] jl777c#5810
+modifying the 777 autologout to 7777777 seconds is a matter of changing one define
+
+[13-Nov-19 10:12 AM] Slyris#2880
+If it's possible to add it as the command line parameters or in the nspv config that can be great
+
+[13-Nov-19 10:13 AM] Slyris#2880
+But in fact if for buyings any stuffs that i want i type my pin for 777 seconds, it's should be enough to shop everything that i need
+
+[13-Nov-19 10:14 AM] jl777c#5810
+it is just dangerous to have a funded privkey in memory forever
+
+[13-Nov-19 10:14 AM] jl777c#5810
+putting in the pin whenever transacting doesnt seem like too much burden
+
+[13-Nov-19 10:14 AM] Slyris#2880
+Yeah
+
+[13-Nov-19 10:14 AM] TonyL#3577
+`But in fact if for buyings any stuffs that i want i type my pin for 777 seconds, it's should be enough to shop everything that i need` but in future keystrokes you'll need to send permanently I wonder
+
+[13-Nov-19 10:15 AM] Slyris#2880
+Anyway this is just configuration stuff issue i guess we can change it at any moment
+
+[13-Nov-19 10:15 AM] Slyris#2880
+Best things to do it's to expose different possibility to the user and let him pick the best choice
+
+[13-Nov-19 10:16 AM] Slyris#2880
+If i want to type my pin every time i buy something.
+If i want to type my pin only once. etc
+
+[13-Nov-19 10:16 AM] Slyris#2880
+Everyone is different i guess
+
+[13-Nov-19 10:16 AM] Slyris#2880
+it's mater of taste mostly.
+
+[13-Nov-19 10:16 AM] TonyL#3577
+It might be different for different games also
+
+[13-Nov-19 10:16 AM] Slyris#2880
+But we need to tell to the user to be aware of the different level of security solution that we expose to him.
+
+[13-Nov-19 10:16 AM] TonyL#3577
+In FPS I'll need to record results once per round, if we trade some NFT we'll need to broadcast txs and etc
+
+[13-Nov-19 10:17 AM] Slyris#2880
+Yeah but let's say you are in a mmorpg
+
+[13-Nov-19 10:17 AM] Slyris#2880
+Have a priv key in memory that doesn't expire
+
+[13-Nov-19 10:17 AM] Slyris#2880
+it's really dangerous
+
+[13-Nov-19 10:18 AM] Slyris#2880
+Especially on windows, detect the nSPV process and just put a watcher in real time to it
+
+[13-Nov-19 10:18 AM] Slyris#2880
+you will get the seed really easy.
+
+[13-Nov-19 10:19 AM] Slyris#2880
+You can easily sniff a packet of a mmorpg to know when a player is trying to buy something and at that moment to monitor the process nspv to try to get the seed, it's crooked, but I think it's really simple to make
+
+[13-Nov-19 10:20 AM] Slyris#2880
+Since if you know that the call `login` arrives when a user try to buy something at that moment the seed is exposed
+
+[13-Nov-19 10:21 AM] Slyris#2880
+After that, it's also up to the user to pay attention to the software that hangs on his computer, but it's becoming more and more common
+
+[13-Nov-19 10:21 AM] TonyL#3577
+With current design you'll have the seed as the plain text on some point anyway
+
+[13-Nov-19 10:21 AM] gcharang#6833
+>  sniff a packet of a mmorpg
+this is in the internet, correct?
+
+nSPV communication happens locally
+
+[13-Nov-19 10:22 AM] Slyris#2880
+But hey you take the case of a lambda user who just want to download the new mod of the game he likes, and behind you have an app that monitors nspv behind, it's not terrible
+
+[13-Nov-19 10:22 AM] Slyris#2880
+Yeah @gcharang I speak locally
+
+[13-Nov-19 10:22 AM] Slyris#2880
+I mean locally you can sniff the packet from localhost if you have a software that try to spy
+
+[13-Nov-19 10:22 AM] gcharang#6833
+oh, you mean the local system is already compromised?
+
+[13-Nov-19 10:22 AM] Slyris#2880
+Yup
+
+{Reactions}
+👍 
+
+[13-Nov-19 10:23 AM] Slyris#2880
+Let's say you want to download a MOD's
+
+[13-Nov-19 10:23 AM] Slyris#2880
+in this mod's there is a spy software that's hook the nspv process
+
+[13-Nov-19 10:23 AM] Slyris#2880
+we are instantly fucked.
+
+[13-Nov-19 10:23 AM] Slyris#2880
+It's the user fault of course
+
+[13-Nov-19 10:24 AM] gcharang#6833
+got it, so even if it is a mod, the user should install from a trusted open source repo
+
+[13-Nov-19 10:24 AM] Slyris#2880
+Yeah ofc, but every day's people try to download external stuff for their games
+
+[13-Nov-19 10:24 AM] Slyris#2880
+we cannot control
+
+{Reactions}
+👍 
+
+[13-Nov-19 10:25 AM] Slyris#2880
+But something that we can do, it's try to hiding the process nspv
+
+[13-Nov-19 10:25 AM] Slyris#2880
+from the task manager
+
+[13-Nov-19 10:25 AM] Slyris#2880
+https://docs.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntquerysysteminformation
+
+{Embed}
+https://docs.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntquerysysteminformation
+NtQuerySystemInformation function (winternl.h) - Win32 apps
+Retrieves the specified system information.
+https://docs.microsoft.com/en-us/media/logos/logo-ms-social.png
+
+[13-Nov-19 10:31 AM] Slyris#2880
+so here what I'm going to do is for the moment exposed a member function in my system nspv which allows to `encrypt / decrypt` a `wif` stored locally to use the login function. Later we will see where and how, and in which context we will use these two functions.
+
+[13-Nov-19 10:33 AM] Slyris#2880
+It would seem all the same that we have to look into the possible vulnerabilities of our solution (the private key has a time exposed) that does not necessarily happen on other game, because they are centralized and that finally the information is stored in a database that is not local.
+
+[13-Nov-19 10:34 AM] Slyris#2880
+The first idea that comes to my mind is to ban the external hooks on the process directly from the nSPV binary, I know it's possible I did it in the past. (but only on Windows)
+
+[13-Nov-19 10:37 AM] Slyris#2880
+But stackoverflow disagree with me
+
+[13-Nov-19 10:37 AM] Slyris#2880
+
+{Attachments}
+https://cdn.discordapp.com/attachments/594906735467036682/644123676052029440/Capture_decran_2019-11-13_a_11.37.13.png
+
+[13-Nov-19 10:39 AM] Slyris#2880
+I want to say that it's just part of the pros and cons, and the user should just pay attention, as we try to pay attention to our private keys
+
+[13-Nov-19 10:54 AM] Slyris#2880
+I love the idea of ​​having a decentralized online game, but that means that the user must be ultra serious and attentive to the environment in which he launches the game.
+
+[13-Nov-19 10:55 AM] Slyris#2880
+I guess some of the solution just launches their games in a sandbox that's untouchable and impenetrable
+
+[13-Nov-19 10:56 AM] Slyris#2880
+such as : https://itch.io/docs/itch/using/sandbox.html
+
+Seem's to be really interesting.
+
+{Embed}
+https://itch.io/docs/itch/using/sandbox.html
+The sandbox · The itch.io app book
+
+[13-Nov-19 12:10 PM] Sir Seven#7158
+@jl777c   `pushed fix to all branches other than master. after it is confirmed to be working, i will update master`
+Checked with cli and html wallet. Works fine. Autotests passed.
+If I got it right - problem was with too much vins to transaction. Currently huge amounts of vins do not crash nspv process.
+
+[13-Nov-19 12:15 PM] jl777c#5810
+yes, before if you had more than 80 utxos it crashed. that address had 81!
+
+{Reactions}
+🎰 
+
+[13-Nov-19 12:15 PM] jl777c#5810
+now it should work, even with thousands
+
+[13-Nov-19 03:01 PM] TonyL#3577
+That was a jackpot to buypass 80 limitation with exactly 81 😂
+
+[13-Nov-19 03:03 PM] TonyL#3577
+btw @Sir Seven is it some address in auto-tests? If you're using same address on real chain it's better to merge utxos into single one on each tests execution - otherwise each other test will be started with different conditions to previous one
+

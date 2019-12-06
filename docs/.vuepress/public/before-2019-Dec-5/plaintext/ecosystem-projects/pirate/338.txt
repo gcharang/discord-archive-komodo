@@ -1,0 +1,445 @@
+==============================================================
+Guild: Komodo
+Channel: pirate
+Topic: Pirate (ARRR) is a cryptocurrency that solves the issue of financial privacy on the blockchain through forced anonymous transactions. Protect your wallet and transactions with Pirate’s completely anonymous network. With forced private transactions, your privacy cannot be compromised by another users’ activity on the network. If you wish to learn more, please join the official Pirate Discord at https://pirate.black/discord/ or message FishyGuts#5085, who will be happy to help out.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[24-Nov-18 05:39 PM] dukeleto#7326
+@KNOX @Alright there is a bug with showing balances correctly in ZEC upstream, both radix42 and I have noticed it, and it might have come in on recent merge. If you are seeing some issues with getwalletinfo/getbalance not being in sync, could be related
+
+[24-Nov-18 05:40 PM] KNOX#9338
+merged! https://github.com/PirateNetwork/komodo/pull/11
+
+{Embed}
+https://github.com/PirateNetwork/komodo/pull/11
+z_sendmany to allow z -> t by ParrotGotMeEye · Pull Request #11 ...
+https://avatars2.githubusercontent.com/u/43793612?s=400&v=4
+
+[24-Nov-18 05:40 PM] dukeleto#7326
+the bug has something to do with having sprout + sapling transparent funds, and not all funds show up in `getwalletinfo` until you rescan
+
+[24-Nov-18 05:40 PM] dukeleto#7326
+but `listunspent` shows it correctly
+
+[24-Nov-18 05:41 PM] dukeleto#7326
+a rescan fixes it
+
+[24-Nov-18 05:43 PM] gt#2812
+that fix seems to work
+
+[24-Nov-18 05:43 PM] KNOX#9338
+```
+./komodo-cli -ac_name=RKT z_sendmany zcdiaH6hVy8vuTiCwerBoGPt2fpthQo6KEPDZJwiMekqsj3mhXYLiGZ4SzvbyVZzQbqAp94fH761imGfHa4cc3tUqnuaDo7 "[{\"address\": \"RMeqXs5L9hxmFHSxng33B2mm8YEVSSWvdK\",\"amount\": 100}]"
+opid-6cd1068f-516d-4cb6-80e9-46e8cea8c027
+```
+
+[24-Nov-18 05:43 PM] KNOX#9338
+```
+./komodo-cli -ac_name=RKT z_getoperationstatus [\"opid-6cd1068f-516d-4cb6-80e9-46e8cea8c027\"]
+[
+  {
+    "id": "opid-6cd1068f-516d-4cb6-80e9-46e8cea8c027",
+    "status": "failed",
+    "creation_time": 1543081350,
+    "error": {
+      "code": -26,
+      "message": "16: bad-txns-acprivacy-chain"
+    },
+    "method": "z_sendmany",
+    "params": {
+      "fromaddress": "zcdiaH6hVy8vuTiCwerBoGPt2fpthQo6KEPDZJwiMekqsj3mhXYLiGZ4SzvbyVZzQbqAp94fH761imGfHa4cc3tUqnuaDo7",
+      "amounts": [
+        {
+          "address": "RMeqXs5L9hxmFHSxng33B2mm8YEVSSWvdK",
+          "amount": 100
+        }
+      ],
+      "minconf": 1,
+      "fee": 0.0001
+    }
+  }
+]
+```
+
+[24-Nov-18 05:43 PM] Alright#0419
+@dukeleto please help me with some git-fu
+
+[24-Nov-18 05:43 PM] KNOX#9338
+with latest ^^
+
+[24-Nov-18 05:44 PM] Alright#0419
+how do I stash changes, git pull, then reintroduce changes
+
+[24-Nov-18 05:44 PM] jl777c#5810
+any prints on the console?
+
+[24-Nov-18 05:44 PM] dukeleto#7326
+@Alright ok
+
+[24-Nov-18 05:44 PM] dukeleto#7326
+@Alright i actually have an alias just for that, but it's simple
+
+[24-Nov-18 05:44 PM] dukeleto#7326
+`git stash; git pull; git stash pop`
+
+[24-Nov-18 05:45 PM] KNOX#9338
+```
+found taddr in private chain: z_z.0 z_t.0 t_z.1
+2018-11-24 17:42:40 ERROR: CheckTransaction(): this is a private chain, only sprout -> taddr allowed until deadline
+2018-11-24 17:42:40 ERROR: AcceptToMemoryPool: CheckTransaction failed
+2018-11-24 17:42:40 opid-6cd1068f-516d-4cb6-80e9-46e8cea8c027: z_sendmany finished (status=failed, error=16: bad-txns-acprivacy-chain)
+```
+@jl777c
+
+[24-Nov-18 05:45 PM] KNOX#9338
+from debug.log
+
+[24-Nov-18 05:45 PM] dukeleto#7326
+did you get that, when sending to a notary node?
+
+[24-Nov-18 05:45 PM] dukeleto#7326
+i have a test like that, which I thought should pass
+
+[24-Nov-18 05:45 PM] KNOX#9338
+not to notary node, just a t address
+
+[24-Nov-18 05:45 PM] Alright#0419
+```
+git stash pop
+Auto-merging src/wallet/rpcwallet.cpp
+CONFLICT (content): Merge conflict in src/wallet/rpcwallet.cpp
+modo0@ubuntu-16gb-nbg1-2:~/ARtest/src$ git pull
+error: Pulling is not possible because you have unmerged files.
+hint: Fix them up in the work tree, and then use 'git add/rm <file>'
+hint: as appropriate to mark resolution and make a commit.
+fatal: Exiting because of an unresolved conflict.
+```
+
+[24-Nov-18 05:45 PM] KNOX#9338
+that Alright provided
+
+[24-Nov-18 05:45 PM] jl777c#5810
+oops i counted the z->t as a t->z, fixing
+
+{Reactions}
+💯 
+
+[24-Nov-18 05:46 PM] KNOX#9338
+@Alright you can also use `git reset --hard` if you dont' want to keep local changes and get fresh from the repo
+
+[24-Nov-18 05:46 PM] KNOX#9338
+very fast and effective i found for testing
+
+[24-Nov-18 05:46 PM] Alright#0419
+tyty
+
+[24-Nov-18 05:47 PM] dukeleto#7326
+@Alright you can't have conflicts and do a pull
+
+[24-Nov-18 05:47 PM] Alright#0419
+@KNOX can you just comment out all the rpc checks for now
+
+[24-Nov-18 05:47 PM] dukeleto#7326
+`git stash pop` is like applying a patch
+
+[24-Nov-18 05:47 PM] jl777c#5810
+pushed fix
+
+[24-Nov-18 05:47 PM] SHossain#0007
+Dukeleto preferes different 😛
+
+[24-Nov-18 05:47 PM] Alright#0419
+we need to test the consensus rules themselves and the rpc errors interfere with that
+
+[24-Nov-18 05:47 PM] KNOX#9338
+merging changes
+
+[24-Nov-18 05:47 PM] dukeleto#7326
+and if there are merge conflicts, well, you still have conflicts
+
+[24-Nov-18 05:47 PM] dukeleto#7326
+@Alright this is how to alias it in git: https://github.com/leto/Util/blob/master/config/.gitconfig#L50
+
+{Embed}
+https://github.com/leto/Util/blob/master/config/.gitconfig
+leto/Util
+Duke Leto's utilities. Contribute to leto/Util development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/30298?s=400&v=4
+
+[24-Nov-18 05:47 PM] jl777c#5810
+plz post the value of:         fprintf(stderr,"found taddr in private chain: z_z.%d z_t.%d t_z.%d\n",z_z,z_t,t_z);
+
+[24-Nov-18 05:48 PM] Alright#0419
+`found taddr in private chain: z_z.0 z_t.0 t_z.1`
+
+[24-Nov-18 05:48 PM] Alright#0419
+not on latest atm though
+
+[24-Nov-18 05:48 PM] Alright#0419
+not sure it matters
+
+[24-Nov-18 05:48 PM] Alright#0419
+building
+
+[24-Nov-18 05:48 PM] KNOX#9338
+merged
+
+[24-Nov-18 05:49 PM] jl777c#5810
+if it shows t_z.1 when it was a z->t that is a bug, which was fixed
+
+[24-Nov-18 05:49 PM] KNOX#9338
+compiling
+
+[24-Nov-18 05:49 PM] dukeleto#7326
+@jl777c i can give you the output of that from our regtests in a few minutes, these tests take some time to run
+
+[24-Nov-18 05:49 PM] Alright#0419
+can we just give jl commit access to the piratechain repo 😅
+
+[24-Nov-18 05:50 PM] KNOX#9338
+then, i don't have to worry much
+
+[24-Nov-18 05:50 PM] KNOX#9338
+😛
+
+[24-Nov-18 05:50 PM] KNOX#9338
+but, how to do that?
+
+[24-Nov-18 05:50 PM] Alright#0419
+not a big deal
+
+[24-Nov-18 05:50 PM] Alright#0419
+doesn't really make a difference
+
+[24-Nov-18 05:50 PM] jl777c#5810
+i think we are this bug fix away, other than z_migrate
+
+[24-Nov-18 05:51 PM] Alright#0419
+just lagging behind a minute or two is bugging me lol
+
+[24-Nov-18 05:51 PM] dukeleto#7326
+i notice less printouts on the latest FSM
+
+[24-Nov-18 05:51 PM] dukeleto#7326
+so sleek
+
+[24-Nov-18 05:52 PM] dukeleto#7326
+@jl777c ```Sending to RBRUNgV2nwtdGtR8Mc8Hz9RXQdSbmSUCsK
+found taddr in private chain: z_z.0 z_t.0 t_z.0
+commit failed
+JSONRPC error: Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.```
+
+[24-Nov-18 05:52 PM] KNOX#9338
+after starting the latest source i get them in debug.log 
+```
+found taddr in private chain: z_z.0 z_t.1 t_z.0
+2018-11-24 17:51:20 AddToWallet ae2fb358853e739dc81a23ac464b5223e5b31cdde5101e8317f6465befb51223  new
+2018-11-24 17:51:20 opid-8305e20d-c4ee-4a18-93d7-b94c1dfdc8af: z_sendmany finished (status=success, txid=ae2fb358853e739dc81a23ac464b5223e5b31cdde5101e8317f6465befb51223)
+2018-11-24 17:51:20 KomodoMiner started
+notaryid.-1 Mining.RKT with tromp
+try RKT Mining with tromp
+found taddr in private chain: z_z.0 z_t.1 t_z.0
+found taddr in private chain: z_z.0 z_t.1 t_z.0
+```
+
+[24-Nov-18 05:52 PM] dukeleto#7326
+i am sending to your notary address with `sendtoaddress`, i thought that would be allowed
+
+[24-Nov-18 05:52 PM] gt#2812
+got success
+
+[24-Nov-18 05:52 PM] Alright#0419
+@dukeleto change output?
+
+[24-Nov-18 05:53 PM] dukeleto#7326
+@Alright oh, interesting. maybe
+
+[24-Nov-18 05:53 PM] dukeleto#7326
+```        dev1_jl777 = "RNJmgYaFF5DbnrNUX6pMYz9rcnDKC2tuAc"
+        # taddr vout is only allowed if it is a notary address
+        txid = rpc.sendtoaddress(dev1_jl777, 7)
+        assert txid, 'got txid'```
+
+[24-Nov-18 05:53 PM] Alright#0419
+zc -> t works
+
+[24-Nov-18 05:53 PM] dukeleto#7326
+that is the test code, but yeah, maybe a change address is messing stuff up
+
+[24-Nov-18 05:53 PM] dukeleto#7326
+oh
+
+[24-Nov-18 05:54 PM] KNOX#9338
+i got this
+```
+./komodo-cli -ac_name=RKT z_getoperationstatus [\"opid-c234201d-7a9d-4396-a5e5-d515bfcc8d07\"]
+[
+  {
+    "id": "opid-c234201d-7a9d-4396-a5e5-d515bfcc8d07",
+    "status": "failed",
+    "creation_time": 1543081946,
+    "error": {
+      "code": -6,
+      "message": "Insufficient funds, no unspent notes found for zaddr from address."
+    },
+    "method": "z_sendmany",
+    "params": {
+      "fromaddress": "zcdiaH6hVy8vuTiCwerBoGPt2fpthQo6KEPDZJwiMekqsj3mhXYLiGZ4SzvbyVZzQbqAp94fH761imGfHa4cc3tUqnuaDo7",
+      "amounts": [
+        {
+          "address": "RMeqXs5L9hxmFHSxng33B2mm8YEVSSWvdK",
+          "amount": 100
+        }
+      ],
+      "minconf": 1,
+      "fee": 0.0001
+    }
+  }
+]
+```
+
+[24-Nov-18 05:54 PM] Alright#0419 (pinned)
+t -> t and zs -> t consensus rules work
+zc -> t works
+
+pinning this temporarily
+
+[24-Nov-18 05:54 PM] dukeleto#7326
+i didn't send it to a zaddr first, i am trying to do a t->t, that is not allowed, even for a notary receiver, I think
+
+[24-Nov-18 05:54 PM] Alright#0419
+Pinned a message.
+
+[24-Nov-18 05:54 PM] KNOX#9338
+i have balance in that z addr
+```
+./komodo-cli -ac_name=RKT z_listreceivedbyaddress zcdiaH6hVy8vuTiCwerBoGPt2fpthQo6KEPDZJwiMekqsj3mhXYLiGZ4SzvbyVZzQbqAp94fH761imGfHa4cc3tUqnuaDo7
+[
+  {
+    "txid": "db005198a0be1df08520917c98f9d398de787afe509b9d697767e6a31f6b7c3a",
+    "amount": 12799.99990000,
+    "memo": "removed",
+    "jsindex": 0,
+    "jsoutindex": 1,
+    "change": false
+  }
+]
+```
+
+[24-Nov-18 05:54 PM] Alright#0419
+it is duke
+
+[24-Nov-18 05:54 PM] Alright#0419
+set `-pubkey=` to a notary pubkey
+
+[24-Nov-18 05:54 PM] jl777c#5810
+how much did you send?
+
+[24-Nov-18 05:54 PM] KNOX#9338
+100
+
+[24-Nov-18 05:55 PM] dukeleto#7326
+@KNOX that is a sprout zaddr, fyi
+
+[24-Nov-18 05:55 PM] Alright#0419
+that will make change address notary address also
+
+[24-Nov-18 05:55 PM] KNOX#9338
+```
+./komodo-cli -ac_name=RKT z_sendmany zcdiaH6hVy8vuTiCwerBoGPt2fpthQo6KEPDZJwiMekqsj3mhXYLiGZ4SzvbyVZzQbqAp94fH761imGfHa4cc3tUqnuaDo7 "[{\"address\": \"RMeqXs5L9hxmFHSxng33B2mm8YEVSSWvdK\",\"amount\": 100}]"
+```
+
+[24-Nov-18 05:55 PM] KNOX#9338
+this was the call
+
+[24-Nov-18 05:55 PM] jl777c#5810
+i think it is like shielding and maybe it needs to be exact
+
+[24-Nov-18 05:55 PM] dukeleto#7326
+@KNOX what does `z_listunspent` say ?
+
+[24-Nov-18 05:55 PM] dukeleto#7326
+we have that RPC now, right?
+
+[24-Nov-18 05:56 PM] jl777c#5810
+yes
+
+[24-Nov-18 05:56 PM] dukeleto#7326
+🎉
+
+[24-Nov-18 05:56 PM] Alright#0419
+I did zc -> t without exact amount
+
+[24-Nov-18 05:56 PM] Alright#0419
+no problem
+
+[24-Nov-18 05:56 PM] dukeleto#7326
+that RPC makes GUI wallets so much faster for shielded stuff
+
+[24-Nov-18 05:56 PM] KNOX#9338
+```
+./komodo-cli -ac_name=RKT z_listunspent
+[
+  {
+    "txid": "ae2fb358853e739dc81a23ac464b5223e5b31cdde5101e8317f6465befb51223",
+    "jsindex": 0,
+    "jsoutindex": 1,
+    "confirmations": 1,
+    "spendable": true,
+    "address": "zcdiaH6hVy8vuTiCwerBoGPt2fpthQo6KEPDZJwiMekqsj3mhXYLiGZ4SzvbyVZzQbqAp94fH761imGfHa4cc3tUqnuaDo7",
+    "amount": 12699.99980000,
+    "memo": "removed",
+    "change": true
+  }
+]
+```
+
+[24-Nov-18 05:56 PM] dukeleto#7326
+need to start using it in TreasureChest
+
+[24-Nov-18 05:56 PM] gt#2812
+zc -> t worked fine
+
+[24-Nov-18 05:56 PM] KNOX#9338
+@dukeleto ^^
+
+[24-Nov-18 05:57 PM] dukeleto#7326
+it seems like you have funds in that addr
+
+[24-Nov-18 05:57 PM] jl777c#5810
+you have txid for the zc -> t?
+
+[24-Nov-18 05:57 PM] jl777c#5810
+maybe it was unconfirmed?
+
+[24-Nov-18 05:57 PM] ComputerGenie 👴🏼📢#7004
+banning folks right and left here:
+```2018-11-24 17:55:19 ERROR: CheckTransaction(): this is a private chain, only sprout -> taddr allowed until deadline
+2018-11-24 17:55:19 ERROR: CheckBlock: CheckTransaction failed
+2018-11-24 17:55:19 Misbehaving: 195.201.20.230:39386 (0 -> 1)
+2018-11-24 17:55:19 ERROR: ProcessNewBlock: CheckBlock FAILED
+2018-11-24 17:55:19 Misbehaving: 195.201.20.230:39386 (1 -> 101) BAN THRESHOLD EXCEEDED```
+
+[24-Nov-18 05:58 PM] Alright#0419
+that'd be me lol
+
+[24-Nov-18 05:58 PM] ComputerGenie 👴🏼📢#7004
+that's just one of the bans 😛
+
+[24-Nov-18 05:58 PM] Alright#0419
+update?
+
+[24-Nov-18 05:58 PM] Alright#0419
+although I have been trying funky things
+
+[24-Nov-18 05:58 PM] Alright#0419
+none seemed to have broadcast so far
+
+[24-Nov-18 05:58 PM] Alright#0419
+at least didn't think any did
+
+[24-Nov-18 05:58 PM] ComputerGenie 👴🏼📢#7004
+what's the current height?
+

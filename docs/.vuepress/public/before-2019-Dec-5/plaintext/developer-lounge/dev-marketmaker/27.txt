@@ -1,0 +1,467 @@
+==============================================================
+Guild: Komodo
+Channel: dev-marketmaker
+Topic: Discussion about AtomiAPI and its market making tech.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[22-Nov-19 01:49 PM] phm87#7395
+```cargo version
+cargo 1.40.0-nightly (8b0561d68 2019-09-30)```
+
+[22-Nov-19 01:50 PM] phm87#7395
+I'm looking at the line ``error: failed to run custom build command for `common v0.1.0 (/home/administrator/atomicDEX-API/mm2src/common)``
+
+[22-Nov-19 02:56 PM] phm87#7395
+Maybe it will be painful to make it work on ubuntu 16.04 : I think that most of mm2 ubuntu are on 18.04, I can use docker
+
+[22-Nov-19 02:59 PM] gcharang#6833
+I am using 16.04 though
+
+[22-Nov-19 03:04 PM] phm87#7395
+Did you add a PPA ?
+
+[22-Nov-19 03:06 PM] phm87#7395
+Can you show me the commands that you typed ? I'm creating a new VM to start fresh, I can try with ubuntu 16.04 or 18.04 (I'm more used to 16.04 though)
+
+[22-Nov-19 03:08 PM] phm87#7395
+2019-10-06 seems to be installed without error now, I'll try again```rustup install nightly-2019-10-06
+info: syncing channel updates for 'nightly-2019-10-06-x86_64-unknown-linux-gnu'
+info: latest update on 2019-10-06, rust version 1.40.0-nightly (787005079 2019-10-04)
+info: downloading component 'cargo'
+  4.7 MiB /   4.7 MiB (100 %)   3.7 MiB/s in  1s ETA:  0s
+info: downloading component 'rust-std'
+173.8 MiB / 173.8 MiB (100 %)  20.0 MiB/s in 11s ETA:  0s
+info: downloading component 'rustc'
+ 65.7 MiB /  65.7 MiB (100 %)  14.7 MiB/s in  4s ETA:  0s
+info: installing component 'cargo'
+info: installing component 'rust-std'
+173.8 MiB / 173.8 MiB (100 %)  34.0 MiB/s in  5s ETA:  0s
+info: installing component 'rustc'
+ 65.7 MiB /  65.7 MiB (100 %)  16.0 MiB/s in  4s ETA:  0s
+
+  nightly-2019-10-06-x86_64-unknown-linux-gnu installed - rustc 1.40.0-nightly (787005079 2019-10-04)
+
+info: checking for self-updates```
+
+[22-Nov-19 03:09 PM] gcharang#6833
+I didn't add any ppa
+I also faced the error that said something like "rustfmt not availale with this release"
+I think I used
+```
+git clone https://github.com/KomodoPlatform/atomicDEX-API --branch mm2 --single-branch
+
+cd atomicDEX-API
+cargo clean 
+
+rustup install nightly
+rustup override set nightly
+
+cargo build --features native -vv
+```
+
+{Reactions}
+👌 
+
+[22-Nov-19 03:09 PM] phm87#7395
+```administrator@uni-prod-web:~$ rustup default nightly-2019-10-06
+info: using existing install for 'nightly-2019-10-06-x86_64-unknown-linux-gnu'
+info: default toolchain set to 'nightly-2019-10-06-x86_64-unknown-linux-gnu'
+
+  nightly-2019-10-06-x86_64-unknown-linux-gnu unchanged - rustc 1.40.0-nightly (787005079 2019-10-04)
+
+administrator@uni-prod-web:~$ rustup component add rustfmt-preview
+error: component 'rustfmt' for target 'x86_64-unknown-linux-gnu' is unavailable for download for channel nightly-2019-10-06```
+I'll try with your commands, thank you
+
+[22-Nov-19 03:11 PM] gcharang#6833
+also, make sure the branch is mm2
+
+[22-Nov-19 03:41 PM] phm87#7395
+Weird, using your commands, I had the same error
+
+[22-Nov-19 03:43 PM] phm87#7395
+```rustc --version
+rustc 1.41.0-nightly (5c5b8afd8 2019-11-16)
+~/atomicDEX-API$ rustup --version
+rustup 1.20.2 (13979c968 2019-10-16)
+ cargo --version
+cargo 1.40.0-nightly (5da4b4d47 2019-10-28)```
+
+[22-Nov-19 03:45 PM] TonyL#3577
+@phm87 From the error above looks like you don't have `cmake` in your PATH
+
+[22-Nov-19 03:45 PM] TonyL#3577
+```Building dht.cc …
+$ cmake -DMM_VERSION=UNKNOWN -DCMAKE_BUILD_TYPE=Debug ..
+$ cmake -DMM_VERSION=UNKNOWN -DCMAKE_BUILD_TYPE=Debug ..
+thread 'main' panicked at '
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!   unwrap! called on Result::Err                                              !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+mm2src/common/build.rs:899,5 in build_script_build
+
+Err(Os { code: 2, kind: NotFound, message: "No such file or directory" })```
+
+[22-Nov-19 03:45 PM] phm87#7395
+thank you TonyL, I was looking in the wrong direction
+
+{Reactions}
+👍 
+
+[22-Nov-19 04:46 PM] phm87#7395
+```--- stderr
+Boost at "/home/administrator/atomicDEX-API/target/debug/build/common-acae92b81bfdc204/out/boost_1_                                             68_0"
+libtorrent at "/home/administrator/atomicDEX-API/target/debug/build/common-acae92b81bfdc204/out/lt"
+Building dht.cc …
+$ cmake -DMM_VERSION=UNKNOWN -DCMAKE_BUILD_TYPE=Debug ..
+$ cmake -DMM_VERSION=UNKNOWN -DCMAKE_BUILD_TYPE=Debug ..
+$ cmake --build . --target marketmaker-lib
+$ cmake --build . --target marketmaker-lib
+Error: could not find CMAKE_PROJECT_NAME in Cache
+thread 'main' panicked at 'Command returned an error status: exit code: 1', mm2src/common/build.rs:                                             908:5
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace.
+
+administrator@uni-prod-web:~/atomicDEX-API$ cmake --version
+cmake version 3.16.0-rc4
+
+CMake suite maintained and supported by Kitware (kitware.com/cmake).
+administrator@uni-prod-web:~/atomicDEX-API$ echo $PATH
+/home/administrator/.cargo/bin:/home/administrator/bin:/home/administrator/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+administrator@uni-prod-web:~/atomicDEX-API$ whereis cmake
+cmake: /usr/local/bin/cmake```
+Here is how I install last stable cmake <https://askubuntu.com/questions/829310/how-to-upgrade-cmake-in-ubuntu?answertab=active#tab-top>
+
+[22-Nov-19 04:46 PM] phm87#7395
+but the error is indeed related to cmake, I'll try to look at that
+
+[22-Nov-19 04:55 PM] TonyL#3577
+Maybe it's something `sudo` things, just guessing
+
+[22-Nov-19 04:59 PM] Slyris#2880
+@phm87 It's not related with CMake version.
+
+When you run CMake it's creating a cache files and directory inside the build directory.
+
+The error here here mean's that :
+
+1st- The cache variable containing the project variable name  (CMAKE_PROJECT_NAME) is erased
+2nd - project_name() is not set in the CMakeLists.txt
+
+[22-Nov-19 05:00 PM] Slyris#2880
+So the problem is probably the 1st one, you could use grep insinde the build directory to see if the variable is set
+
+[22-Nov-19 05:00 PM] Slyris#2880
+(The variable should be in the CMakeCache.txt)
+
+[22-Nov-19 05:01 PM] phm87#7395
+I made a cargo clean then build again. I will make a grep after the build. Thank you
+
+[22-Nov-19 05:02 PM] Slyris#2880
+Check also with which rights you are running CMake
+
+[22-Nov-19 05:02 PM] Slyris#2880
+Did you clone the project as sudo ?
+
+[22-Nov-19 05:22 PM] phm87#7395
+no I didn't use sudo to git clone not to build. I used sudo only to add dependancies
+
+[22-Nov-19 05:22 PM] phm87#7395
+```Building dht.cc …
+$ cmake -DMM_VERSION=1019c60 -DCMAKE_BUILD_TYPE=Debug ..
+$ cmake -DMM_VERSION=1019c60 -DCMAKE_BUILD_TYPE=Debug ..
+$ cmake --build . --target marketmaker-lib
+$ cmake --build . --target marketmaker-lib
+Error: could not find CMAKE_PROJECT_NAME in Cache
+thread 'main' panicked at 'Command returned an error status: exit code: 1', mm2src/common/build.rs:908:5
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace.
+
+administrator@uni-prod-web:~/atomicDEX-API$ grep MAKE_PROJECT_NAME *
+grep: build: Is a directory
+grep: cmake: Is a directory
+CMakeCache.txt:CMAKE_PROJECT_NAME:STATIC=SuperNET``` so it is there
+
+[22-Nov-19 05:23 PM] phm87#7395
+``Error: could not find CMAKE_PROJECT_NAME in Cache`` weird
+
+[22-Nov-19 05:50 PM] phm87#7395
+```grep project CMakeLists.txt
+project(SuperNET)```
+
+[22-Nov-19 07:14 PM] phm87#7395
+I made a manual ``cmake .`` and ``cmake ..`` each time that I saw a CMakeLists.txt and I adapted a little bit here <https://github.com/KomodoPlatform/atomicDEX-API/blob/mm2/mm2src/common/build.rs#L901> now I obtained a working binary ^^
+
+[22-Nov-19 07:22 PM] phm87#7395
+Can I have some MORTY ? I have error on the faucet ``Failed captcha verification`` but I saw no captcha (i see an error in the console ``Uncaught TypeError: grecaptcha.render is not a function`` et index.js:609 under chrome)
+
+[22-Nov-19 07:23 PM] phm87#7395
+RQURAF82ELUM9dXEVBACPSxo4oMGWp3YBc
+
+[22-Nov-19 07:31 PM] phm87#7395
+weird, I refreshed the page several times, I opened it in a new tab and after a while, the captcha appeared and I was able to get 7.77 MORTY
+
+{Reactions}
+👍 
+
+[23-Nov-19 02:11 AM] gcharang#6833
+@phm87 hey, I deleted the  terminal output you posted because it seemed to contain the actual rpcpass and passphrase, no doubt your brain was lagging a bit after all that troubleshooting 😜 
+
+sorry if they aren't real
+
+[23-Nov-19 09:34 AM] phm87#7395
+@gcharang  there is only MORTY on these keys but it is better to avoid to share passphrases, thank you.
+I was able to make the tutorial/walkthrough, I created 2 orders but I'm waiting for a match (I let mm2 running in a screen), how long should I wait ?
+Another question about prices, is it mandatory to parse the orderbook to know the last buy & sell prices (best buy price and best sell price) ? Or does it exist a single call to know all prices of all coins ?
+
+[23-Nov-19 10:24 AM] phm87#7395
+On MM2, do we have a similar call to know all supported coins on mm2 ? (similar to ``getcoins`` from mm1 <https://docs.komodoplatform.com/mmV1/api/general.html#getcoins>)
+
+[23-Nov-19 10:26 AM] phm87#7395
+``get_enabled_coins`` returns only the user enabled coins but I'd like to have all supported coins, thank you
+
+[23-Nov-19 11:19 AM] cipi#4502
+the supported coins are in the coins file: https://github.com/jl777/coins/blob/master/coins
+the ones with `"mm2": 1`, the others were not tested with mm2 or are not working in mm2
+
+{Embed}
+https://github.com/jl777/coins/blob/master/coins
+jl777/coins
+coin parameters and all files needed for GUI support - jl777/coins
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[23-Nov-19 01:07 PM] phm87#7395
+Thank you
+
+[23-Nov-19 01:41 PM] phm87#7395
+@cipi and about the prices ? Should I perform one call for each coin ? Or can I get the prices for all coins with one call ?
+
+[23-Nov-19 01:42 PM] phm87#7395
+Now, I'm planning to retrieve orderbook for each coin, it is not efficient (I only need the best buy/sell, not whole orderbook)
+
+[23-Nov-19 02:25 PM] cipi#4502
+these are the available API calls: https://developers.atomicdex.io/basic-docs/atomicdex/atomicdex-api.html
+there is no API call for bestprice, so you need to query the orderbook
+
+{Embed}
+https://developers.atomicdex.io/basic-docs/atomicdex/atomicdex-api.html
+Komodo Developer Documentation
+Documentation for developers building on the Komodo Platform
+https://developers.komodoplatform.com/start-here-pics/Dev_Docs_Introduction_small.png
+
+[23-Nov-19 03:42 PM] gcharang#6833
+>  I created 2 orders but I'm waiting for a match (I let mm2 running in a screen), how long should I wait ?
+you have to wait till some one fills your order
+
+[23-Nov-19 05:57 PM] phm87#7395
+I tried to use the same price and volume that match another order in the orderbook but I didn't pay attention to bid / ask, I'll create other orders, thank you
+
+[23-Nov-19 06:11 PM] SHossain#0007
+what command did use to match another order?
+
+[23-Nov-19 06:18 PM] SHossain#0007
+`setprice` or `buy`?
+
+[23-Nov-19 06:18 PM] phm87#7395
+I used ``curl --url "http://127.0.0.1:7783" --data "{\"userpass\":\"$userpass\",\"method\":\"orderbook\",\"base\":\"RICK\",\"rel\":\"MORTY\"}" | jq`` then I used my eyes to try to match an order but I didn't pay attention to bids and asks lists, I created a second order trying to sell 1 MORTY to receive 1 RICK. But the trading part can be dangerous (for the purpose I'd like to do) so I'll focus first on get prices and get balances and in a few days, swaps and trading
+
+[23-Nov-19 06:18 PM] SHossain#0007
+that's `orderbook` command
+
+[23-Nov-19 06:19 PM] phm87#7395
+I used a ``buy`` as they explain in <https://github.com/KomodoPlatform/developer-docs/blob/master/docs/basic-docs/atomicdex/atomicdex-tutorials/atomicdex-walkthrough.md> but I'll sell RICK from my phone to be sure that my orders are matched
+
+[23-Nov-19 06:19 PM] phm87#7395
+thank you for your help
+
+[23-Nov-19 10:06 PM] phm87#7395
+I though that KOIN was mm2 compotible because it is an assetchain/smartchain (but maybe it is another KOIN here), I don't see ``"mm2": 1`` here for KOIN: <https://github.com/jl777/coins/blob/master/coins#L172>
+
+[23-Nov-19 10:28 PM] cipi#4502
+assetchains will work, only OOT and ZILLA are special (no sapling)
+
+[23-Nov-19 10:28 PM] phm87#7395
+but in the help, they explain to use only the coins with mm2: 1
+
+[23-Nov-19 10:29 PM] cipi#4502
+yes, because that are the tested ones... do a KOIN trade, then it is tested 🙂
+
+[23-Nov-19 10:30 PM] phm87#7395
+<https://developers.komodoplatform.com/basic-docs/atomicdex/atomicdex-api.html#electrum>
+```Notes on the MM2 Parameter
+For each coin, Komodo software requires the user/developer to set the mm2 parameter. This can be achieved either in the coins for more details), or via the electrum and enable methods.
+
+The value of the mm2 parameter informs the software as to whether the coin is expected to function.
+
+0 = non-functioning
+1 = functioning```
+But in some cases, there is no mm2 parameter
+
+[23-Nov-19 10:30 PM] phm87#7395
+oh ok I understand what you mean
+
+[23-Nov-19 10:30 PM] phm87#7395
+not tested, no tag, it makes sense
+
+[23-Nov-19 10:32 PM] cipi#4502
+btw, is KOIN actually still alive?
+
+[23-Nov-19 10:32 PM] phm87#7395
+no clues
+
+[23-Nov-19 10:40 PM] SHossain#0007
+@cipi we are notarizing KOIN
+
+[23-Nov-19 10:41 PM] phm87#7395
+yes, that's why I know it exists but we are notarizing several projects that I have never see any life in their channel so the question of cipi makes sense (maybe only notaries uses it now)
+
+[24-Nov-19 01:47 AM] kmdkrazy#8280
+Looks like If you create a new zTOMIC coin - you could blend the zcash light wallet in to Adex ...use a 24 word seed and  ...."swap"... zaddress coins.....at least it looks like you can from my couch.
+
+[24-Nov-19 01:54 AM] phm87#7395
+zaddress are not yet supported into atomicdex and mm2 but in few months, it should be
+
+[24-Nov-19 01:56 AM] kmdkrazy#8280
+That Artem dude could do it now....1st to market - dont wait
+
+[24-Nov-19 01:58 AM] SHossain#0007
+Q1 2020
+
+[24-Nov-19 02:00 AM] kmdkrazy#8280
+👌
+
+[24-Nov-19 05:02 AM] jl777c#5810
+https://hummingbot.io/ might be useful for mm2 CEX liquidity bridges. dont know if it is free or how good it is, but it is the first one of its type i have seen
+
+[24-Nov-19 06:45 AM] Paro#7842
+@jl777c I tested "HummingBot" in the past.
+
+[24-Nov-19 08:38 AM] mrlynch#5735
+is it any good?
+
+[24-Nov-19 09:16 AM] Paro#7842
+For those who use high amounts. risky
+
+[24-Nov-19 08:51 PM] phm87#7395
+Can I set up a mm2 node on one VM/server and make curl queries from another VM/server (in the same LAN) ? Does it require a kind of rpcallowip to be set somewhere ?
+
+[24-Nov-19 09:04 PM] cipi#4502
+https://github.com/KomodoPlatform/atomicDEX-API/blob/mm2/mm2src/mm2.rs#L127
+
+{Embed}
+https://github.com/KomodoPlatform/atomicDEX-API/blob/mm2/mm2src/mm2.rs
+KomodoPlatform/atomicDEX-API
+This is the official AtomicAPI (atomicDEX API) repository - KomodoPlatform/atomicDEX-API
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[24-Nov-19 09:08 PM] cipi#4502
+but why do you want to do that? why not doing the requests on the same server where mm2 is running?
+
+[24-Nov-19 09:09 PM] phm87#7395
+If the other tool needs a server reboot, mm2 won t be affdcted. And vice versa
+
+[24-Nov-19 09:11 PM] cipi#4502
+that is true... i have to admit that i never reboot servers, only if i want/need a new kernel version 🙂
+
+[24-Nov-19 10:11 PM] cipi#4502
+i think you need this option too (`rpc_local_only=false`): https://github.com/KomodoPlatform/atomicDEX-API/blob/mm2/mm2src/mm2.rs#L130
+
+{Embed}
+https://github.com/KomodoPlatform/atomicDEX-API/blob/mm2/mm2src/mm2.rs
+KomodoPlatform/atomicDEX-API
+This is the official AtomicAPI (atomicDEX API) repository - KomodoPlatform/atomicDEX-API
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[24-Nov-19 10:38 PM] phm87#7395
+thank you
+
+[24-Nov-19 10:40 PM] phm87#7395
+@TonyL @ca333 @SHossain for a good cause, I'd need huuuuge amounts of RICK and MORTY. I can give more details in private
+
+[24-Nov-19 10:40 PM] SHossain#0007
+@phm87 DM TonyL. he can send you
+
+[24-Nov-19 10:41 PM] phm87#7395
+Thank you
+
+[25-Nov-19 10:44 PM] phm87#7395
+there is a rpc call to know my own swap history but I'd really be happy to be able to know history of the whole atomicdex. The only written track are blockchains of both assets. How can I identify an old atomic swap from blockchain data ? I don't know if electrum will be enough to gather this info. I hope that I'll see something specific in the op_return
+
+[25-Nov-19 11:00 PM] cipi#4502
+only the seed nodes have the infos about swaps from all nodes
+
+[25-Nov-19 11:05 PM] cipi#4502
+https://github.com/KomodoPlatform/atomicDEX-API/issues/302
+
+{Embed}
+https://github.com/KomodoPlatform/atomicDEX-API/issues/302
+Shared statistics · Issue #302 · KomodoPlatform/atomicDEX-API
+We want the SWAP statistics to be shared with the sites where we implement statistical interfaces, allowing the users to check on the status and health of the exchange network. There&#39;s also...
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[26-Nov-19 06:22 AM] Alright#0419
+You can track trades via RThtXup6Zo7LZAi8kRWgjAyi1s4u6U9Cpf, it's the dex fee address
+
+[26-Nov-19 06:23 AM] Alright#0419
+I have some basic scripts if you want them, basically just calculates total alice volume for a given chain
+
+[26-Nov-19 06:23 AM] Alright#0419
+@phm87
+
+[26-Nov-19 06:49 AM] phm87#7395
+Thank you
+
+[26-Nov-19 04:13 PM] cipi#4502
+problem with dexfee address is, that it covers only the swaps where the taker has used KMD. If he bought KMD and payed with BTC, the dexfee will be in BTC and payed to some other address.
+
+[26-Nov-19 04:40 PM] gcharang#6833
+another problem is, dexfee might be paid but the swap could still fail
+I am not sure if it should be counted as volume
+
+[26-Nov-19 05:40 PM] CHMEX#0686
+I still think what mm1 did was pretty good it was called 'ticker' and easy to use as it just tracked what happened on the network
+
+[26-Nov-19 05:49 PM] allbits#5898
+1KRhTPvoxyJmVALwHFXZdeeWFbcJSbkFPu btc address for dex fees
+
+[26-Nov-19 06:34 PM] allbits#5898
+That's also the bch address (legacy)
+
+[29-Nov-19 09:03 AM] phm87#7395
+I performed some swaps yesterday between atomicdex-api and AtomicDEX (on smartphone) on RICK and MORTY and I noticed that:
+- I can't match my own orders. If I create a sell and a buy that should match with the same client, nothing happens (I used ``setprice``)
+- I was able to swap if I create orders from atomicdex-api with ``setprice`` then create the matching orders on atomicdex from my phone
+- I'm testing but it doesn't seem to work to create new orders with my phone then create the matching order with atomicdex-api using ``setprice``
+Should I use ``buy`` sometimes ? How can I know when I should use ``buy``, ``sell`` or ``setprice`` ?
+But I don't use <https://developers.komodoplatform.com/basic-docs/atomicdex/atomicdex-api.html#note-about-rational-number-type> but it doesn't work with round numbers 0.5 / 1 / 2 so I don't think that it is number type bug.
+Thank you
+
+[29-Nov-19 09:20 AM] jorian#4555
+> If I create a sell and a buy that should match with the same client, nothing happens (I used setprice) 
+I'm not sure i understand this one, but if i'm correct a send / buy is something that is broadcasted on the network. if in 30 seconds no reply comes in, it will be converted from taker to maker and will be put in the orderbook for others to buy / sell
+
+[29-Nov-19 09:20 AM] jorian#4555
+> I was able to swap if I create orders from atomicdex-api with setprice then create the matching orders on atomicdex from my phone
+This is how it normally works; setprice is when you want to make a market
+
+[29-Nov-19 09:20 AM] jorian#4555
+in fact, every unmatched buy / sell will eventually become a setprice, conceptually
+
+[29-Nov-19 09:21 AM] jorian#4555
+> it doesn't seem to work to create new orders with my phone then create the matching order with atomicdex-api using setprice
+that is because setprice isn't a taker order
+
+[29-Nov-19 09:21 AM] jorian#4555
+it will ignore the orderbook, so to say
+
+[29-Nov-19 09:21 AM] phm87#7395
+> If I create a sell and a buy that should match with the same client, nothing happens (I used setprice) 
+sorry I mean that I used ``setprice`` to swap 1 RICK to 1 MORTY and I did a second call with the same client/wallet to swap 1 MORTY to 1 RICK, it didn't work (but I think that it is because it was done from the same client/wallet)
+
+[29-Nov-19 09:22 AM] phm87#7395
+ok so if I want to make sure to succeed to places orders and have matching, I'll try with ``buy`` instead of ``setprice``
+
+[29-Nov-19 09:22 AM] jorian#4555
+self-trading isn't possible, if i recall correctly
+

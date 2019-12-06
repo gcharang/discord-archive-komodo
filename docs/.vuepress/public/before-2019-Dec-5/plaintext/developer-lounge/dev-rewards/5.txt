@@ -1,0 +1,341 @@
+==============================================================
+Guild: Komodo
+Channel: dev-rewards
+Topic: A channel to discuss claiming Komodo's 5.1% rewards.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[28-Nov-18 10:25 AM] lukechilds#2707
+oh no sorry
+
+[28-Nov-18 10:25 AM] lukechilds#2707
+looks like it uses the time from the latest block
+
+[28-Nov-18 10:25 AM] jl777c#5810
+it should use chaintip nTime
+
+[28-Nov-18 10:25 AM] jl777c#5810
+not system time
+
+[28-Nov-18 10:25 AM] jl777c#5810
+so not sure the issue
+
+[28-Nov-18 10:25 AM] lukechilds#2707
+ah great!
+
+[28-Nov-18 10:25 AM] lukechilds#2707
+I must of just checked it twice, the second time right after a new block
+
+[28-Nov-18 10:26 AM] lukechilds#2707
+so I can run that, check the current block time and the interest amount, and then use those values to test against my JS implementation by spoofing the time?
+
+[28-Nov-18 10:28 AM] lukechilds#2707
+so the network is validing interest on new transactions based on the time of the latest block, not the system time
+
+[28-Nov-18 10:28 AM] lukechilds#2707
+is that correct?
+
+[28-Nov-18 10:29 AM] jl777c#5810
+yes
+
+[28-Nov-18 10:29 AM] jl777c#5810
+tiptime
+
+[28-Nov-18 10:29 AM] jl777c#5810
+nTime of chaintip
+
+[28-Nov-18 10:29 AM] lukechilds#2707
+which means if I create a TX with perfect interest accuracy using my system clock, it would likely be rejected by the network because they checking against the time of the latest block, which could be ~1 minute behind
+
+[28-Nov-18 10:29 AM] jl777c#5810
+use tiptime
+
+[28-Nov-18 10:30 AM] jl777c#5810
+odds are unless it is a very large amount, it wont matter (it would reduce the actual txfee a bit)
+
+[28-Nov-18 10:30 AM] lukechilds#2707
+ah ok, it's just a web app connecting to Insight
+
+[28-Nov-18 10:30 AM] lukechilds#2707
+should be able to get the latest block and use the time from that
+
+[28-Nov-18 10:36 AM] lukechilds#2707
+Thanks, you've been very helpful 🙌
+
+[28-Nov-18 11:17 AM] lukechilds#2707
+@jl777c WOOOOOO, I tested some UTXOs against `komodo-cli gettxout <TXID> <index>` and then used the same time of the latest block with my JS implementation and the results are 100% identical 🎉
+
+[28-Nov-18 11:17 AM] lukechilds#2707
+I can write a suite of unit tests around that too
+
+[28-Nov-18 11:18 AM] lukechilds#2707
+and publish this as a reusable module
+
+[28-Nov-18 11:18 AM] lukechilds#2707
+so we'll get notified if any changes are made that breaks Komodo consensus
+
+[28-Nov-18 11:22 AM] jl777c#5810
+sounds great!
+
+[28-Nov-18 11:27 AM] CHMEX#0686
+@lukechilds  but komodo-cli gettxout only works for your wallets right?
+
+[28-Nov-18 11:28 AM] lukechilds#2707
+It worked for me on a UTXO I don't own but possibly because I had txindex on
+
+[28-Nov-18 11:28 AM] lukechilds#2707
+either way, it doesn't matter
+
+[28-Nov-18 11:28 AM] lukechilds#2707
+this only needs ot be done for me to create a reproducible test suite
+
+[28-Nov-18 11:28 AM] lukechilds#2707
+to garantee our reward calculations comply with Komdo consensus
+
+[28-Nov-18 11:28 AM] lukechilds#2707
+end users will never need to run it
+
+[28-Nov-18 11:28 AM] jl777c#5810
+gettxout works at the blockchain level, not wallet
+
+[28-Nov-18 11:30 AM] lukechilds#2707
+@jl777c I just had an awsome idea
+
+[28-Nov-18 11:30 AM] lukechilds#2707
+is it desirable that nLockTime is required to be set on a UTXO for rewards to be claimed?
+
+[28-Nov-18 11:30 AM] lukechilds#2707
+or is that just a side affect?
+
+[28-Nov-18 11:30 AM] jl777c#5810
+it makes it go faster
+
+[28-Nov-18 11:30 AM] jl777c#5810
+it is slow enough as it is
+
+[28-Nov-18 11:31 AM] jl777c#5810
+would be a hardfork to change it
+
+[28-Nov-18 11:31 AM] lukechilds#2707
+I've thought of a way you could remove the nLockTime requirement without a hardfork
+
+[28-Nov-18 11:31 AM] lukechilds#2707
+it would be a softfork upgrade
+
+[28-Nov-18 11:31 AM] lukechilds#2707
+but I hadn't considered performance
+
+[28-Nov-18 11:31 AM] lukechilds#2707
+that may be an issue
+
+[28-Nov-18 11:38 AM] jl777c#5810
+each utxo needed to lookup the block...
+
+[28-Nov-18 11:39 AM] jl777c#5810
+it is the same reason CLTV requires the nLockTime in the tx itself
+
+[28-Nov-18 11:51 AM] lukechilds#2707
+Requiring nLockTime to be set is a pain because many wallets don’t support setting it. So even if you send your funds to a wallet using nLockTime, any transactions you make which return change will not have nLockTime set meaning you lose the ability to claim rewards on all your change UTXOs. This could reasonably be a large amount of your balance.
+
+Being able to claim rewards without needing nLockTime set would resolve this and allow you to claim rewards on change UTXOs and other UTXOs created by non nLockTime supported wallets.
+
+It also has the added benefit that all the transactions not using nLockTime from users who aren’t interested in claiming rewards (e.g exchanges) would automatically have rewards available. These users would likely not claim them meaning the rewards would then go to miners, increasing mining profitability.
+
+[28-Nov-18 11:51 AM] lukechilds#2707
+My proposal would be:
+
+Instead of calculating the reward period as (latest block time - nLockTime), calculate the reward period as (latest block time - UTXO block time). This can be implement as a soft fork.
+
+One downside would be that it’s common practise for people to set nLockTime slightly in the past (often 777 seconds). This would mean that people calculating rewards using the nLockTime way would be invalid because the reward period they’d calculate would be slightly longer (e.g 777 seconds longer than tip to tip accounting for the extra nLockTime) than the consensus rules and so would be rejected.
+
+So its a soft fork, it won’t cause a chain split. But it would cause people using the old reward logic to get their reward claim transactions rejected. If they used the new logic, everything would work as expected.
+
+However there is a way to also allow the old reward claiming logic to validate against the new rules. nLockTime is limited to one hour in the past. So instead of calculating the reward period as (latest block time - UTXO block time) we calculate it as (latest block time - UTXO block time - 1 hour). Adding this extra hour accounts for all possible nLockTime sizes so people claiming with the old nLockTime based logic would always be inside the allowed reward period.
+
+As you mentioned, the only difference is performance.
+
+With the current method, we need to lookup latest block time.
+With the non nLockTime method you’d need to lookup latest block time and UTXO block time.
+
+I think the benefits are pretty huge, but I have no idea how much that extra block lookup would hurt performance.
+
+How much of a difference would that make? Would it be completely infeasible?
+
+[28-Nov-18 11:58 AM] jl777c#5810
+every single vin in every single tx would incur a block lookup, and vins can be from anytime in the past, ie. likely a random seek
+
+[28-Nov-18 11:58 AM] jl777c#5810
+also, setting nLockTime is not such a large burden for third party wallets, which by now all are doing
+
+[28-Nov-18 11:59 AM] jl777c#5810
+i am reluctant to mess with interest calc consensus rules as it was very tricky to get it stable and if it works, why fix it
+
+[28-Nov-18 12:32 PM] lukechilds#2707
+Well the benefits are the reasons I mentioned above
+
+[28-Nov-18 12:32 PM] lukechilds#2707
+but yeah
+
+[28-Nov-18 12:33 PM] lukechilds#2707
+what you say makes sense
+
+[28-Nov-18 12:33 PM] lukechilds#2707
+a random lookup through the entire blockchain for every single input in a block is probably not a good idea
+
+[28-Nov-18 12:35 PM] lukechilds#2707
+one other solution would be to count the reward period as number of blocks
+
+[28-Nov-18 12:35 PM] lukechilds#2707
+e.g tip height - UTXO height
+
+[28-Nov-18 12:35 PM] lukechilds#2707
+but I guess that's still a lookup
+
+[28-Nov-18 12:36 PM] lukechilds#2707
+but that seems like it could be indexed very efficiently
+
+[28-Nov-18 12:36 PM] lukechilds#2707
+but then that requires treating 1 block as 1 minute
+
+[28-Nov-18 12:36 PM] lukechilds#2707
+which in theor is ok
+
+[28-Nov-18 12:36 PM] lukechilds#2707
+but in practise could open up some nasty attacks
+
+[28-Nov-18 12:37 PM] jl777c#5810
+exactly and this is an area where we were attacked for real
+
+[28-Nov-18 12:37 PM] lukechilds#2707
+like messing with difficulty and giving a large incentive to rapidly mine blocks to not only get block rewards but also massive amounts of rewards
+
+[28-Nov-18 12:38 PM] lukechilds#2707
+do you have any idea how much of a perf impact looking up the TX time for each vin would have?
+
+[28-Nov-18 12:38 PM] lukechilds#2707
+I agree now that you said that it's probably not a good idea
+
+[28-Nov-18 12:38 PM] lukechilds#2707
+but I am intrigued to know how much it would affect performance
+
+[28-Nov-18 12:38 PM] lukechilds#2707
+and if it would have a negative affect on the network
+
+[28-Nov-18 12:39 PM] lukechilds#2707
+or just slightly increase daemon resources
+
+[28-Nov-18 12:42 PM] jl777c#5810
+i think it would slow down sync from scratch by 2x
+
+[28-Nov-18 12:45 PM] lukechilds#2707
+Ok yeah, thats not really worth the trade off
+
+[28-Nov-18 12:46 PM] lukechilds#2707
+I thought I'd had an amazing idea then haha 😅
+
+[28-Nov-18 12:54 PM] jl777c#5810
+the tricky part is that the tx needs the block it was in to be validated and sometimes the same tx is in more than one block. most of the bitcoin code assumes a tx can be validated in isolation
+
+[28-Nov-18 12:55 PM] jl777c#5810
+i am sure that it is possible to do... but it isnt without ongoing cost and if the only downside is wallets that cant do nLockTime, then better to fix them
+
+[28-Nov-18 03:10 PM] lukechilds#2707
+ahh I get you
+
+[28-Nov-18 03:11 PM] lukechilds#2707
+because a BTC transaction has all the data needed to validate it within itself and the UTXO set
+
+[28-Nov-18 03:12 PM] lukechilds#2707
+Once you start requiring external bits of data, the BTC derived code doesn't account for that so you need to start patching things to make it work
+
+[28-Nov-18 03:12 PM] lukechilds#2707
+and the more external data you require, the more things you have to patch
+
+[28-Nov-18 03:14 PM] jl777c#5810
+yes
+
+[28-Nov-18 03:15 PM] jl777c#5810
+possible but has risk
+
+[28-Nov-18 11:29 PM] lukechilds#2707
+by the way, how do you think is the best way to group the UTXOs to claim interest from a Ledger Live acount?
+
+[28-Nov-18 11:29 PM] lukechilds#2707
+They use BIP44
+
+[28-Nov-18 11:29 PM] lukechilds#2707
+not sure how familiar you are with it
+
+[28-Nov-18 11:30 PM] lukechilds#2707
+but it has the concept of accounts
+
+[28-Nov-18 11:30 PM] lukechilds#2707
+and inside an account you have a new address derived for each recieving TX and a new address derived for each change TX
+
+[28-Nov-18 11:30 PM] lukechilds#2707
+if you make a payment larger than a single UTXO for one of your addresses it will combine UTXOs together from any addresses in that account
+
+[28-Nov-18 11:31 PM] lukechilds#2707
+but it will never combine UTXOs from seperate accounts to preserve anonymity between accounts
+
+[28-Nov-18 11:31 PM] lukechilds#2707
+the way that makes the most sense to me would be to allow users to claim rewards per account
+
+[28-Nov-18 11:32 PM] lukechilds#2707
+claiming on an account wil combine all UTXOs from all addresses in that account (received and change) into a single transaction and send to a new unused address from that account with interest
+
+[28-Nov-18 11:32 PM] lukechilds#2707
+this will consolidate all UTXOs/addresses in the account to a single UTXO
+
+[28-Nov-18 11:35 PM] lukechilds#2707
+the pros are:
+- It's only a single TX that has to be manually approved by the user on the Ledger
+- We can sweep all UTXOs, including one's that don't have nLockTime set (like change UTXOs in Ledger), meaning they will now start acruing interest in the new UTXO
+So the end result is you have your entire balance in a single new unused address all now acruing interest (even the UTXOs that weren't acruing interest before)
+
+[28-Nov-18 11:35 PM] lukechilds#2707
+the cons are:
+- This is bad for privacy, it clearly links all your addresses within that account together in a single TX
+However only for that account, other accounts would have their own TX
+
+[28-Nov-18 11:38 PM] lukechilds#2707
+It seems like maybe the privacy issue isn't a huge issue in the Komodo community as public addresses aren't *that* private anyway, and can already be linked with chain analysis. This would just make it easier. If Komodo users want privacy they use Z addresses.
+
+It also seems like it's quite common in the Komodo community (encouraged by Agama, BarterDEX) to just have a single address that is re-used for incoming/change transactions and then use a Z address for privacy. Reusing a single address for everything has even less rpivacy than using seperate BIP44 addresses and occasionally consolidating them.
+
+[28-Nov-18 11:38 PM] lukechilds#2707
+That's just my assumption, so correct me if I'm wrong. But it seems like if that is the case, then combining UTXOs from different addresses in the same BIP44 account shouldn't be a big deal.
+
+[28-Nov-18 11:40 PM] lukechilds#2707
+I've already spoken to Komodo Ledger users who have said they use multiple BIP44 accounts in Ledger to seperate their funds properly. This is issue won't affect them. They will have a seperate reward claim transaction for each BIP44 account consolidating only the UTXOs *inside* those account.
+
+[28-Nov-18 11:41 PM] lukechilds#2707
+If this is an issue, the alternative would be to create a seperate reward clam transaction per address. So every address in every account get's it's own claim TX.
+the pros are:
+- preserves anonymity slighly, all account UTXOs aren't consolidated into a single transaction, it was one TX for 1 address
+the cons are:
+- requires a seperate TX per address. This is quite a huge pain for the user. Each TX need to be signed on the Ledger device, which is slow, and manually approved by clicking buttons on the Ledger. If they have been using the account for a long time it could have hundreds of UTXOs. This would involve manually verifying and physically clicking the button on the device hundreds of times.
+- it isn't actually that much more private than my previous proposal. All addresses in the accounts will probably be claimed very close together and would quite likely make it into the same block. So although they aren't linked in the same TX, it would be quite obvious if you see a block with a large amount of reward claims going from one address to another in the same block that they are all from the same person.
+
+[28-Nov-18 11:47 PM] lukechilds#2707
+I'm leaning towards the first implementation, one TX for all account UTXOs. It's not as private as the second option but clear addresses aren't private anyway. Someone can already follow your chain of TXs with chain analysis if they want to, this just makes it a bit more obvious. If users want real privacy, they should use a Z address.
+
+[28-Nov-18 11:58 PM] lukechilds#2707
+@jl777c what do you think?
+
+[29-Nov-18 07:24 AM] jl777c#5810
+I agree with you. a simpler implementation will be more reliable and anybody that believes they have privacy without zaddr is just kidding themselves
+
+[29-Nov-18 07:25 AM] jl777c#5810
+as long as the funds separation is retained for the different accounts, that seems to be a non-privacy related issue, whatever solution seems fine
+
+[29-Nov-18 08:46 AM] lukechilds#2707
+great
+
+[29-Nov-18 08:46 AM] lukechilds#2707
+the app is very close to being finsihed btw
+
+[29-Nov-18 08:46 AM] lukechilds#2707
+it's 100% functional
+

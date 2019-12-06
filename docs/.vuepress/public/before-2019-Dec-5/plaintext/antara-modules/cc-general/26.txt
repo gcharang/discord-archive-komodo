@@ -1,0 +1,409 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[31-Jul-18 06:13 PM] SHossain#0007
+going afk. be back in an hour or so
+
+[31-Jul-18 06:35 PM] Alright#0419
+@jl777c is there some way I could get these commands to output unsigned raw txs? Or would my best bet for trying to create malformed txs be to change the contract itself?
+
+[31-Jul-18 06:36 PM] jl777c#5810
+change the functions that call FinalizeCCTx
+
+[31-Jul-18 06:36 PM] jl777c#5810
+i doubt you will be able to do the signing yourself, it uses a combined normal signing and CC signing
+
+[31-Jul-18 06:37 PM] jl777c#5810
+if ( (inputs= AddFaucetInputs(cp,mtx,faucetpk,nValue+txfee,60)) > 0 )
+    {
+        if ( inputs > nValue )
+            CCchange = (inputs - nValue - txfee);
+        if ( CCchange != 0 )
+            mtx.vout.push_back(MakeCC1vout(EVAL_FAUCET,CCchange,faucetpk));
+        mtx.vout.push_back(CTxOut(nValue,CScript() << ParseHex(HexStr(mypk)) << OP_CHECKSIG));
+        return(FinalizeCCTx(-1LL,cp,mtx,mypk,txfee,opret));
+    } else fprintf(stderr,"cant find faucet inputs\n");
+
+[31-Jul-18 06:38 PM] Alright#0419
+:/ would be able to test things a lot quicker if I could sign them myself. Could change things on the fly without having to rebuild to test each
+
+[31-Jul-18 06:38 PM] Alright#0419
+Will just start building though
+
+[31-Jul-18 06:38 PM] jl777c#5810
+dice isnt ready to be abused yet
+
+[31-Jul-18 06:38 PM] jl777c#5810
+use FinalizeCCTx
+
+[31-Jul-18 06:39 PM] jl777c#5810
+it is the only way for now. signrawtransaction does not work
+
+[31-Jul-18 06:39 PM] jl777c#5810
+for CC
+
+[31-Jul-18 09:06 PM] siu - Chainmakers#3920
+did a new REWARDS program its called MASTERNODE :p
+
+[31-Jul-18 09:14 PM] siu - Chainmakers#3920
+ups only got to MASTERNO
+
+[31-Jul-18 09:14 PM] siu - Chainmakers#3920
+😂
+
+[31-Jul-18 09:43 PM] siu - Chainmakers#3920
+i notice that in help there is only `tokenswapask numtokens tokenid otherid price` but no `tokenswapbid`
+
+[31-Jul-18 09:58 PM] Alright#0419
+So I started with my poking on faucet as it's seems the simplest, but I can't get any malformed txs to pass consensus rules
+
+[31-Jul-18 09:59 PM] Alright#0419
+*seems* pretty solid in that it checks the exact amount. The only thing I could think of was maybe manipulating it to pay the miner instead, so a miner could just run it constantly and drain the faucet. Although, anyone could just run a script constantly to slowly drain the faucet, so it wouldn't really help them
+
+[31-Jul-18 09:59 PM] Alright#0419
+🤷
+
+[31-Jul-18 09:59 PM] Alright#0419
+*moves on to assets*
+
+[31-Jul-18 10:02 PM] siu - Chainmakers#3920
+yeah
+
+[31-Jul-18 10:02 PM] siu - Chainmakers#3920
+there is no limitation on the faucet contract
+
+[31-Jul-18 10:02 PM] siu - Chainmakers#3920
+so one person can just drain it all in a few minutes
+
+[31-Jul-18 10:11 PM] SHossain#0007
+@siu - Chainmakers `tokenswapbid` is not necessary. just swap the tokens
+
+[31-Jul-18 10:11 PM] SHossain#0007
+and use `tokenswapask`
+
+[31-Jul-18 10:27 PM] siu - Chainmakers#3920
+ok
+
+[31-Jul-18 10:28 PM] siu - Chainmakers#3920
+you own c5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b59?
+
+[31-Jul-18 10:31 PM] siu - Chainmakers#3920
+```{
+    "funcid": "e",
+    "txid": "998c32ac6c733c4de31cc647a4bba4395e8e475b90b2b019559579faa407cd09",
+    "vout": 0,
+    "amount": "1000",
+    "askamount": "1000",
+    "origaddress": "RQymbXA8FfWw2AaHv7oC8JRKo9W5HkFVMm",
+    "tokenid": "9217014eae0a83a0b64632f379c1b474859794f9eaf1cf1eecf5804ed6124a5e",
+    "otherid": "c5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b59",
+    "totalrequired": "0.00001234",
+    "price": "0.00000001"
+  },```
+
+[31-Jul-18 10:31 PM] siu - Chainmakers#3920
+if someone wants to fill my ask
+
+[01-Aug-18 01:17 AM] Mylo#8306
+@Alright here's my docs on faucet https://github.com/imylomylo/KMD-CC-Token-Test-Guide/tree/master/rpc/faucet @SHossain can you PR it before it gets harder to merge pls 😃
+
+{Embed}
+https://github.com/imylomylo/KMD-CC-Token-Test-Guide/tree/master/rpc/faucet
+imylomylo/KMD-CC-Token-Test-Guide
+KMD-CC-Token-Test-Guide - Komodo CC Token testing description, setup & how-to
+https://avatars3.githubusercontent.com/u/19399102?s=400&v=4
+
+[01-Aug-18 01:18 AM] Mylo#8306
+*my additions
+
+[01-Aug-18 01:18 AM] Mylo#8306
+🙏
+
+[01-Aug-18 01:19 AM] Alright#0419
+🔥
+
+[01-Aug-18 05:17 AM] jl777c#5810
+@siu - Chainmakers plz demonstrate how someone can drain the faucet of more than a few coins per block
+
+[01-Aug-18 05:18 AM] jl777c#5810
+200,000 coins in the faucet you claim can be drained in "a few minutes"? really? if so that is a big bug
+
+[01-Aug-18 05:18 AM] jl777c#5810
+plz dont make unsubstantiated claims based on your false assumptions. please test and report ACTUAL results
+
+[01-Aug-18 05:19 AM] jl777c#5810
+faucet is utxo based. it should be preventing usage of a mempool utxo, which means max throughput is the total number of utxo the faucet has, which is not 100,000
+
+[01-Aug-18 05:20 AM] jl777c#5810
+so I think it will take closer to 50,000 blocks to drain the entire faucet, which is quite a lot longer than a few minutes. more like a month
+
+[01-Aug-18 06:27 AM] jl777c#5810
+@SHossain let us make test plans for each CC so that we can know how close to complete each one is. plz get help from cipi for the tokens test plan, that one will have a lot of similarities to barterDEX, though it is quite different and utxo-ness is mostly hidden
+
+[01-Aug-18 09:14 AM] SHossain#0007
+Thanks, will do.
+
+[01-Aug-18 09:21 AM] SHossain#0007
+@Mylo thanks for the updates. the help command for `faucetaddress` call shows how to use the call, that is already listed as `Usage: command` on top of every RPC call .md file.
+
+{Reactions}
+👌 
+
+[01-Aug-18 09:23 AM] SHossain#0007
+i will use the faq entry and the description you provided for faucet. those looks good and are needed.
+
+[01-Aug-18 11:04 AM] siu - Chainmakers#3920
+my statement was regarding smaller supply... like 1000 or 10000
+
+[01-Aug-18 11:11 AM] jl777c#5810
+1000 would still take many hours
+
+[01-Aug-18 11:19 AM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=ATEST sendrawtransaction 010000000309cd07a4fa79955519b0b2905b478e5e39a4bba447c61ce34d3c736cac328c99020000004948304502210092a6ad8cbbef0ff3d483c058580dfaa48338ca7b9e68deba684e77b5b641d3d10220174b20b056ab0a233472876d12bf4de4cea3df8ca64c69cfc856e088b8b6fa9601ffffffff09cd07a4fa79955519b0b2905b478e5e39a4bba447c61ce34d3c736cac328c99000000007b4c79a276a072a26ba067a565802102adf84e0e075cf90868bd4e3d34a03420e034719649c41f371fc70d8e33aa27028140b80f4401345b2037add332e4049021bb30f7ff94eaa978acca1a8603fe3685163e0b73cab675cbb7d09fee9479deced07893715577341af98dc8cbcdc6163af3a100af038001e3a10001ffffffff4f2016d356282fca9d8278aa04fbdbed98ac6af0bf7a479959c5bb91f95e8ef5020000007b4c79a276a072a26ba067a5658021028bb4ae66aa4f1960a4aa822907e800eb688d9ab2605c8067a34b421748c67e2781402f6515eca068539af87aedea1b0108ac9bedf7cad890cb6bdbfb2089a9287e1e7204702806f5177f4868a13de993a47fdadd57a003c672dd9aab845df6c3e7bba100af038001e3a10001ffffffff068503000000000000302ea22c80201ab400e039122028345520ba041ac3e6ec81ad28d8415e78d760d55f41097dd58103120c008203000401cc6300000000000000302ea22c80204f037064a29eb9cb7476eb8d0fbabbaa366c617f95fb4353658e84a493962eb38103120c008203000401cc7b000000000000002321028bb4ae66aa4f1960a4aa822907e800eb688d9ab2605c8067a34b421748c67e27ac6d03000000000000302ea22c80204f037064a29eb9cb7476eb8d0fbabbaa366c617f95fb4353658e84a493962eb38103120c008203000401cce051724e180900002321028bb4ae66aa4f1960a4aa822907e800eb688d9ab2605c8067a34b421748c67e27ac00000000000000006f6a4c6ce3459217014eae0a83a0b64632f379c1b474859794f9eaf1cf1eecf5804ed6124a5ec5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b59570400000000000021028bb4ae66aa4f1960a4aa822907e800eb688d9ab2605c8067a34b421748c67e2700000000
+```
+
+[01-Aug-18 11:19 AM] siu - Chainmakers#3920
+tried to partially fillswap
+
+[01-Aug-18 11:19 AM] siu - Chainmakers#3920
+```error code: -26
+error message:
+16: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)
+```
+
+[01-Aug-18 11:19 AM] siu - Chainmakers#3920
+```AssetValidateSellvin
+Got 0.00001000 to origaddr.(RKVF6bHNo9w83ZJtM1RCEj4mb1HUsEYDUJ)
+constrain vout error isCC 0 vs 1 CCflag
+CC Eval EVAL_ASSETS Invalid: vout2 doesnt go to origpubkey fillex spending tx 998c32ac6c733c4de31cc647acd src
+```
+
+[01-Aug-18 11:22 AM] siu - Chainmakers#3920
+is there a limit of how much % of an order can be filled?
+
+[01-Aug-18 11:22 AM] jl777c#5810
+no limits
+
+[01-Aug-18 11:22 AM] jl777c#5810
+it is totally untested, so not surprising there are bugs. almost finished with dice, will investigate above after dice is done
+
+[01-Aug-18 11:25 AM] siu - Chainmakers#3920
+ahh i notice the issue
+
+[01-Aug-18 11:25 AM] siu - Chainmakers#3920
+the price is set in satoshis for swaps
+
+[01-Aug-18 11:26 AM] siu - Chainmakers#3920
+different from bid and ask
+
+[01-Aug-18 11:26 AM] jl777c#5810
+constrain vout error isCC 0 vs 1 CCflag <- that is also a problem
+
+[01-Aug-18 11:27 AM] jl777c#5810
+i added more error check code, so best to make sure normal bid and ask are still working first
+
+[01-Aug-18 11:28 AM] siu - Chainmakers#3920
+i have done various bid and asks and filled most here and everything seems to be doing good
+
+[01-Aug-18 11:28 AM] siu - Chainmakers#3920
+but swaps are still tricky
+
+[01-Aug-18 11:28 AM] jl777c#5810
+yes
+
+[01-Aug-18 11:29 AM] siu - Chainmakers#3920
+the pricing changes to satoshis which is confunsing
+
+[01-Aug-18 11:29 AM] siu - Chainmakers#3920
+since bid and ask are natural numbers
+
+[01-Aug-18 11:34 AM] siu - Chainmakers#3920
+also... could tokenlist get a `[pubkey]` option for getting the list of tokens with balance in a specific pubkey
+
+[01-Aug-18 11:34 AM] jl777c#5810
+assets are satoshi based
+
+[01-Aug-18 11:38 AM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=ATEST diceaddfunds KMDDice ebfcff20fa5ab7bebf14b778e74bd6b34b02f100ff75e4cb611190f160ae4cf7 1000
+error code: -1
+error message:
+basic_string::_M_construct null not valid
+```
+
+[01-Aug-18 11:38 AM] siu - Chainmakers#3920
+what am i doing wrong on this?
+
+[01-Aug-18 11:38 AM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=ATEST diceinfo ebfcff20fa5ab7bebf14b778e74bd6b34b02f100ff75e4cb611190f160ae4cf7
+{
+  "result": "success",
+  "fundingtxid": "ebfcff20fa5ab7bebf14b778e74bd6b34b02f100ff75e4cb611190f160ae4cf7",
+  "name": "KMDDice",
+  "sbits": 28538276415819083,
+  "minbet": "0.77700000",
+  "maxbet": "7.77000000",
+  "maxodds": 777,
+  "timeoutblocks": 7,
+  "funding": "777787.00000000"
+}
+```
+
+[01-Aug-18 11:39 AM] siu - Chainmakers#3920
+`diceaddfunds name fundingtxid amount`
+
+[01-Aug-18 11:45 AM] jl777c#5810
+only the one that created a dice plan is able to addfunds
+
+[01-Aug-18 11:49 AM] siu - Chainmakers#3920
+ok
+
+[01-Aug-18 11:57 AM] siu - Chainmakers#3920
+``` ./komodo-cli -ac_name=ATEST dicebet KMDDice ebfcff20fa5ab7bebf14b778e74bd6b34b02f100ff75e4cb611190f160ae4cf7 5 2
+error code: -1
+error message:
+basic_string::_M_construct null not valid
+```
+
+[01-Aug-18 11:57 AM] siu - Chainmakers#3920
+```(E 10.00000000) numentropy tx 1: 777787.00000000
+cant find dice entropy inputs```
+
+[01-Aug-18 11:58 AM] siu - Chainmakers#3920
+trying with different odds and cant get it to work
+
+[01-Aug-18 11:59 AM] jl777c#5810
+likely no entropy tx, can you wait until dice is ready to test before testing it?
+
+[01-Aug-18 12:23 PM] siu - Chainmakers#3920
+@SHossain  im sending some PR to your repo... updating some old info https://github.com/himu007/KMD-CC-Token-Test-Guide/pull/6
+
+{Embed}
+https://github.com/himu007/KMD-CC-Token-Test-Guide/pull/6
+Update README.md by siulynot · Pull Request #6 · himu007/KMD-CC-...
+https://avatars3.githubusercontent.com/u/225342?s=400&v=4
+
+{Reactions}
+👍🏽 
+
+[01-Aug-18 12:33 PM] siu - Chainmakers#3920
+https://github.com/himu007/KMD-CC-Token-Test-Guide/pull/7
+
+{Embed}
+https://github.com/himu007/KMD-CC-Token-Test-Guide/pull/7
+Create tokenask.md by siulynot · Pull Request #7 · himu007/KMD-C...
+https://avatars3.githubusercontent.com/u/225342?s=400&v=4
+
+[01-Aug-18 12:54 PM] jl777c#5810
+OK, dice is ready to test. everything other than timeout tx should work
+
+[01-Aug-18 12:54 PM] jl777c#5810
+it is a hardforking change
+
+[01-Aug-18 01:00 PM] jl777c#5810
+@siu - Chainmakers pushed fix for the swap fill error
+
+[01-Aug-18 01:23 PM] siu - Chainmakers#3920
+ok
+
+[01-Aug-18 01:27 PM] jl777c#5810
+i just had a dicebet win and get the winning tx in 4 seconds
+
+[01-Aug-18 01:31 PM] siu - Chainmakers#3920
+```{
+    "funcid": "e",
+    "txid": "998c32ac6c733c4de31cc647a4bba4395e8e475b90b2b019559579faa407cd09",
+    "vout": 0,
+    "amount": "1000",
+    "askamount": "1000",
+    "origaddress": "RQymbXA8FfWw2AaHv7oC8JRKo9W5HkFVMm",
+    "tokenid": "9217014eae0a83a0b64632f379c1b474859794f9eaf1cf1eecf5804ed6124a5e",
+    "otherid": "c5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b59",
+    "totalrequired": "0.00001234",
+    "price": "0.00000001"
+  },
+```
+
+[01-Aug-18 01:31 PM] siu - Chainmakers#3920
+this is the order
+
+[01-Aug-18 01:32 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=ATEST tokenfillswap 9217014eae0a83a0b64632f379c1b474859794f9eaf1cf1eecf5804ed6124a5e c5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b59 998c32ac6c733c4de31cc647a4bba4395e8e475b90b2b019559579faa407cd09 0.00001
+```
+
+[01-Aug-18 01:32 PM] siu - Chainmakers#3920
+this is the `tokenfillswap`
+
+[01-Aug-18 01:32 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=ATEST sendrawtransaction 010000000205baade632273516722d906b74fd1c3e1aaf23da3f9a5a4b995f0ebc72c4c85f0100000049483045022100a7ef3a65ceec2cbb4d2dde6af7a516b8c6e2119323f051742b914cef9a96460a022013f873e755ce7693d25e439376c6ea81872e81a4a25e32f0021e7928fb312b0401ffffffff09cd07a4fa79955519b0b2905b478e5e39a4bba447c61ce34d3c736cac328c99000000007b4c79a276a072a26ba067a565802102adf84e0e075cf90868bd4e3d34a03420e034719649c41f371fc70d8e33aa270281408491daa48ad1331a1d2b9fd2e680f8f5a1d3ed499ed1775c854e50c01fffab4b5beb9a53dc32eb6628a657f96797b765374e3bd55911110f1c84ec8b16c0b451a100af038001e3a10001ffffffff06e803000000000000302ea22c80201ab400e039122028345520ba041ac3e6ec81ad28d8415e78d760d55f41097dd58103120c008203000401cc0000000000000000302ea22c80204f037064a29eb9cb7476eb8d0fbabbaa366c617f95fb4353658e84a493962eb38103120c008203000401cc0000000000000000302ea22c80204f037064a29eb9cb7476eb8d0fbabbaa366c617f95fb4353658e84a493962eb38103120c008203000401cc6a43993b00000000302ea22c80204f037064a29eb9cb7476eb8d0fbabbaa366c617f95fb4353658e84a493962eb38103120c008203000401cc9667c92c4a0300002321028bb4ae66aa4f1960a4aa822907e800eb688d9ab2605c8067a34b421748c67e27ac00000000000000006f6a4c6ce3459217014eae0a83a0b64632f379c1b474859794f9eaf1cf1eecf5804ed6124a5ec5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b59d20400000000000021028bb4ae66aa4f1960a4aa822907e800eb688d9ab2605c8067a34b421748c67e2700000000
+error code: -26
+error message:
+16: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)
+```
+
+[01-Aug-18 01:32 PM] siu - Chainmakers#3920
+rawtx
+
+[01-Aug-18 01:33 PM] siu - Chainmakers#3920
+```AssetValidate (E)
+vin1 1000, vout0 1000, AssetValidateSellvin
+Got 0.00001000 to origaddr.(RKVF6bHNo9w83ZJtM1RCEj4mb1HUsEYDUJ)
+CC Eval EVAL_ASSETS Invalid: asset inputs doesnt match vout2+3 fillex spending tx 998c32ac6c733c4de31cc647a4bba4395e8e475b90b2b019559579faa407cd09
+```
+
+[01-Aug-18 01:33 PM] siu - Chainmakers#3920
+output
+
+[01-Aug-18 01:35 PM] jl777c#5810
+investigating
+
+[01-Aug-18 02:02 PM] jl777c#5810
+but first need to fix a few problems I found with dice
+
+[01-Aug-18 02:32 PM] siu - Chainmakers#3920
+ok
+
+[01-Aug-18 04:05 PM] CHMEX#0686
+can somebody confirm this on a fresh node not getting past height 9640
+Don't trash your current chain as it might not sync past 9640
+
+[01-Aug-18 04:11 PM] CHMEX#0686
+this is tail -20 debug.log
+maybe it helps
+https://pastebin.com/VhKxgf2p
+
+{Embed}
+https://pastebin.com/VhKxgf2p
+2018-08-01 16:09:38 ERROR: AcceptToMemoryPool: ConnectInputs faile...
+https://pastebin.com/i/facebook.png
+
+[01-Aug-18 05:01 PM] siu - Chainmakers#3920
+mine is at 11261
+
+[01-Aug-18 05:01 PM] siu - Chainmakers#3920
+you might want to update to latest and reindex @CHMEX
+
+[01-Aug-18 05:09 PM] CHMEX#0686
+Ok after a complete resynch from scratch?
+
+[01-Aug-18 05:14 PM] siu - Chainmakers#3920
+yes
+
+[01-Aug-18 05:15 PM] CHMEX#0686
+Ok
+
+[01-Aug-18 06:09 PM] jl777c#5810
+@siu - Chainmakers updated assetvalidate.E but just added some additional printout, need to see the value
+
+[01-Aug-18 06:10 PM] siu - Chainmakers#3920
+ok... so i try again to do a fillswap?
+
+[01-Aug-18 06:10 PM] jl777c#5810
+do the same tx, yes
+

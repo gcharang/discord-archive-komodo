@@ -1,0 +1,425 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[11-Oct-19 04:23 AM] Regnar#6164
+But I'm repeating myself. We need the pubkey to send to
+
+[11-Oct-19 04:23 AM] gcharang#6833
+which wallet is he using?
+
+[11-Oct-19 04:24 AM] gcharang#6833
+if he is using nativemode, he can get the pubkey
+
+[11-Oct-19 04:25 AM] Regnar#6164
+It's a mobile. Idk which one yet, he said earlier he couldn't find pub keys anywhere.
+
+[11-Oct-19 04:25 AM] Regnar#6164
+But like I said, sending to him wasn't so he could look at or interact with the tokens, it was strictly so he would have them for a later date.
+
+[11-Oct-19 04:25 AM] gcharang#6833
+yes, no litemode wallet has the need to expose pubkeys to users currently
+
+[11-Oct-19 04:25 AM] Regnar#6164
+Nuanced case perhaps
+
+[11-Oct-19 04:26 AM] Regnar#6164
+Yea seems that way. I was just trying to give ownership to him, to claim at later date whenever he pleased.
+
+[11-Oct-19 04:27 AM] Regnar#6164
+Okay. Going to bed, thanks for the explanation
+
+[11-Oct-19 04:28 AM] gcharang#6833
+np, he can always export the privkey or seed and use the ocean wallet to get the pubkey
+no need to even sync the blockchain
+
+[11-Oct-19 04:28 AM] gcharang#6833
+good night!
+
+[11-Oct-19 04:29 AM] gcharang#6833
+<https://support.komodoplatform.com/support/solutions/articles/29000031730-how-to-get-a-public-key-to-create-a-new-smart-chain-using-antara-composer>
+
+[11-Oct-19 04:31 AM] Regnar#6164
+Yea that was the plan, but for using the tokens, not to just receive them. Unfortunately I think we may be on our own with mobile wallets not providing pubkey, and probably going to have Tokens compared to ERC20 and the inability to send directly to an address. 
+
+Okay that's all, night
+
+{Reactions}
+👋 
+
+[11-Oct-19 05:57 AM] jl777c#5810
+nspv wallet displays pubkey
+
+[11-Oct-19 12:43 PM] Regnar#6164
+Okay onward for my tokenCC knowledge! 
+
+I understand there aren't any explorers to look at tokens yet (that I know of) but was looking at my token on the RICK explorer and noticed the RICK I used to create the tokens is reading as zero on the explorer.
+
+Is this normal or a bug?
+
+[11-Oct-19 12:44 PM] gcharang#6833
+the current explorers aren't equipped to deal with cc transactions
+can you share the link to txn?
+
+[11-Oct-19 12:44 PM] Regnar#6164
+<https://rick.kmd.dev/tx/f591850f9bd94352a6461a45909db80d5d8549746c766ef5e08ed2959ba089c5>
+
+[11-Oct-19 12:45 PM] Regnar#6164
+I figured I couldn't see any of the token stuff, just didn't expect to see the 0.00000777 KMD (RICK) going to an address and then showing as zero balance for the address
+
+[11-Oct-19 12:46 PM] gcharang#6833
+the zero value output is an opreturn utxo
+it is used to store data
+<https://rick.kmd.dev/insight-api-komodo/tx/f591850f9bd94352a6461a45909db80d5d8549746c766ef5e08ed2959ba089c5>
+
+[11-Oct-19 12:52 PM] Regnar#6164
+I don't understand what that means exactly. I understand storing values in op_return. 
+
+What does that value mean? It's a hash if something?
+
+[11-Oct-19 12:53 PM] Regnar#6164
+So the 777 satoshi is stored in the op_return value, as a utxo?
+
+[11-Oct-19 12:53 PM] Regnar#6164
+Or behaves as one?
+
+[11-Oct-19 12:57 PM] gcharang#6833
+> showing as zero balance for the address
+
+the address RMDvABbzXVnD7CwAZyMeBQXCvmMqH1iwsY isn't a normal KMD address
+it is an address that is specific to tokens cc and modified by its eval code
+
+the 777 sats are locked by the tokens cc: 
+```
+"asm": "a22c802044d7a309196f78e8948b1bc446dfb1b3ceae1a0725bd89f07c7ecea922042c988103120c008203000401 OP_CHECKCRYPTOCONDITION"
+```
+do you understand the bitcoin script some what? like OP_CHECKSIG, OP_DUP etc ?
+
+[11-Oct-19 01:00 PM] Regnar#6164
+Not familiar, but I'll read up on it right now
+
+[11-Oct-19 01:02 PM] gcharang#6833
+@Regnar if you are intersted in a deep dive, going through this write up <https://docs.komodoplatform.com/cc-jl/introduction.html> by jl and googling unknowns can be very rewarding
+
+{Reactions}
+👍 
+
+[11-Oct-19 03:45 PM] jl777c#5810
+CC addresses and normal addresses are different "locations" even if they are the same address
+
+[11-Oct-19 03:45 PM] jl777c#5810
+there are rpc calls to get the tokenbalance
+
+[11-Oct-19 04:02 PM] Regnar#6164
+Yea I started making some Python wrappers for TokensCC and saw that. Can someone send to CC addresses like the `RMDvA...` one above? Or is pubkey the only way?
+
+[11-Oct-19 04:07 PM] gcharang#6833
+@Regnar sending normal coins to RMDvABbzXVnD7CwAZyMeBQXCvmMqH1iwsY uisng sendtoaddress will send the coins to an address no one knows the private key of
+
+the address in the context of tokens is hash(evalcode + pubkey + ....) both of them are different
+
+the easiest way to deal with antara modules is to just use the RPC calls corresponding to them
+the implementation details are not really important as far as a user is concerned
+the only change would be dealing with a longer string (pubkey vs address)
+
+[11-Oct-19 04:08 PM] jl777c#5810
+it is based on pubkey
+
+[11-Oct-19 04:08 PM] jl777c#5810
+the display of pubkey as an address is basically an arbitrary thing
+
+[11-Oct-19 04:12 PM] Regnar#6164
+Okay. Sounds good. I planned to just use the RPCs as given, but wasn't really sure what the reasons were for the different CC addresses. Good to know, don't send to them
+
+[11-Oct-19 04:17 PM] jl777c#5810
+CC funds are constrained, so just having the privkey isnt enough. and if you send normal funds to a CC address, well you actually cant do that, as they operate in different "dimensions"
+
+[11-Oct-19 04:17 PM] Regnar#6164
+Okay I think I got it. I'm reading through the CC guide right now
+
+[11-Oct-19 04:23 PM] jl777c#5810
+there is literally a CCflag that denotes if an address is a CC address or a normal address, in the addresindex DB entries
+
+[11-Oct-19 04:24 PM] jl777c#5810
+users should not be using sendtoaddress to send to CC addresses, as sendtoaddress sends to only normal addresses
+
+[11-Oct-19 04:24 PM] jl777c#5810
+you need to use the proper CC rpc call to do the CC tx
+
+[11-Oct-19 04:44 PM] Regnar#6164
+Yea for this I think it's `tokentransfer`
+
+[11-Oct-19 04:45 PM] Regnar#6164
+I'm just trying to get a grasp on all the addresses and details so I can understand it a bit better. Appreciate all the help here 😁
+
+[11-Oct-19 05:01 PM] jl777c#5810
+it just doesnt fit into any preexisting "box" so you need to make new boxes
+
+[11-Oct-19 05:01 PM] jl777c#5810
+some are really simplistic, like faucet, but others are quite complex, like gateways
+
+[11-Oct-19 05:50 PM] Regnar#6164
+Yea I'm extremely grateful for the RPCs and Documentation. Definitely some of the best docs I've come across in the space
+
+{Reactions}
+💯 
+
+[11-Oct-19 06:29 PM] dukeleto#7326
+@jl777c does sending normal funds to a CC address make the funds unspendable and hence "burned" for practical purposes?
+
+[11-Oct-19 06:57 PM] jl777c#5810
+the CC vout hash is hash of the scriptPubKey, which is a CC vout and not a pubkey. so if you sendtoaddress normal funds to a p2pkh address, odds are you will never find the matching privkey. would need a hash collision between the hash of pubkey and hash of CC vout (which itself is mostly a hash of the CC condition)
+
+[11-Oct-19 06:57 PM] jl777c#5810
+however, it wont be provably unspendable
+
+[11-Oct-19 06:57 PM] jl777c#5810
+just practically unspendable
+
+[11-Oct-19 07:11 PM] dukeleto#7326
+thanks, that answers my question
+
+[15-Oct-19 10:18 PM] Paro#7842
+komodo blockchain  also have whitelist?
+
+[15-Oct-19 10:19 PM] Paro#7842
+summary
+I can choose the IP addresses to connect. ?
+
+[15-Oct-19 10:33 PM] Oszy#5734
+you mean connect to specific nodes with `addnode` ?
+
+[15-Oct-19 10:35 PM] Paro#7842
+no. except for specific IPs. I don't want anyone to connect.
+
+[16-Oct-19 01:17 AM] gcharang#6833
+@Paro 
+you can use `-connect` to make sure your own node connects to only certain other ip addresses
+but you can't control the  other nodes running the same chain connecting to different ip addresses
+
+[16-Oct-19 01:48 AM] Paro#7842
+ty
+
+[17-Oct-19 09:43 PM] Regnar#6164
+So not sure this is at all a milestone but, I created some tokens using TokenCC on RICK today from my mobile phone (kinda). I made a discord bot that runs TokensCC RPCs and called it from Discord App on my phone 😅
+
+{Reactions}
+3040_kingpeepo (3) 
+
+[17-Oct-19 09:50 PM] Regnar#6164
+@smk762 -  dracocanis ominator mistakenly made a bunch of the same tokens because my error handling sucks and he thought it wasn't working 😂
+
+[17-Oct-19 09:51 PM] Regnar#6164
+admittedly it literally said `error with creating tokens... Sorry`
+
+[17-Oct-19 10:17 PM] mrlynch#5735
+it's not a bug, it's a feature
+
+{Reactions}
+👍 🐛 
+
+[18-Oct-19 12:58 AM] Regnar#6164
+I'm getting errors when I run `tokenorders` without a tokenID.
+<https://developers.komodoplatform.com/basic-docs/antara/antara-api/assets.html#tokenorders> 
+These docs say tokenID is optional, without tokenID is supposed to display all available orders, but I'm getting the error ```error code: -1
+error message:
+no tokenid```
+
+[18-Oct-19 12:59 AM] Regnar#6164
+the example used shows `./komodo-cli -ac_name=HELLOWORLD tokenorders` and some orders as the response
+
+[18-Oct-19 01:19 AM] Mylo#8306
+https://github.com/Komodo-Cakeshop/komodo-in-a-box/blob/master/setup/cc/tokens.sh#L133
+
+{Embed}
+https://github.com/Komodo-Cakeshop/komodo-in-a-box/blob/master/setup/cc/tokens.sh
+Komodo-Cakeshop/komodo-in-a-box
+Cakeshop-In-a-Box but komodo specific, Turnkey Blockchain Starter Kit. - Komodo-Cakeshop/komodo-in-a-box
+https://avatars0.githubusercontent.com/u/45069400?s=400&v=4
+
+[18-Oct-19 01:20 AM] Mylo#8306
+That is the curl equivalent of the cli you want @Regnar
+
+[18-Oct-19 01:22 AM] Mylo#8306
+Maybe `komodo-cli .... tokenorders 0cbfadeeed357def654457 ` where 0cb.... is a tokenid
+
+[18-Oct-19 01:22 AM] Regnar#6164
+```komodo-cli -ac_name=RICK tokenorders
+error code: -1
+error message:
+no tokenid
+
+komodo-cli -ac_name=RICK tokenorders 0091dedf45ae6cd5bf49e05979f550bb9ed4cb5f2e1ac2690a5049833b752103
+[
+]```
+
+[18-Oct-19 01:22 AM] Mylo#8306
+Perfect
+
+[18-Oct-19 01:22 AM] Mylo#8306
+No orders
+
+[18-Oct-19 01:22 AM] Mylo#8306
+Empty array
+
+[18-Oct-19 01:23 AM] Regnar#6164
+yea I know, that isn't what I'm talking about though
+
+[18-Oct-19 01:23 AM] Regnar#6164
+<https://developers.komodoplatform.com/basic-docs/antara/antara-api/assets.html#examples-8>
+
+[18-Oct-19 01:24 AM] Regnar#6164
+In that example this command `komodo-cli -ac_name=HELLOWORLD tokenorders` works without a tokenID.
+
+[18-Oct-19 01:24 AM] Regnar#6164
+Unless I'm just misunderstanding these docs
+
+[18-Oct-19 01:24 AM] Mylo#8306
+Maybe bug
+
+[18-Oct-19 01:24 AM] Regnar#6164
+that's what I'm thinking
+
+[18-Oct-19 01:25 AM] Mylo#8306
+Ask in #cc-tokens
+
+[18-Oct-19 01:25 AM] Regnar#6164
+there isn't one
+
+[18-Oct-19 01:25 AM] Mylo#8306
+#cc-assets
+
+[18-Oct-19 01:25 AM] Regnar#6164
+okay
+
+{Reactions}
+👍 
+
+[19-Oct-19 09:18 AM] CrisF#3405
+Hi @Regnar, have you seen this `https://developers.komodoplatform.com/basic-docs/antara/antara-tutorials/understanding-antara-addresses.html`?
+A very good explanation of module addresses.
+
+[19-Oct-19 02:21 PM] Regnar#6164
+Yea I read through that one
+
+[19-Oct-19 02:22 PM] coinmonks || CoinCodeCap#8469
+I am analyzing komodo's codebase.. here is something may be you guys can use .. https://pastebin.com/gbmeR4Dh
+
+{Embed}
+https://pastebin.com/gbmeR4Dh
+commit_author_email,count  mrgcharang@gmail.com,1  siddhartha-cryp...
+https://pastebin.com/i/facebook.png
+
+[19-Oct-19 02:23 PM] coinmonks || CoinCodeCap#8469
+above file show people who contributed on komodo's github (also ordered by the number of their contribution)
+
+[19-Oct-19 02:24 PM] coinmonks || CoinCodeCap#8469
+you can use this to communicate things internally in the ecosystem
+
+{Reactions}
+🙏🏽 (2) 
+
+[19-Oct-19 09:18 PM] SHossain#0007
+@coinmonks || CoinCodeCap in that list everyone has only 1 commit count. totally wrong counts.
+
+[19-Oct-19 11:27 PM] dukeleto#7326
+```
+$ git shortlog -se|sort -rn|head
+ 10499    jl777 <jameslee777@yahoo.com>
+  2817    Wladimir J. van der Laan <laanwj@gmail.com>
+  1557    jl777 <jl777@users.noreply.github.com>
+  1371    blackjok3r <blackjok3r@gmail.com>
+  1097    Gavin Andresen <gavinandresen@gmail.com>
+```
+
+{Reactions}
+✅ 
+
+[25-Oct-19 07:25 PM] dimxy#2587
+@jl777c @Mihailo 
+About that new finite state machine (FSM) CC module which is planned to create.
+---
+I looked through several implementations and seems this tasks is very well defined and it is not very hard to create it as a cc module.
+Here is a nice one for pure c https://www.codeproject.com/Articles/1275479/State-Machine-Design-in-C
+It implements a basic FSM engine and provides macros to create state and event functions and transition map. 
+Also it has useful concepts like guard conditions, entry and exit actions (seems this is derived from UML and this is good)
+The important thing is that it supports both internal and external events. Internal events are those which are generated by the state machine.
+I think in case of blockchain internal events could be timeouts and address spends or other blockchain events (mentioned in the article in medium.com) so we could provide implementations of some basic functions (for example to implement 'payments').
+As external event are supplied by oracles we need to apply additional rules for event data formats (which are oracle formats).
+Miners could perform evaluation of state machine (check for events and state transitions) who could take some tx fee as a reward.
+---
+For which applications is the FSM CC?
+In this codeproject example for each FSM application it should be created a specific event and state code (like for motor or centrifuge FSMs in the example).
+Do we think that we could provide some set of event and state functions in the which could be used for many FSM configurations?
+Is there a specific application domain for which we provide this FSM CC? (That is, we do not want to allow to make a 'Motor State Machine' like in the example, and if this is only about coins or tokens it is easier to develop a some function set for the FSM CC)?
+Or maybe we could allow to attach some library to the FSM CC with externally defined event and state processing functions?
+
+{Embed}
+https://www.codeproject.com/Articles/1275479/State-Machine-Design-in-C
+State Machine Design in C
+A compact C finite state machine (FSM) implementation that's easy to use on embedded and PC-based systems.
+
+[25-Oct-19 07:25 PM] dimxy#2587
+---
+To manage events I think it is good to use 1of2 address 'FSM CC global address' + 'FSM initial txid address', so miners could send events (probably not events, but state transitions) between FSMs instances.
+---
+A FSM CC config could be a json which defines a state list, events and state transition map (similar to the example) and also binds an oracle txid.
+Events are triggered by oracles data and miners create a state transition transactions.
+
+[26-Oct-19 04:46 AM] jl777c#5810
+FSM CC should allow to create an arbitrary FSM via opreturn definitions. it should support a nested FSM, so you can create an FSM of arbitrary size. We need to define and implement a comprehensive set of blockchain events as the idea is to make the FSM CC and then after that essentially any logic can be implemented. standardizing the arguments and return values will allow creation of complex events and actions, though if all actions are built in, there is no need to make those nested.
+
+[26-Oct-19 04:47 AM] jl777c#5810
+A test of the FSM spec is to have half a dozen usecases and to make sure all of them can be implemented
+
+[26-Oct-19 04:49 AM] jl777c#5810
+as you say by having a standard oracles interface we can bring in external events into the statemachine. it should also be possible to create an oracle event based on the state changes of an FSM. this way, a specific FSM can create an event that is then used by other FSM.
+
+[26-Oct-19 04:50 AM] jl777c#5810
+At the high level, we want to use FSM to provide as close to turing completeness as practical. For blockchains, turing completeness is overkill and ends up with resource consumption issues. With FSM, the processing of events is the only thing that is taking any time, and really it wouldnt be that much time, and most blockchain dapps logic can be done with a FSM
+
+[26-Oct-19 04:53 AM] jl777c#5810
+I think the simplest FSM would be of the form: lock funds into the FSM, if an oracle posts the expected data send release payment. if a timeout happens, the funds can go to the one that put in the funds
+
+[26-Oct-19 04:54 AM] jl777c#5810
+so the FSM CC would allow to define such an fsm and we would have this as a template. then any new oracle can be used to make an oracle controlled payment. just during the initial blocks, the chain creator should run the standard FSM templates and we get a list of txids, one for each of the standard FSM
+
+[26-Oct-19 04:55 AM] jl777c#5810
+given these txids, specific instances of the standard FSM can be created, and by created, i mean the locking in of funds
+
+[26-Oct-19 04:57 AM] jl777c#5810
+so we have the templates of FSM (state maps, events, actions) and specific instances of a template (with all the txids defined).
+
+[26-Oct-19 04:57 AM] jl777c#5810
+fsmdefine to define the state maps, parameters, return values, actions
+
+[26-Oct-19 04:58 AM] jl777c#5810
+fsmcreate <defined txid> <amount> <parameters> to create a specific instance
+
+[26-Oct-19 05:00 AM] jl777c#5810
+once a specific instance is created, it is up to the dapp to notice the trigger events or timeouts and create a state transition transaction. what that means is that regardless of the number of active FSM instances, there is no overhead for polling of events! only when the dapp submits a transaction, will it need to be evaluated and by having it pass in the most recent txid, we can simply look up the current state it is in (as that is part of the required data), find the state map and make sure the submitted tx is following the FSM definition
+
+[26-Oct-19 05:02 AM] jl777c#5810
+of course each dapp will need to be polling for events that it cares about, but this is non-consensus load and if you have money at stake, it is not a problem to be running code to look for events.
+
+[26-Oct-19 05:03 AM] jl777c#5810
+we need to support crosschain events, so part of the state transition tx in this case would be the txproof for the crosschain tx (likely an oracle, but could be a spend of a specific utxo, etc)
+
+[26-Oct-19 05:05 AM] jl777c#5810
+events could be oracle data, spend of utxo, passage of time, height, balance of an address going above/below specified amount, DTO price calculation above/below, DTO price calculation of A > DTO price B, etc, etc, etc
+
+{Reactions}
+👍 
+
+[26-Oct-19 05:06 AM] jl777c#5810
+i hope you can see the scope of what is possible with the events. we should also support all the standard comparisons,  ==, !=, >, <, >=, <=
+
+{Reactions}
+shexy 👍 😎 🔥 KMD (3) 
+

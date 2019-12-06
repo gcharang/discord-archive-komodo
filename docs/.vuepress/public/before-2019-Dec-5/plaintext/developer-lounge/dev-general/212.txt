@@ -1,0 +1,364 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[05-Sep-19 02:19 AM] dukeleto#7326
+I talked with James, and yes, there are some current issues, but maybe they can be worked around. txindex is only needed by KMD
+
+[05-Sep-19 02:19 AM] dukeleto#7326
+not any asset chain
+
+[05-Sep-19 02:20 AM] dukeleto#7326
+it's for interest calcs
+
+[05-Sep-19 02:20 AM] dukeleto#7326
+watchonly addrs could be used for dpow in pruned mode
+
+[05-Sep-19 02:20 AM] blackjok3r#3181
+I really do not think it can, I am pretty falmiliar with the pruneing code
+
+[05-Sep-19 02:20 AM] Alright#0419
+why do you need to prune ACs?
+
+[05-Sep-19 02:20 AM] dukeleto#7326
+so txindex will be off
+
+[05-Sep-19 02:20 AM] Alright#0419
+dpow would be disabled entirely, no?
+
+[05-Sep-19 02:20 AM] blackjok3r#3181
+poretty much...
+
+[05-Sep-19 02:20 AM] Alright#0419
+not sure how pruning works, but if it just flat out ignores OP_RETURNs, dpow is deded
+
+[05-Sep-19 02:21 AM] dukeleto#7326
+what I am saying, is pruning might be compatible with DPoW *if* we can leverage nSPV
+
+[05-Sep-19 02:21 AM] blackjok3r#3181
+GetTransaction wouldnt work without txindex... and if the blocks are pruned... there are no tx to look up
+
+[05-Sep-19 02:21 AM] dukeleto#7326
+@blackjok3r listen to my words (take a huge bong rip, might help)
+
+[05-Sep-19 02:21 AM] dukeleto#7326
+we can change the code, and make it work for ARRR
+
+[05-Sep-19 02:21 AM] dukeleto#7326
+but not KMD
+
+[05-Sep-19 02:21 AM] dukeleto#7326
+because interest
+
+[05-Sep-19 02:21 AM] blackjok3r#3181
+nSPV is good, but it needs to be 100% reliuable to use in consensus code
+
+[05-Sep-19 02:22 AM] dukeleto#7326
+@blackjok3r very good point
+
+[05-Sep-19 02:22 AM] blackjok3r#3181
+if a node replies garbage
+
+[05-Sep-19 02:22 AM] blackjok3r#3181
+then nodes that receive that, could fork.
+
+[05-Sep-19 02:22 AM] dukeleto#7326
+@blackjok3r James seemed to think it might be possible for stuff not KMD, because in that case, it's a hard no
+
+[05-Sep-19 02:22 AM] blackjok3r#3181
+fetching from lots of nodes. isnt really practival, as it will overlaod all full nodes very fast
+
+[05-Sep-19 02:22 AM] Alright#0419
+make nodes that fetch from nodes that fetch from nodes
+
+[05-Sep-19 02:23 AM] Alright#0419
+problem solved
+
+[05-Sep-19 02:23 AM] Alright#0419
+we only need 1 real node
+
+[05-Sep-19 02:23 AM] blackjok3r#3181
+nSPVs that send each other getinfo calls?
+
+[05-Sep-19 02:23 AM] Alright#0419
+man I'm joking 😫
+
+[05-Sep-19 02:23 AM] dukeleto#7326
+we originally talked about this in ARRR captains quarters, about using `-prune` with ARRR
+
+[05-Sep-19 02:23 AM] Alright#0419
+there is *no reason* to prune ARRR
+
+[05-Sep-19 02:24 AM] Alright#0419
+the only stuff it would prune is notarizations
+
+[05-Sep-19 02:24 AM] dukeleto#7326
+it's actually viable, a bit. If you change over to watchonly and don't use txindex to find dpow xtns
+
+[05-Sep-19 02:24 AM] Alright#0419
+and obviously you don't want to do that
+
+[05-Sep-19 02:24 AM] blackjok3r#3181
+actually you could keep the notarization check points and prune the blocks
+
+[05-Sep-19 02:24 AM] dukeleto#7326
+so, IF pruned mode => use watchonly instead of txindex to find dpow xtns
+
+[05-Sep-19 02:24 AM] blackjok3r#3181
+as long as the blocks are there when it is validated
+
+[05-Sep-19 02:24 AM] blackjok3r#3181
+too slow
+
+[05-Sep-19 02:24 AM] Alright#0419
+ok, again, why?
+
+[05-Sep-19 02:25 AM] dukeleto#7326
+allow a full ARRR node to run in `-pruned` mode with dpow
+
+[05-Sep-19 02:25 AM] dukeleto#7326
+that was wanted by CG
+
+[05-Sep-19 02:25 AM] blackjok3r#3181
+dont side track me :abusedsmily:
+
+[05-Sep-19 02:25 AM] Alright#0419
+@blackjok3r go to sleep
+
+{Reactions}
+😂 
+
+[05-Sep-19 02:25 AM] dukeleto#7326
+it works fine right now, but the node itself doesn't know about dpow. All it can do is relay
+
+[05-Sep-19 02:25 AM] blackjok3r#3181
+what? it 10am
+
+{Reactions}
+🙃 (2) 🇦🇺 
+
+[05-Sep-19 03:44 PM] dukeleto#7326
+@blackjok3r man, i am still dealing with corrupt block indexes even with your SER_DISK fix. I think I am still missing the proper use of SER_DISK, giving it to a certain function somewhere?
+
+[05-Sep-19 03:44 PM] dukeleto#7326
+maybe it's defaulting to no SER_DISK because I am not passing that variable in somewhere
+
+[05-Sep-19 03:44 PM] dukeleto#7326
+your fix was also needed, deciding whether to READWRITE it
+
+[05-Sep-19 03:45 PM] dukeleto#7326
+in the meantime, i write docs to not get too frustrated
+
+[05-Sep-19 03:57 PM] dukeleto#7326
+SER_DISK, Y U HATE ME?
+
+[05-Sep-19 03:57 PM] dukeleto#7326
+assertions that corrupt block indexes really suck
+
+[05-Sep-19 03:58 PM] dukeleto#7326
+demoralizing to know i need to wipe and fully sync again to test it
+
+[05-Sep-19 05:05 PM] ComputerGenie 👴🏼📢#7004
+Food for thought:
+As I wander through github, I'm constantly amazed at how much IP the Free Software Foundation, Inc. owns
+
+[05-Sep-19 05:40 PM] allbits#5898
+Can you expand on that? I'm genuinely interested
+
+[05-Sep-19 06:20 PM] ComputerGenie 👴🏼📢#7004
+A great many people just copy/paste the license template and never edit it and it reads like:
+```            GNU GENERAL PUBLIC LICENSE
+               Version 2, June 1991
+
+Copyright (C) 1989, 1991 Free Software Foundation, Inc.```
+
+[05-Sep-19 06:23 PM] ComputerGenie 👴🏼📢#7004
+or they just edit the year and nothing else
+
+[05-Sep-19 08:20 PM] DLT Novice#2835
+Can anyone from these teams quickly add their coin to the newly to be released Heat Mobil wallet? SHould be easy and fast to add your coin to the wallet. https://github.com/Heat-Ledger-Ltd/heat-modules
+
+{Embed}
+https://github.com/Heat-Ledger-Ltd/heat-modules
+Heat-Ledger-Ltd/heat-modules
+Collection of low level crypto currency operations - Heat-Ledger-Ltd/heat-modules
+https://avatars2.githubusercontent.com/u/21058733?s=400&v=4
+
+[05-Sep-19 08:20 PM] DLT Novice#2835
+KMD
+BTCH
+CHIPS
+CHAINZILLA
+HUSH
+PIRATE
+VERUS
+UTRUM
+
+https://github.com/Heat-Ledger-Ltd/heat-modules
+
+{Embed}
+https://github.com/Heat-Ledger-Ltd/heat-modules
+Heat-Ledger-Ltd/heat-modules
+Collection of low level crypto currency operations - Heat-Ledger-Ltd/heat-modules
+https://avatars2.githubusercontent.com/u/21058733?s=400&v=4
+
+[05-Sep-19 08:21 PM] DLT Novice#2835
+https://twitter.com/PeterRi73428925/status/1169706097566830592?s=20
+
+{Embed}
+Peter Richards (IOTA) (HOLO) (HEAT) - DLT NOVICE (@PeterRi73428925)
+https://twitter.com/PeterRi73428925/status/1169706097566830592?s=20
+#VERUS #HUSH #BTCH #CHiPs #ChainZilla #pirate #UTRUM #KMD - Is there a list of developers on Twitter for these Coins.
+
+Take just a moment to add them to the new soon to be released #HeatLedger $Heat mobile wallet.
+
+BTCH
+CHIPS
+CHAINZILLA
+HUSH
+PIRATE
+VERUS
+
+https://t.co/uqC8...
+Twitter
+
+[05-Sep-19 08:27 PM] ComputerGenie 👴🏼📢#7004
+_is so glad that he has most of the channels that @DLT Novice is spamming muted_
+
+[05-Sep-19 08:29 PM] DLT Novice#2835
+DOnt hate me so fast
+
+[05-Sep-19 08:29 PM] DLT Novice#2835
+I asked @jl777c first
+
+[05-Sep-19 08:32 PM] ComputerGenie 👴🏼📢#7004
+I'm not sure he realized that your intention was to copy/paste 2 full screen in 187 million channels
+
+[05-Sep-19 08:32 PM] ComputerGenie 👴🏼📢#7004
+😕
+
+[06-Sep-19 01:30 AM] dukeleto#7326
+@DLT Novice i see it's all NodeJS. No thanks, HUSH wants no part in that
+
+[06-Sep-19 12:36 PM] dukeleto#7326
+@blackjok3r i just realized mike-fucking-tout wrote the assertion line that has been giving me problems for days. I don't have enough things to throw
+
+[06-Sep-19 12:36 PM] dukeleto#7326
+Mike's ChainPower code is utter garbage
+
+[06-Sep-19 12:37 PM] dukeleto#7326
+it's a disease infecting my PoW code
+
+[06-Sep-19 12:37 PM] dukeleto#7326
+causes fucking constant problems
+
+[06-Sep-19 12:37 PM] dukeleto#7326
+@Deleted User merged into KMD
+
+[06-Sep-19 12:37 PM] dukeleto#7326
+and breaks everything constantly
+
+[06-Sep-19 12:37 PM] dukeleto#7326
+he changed so much internals
+
+[06-Sep-19 12:38 PM] dukeleto#7326
+every time you try to merge stuff from ZEC or current KMD, it's mike's garbage hour
+
+[06-Sep-19 12:38 PM] dukeleto#7326
+His garbage PoS code causes bugs in PoW coins
+
+[06-Sep-19 12:38 PM] dukeleto#7326
+`4b729ec577 src/main.cpp (miketout                 2018-09-28 01:38:14 -0700 4391)             assert(pindexTest->nChainTx || pindexTest->GetHeight() == 0);`
+
+[06-Sep-19 12:38 PM] dukeleto#7326
+no documentation or comment about WHY THE FUCK THIS ASSERTION EXISTS. Just because Mike felt like adding it.
+
+[06-Sep-19 12:39 PM] dukeleto#7326
+```
+commit 4b729ec5776abe84c21feb310bb0dc9a99e5ce2b
+Author: miketout <michaeltoutonghi@gmail.com>
+Date:   Fri Sep 28 01:38:14 2018
+
+    Changes for most chain power rule
+
+```
+
+[06-Sep-19 12:39 PM] dukeleto#7326
+Fuck your shitty code, Mike
+
+[06-Sep-19 12:39 PM] dukeleto#7326
+Your MSFT values are not welcome in this community.
+
+[06-Sep-19 12:39 PM] dukeleto#7326
+well, broken VRSC code is merged into KMD, accidentally
+
+[06-Sep-19 12:39 PM] dukeleto#7326
+yes, it happens
+
+[06-Sep-19 12:39 PM] dukeleto#7326
+All. The. Time.
+
+[06-Sep-19 12:39 PM] dukeleto#7326
+@Deleted User he is not improving my "things"
+
+[06-Sep-19 12:40 PM] dukeleto#7326
+he only causes me work
+
+[06-Sep-19 12:40 PM] dukeleto#7326
+with his shite code
+
+[06-Sep-19 12:40 PM] dukeleto#7326
+That fucking backdoor was accidentally merged
+
+[06-Sep-19 12:40 PM] dukeleto#7326
+Don't even get me started.
+
+[06-Sep-19 12:44 PM] dukeleto#7326
+Corrupt block indexes make devs unhappy
+
+[06-Sep-19 12:45 PM] dukeleto#7326
+Been debugging this a week, and yeah, I am salty af
+
+[06-Sep-19 12:45 PM] dukeleto#7326
+need to do a fresh sync every time I try different code
+
+[06-Sep-19 12:45 PM] dukeleto#7326
+I thought I was bumping into BTC internals I didn't understand
+
+[06-Sep-19 12:45 PM] dukeleto#7326
+So I went deep, took out my pen and notebook and took fucking notes on everything about the code
+
+[06-Sep-19 12:46 PM] dukeleto#7326
+Now I come to find out it's 💩 Mike recently added, not BTC core or KMD core code
+
+[06-Sep-19 12:46 PM] dukeleto#7326
+he removed fucking `pindex->nHeight` @Deleted User
+
+[06-Sep-19 12:46 PM] dukeleto#7326
+do you know how much fucking busy work this causes for integrating code?
+
+[06-Sep-19 12:47 PM] dukeleto#7326
+every line of code in the universe that uses that needs to be changed
+
+[06-Sep-19 12:47 PM] dukeleto#7326
+@Deleted User i have no relationship to him. He has to deal with my code and I have to deal with his
+
+[06-Sep-19 12:47 PM] dukeleto#7326
+He pulls in my code from BTC + ZEC + KMD, and I pull in his code from KMD
+
+[06-Sep-19 12:47 PM] dukeleto#7326
+VRSC refuses to use my dpowconfs code and leaves itself open to bugs related to that
+
+[06-Sep-19 12:48 PM] dukeleto#7326
+Nah, K64 has that covered
+
+[06-Sep-19 12:49 PM] dukeleto#7326
+I don't get paid enough to have a relationship with miketout, other than the current one
+
+[06-Sep-19 12:49 PM] dukeleto#7326
+whatevs, semantics
+

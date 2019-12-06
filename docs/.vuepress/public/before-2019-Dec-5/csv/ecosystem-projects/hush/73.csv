@@ -1,0 +1,146 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:32 PM";"[dscrd-hush] <SHossain> the daemon crash only happens if you use the swing wallet. normal z tx using pure CLI doesn't crash.
+i used my locally compiled bins in Ubuntu to get this crash data";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:32 PM";"[dscrd-hush] <SHossain> and used the HUSHmate Swing wallet by @TheTrunk";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:33 PM";"[dscrd-hush] <SHossain> so, just to confirm i used Linux";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:33 PM";"[dscrd-hush] <TheTrunk> Yes it is not related to OS - tested on all platforms";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:33 PM";"[dscrd-hush] <dukeleto> `364            return this->chainPower.nHeight;`";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:34 PM";"[dscrd-hush] <SHossain> i ran the daemon on a separate window using `gdb` and started the HUSHmate jar file standalone";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:34 PM";"[dscrd-hush] <dukeleto> @SHossain very useful debug info, i am not sure that `chainPower` should be used, and i don't think this is hush-specific bug";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:35 PM";"[dscrd-hush] <dukeleto> @SHossain if you tried to do all of this in the same GUI with a diff asset chain, it would happen in KMD core";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:35 PM";"[dscrd-hush] <SHossain> yes, we assumed that 😃";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:35 PM";"[dscrd-hush] <SHossain> i notified jl777 as well";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:35 PM";"[dscrd-hush] <dukeleto> chainPower is a verus thing";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:35 PM";"[dscrd-hush] <dukeleto> it's being used when it shouldn't be";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:35 PM";"[dscrd-hush] <dukeleto> which is causing this massive failure";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:36 PM";"[dscrd-hush] <dukeleto> `this->chainPower` is undefined, so trying to look for the `nHeight` entry inside of it, blows up";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:36 PM";"[dscrd-hush] <dukeleto> chainPower is only when there is mixed PoS/PoW, iirc";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:36 PM";"[dscrd-hush] <dukeleto> but I have not reviewed all these changes that came from VRSC into KMD";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:43 PM";"[dscrd-hush] <dukeleto> @SHossain this may also be a bug in VRSC itself, or just in how it was merged to KMD";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:44 PM";"[dscrd-hush] <dukeleto> @SHossain the core issue is that `GetHeight` assumes `this->chainPower` always has been set, and that is not the case here";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:45 PM";"[dscrd-hush] <SHossain> I'll ping Miketout as well in this case";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:47 PM";"[dscrd-hush] <dukeleto> @SHossain @TheTrunk try using this commit and see if the segfault goes away: https://github.com/MyHush/hush3/commit/4b8ae2623231e15b7a997faa12b448b5f0e328a3";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:48 PM";"[dscrd-hush] <SHossain> 👍🏽";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:49 PM";"[dscrd-hush] <SHossain> @dukeleto which branch did you commit this fix?";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:50 PM";"[dscrd-hush] <SHossain> found it. never mind";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 12:56 PM";"[dscrd-hush] <SHossain> doing fresh clone and compile";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 01:01 PM";"[dscrd-hush] <SHossain> @dukeleto getting this crash
+```
+Linux
+Building cclib to src/
+LINUX
+gcc -Wno-write-strings -DBUILD_ROGUE -std=c++11 -I../../depends/x86_64-unknown-linux-gnu/include -I../univalue/include -I../cryptoconditions/include -I../cryptoconditions/src -I../cryptoconditions/src/asn -I.. -I. -fPIC -shared -O0 -D _DEBUG -o librogue.so -c cclib.cpp
+In file included from ../cc/eval.h:22:0,
+                 from cclib.cpp:22:
+../chain.h: In member function ‘int32_t CBlockIndex::GetHeight() const’:
+../chain.h:364:22: error: could not convert ‘((const CBlockIndex*)this)->CBlockIndex::chainPower’ from ‘const CChainPower’ to ‘bool’
+         return this->chainPower ? this->chainPower.nHeight : 0;
+                ~~~~~~^~~~~~~~~~
+Makefile_rogue:22: recipe for target 'librogue.so' failed
+make: *** [librogue.so] Error 1
+ROGUE BUILD FAILED
+```";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 01:03 PM";"[dscrd-hush] <SHossain> looks like the fix is conflicting with ROGUE";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 01:04 PM";"[dscrd-hush] <Heno1974> 🤔";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 01:05 PM";"[dscrd-hush] <SHossain> oh...maybe i am posting all these in wrong channel? 🤔 
+let me know of any channel you want me to continue";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 01:36 PM";"[dscrd-hush] <Heno1974> https://hacked.com/trade-recommendation-zcash-22/";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 01:42 PM";"[dscrd-hush] <jl777c> pushed fixes for this issue to my repo, jl777 and FSM branches";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 01:56 PM";"[dscrd-hush] <dukeleto> i am merging that stuff in, dealing with some conflicts and making sure compiles are happy";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 01:58 PM";"[dscrd-hush] <SHossain> i'll be waiting 😄";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 02:07 PM";"[dscrd-hush] <Heno1974> hush3 solo pool??:";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 02:07 PM";"[dscrd-hush] <Heno1974> https://www.mining-dutch.nl/pools/hush.php?page=statistics&action=blocks";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 02:28 PM";"[dscrd-hush] <SHossain> @dukeleto @jl777c  @TheTrunk the crash is now gone and swing wallet working fine with sending z tx
+however, there are stdout prints like this
+```
+block hash 0000000000000000000000000000000000000000000000000000000000000000 does not exist!
+block hash 0000000000000000000000000000000000000000000000000000000000000000 does not exist!
+block hash 0000000000000000000000000000000000000000000000000000000000000000 does not exist!
+block hash 0000000000000000000000000000000000000000000000000000000000000000 does not exist!
+block hash 0000000000000000000000000000000000000000000000000000000000000000 does not exist!
+block hash 0000000000000000000000000000000000000000000000000000000000000000 does not exist!
+block hash 0000000000000000000000000000000000000000000000000000000000000000 does not exist!
+```";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 02:36 PM";"[dscrd-hush] <SHossain> these printouts stop after the tx is confirmed";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 02:42 PM";"[dscrd-hush] <SHossain> confirmed, these printouts happen after sending a tx and until it is confirmed";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 02:53 PM";"[dscrd-hush] <SHossain> ok. latest commit from @dukeleto fixed it";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 02:53 PM";"[dscrd-hush] <SHossain> 😃";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 02:53 PM";"[dscrd-hush] <SHossain> the swing wallet and the daemon looks good.";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 02:56 PM";"[dscrd-hush] <dukeleto> sweeeeeeet";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 02:56 PM";"[dscrd-hush] <dukeleto> https://github.com/jl777/komodo/pull/1448";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 02:56 PM";"[dscrd-hush] <dukeleto> also made this to improve things upstream, too";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 02:57 PM";"[dscrd-hush] <dukeleto> of course the null block hash doesn't exist! It was an overzealous warning, which is actually something that can happen normally. Unconfirmed transactions do not have a height, because they have not been included in a block yet";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 03:35 PM";"[dscrd-hush] <TheTrunk> Great, I will build binaries for other platforms, test it and craft hushmate";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 03:35 PM";"[dscrd-hush] <SHossain> @TheTrunk what does the Close button uses? `pkill -15` or `kill -9`?";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 03:35 PM";"[dscrd-hush] <TheTrunk> ?";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 03:35 PM";"[dscrd-hush] <SHossain> or, does it uses `./komodo-cli -ac_name=HUSH3 stop`";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 03:36 PM";"[dscrd-hush] <TheTrunk> No I am using 
+```
+./komodo-cli -ac_name=HUSH3 stop
+```";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 03:36 PM";"[dscrd-hush] <SHossain> when you close the Swing app, it closes the daemon as well. even if the daemon was started externally.";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 03:36 PM";"[dscrd-hush] <TheTrunk> yes";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 03:36 PM";"[dscrd-hush] <SHossain> oh...great. you are using the safe method already";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 03:37 PM";"[dscrd-hush] <SHossain> i was just curious. thanks for your answer";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 03:38 PM";"[dscrd-hush] <TheTrunk> Sure, anytime 😉";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 03:58 PM";"[dscrd-hush] <ComputerGenie - ChickenPool> @dukeleto ty for pull 1448, that's been bugging my OCD on chickenpool, but hadn't the time to look for it";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 03:58 PM";"[dscrd-hush] <Inevitability> I'm mine HUSH 3 right on my new ""R"" address, and coins not coming...";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 03:59 PM";"[dscrd-hush] <ComputerGenie - ChickenPool> @Inevitability talk to your pool op";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 04:00 PM";"[dscrd-hush] <Inevitability> woow they com to web wallet )) Not to ZelCore)";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 04:05 PM";"[dscrd-hush] <dukeleto> @Inevitability Zelcore is talking to the old Hush chain, and is not a supported wallet, mostly because it's closed source";"";"";
+"490649742188085273";"addaeus#4492";"21-Apr-19 04:47 PM";"I am trying to use the the Lite wallet. Can I use my t1 WIF seed to see my new R HUSH3 coins? Can some point me in the right direction so I can read how to get my t1 coins off of the old wallet to the Lite wallet. Thanks";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"21-Apr-19 04:51 PM";"@addaeus the coins from the old chain are already on the new chain, there's nothing for you to do
+if you want to see the R address before Agama is updated, you can use this page:
+<https://dexstats.info/addressconverter.php?fromcoin=HUSH&tocoin=HUSH3>";"";"";
+"490649742188085273";"addaeus#4492";"21-Apr-19 04:54 PM";"Awesome! Thanks!!!!";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 04:54 PM";"[dscrd-hush] <dukeleto> <addaeus> we will have a GUI wallet coming out very soon which will make things easier";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 04:55 PM";"[dscrd-hush] <dukeleto> old HUSH WIFs are not the same as new HUSHv3 WIFs, but there is an agama tool in the ""Tools"" menu called Wif-to-Wif that can convert between them, fyi";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 04:56 PM";"[dscrd-hush] <ComputerGenie - ChickenPool> _thinks discord bots should cross-carry IDs so that you can tag folks_";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 04:56 PM";"[dscrd-hush] <Inevitability> ""Tools"" menu called Wif-to-Wif that can convert between them - not working now.....";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:00 PM";"[dscrd-hush] <dukeleto> that is a pretty vague statement";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:03 PM";"[dscrd-hush] <Inevitability> What do you mean , vague ?";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:04 PM";"[dscrd-hush] <Inevitability> I click on the ""Get address"" button and nothing happens. This is not a vague statement - it is facts.";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:04 PM";"[dscrd-hush] <penguin> This guy.";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:07 PM";"[dscrd-hush] <ComputerGenie - ChickenPool> ```If you use the current Agama and you have your t address WIF
+'Activate Coin'
+'Select ...' HUSH
+use any passphrase
+'Tools'
+'WIF to WIF'
+'Coin' KMD
+'WIF' enter your WIF
+'Get WIF'
+and the output is your WIF for the new chain```";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:08 PM";"[dscrd-hush] <Inevitability> Coin KMD ! hmmm";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:08 PM";"[dscrd-hush] <ComputerGenie - ChickenPool> if you select HUSH as the wif to wif coin the output will be empty because 1=1";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:10 PM";"[dscrd-hush] <Inevitability> Ok. i'm get my new WIF, what next?";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:11 PM";"[dscrd-hush] <Inevitability> Close Agama or what?";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:11 PM";"[dscrd-hush] <ComputerGenie - ChickenPool> save the new wif and wait for the updated agama";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:12 PM";"[dscrd-hush] <Inevitability> ....Press ""Wallet"" button?";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:13 PM";"[dscrd-hush] <ComputerGenie - ChickenPool> close agama
+wait for update to be released";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:14 PM";"[dscrd-hush] <dukeleto> 👍 to educating the masses";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:14 PM";"[dscrd-hush] <ComputerGenie - ChickenPool> _had to install agama just to do that :P_";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:15 PM";"[dscrd-hush] <Inevitability> Why was I doing all this if I could just sit and wait for an update?";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:15 PM";"[dscrd-hush] <ComputerGenie - ChickenPool> because you didn't listen 36 hrs ago the 1st 15 times someone told you to wait?";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:16 PM";"[dscrd-hush] <ComputerGenie - ChickenPool> 🤷🏽";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:17 PM";"[dscrd-hush] <Inevitability> no";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:21 PM";"[dscrd-hush] <dukeleto> such excitement much wow";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:21 PM";"[dscrd-hush] <dukeleto> @Inevitability with your new WIF, you could import that into the CLI wallet, if you really wanted to learn a bit";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:21 PM";"[dscrd-hush] <dukeleto> i think i saw you using the binaries already, iirc";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:22 PM";"[dscrd-hush] <dukeleto> `hush-cli importprivkey SUPER_SEKRET_PRIVKEY`";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:23 PM";"[dscrd-hush] <dukeleto> that's it, and then you can use `hush-cli getwalletinfo` to see your updated balance with that private key added to your wallet";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:24 PM";"[dscrd-hush] <dukeleto> using CLI wallets might not be as fun, but when things break and go really wrong in a GUI wallet, knowing how the insides work is extremely valuable to anybody, not only developers";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:24 PM";"[dscrd-hush] <dukeleto> kind of like knowing how to fix your bicycle if the chain comes off";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:25 PM";"[dscrd-hush] <ComputerGenie - ChickenPool> _just takes his bike to the bike shop and pays them to fix it_";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:28 PM";"[dscrd-hush] <dukeleto> until Zombie day comes and the only currency is braaaaaains";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 05:31 PM";"[dscrd-hush] <ComputerGenie - ChickenPool> I don't have to run fast, just faster than you 😝";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 06:03 PM";"[dscrd-hush] <penguin> `sudo world -reindex` ?";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 06:04 PM";"[dscrd-hush] <ComputerGenie - ChickenPool> I hear that's been done a time or two before";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 06:05 PM";"[dscrd-hush] <penguin> agreed, you know what they say about when something happens a third time ...";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 08:15 PM";"[dscrd-hush] <5indians> @Inevitability  have you been talking with nobby ? :trol:";"";"";
+"455021680935436290";"Gateway#3763";"21-Apr-19 10:29 PM";"[dscrd-hush] <ComputerGenie - ChickenPool> @cuel I'll take 10000 BITCOINTALK Legendary Accounts with merits
+plz contact 
+<https://bitcointalk.org/index.php?action=profile;u=19971>
+with full details of the accounts";"";"";
+"490649742188085273";"addaeus#4492";"21-Apr-19 10:31 PM";"Thanks  for all the great information @dukeleto @ComputerGenie 👴🏼📢 @Gateway";"";"👍🏽 (1)";

@@ -1,0 +1,442 @@
+==============================================================
+Guild: Komodo
+Channel: cc-rogue
+Topic: use FSM branch AND then build as normal
+ 
+./komodod -ac_name=ROGUE -ac_supply=1000000 -pubkey=<yourpubkey> -addnode=5.9.102.210  -ac_cclib=rogue -ac_perc=10000000 -ac_reward=100000000 -ac_cc=60001 -ac_script=2ea22c80203d1579313abe7d8ea85f48c65ea66fc512c878c0d0e6f6d54036669de940febf8103120c008203000401cc -daemon
+Guide here: https://github.com/KomodoPlatform/komodo/wiki/Get-Started-with-Rogue-Game
+Explorer: http://rogue.explorer.dexstats.info/
+Player's Handbook: https://github.com/jl777/komodo/blob/jl777/src/cc/rogue/rogue.doc
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[15-Mar-19 08:22 AM] jl777c#5810
+if so, which value
+
+[15-Mar-19 08:22 AM] TonyL#3577
+I'm getting ```error code: -22
+error message:
+TX decode failed
+```
+
+[15-Mar-19 08:22 AM] jl777c#5810
+likely due to cut and paste error
+
+[15-Mar-19 08:22 AM] TonyL#3577
+Maybe in hex missing some symbols because it was pasted in two messages
+
+[15-Mar-19 08:23 AM] jl777c#5810
+or CRLF added?
+
+[15-Mar-19 08:23 AM] TonyL#3577
+I concatenated /n 😃
+
+[15-Mar-19 08:23 AM] jl777c#5810
+or /n added?
+
+[15-Mar-19 08:23 AM] jl777c#5810
+that would cause a parse error
+
+[15-Mar-19 08:24 AM] TonyL#3577
+https://paste.ubuntu.com/p/6hsRnf5Rcd/ I'm trying this
+
+[15-Mar-19 08:25 AM] jl777c#5810
+need the actual rawtx without errors
+
+[15-Mar-19 08:26 AM] jl777c#5810
+what does extract of that game return?
+
+[15-Mar-19 08:27 AM] TonyL#3577
+Will check in a few mins (rebuilding with fast games fix)
+
+[15-Mar-19 08:28 AM] TonyL#3577
+Grabbed `set cashout to 0` also
+
+[15-Mar-19 08:32 AM] jl777c#5810
+i doubt that would do anything, just did it to be defensive
+
+[15-Mar-19 08:32 AM] TonyL#3577
+```./komodo-cli -ac_name=ROGUE cclib bailout 17 '["5c141b64de7693e4485117b94bfc161a50c30d297457efabdfa578dd70a94063"]'() found baton fe21f0ff26f937fa7e19b7cc79aa82b64efadb8c74bcaa9e7b6635cc6f90aaa7 numkeys.176 seed.4245480280465838146 playerdata.0
+
+extracted $$$gold.4 -> 0.00000160 ROGUE hp.12 strength.16/16 level.1 exp.4 dl.1 n.1 amulet.0
+5c141b64de7693e4485117b94bfc161a50c30d297457efabdfa578dd70a94063 good.1 bad.0
+tokentx.(c) decoded.1 ht.58159 txid.0df835704fe95e1d3cf7356f29ce209a060891e646347f7ded491a3be0084b3e 0.00000160 vs vout2 0.00010000
+CC Eval 0x11 Invalid: mismatched cashout amount spending tx fe21f0ff26f937fa7e19b7cc79aa82b64efadb8c74bcaa9e7b6635cc6f90aaa7
+```
+
+[15-Mar-19 08:34 AM] TonyL#3577
+vout changed to 10000 but bailout tx still not accepted to mempool
+
+[15-Mar-19 08:35 AM] TonyL#3577
+https://paste.ubuntu.com/p/tSjnTRtFXf/ - full output with hex
+
+[15-Mar-19 08:36 AM] jl777c#5810
+pushed fix
+
+[15-Mar-19 08:40 AM] jl777c#5810
+i see it
+
+{Reactions}
+🦅 
+
+[15-Mar-19 08:40 AM] TonyL#3577
+Yay, bailout is in mempool this time
+
+[15-Mar-19 08:44 AM] TonyL#3577
+https://paste.ubuntu.com/p/Nx8NM3RC3f/ extract of @wookie game
+
+[15-Mar-19 08:44 AM] jl777c#5810
+seems normal enough, wonder why it generates negative vout
+
+[15-Mar-19 08:45 AM] TonyL#3577
+Maybe some OSX non-det
+
+[15-Mar-19 08:46 AM] jl777c#5810
+but negative vout?
+
+[15-Mar-19 08:46 AM] TonyL#3577
+non-det as problem with my bundle
+
+[15-Mar-19 08:47 AM] TonyL#3577
+not-compatible rogue/daemon for example 🤔
+
+[15-Mar-19 08:47 AM] TonyL#3577
+But there is a hello kitty bug protection - strange
+
+[15-Mar-19 08:47 AM] jl777c#5810
+negative vout means negative cashout, but that assumes it is vout2 that was wrong...
+
+[15-Mar-19 08:49 AM] TonyL#3577
+Intrigue to see a valid hex grows 😃
+
+[15-Mar-19 12:22 PM] wookie#7663
+@TonyL here's the pastebin from ./komodo-cli -ac_name=ROGUE cclib bailout 17 "[%220669a10b3fea38193449dd90c0a0833fcb771bfe20c12c20c7c03ba48b924b8a%22]"
+https://paste.ubuntu.com/p/42pKJphGKr/
+
+[15-Mar-19 12:26 PM] wookie#7663
+Also, not sure if this is needed but here's the output and hex immediately after the game that did not convert to ROGUE (or did not make it to the blockchain) and my warrior was lost: 
+https://paste.ubuntu.com/p/DcXsnBksKx/
+
+[15-Mar-19 02:07 PM] TonyL#3577
+@jl777c ```    {
+      "value": -0.02025090,
+      "valueZat": -2025090,
+      "n": 3,
+      "scriptPubKey": {
+        "asm": "a22c80203d1579313abe7d8ea85f48c65ea66fc512c878c0d0e6f6d54036669de940febf8103120c008203000401 OP_CHECKCRYPTOCONDITION",
+        "hex": "2ea22c80203d1579313abe7d8ea85f48c65ea66fc512c878c0d0e6f6d54036669de940febf8103120c008203000401cc",
+        "reqSigs": 1,
+        "type": "cryptocondition",
+        "addresses": [
+          "RAuQoR7wqHcyZPd7qgzHfnw1GjcChPm5E1"
+        ]
+      }
+```
+
+[15-Mar-19 02:08 PM] jl777c#5810
+ouch! vout3... looking
+
+[15-Mar-19 02:08 PM] TonyL#3577
+Hex can be found in paste above. Thanks a lot @wookie !
+
+[15-Mar-19 02:09 PM] jl777c#5810
+what are the other vout values?
+
+[15-Mar-19 02:09 PM] jl777c#5810
+what are the values of the vins
+
+[15-Mar-19 02:12 PM] jl777c#5810
+added a check for negative change, but not sure how it was possible. so need to see the exact values
+
+[15-Mar-19 02:12 PM] jl777c#5810
+oh wait
+
+[15-Mar-19 02:12 PM] jl777c#5810
+i see the problem
+
+[15-Mar-19 02:13 PM] jl777c#5810
+pushed fix
+
+{Reactions}
+treasure 
+
+[15-Mar-19 02:21 PM] TonyL#3577
+Oh, I'll have OSX only on Monday to compile on my side
+@wookie Could you please compile daemon for OSX on your side to check if fix helps to bailout?
+https://github.com/KomodoPlatform/komodo/wiki/Installing-Komodo-Manually#installing-komodo-on-osx just follow this guide and change
+```git clone https://github.com/KomodoPlatform/komodo
+git checkout dev``` to 
+```git clone https://github.com/jl777/komodo
+cd komodo 
+git checkout jl777
+```
+
+{Embed}
+https://github.com/KomodoPlatform/komodo/wiki/Installing-Komodo-Manually
+KomodoPlatform/komodo
+Komodo. Contribute to KomodoPlatform/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+{Reactions}
+👌 
+
+[15-Mar-19 02:23 PM] TonyL#3577
+@jl777c Is this fix can affect many games / hardforking one?
+
+[15-Mar-19 02:26 PM] jl777c#5810
+not hardfork, should fix the malformed bailouts
+
+{Reactions}
+👍 
+
+[15-Mar-19 02:41 PM] Cryptofist#7504
+@TonyL  I did get windows set up on both machines yesterday. Warriors are not saving on windows at all.
+
+[15-Mar-19 02:42 PM] TonyL#3577
+@Cryptofist Hmm, are you getting actual progress (dungeon level, experience, gold) in `export` prints?
+
+[15-Mar-19 02:43 PM] Cryptofist#7504
+Yep printout below 
+I also (in game)made sure to kill at least one monster and get gold, then went for two monsters and gold with the same results
+
+[15-Mar-19 02:43 PM] Cryptofist#7504
+Current game state:
+Game txid: 62d993aefaf457b0e0a7a9bfa7249395587aa21710d8c0708d58ec8cecd5fe61
+Information about game saved on chain: $$$gold.21 hp.12 strength.16/16 level.1 exp.2 dl.1
+
+Do you want to make bailout now [y] or wait for one more block [n]? [y/n]: y
+{'name': 'rogue', 'method': 'bailout', 'myrogueaddr': 'RNrxAPhuDSdmneENXX2synME2y8xtKSVUi', 'gametxid': '62d993aefaf457b0e0a7a9bfa7249395587aa21710d8c0708d58ec8cecd5fe61',
+
+[15-Mar-19 02:44 PM] TonyL#3577
+Oh, 21 gold it's 4410 satoshi
+
+[15-Mar-19 02:44 PM] TonyL#3577
+There is a fix for games with less than 10000 satoshies reward - but it's not in bundles yet
+
+[15-Mar-19 02:45 PM] Cryptofist#7504
+Ok, So should I try to get above 10k sats  and see if the warrior saves for now?
+
+[15-Mar-19 02:45 PM] TonyL#3577
+We have to check if latest  fix resolves wookies issue. And if it's fine now - I'll update bundles
+
+[15-Mar-19 02:46 PM] TonyL#3577
+@Cryptofist yes please - for games with rewards >10000 sat bailout should work
+
+[15-Mar-19 02:47 PM] Cryptofist#7504
+If I can make it that far with a fresh start.
+
+[15-Mar-19 02:47 PM] TonyL#3577
+Rewards calculating as: ```rogueshis = gold * gold * level * 10```
+
+[15-Mar-19 02:47 PM] Cryptofist#7504
+super hard mode activated.  
+Maybe ill start with an older address
+
+[15-Mar-19 02:48 PM] TonyL#3577
+So 10000 satoshies not so long game - even 50 gold on level 2  - it's 50000 rogueshis already
+
+[15-Mar-19 02:56 PM] Cryptofist#7504
+Ok. I saw you guys talk about the level  calculation changes a bit, just to make sure I understand fully, Dungeon level 3 exit would be a higher amount of rogue than Dungeon level two, with the same amount of gold ? 
+For 50 Gold on dungeon level 2
+ 50* 50 * 2* 10 = 50000
+For 50 Gold on dungeon level 3
+50* 50 * 3 * 10=75000
+
+[15-Mar-19 03:02 PM] TonyL#3577
+Yes, correct @Cryptofist
+
+[15-Mar-19 03:04 PM] Cryptofist#7504
+Current game state:
+Game txid: a5a1dfe814fe81d05d29b30c1a0dc0b70880747f047589624ccd48157103bfe1
+Information about game saved on chain: $$$gold.236 hp.22 strength.16/16 level.3 exp.22 dl.2
+
+
+Do you want to make bailout now [y] or wait for one more block [n]? [y/n]: y
+{'name': 'rogue', 'method': 'bailout', 'myrogueaddr': 'RNrxAPhuDSdmneENXX2synME2y8xtKSVUi', 'gametxid': 'a5a1dfe814fe81d05d29b30c1a0dc0b70880747f047589624ccd48157103bfe1',
+
+[15-Mar-19 03:04 PM] Cryptofist#7504
+No warrirors. Ill try restarting tui too
+
+[15-Mar-19 03:05 PM] TonyL#3577
+Is bailout transaction mined?
+
+[15-Mar-19 03:06 PM] TonyL#3577
+Could you please paste full output after `Do you want to make bailout now [y] or wait for one more block [n]? [y/n]: y` to https://paste.ubuntu.com/ ?
+
+[15-Mar-19 03:06 PM] Cryptofist#7504
+I belive so. 
+SO i restarted and now my very first warrior is here
+
+[15-Mar-19 03:06 PM] TonyL#3577
+So maybe just bailout transaction was not mined when you checked your warrior list
+
+[15-Mar-19 03:07 PM] Cryptofist#7504
+and needed to restart the tui, the first warrior was from yesterday
+
+[15-Mar-19 03:07 PM] Cryptofist#7504
+I played 3 other games on this machine i believe
+
+[15-Mar-19 03:08 PM] TonyL#3577
+Thats strange, TUI not caching anything anywhere - just requesting data again when you calling menu item
+
+[15-Mar-19 03:11 PM] Cryptofist#7504
+Also, the warrior that saved was the only one I entered N to wait, when asked.
+
+[15-Mar-19 03:17 PM] TonyL#3577
+If some warriors not saving - could you please check if bailout was broadcasted on chain?
+
+{Reactions}
+✅ (2) 
+
+[16-Mar-19 05:58 AM] Cryptofist#7504
+Aside from low gold exits windows rogue has been working great.
+
+[16-Mar-19 06:01 AM] TonyL#3577
+Nice to hear! I'll publish fresh bundles with fix for these low gold exits soon
+
+[16-Mar-19 08:40 AM] jl777c#5810
+sounds like the occasional last keystrokes missing is the only issue now
+
+[16-Mar-19 08:47 AM] TonyL#3577
+Yes, very little keystrokes for one last level or not counted death from icemonster let's say
+
+[16-Mar-19 08:47 AM] jl777c#5810
+always the icemonster. maybe there is an edgecase there
+
+[16-Mar-19 08:49 AM] TonyL#3577
+Death from hyperthermia is RNG based - maybe it's changing the seed
+
+[16-Mar-19 08:50 AM] jl777c#5810
+i dont see anything strange in the death by icemonster path
+
+[16-Mar-19 08:51 AM] TonyL#3577
+Aha, so maybe it's just same "last keystrokes lost" issue - just death focusing attention on it
+
+[16-Mar-19 08:51 AM] jl777c#5810
+yes
+
+[16-Mar-19 08:56 AM] TonyL#3577
+Hope we'll collect few games examples with a little progress loss
+
+[16-Mar-19 10:56 AM] ronyi#5719
+Updated komodo and TUI and my secound game:
+FinalizeCCTx couldnt find 0000000000000000000000000000000000000000000000000000000000000000
+FinalizeCCTx couldnt find 0000000000000000000000000000000000000000000000000000000000000000
+Gametxid: 5b71975befe5d19a446371aa2132f210fcd381f180c7163bd95ebd6116991846
+Bailout: getrawtransaction: No information available about transaction (code -5)
+Let's wait a little bit more
+
+Quit on lvl 3 with 338 gold. On lvl3 only collected gold on first room and quit.
+Manual bailout :32b9b3d296a0eb14b6cac00ae19d89a55f7d675ebf0d8479c51662f0c51b9b24
+
+extracted $$$gold.294 -> 0.02593080 ROGUE hp.29 strength.16/16 level.5 exp.99 dl.3 n.1 amulet.0
+5b71975befe5d19a446371aa2132f210fcd381f180c7163bd95ebd6116991846 good.2 bad.0
+tokentx.(c) decoded.1 ht.59736 txid.32b9b3d296a0eb14b6cac00ae19d89a55f7d675ebf0d8479c51662f0c51b9b24 0.02593080 vs vout2 0.02593080
+
+[16-Mar-19 11:06 AM] TonyL#3577
+So is manual bailout worked fine?
+
+[16-Mar-19 11:08 AM] ronyi#5719
+Yes, but gold reducated to 294
+
+[16-Mar-19 11:58 AM] ronyi#5719
+immediately i arrived on lvl6 my node: 
+FinalizeCCTx couldnt find 0000000000000000000000000000000000000000000000000000000000000000
+FinalizeCCTx couldnt find 0000000000000000000000000000000000000000000000000000000000000000
+1  1224 Ronyi: quit on level 7.
+Gametxid: b9ddca955fb90fef40ab612c5cb95071adbfe2d42e9f346d097b0bb36acf315d
+Bailout txid: 1560f8835644d7b2aa95c2603e0079bb2835eb4c549f30e0a9e1e93ba5cc8457
+$$$gold.83 hp.30 strength.18/18 level.5 exp.134 dl.1
+
+[16-Mar-19 12:31 PM] ronyi#5719
+Hmmm, maybe gameing and mining source of my FinalizeCCTx couldnt find 0000000000000000000000000000000000000000000000000000000000000000 "issue"?
+
+[16-Mar-19 03:31 PM] Cryptofist#7504
+Its exciting to see gameplay get fine tuned!  Seems like its closer to bug free. Maybe back to dex and multiplayer items next?
+We had an issue with the sale of a warrior not showing up ages ago, i don't recall that being worked on. Also an issue with us playing three player, I won and lost my warrior.
+
+[17-Mar-19 03:30 AM] TonyL#3577
+I wonder `FinalizeCCTx couldnt find 0000000000000000000000000000000000000000000000000000000000000000` connected with TUI attempts of last keystroke rebroadcasting and this error appears on this stage hmm, maybe on some point it's broadcasted already - so thats why baton is zero
+
+[17-Mar-19 03:32 AM] TonyL#3577
+```Maybe back to dex and multiplayer items next?
+We had an issue with the sale of a warrior not showing up ages ago, i don't recall that being worked on. Also an issue with us playing three player, I won and lost my warrior.``` - yes, reusage of bought/sold warriors is good thing to test (it was fixed actually - but anyway worth to re-check), 3 players multiplayer should be fixed as well and would be great to re-test
+
+[17-Mar-19 03:40 AM] TonyL#3577
+And its extracted progress for dl3 in ronyi game, so all keystroke tx were mined in order - just some last key presses missed in replay what caused not matching of gold amounts. So I think its reproducing of this last remained known bug
+
+[18-Mar-19 07:06 AM] ronyi#5719
+1   222 Testelek: quit on level 3.
+Game txid: 14a4daf5f136786544593ec9d4e91e4d4e46d634a3eea6d949dc394012a65a49
+Information about game saved on chain: $$$gold.161 hp.44 strength.22/22 level.6 exp.172 dl.2
+Bailout txid: 15d02b726660fa28a8039120484605b9c1965280641e162c573b92b6b82874fc
+
+[18-Mar-19 07:38 AM] ronyi#5719
+1   145 Ronyi: killed on level 1 by hypothermia.
+Game txid: 4e7b04b1fe207bb6772cf4fc9c17f30f977e3ff5b1424793403aa3fa822147c0
+Information about game saved on chain: $$$gold.161 hp.40 strength.18/18 level.6 exp.221 dl.1
+Bailout txid: 837dabc2488ac6301f711d4f38eaac0a9aed648551235e66fd8a6598a0458f32
+
+[18-Mar-19 08:12 AM] TonyL#3577
+@ronyi Could you please zip all keystrokes for this game seed and send me in DM?
+
+[18-Mar-19 08:13 AM] TonyL#3577
+Actually for both would be great, just mark somehow which zip is for which problem description or gametxid
+
+[18-Mar-19 08:14 AM] ronyi#5719
+Yes of course.
+
+[18-Mar-19 08:14 AM] TonyL#3577
+Thinking to make updated bundles today - so maybe we'll find out this problem roots and solve it before 🤞
+
+[18-Mar-19 08:15 AM] TonyL#3577
+Ah and also attach please: `cat keystrokes.log | grep gametxid` output
+
+[18-Mar-19 09:13 AM] TonyL#3577
+@jl777c Could you please have a look on this game? 
+
+```./komodo-cli -ac_name=ROGUE cclib extract 17  "[%224e7b04b1fe207bb6772cf4fc9c17f30f977e3ff5b1424793403aa3fa822147c0%22,%220325151cf0f7321d0cde232898c5adc6b60f32df71b79af3a49d10020d42925ae9%22]"```
+
+(1   145 Ronyi: killed on level 1 by hypothermia.
+Game txid: 4e7b04b1fe207bb6772cf4fc9c17f30f977e3ff5b1424793403aa3fa822147c0
+Information about game saved on chain: $$$gold.161 hp.40 strength.18/18 level.6 exp.221 dl.1
+Bailout txid: 837dabc2488ac6301f711d4f38eaac0a9aed648551235e66fd8a6598a0458f32)
+
+It have not many keystrokes so maybe easy to find out the issue. @ronyi died on lvl1 by hypertermina. 
+Extracted keystrokes matching with his local ones: 
+```cat rogue.2957615466801226752.0
+W* b flw*  lllkkhhjhkhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh fhhhhhhhhhhllllllhjjjjjhhhhhhhhhhjjjllljjjjjj jjjjlllllkllllllllllllllkllllllllllllllll lllllllllllllllklllllllllllljllllllllllllllkkkkkllkkkkkhkkkkkkkhhhhhhhhhh h llfhhhhhhhhhhhhhhhhkkfkjfkfkfk```
+
+Last frame in replay "you're frozen by icemonster"
+
+It don't have Qy in the end. 
+Also what is sucpicious ronyi locally have empty ```rogue.2957615466801226752.2``` by some reason (but died on lvl1) - maybe it's the clue.
+
+[18-Mar-19 09:15 AM] TonyL#3577
+Oh, I have to check in `if ( 1 )` log also
+
+[18-Mar-19 09:19 AM] TonyL#3577
+@jl777c https://paste.ubuntu.com/p/jxW9qxk3QF/ is it fine that seed changing more than 10 times in single dungeon level game? I'm checking mine replays and seed changing only once per room or so
+
+[18-Mar-19 09:21 AM] TonyL#3577
+Also 247 keystrokes in `log` while in extract `"numkeys": 248,`
+
+[18-Mar-19 09:28 AM] TonyL#3577
+Also other case (it looks different to icemonster case): https://paste.ubuntu.com/p/7WCrjFtxzt/
+
+Where progress partially missed, hmm 
+
+```./komodo-cli -ac_name=ROGUE cclib extract 17  "[%2214a4daf5f136786544593ec9d4e91e4d4e46d634a3eea6d949dc394012a65a49%22,%220325151cf0f7321d0cde232898c5adc6b60f32df71b79af3a49d10020d42925ae9%22]"```
+
+(1   222 Testelek: quit on level 3.
+Game txid: 14a4daf5f136786544593ec9d4e91e4d4e46d634a3eea6d949dc394012a65a49
+Information about game saved on chain: $$$gold.161 hp.44 strength.22/22 level.6 exp.172 dl.2
+Bailout txid: 15d02b726660fa28a8039120484605b9c1965280641e162c573b92b6b82874fc)
+
+
+But it have  Qy with 161 gold state while rogue print is `222 Testelek: quit on level 3.`
+```1034: (Q) hp.41 num.20 gold.161 seed.11209358964507396594
+1035: (y) hp.41 num.20 gold.161 seed.11209358964507396594
+```
+

@@ -1,0 +1,347 @@
+==============================================================
+Guild: Komodo
+Channel: talk-mining
+Topic: ./komodod -ac_name=ZAWY24 -ac_adaptivepow=1 -ac_supply=1000000 -ac_reward=10000000000 -ac_cc=2 -addnode=5.9.102.210 &
+
+A channel to discuss mining. For useful links and more info click the pinned messages to the right.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[07-Aug-19 10:43 AM] jl777c#5810
+from the max target
+
+[07-Aug-19 10:43 AM] jl777c#5810
+but my way, it is clear there is no chance of overflow. all those parens can be a bit confusing
+
+[07-Aug-19 10:43 AM] zawy#5864
+all your conversions I would have thought is a lot more wasteful than simply doing the initial declaration as arith256
+
+[07-Aug-19 10:44 AM] jl777c#5810
+conversion is very fast
+
+[07-Aug-19 10:45 AM] jl777c#5810
+getting the logic right is all that matters now
+
+[07-Aug-19 10:45 AM] zawy#5864
+in what way is it more efficient in computer usage?   Obviously it's in-efficient in code which I would think is the higher priority
+
+[07-Aug-19 10:45 AM] jl777c#5810
+compilers will change a single complex line into multiple simple lines
+
+[07-Aug-19 10:45 AM] jl777c#5810
+optimizing compilers are extremely good at taking a lot of simple lines and making it as efficient as possible
+
+[07-Aug-19 10:46 AM] jl777c#5810
+so as long as the net effect is isomorphic, the difference will be measured in microseconds, if even that much, likely nanoseconds
+
+[07-Aug-19 10:46 AM] jl777c#5810
+not worth the time to think which way is better
+
+[07-Aug-19 10:46 AM] jl777c#5810
+anyway, ready to start if all looks good
+
+[07-Aug-19 10:47 AM] jl777c#5810
+you want a 3x test?
+
+[07-Aug-19 10:47 AM] jl777c#5810
+after the initial targets stabilize
+
+[07-Aug-19 10:48 AM] zawy#5864
+You can change 50 to 20 to speed things up.  Even T=30 if the code is constant-independent everywhere
+
+[07-Aug-19 10:49 AM] jl777c#5810
+sounds good
+
+[07-Aug-19 10:49 AM] zawy#5864
+but do 1x   hashrate until difficulty matches hashrate and difficulty looks like it is staying constant and RST is not being triggered
+
+[07-Aug-19 10:50 AM] jl777c#5810
+i know but depending on what the first test is, i like to use as many cores as possible to reduce variance
+
+[07-Aug-19 10:50 AM] jl777c#5810
+a single core has such a large range of solve times
+
+[07-Aug-19 10:50 AM] zawy#5864
+Then 3x then 6x if that was good, and then 100x
+
+[07-Aug-19 10:51 AM] zawy#5864
+ok, 3x, then 9x , then 27x
+
+[07-Aug-19 10:51 AM] zawy#5864
+wait....there's another issue
+
+[07-Aug-19 10:53 AM] zawy#5864
+when taking a random sample, hashrate is not sum of N Diff's / sum N solvetimess  but sum(D)/sum(ST) * (N-1) / N
+
+[07-Aug-19 10:54 AM] zawy#5864
+This is supposed to have a substantial effect on my initial trigger .  This may be why W=3 did not trigger on 3x
+
+[07-Aug-19 10:54 AM] zawy#5864
+This strange thing does not apply to rolling averages like inside the loop, but the initial trigger is a random sample of time
+
+[07-Aug-19 10:55 AM] jl777c#5810
+i sense a tweak in an equation coming up
+
+[07-Aug-19 10:55 AM] jl777c#5810
+line 109 altK = ...
+
+[07-Aug-19 11:02 AM] zawy#5864
+😃   So I think we should change this
+```if ( ts[1]-ts[W] < T*numerator/denominator )```
+to
+```if ( (ts[1]-ts[W] * W*100) / (W-1) < T*100*numerator/denominator )```
+and
+```altK = (K * (nTime-ts[0]) * (ts[0]-ts[W]) * denominator / numerator) / (T * T);```
+to
+```altK = (K * (nTime-ts[0]) * (ts[0]-ts[W]) * denominator / numerator * W / (W-1)) / (T * T);```
+
+[07-Aug-19 11:03 AM] zawy#5864
+If it starts triggering too much, then the first change is wrong
+
+[07-Aug-19 11:03 AM] zawy#5864
+and should be reverted
+
+[07-Aug-19 11:03 AM] jl777c#5810
+ok, adding these changes. i noticed that this condition did not trigger very often at all
+
+[07-Aug-19 11:04 AM] zawy#5864
+Even with 6x, you said it     took   5 blocks which was at the upper end of what I expectde, and at    3x      never, which was definitely not what I expected .  It took some really smart math people several years to realize this , and Pieter Wuille has had 2 polls 90% of people missed the answer to based on this
+
+[07-Aug-19 11:05 AM] zawy#5864
+If you pick a random time that is 2xT width you will find only 1 block, not 2
+
+[07-Aug-19 11:05 AM] zawy#5864
+if you pick 6xT you find 5 blocks
+
+[07-Aug-19 11:08 AM] jl777c#5810
+```altK = (K * (nTime-ts[0]) * (ts[0]-ts[W]) * denominator * W)/ (numerator * (W-1) * (T * T));```
+just want to make sure this is the same as what you meant
+
+[07-Aug-19 11:08 AM] zawy#5864
+yes
+
+[07-Aug-19 11:09 AM] jl777c#5810
+i find that minimizing / operations is an old habit, but i like to put in parens as much as possible to avoid any reliance on precedence of operators doing exactly as remembered.
+
+[07-Aug-19 11:10 AM] jl777c#5810
+updated
+
+[07-Aug-19 11:11 AM] jl777c#5810
+ready to start
+
+[07-Aug-19 11:12 AM] zawy#5864
+When you give me all the CSV data, remind me of how to see what ctB ("on-chain" )value is being used.
+
+[07-Aug-19 11:12 AM] zawy#5864
+ok
+
+[07-Aug-19 11:13 AM] jl777c#5810
+if the nBits number is odd, then ctB is used, but its value is now calculated only internally, the rpc call doesnt have that data
+
+[07-Aug-19 11:14 AM] jl777c#5810
+if it is really important, i can try to externalize the ctB value
+
+[07-Aug-19 11:14 AM] zawy#5864
+so 3rd column 1, 3, 5...?
+
+[07-Aug-19 11:14 AM] jl777c#5810
+yes
+
+[07-Aug-19 11:14 AM] jl777c#5810
+1, 3, 5, 7, 9, b, d, f
+
+[07-Aug-19 11:14 AM] jl777c#5810
+i only use 1 of the 2 bits now, so we have an extra bit to encode something else if needed
+
+[07-Aug-19 11:15 AM] jl777c#5810
+mining started at quarter past the hour
+
+[07-Aug-19 11:15 AM] zawy#5864
+It  is the only value the DA is seeing so I need to see ctB[] clearly and use it on my spreadsheet to confirm everything
+
+[07-Aug-19 11:16 AM] jl777c#5810
+ok, i will extract (or duplicate it and add it to the CSV)
+
+[07-Aug-19 11:25 AM] jl777c#5810
+tipdiff for 65 at 260, but altK is almost at 1 million already, miners being unlucky
+
+[07-Aug-19 11:30 AM] jl777c#5810
+i see the bnTarget was still very difficult as the prior 3 blocks had very close to the same target
+
+[07-Aug-19 11:30 AM] jl777c#5810
+so (ct[0] - ct[W]) was very small to begin with
+
+[07-Aug-19 11:31 AM] jl777c#5810
+so exp() needed to kick in to solve in 577
+
+[07-Aug-19 11:31 AM] jl777c#5810
+then 6 second solve of diff 2.2, and a 27 second 3.8 diff
+
+[07-Aug-19 11:32 AM] jl777c#5810
+what happens if ct[W] is bigger than ct[0] ?
+
+[07-Aug-19 11:32 AM] jl777c#5810
+it goes negative. that cant be good
+
+[07-Aug-19 11:34 AM] jl777c#5810
+also it seems some implementation issues. the ctB is not adjusting like it should
+
+[07-Aug-19 11:35 AM] jl777c#5810
+60,1565176777,2003f508,03f50800000000000000000000000000,026a646a8087a43434834041a31d100d,3.8,3.9,8
+61,1565176788,2003da0f,03da0f00000000000000000000000000,02019f8ce343c276c25e236260651c1c,3.9,4.0,11
+62,1565176804,2003be83,03be8300000000000000000000000000,01fbac5e4b4af7ce3d5a19aede554c34,4.0,4.1,16
+63,1565176810,2003a617,03a61700000000000000000000000000,000e03a6602c429dab10722eadcfe480,4.1,4.2,6
+64,1565176823,200362b1,0362b100000000000000000000000000,00b3ef4f60c6ef4a19791f412dde16ae,4.4,4.4,13
+65,1565177400,1f66e8b5,0066e8b5000000000000000000000000,0050216e91eb7f181dc648475754d6ef,37.5,4.7,577
+66,1565177406,2006d7b8,06d7b800000000000000000000000000,0690a4c4383a8926d02767badb9aa6af,2.2,4.6,6
+67,1565177433,20040058,04005800000000000000000000000000,03489aa5048d63a05fa7b5a7c5db24f9,3.8,4.6,27
+68,1565177506,200386b4,0386b400000000000000000000000000,024319eac1cdef4fef57ac1db406ddcb,4.3,4.7,73
+69,1565177508,20016349,01634900000000000000000000000000,006a59e3cbe36d93effd665a1dc90c28,10.9,5.0,2
+70,1565177518,200376a8,0376a800000000000000000000000000,00ff641b0b69cffe5f7aa89483fa5075,4.3,4.3,10
+71,1565177531,200445d0,0445d000000000000000000000000000,0365ea18e5ad8ebb1a41280807fdeaa1,3.5,4.3,13
+
+[07-Aug-19 11:35 AM] jl777c#5810
+very strange the ctB is not changed so much when solvetime was 577. investigating. also for ht <= 64 ctB should be all 0
+
+[07-Aug-19 11:38 AM] jl777c#5810
+found the bug. fixing
+
+[07-Aug-19 11:44 AM] jl777c#5810
+need to restart the test
+
+[07-Aug-19 11:45 AM] zawy#5864
+I probably need to do the W-1 adjustment differently
+
+[07-Aug-19 11:45 AM] jl777c#5810
+its actually doing reasonably with 11 blocks in 30 minutes
+
+[07-Aug-19 11:45 AM] jl777c#5810
+it was a math error
+
+[07-Aug-19 11:45 AM] zawy#5864
+I'll look into trying to make sure I get that right
+
+[07-Aug-19 11:45 AM] jl777c#5810
+mine
+
+[07-Aug-19 11:45 AM] jl777c#5810
+fixed the ctB calc
+
+[07-Aug-19 11:57 AM] zawy#5864
+it's probably going to trigger way too much
+
+[07-Aug-19 11:58 AM] jl777c#5810
+6 of 17 didnt trigger
+
+[07-Aug-19 11:58 AM] jl777c#5810
+let me restart without overflow errors
+
+[07-Aug-19 12:03 PM] jl777c#5810
+started at top of the hour
+
+[07-Aug-19 12:07 PM] jl777c#5810
+ht 65 took 57 seconds
+
+[07-Aug-19 12:09 PM] jl777c#5810
+12, 8, 35 seconds for the next blocks
+
+[07-Aug-19 12:10 PM] jl777c#5810
+62,1565179530,2003aed1,03aed100000000000000000000000000,00000000000000000000000000000000,4.1,4.2,22
+63,1565179548,20039847,03984700000000000000000000000000,00000000000000000000000000000000,4.2,4.3,18
+64,1565179585,20037e28,037e2800000000000000000000000000,00000000000000000000000000000000,4.3,4.4,37
+65,1565179642,2001e4ad,01e4ad00000000000000000000000000,01a5174e115930439d3f636b6d34b661,8.0,4.7,57
+66,1565179654,2007e4a0,07e4a000000000000000000000000000,00000000000000000000000000000000,1.9,4.5,12
+67,1565179662,200614d9,0614d900000000000000000000000000,146dcd745d1745d1745d1745d1745d17,2.5,4.4,8
+68,1565179697,200168a1,0168a100000000000000000000000000,033ef132ba6574cae995d32ba6574cae,10.7,4.6,35
+
+[07-Aug-19 12:10 PM] jl777c#5810
+at least ctB is acting as it should
+
+[07-Aug-19 12:10 PM] zawy#5864
+OK, I'm going to do an edit on your file to make all the corerctions for this W-1 effect
+
+[07-Aug-19 12:12 PM] jl777c#5810
+i dont understand what happens when ct[0] is very close to ct[W], or if ct[W] is bigger, doenst that mess up the (ct[0] - ct[W])
+
+[07-Aug-19 12:12 PM] jl777c#5810
+should that be the average ct[] or sum of?
+
+[07-Aug-19 12:14 PM] zawy#5864
+ct[W] bigger than ct[0]?
+
+[07-Aug-19 12:14 PM] zawy#5864
+oh crap
+
+[07-Aug-19 12:14 PM] zawy#5864
+ct is supposed to be "cumulative targets"  in the loop, not targets
+
+[07-Aug-19 12:15 PM] zawy#5864
+Maybe I should not have not used ct[] but only made a tar[]
+
+[07-Aug-19 12:15 PM] zawy#5864
+or t[]
+
+[07-Aug-19 12:16 PM] zawy#5864
+but then the loop would need another loop to sum W t[]'s
+
+[07-Aug-19 12:19 PM] zawy#5864
+So my idea which that I never explained is that you were supposed to create ct[]  of size max(W+past+2)  from the targets before RST.     +2 because of something I need to do with W and to be sure
+
+[07-Aug-19 12:20 PM] jl777c#5810
+68,1565179697,200168a1,0168a100000000000000000000000000,033ef132ba6574cae995d32ba6574cae,10.7,4.6,35
+69,1565179828,1f5b2425,005b2425000000000000000000000000,000efd8615e50d79435e50d79435e50d,42.3,4.9,131
+70,1565179837,20030c9c,030c9c00000000000000000000000000,00000000000000000000000000000000,4.9,4.9,9
+71,1565179840,2003ddd5,03ddd500000000000000000000000000,08d802aaaaaaaaaaaaaaaaaaaaaaaaaa,3.9,5.0,3
+72,1565179913,2001cdb9,01cdb900000000000000000000000000,00f48e763cbeea4e1a08ad8f2fba9386,8.3,5.2,73
+73,1565180003,1f3633fd,003633fd000000000000000000000000,0012e48639ffd2507c352e4f6a18178e,71.1,5.5,90
+74,1565180018,2006800c,06800c00000000000000000000000000,00000000000000000000000000000000,2.3,5.1,15
+75,1565180021,20040c10,040c1000000000000000000000000000,00000000000000000000000000000000,3.7,5.1,3
+76,1565180067,1f795d3d,00795d3d000000000000000000000000,00a208f5802bbfbe60626f6c58dd7ab3,31.8,5.4,46
+
+[07-Aug-19 12:21 PM] jl777c#5810
+at least the ctB is working as you want, though not sure why it should be easier on the faster solvetimes
+
+[07-Aug-19 12:24 PM] zawy#5864
+It's supposed to be harder.      ST * ST / T /T for ST< T is a smaller target
+
+so I was supposed to tell you the following  this morning instead of ctA and ctB which would have revealed what seems to be a big problem in my lack of communication about what ct[] is.  
+``` tB[i] = tA[i]* (( ts[i]  - ts[i+1] ) * ( ts[i]  - ts[i+1] ) * 1000 /T/T/784 ```
+where ``` tA[i] = ctA[i] - ctA[i+1]```
+
+[07-Aug-19 12:25 PM] zawy#5864
+Well, "i" needs to be back in time, so my ts[i] above is backwards
+
+[07-Aug-19 12:26 PM] zawy#5864
+OK, that's corrected
+
+[07-Aug-19 12:27 PM] jl777c#5810
+so longer times to make the ctB easier target (higher value)
+
+[07-Aug-19 12:28 PM] zawy#5864
+yes
+
+[07-Aug-19 12:28 PM] jl777c#5810
+and shorter times to make the ctB harder target (lower value)
+
+[07-Aug-19 12:28 PM] jl777c#5810
+i dont understand why, but will make the change
+
+[07-Aug-19 12:31 PM] zawy#5864
+yes, but     lets     make sure we haven't had a big mis-communication.  tB[] as defined above should be used in all parts of the DA.   ctA and ctB need to be created  at the beginning of the DA so that tB[] can be used in the DA.    do BTC/zcash block chains use 1 / (cumulative target) or  cumulative difficulty to measure chain work?
+
+[07-Aug-19 12:32 PM] zawy#5864
+or maybe tA[] and tB[] are not needed in the DA anywhere if it always uses ctB[i] - ctB[i+1]
+
+[07-Aug-19 12:33 PM] zawy#5864
+I mean somehow we must be approximately on the same page or ersults would be really bad
+
+[07-Aug-19 12:34 PM] zawy#5864
+What is digishield using?  A subtraction of cumulative targets or a sum of targets?
+
+[07-Aug-19 12:38 PM] jl777c#5810
+digishield is using the sum of ct[], which is the bnTarget or the ctB if RST was active
+
+[07-Aug-19 12:39 PM] jl777c#5810
+the chain work is using only the actual bnTargets as the ctB[] is ephemerial in RAM only during mining diff calc
+

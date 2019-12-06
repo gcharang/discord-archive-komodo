@@ -1,0 +1,352 @@
+==============================================================
+Guild: Komodo
+Channel: cc-rewards
+Topic: https://developers.komodoplatform.com
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[26-Mar-19 11:03 AM] blackjok3r#3181
+`if ( !CheckTxFee(tx, PAYMENTS_TXFEE, chainActive.LastTip()->GetHeight(), chainActive.LastTip()->nTime) )`
+`return eval->Invalid("txfee is too high");`
+
+[26-Mar-19 11:03 AM] blackjok3r#3181
+works just as expected 😄
+
+[26-Mar-19 11:05 AM] Alright#0419
+comment that while you're at it? 🙏
+
+[26-Mar-19 11:05 AM] blackjok3r#3181
+pretty self explanitory man
+
+[26-Mar-19 11:05 AM] Alright#0419
+in particular `// validation for recover mode rewardsunlock` at least
+
+[26-Mar-19 11:05 AM] blackjok3r#3181
+the is a commetned out printf inside that function that gives you theb values for debugging
+
+[26-Mar-19 11:05 AM] Alright#0419
+and `// validation for rewardsunlock`
+
+[26-Mar-19 11:06 AM] Alright#0419
+had no idea what that was when I was first looking at it
+
+[26-Mar-19 11:06 AM] Alright#0419
+the recover mode validation
+
+[26-Mar-19 11:06 AM] blackjok3r#3181
+oh ok yeah. I think this is for all rewards tx not just recover.
+
+[26-Mar-19 11:06 AM] blackjok3r#3181
+in any case I get ya. will do
+
+[26-Mar-19 11:07 AM] Alright#0419
+recover mode has entirely separate validation unless you put the checks before the recover mode if
+
+[26-Mar-19 11:07 AM] blackjok3r#3181
+this new check is before
+
+[26-Mar-19 11:07 AM] blackjok3r#3181
+now need to add the extra vout
+
+[26-Mar-19 11:08 AM] blackjok3r#3181
+to prevent anyone claiming... minrelease I think also should be easy, unless I cannot safly call rewards calc earlier
+
+[26-Mar-19 12:50 PM] blackjok3r#3181
+I think I made it work, at least half way there... It appears it lets me just keep claiming it over and and over though lol... free money
+
+[26-Mar-19 12:51 PM] blackjok3r#3181
+yeah something seems quite wrong here lol... Its let me claim the entrie rewards balance to a single p[ubkey even though I added them from 2 diffrent ones... Or at least I think I did 🤔
+
+[26-Mar-19 01:01 PM] blackjok3r#3181
+@Alright  
+https://github.com/blackjok3rtt/komodo/commit/8e6f5a6a2dd9e45b90c7d4d7d603f0901a157941
+Can you please test this? I thiunk there is still something else wrong with it. Maybe I screwed up the test of it? It appears that it will let anyone just take all the funds in the plan, provided they locked at least some.
+
+{Embed}
+https://github.com/blackjok3rtt/komodo/commit/8e6f5a6a2dd9e45b90c7d4d7d603f0901a157941
+initial commit for backup release tx needs testing, i think it hal...
+…orks.
+https://avatars1.githubusercontent.com/u/30971146?s=200&v=4
+
+[26-Mar-19 01:01 PM] blackjok3r#3181
+Not sure why as I really dont know how the rewards CC works
+
+[26-Mar-19 01:01 PM] blackjok3r#3181
+Not sure if it was already like that or what.
+
+[26-Mar-19 01:02 PM] blackjok3r#3181
+Cant use the PAY chain as this branch no longer syncs it.
+
+[26-Mar-19 01:04 PM] jl777c#5810
+all the locked utxo needs to be validated it is for the same dest pubkey
+
+[26-Mar-19 01:04 PM] jl777c#5810
+but since we are doing just one utxo at a time, it seems hard to mix them?
+
+[26-Mar-19 01:07 PM] blackjok3r#3181
+I dont know I think because I was only using a single node to make the plan and also lock funds, I think it let me calim the funding also
+
+[26-Mar-19 01:08 PM] blackjok3r#3181
+I really need someone who knows what they are doing to test this
+
+[26-Mar-19 01:08 PM] blackjok3r#3181
+I think I also solved minrelease issuse too about to push it
+
+[26-Mar-19 01:08 PM] TonyL#3577
+In unittests I'm trying to claim "not mine" rewards from other node and it throw error
+
+[26-Mar-19 01:08 PM] TonyL#3577
+If it's a clue
+
+[26-Mar-19 01:09 PM] TonyL#3577
+Have to recheck this matter because made long time ago
+
+[26-Mar-19 01:10 PM] blackjok3r#3181
+yeah maybe those tests were already broken with recover tx, as it was fairly broken to begin with.
+
+[26-Mar-19 01:10 PM] blackjok3r#3181
+not sure, as I say not familiar with how rewards works exactly...
+
+[26-Mar-19 01:11 PM] blackjok3r#3181
+https://github.com/blackjok3rtt/komodo/commit/4e9f443e4a20fa1cf635541c6f0b6886802c36fb 
+Also this, I think is safe enough.... It seems that it should be ok ... again really not sure
+
+{Embed}
+https://github.com/blackjok3rtt/komodo/commit/4e9f443e4a20fa1cf635541c6f0b6886802c36fb
+fix minrelease recover transaction · blackjok3rtt/komodo@4e9f443
+https://avatars1.githubusercontent.com/u/30971146?s=200&v=4
+
+[26-Mar-19 01:12 PM] blackjok3r#3181
+I know for a fact that claiming with a pubkey that I didnt use to lock, or fund any plans would not let me do it, which was what I was asked to do... but it seems maybe something else was/is broken
+
+[26-Mar-19 01:32 PM] TonyL#3577
+Just checked - current unit tests for rewards not covering much.  It's only creating rewards plan, then trying to unlock it from same node and excepting error because rewards amount less than txfee.
+
+{Reactions}
+😂 
+
+[26-Mar-19 01:33 PM] blackjok3r#3181
+well I tried to start a chain but I cant build my repo/branch right now... `ccache` or something is refusing to DL with build.sh
+
+[26-Mar-19 01:34 PM] blackjok3r#3181
+submitted PR hopefully someone tests it while im asleep and I can fix whatever is left tmorrow
+
+[26-Mar-19 01:34 PM] TonyL#3577
+What is the exact problem at the moment?
+
+[26-Mar-19 01:34 PM] blackjok3r#3181
+I dont really know tbh ... There was 2 problems:
+
+[26-Mar-19 01:35 PM] blackjok3r#3181
+1) miner could change tx fee and steal all the funds from global CC address, this problem is fixed.
+
+[26-Mar-19 01:35 PM] blackjok3r#3181
+2) you could lock funds and then there were not enough funcding to claim the reward
+
+[26-Mar-19 01:36 PM] blackjok3r#3181
+This allowed anyone to just keep on unlockign all funds, no amtter if they locked them or the minrelease had passed
+
+[26-Mar-19 01:36 PM] blackjok3r#3181
+just constantly unlock as soon as funds were locked
+
+[26-Mar-19 01:36 PM] TonyL#3577
+Ah, sabotage
+
+[26-Mar-19 01:36 PM] blackjok3r#3181
+I have made it so that now only if you unlock funds you locked (pubkey limited) that you can unlock and it *should* respect minrelease seconds now
+
+[26-Mar-19 01:37 PM] blackjok3r#3181
+but that im not 100% on, as the RPC takes min days not seconds ...
+
+[26-Mar-19 01:37 PM] blackjok3r#3181
+so it was quite hard to test
+
+[26-Mar-19 01:38 PM] TonyL#3577
+Ok, nice point to retest it and update unit-tests 😃 Just realised that they were written when framework was only with single node
+
+[26-Mar-19 01:38 PM] TonyL#3577
+```        assert_equal(result['minseconds'], 0)
+assert_equal(result['maxseconds'], 864000)```
+
+[26-Mar-19 01:38 PM] TonyL#3577
+Hmm I wonder it's seconds
+
+[26-Mar-19 01:38 PM] blackjok3r#3181
+I did only put 0 for min pretty sure RPC help says days
+
+[26-Mar-19 01:38 PM] blackjok3r#3181
+but internally its seconds
+
+[26-Mar-19 01:38 PM] blackjok3r#3181
+like to create the plan its in days not seconds
+
+[26-Mar-19 01:39 PM] TonyL#3577
+Ah I see
+
+[26-Mar-19 01:39 PM] TonyL#3577
+mindays maxdays on funding creation yes
+
+{Reactions}
+👍 
+
+[26-Mar-19 01:49 PM] jl777c#5810
+days in rpc, seconds in opreturn
+
+[27-Mar-19 07:19 PM] TonyL#3577
+https://paste.ubuntu.com/p/3Ft8JTrcyv/ cant unlock now from any node after locking
+
+[27-Mar-19 07:32 PM] TonyL#3577
+Typo in last call (rewardsplan duplicated)
+Actual call is:
+```./komodo-cli -ac_name=TONYL14 rewardsunlock TONYL a0ae12ac1d50801873e33ea0dd2c2331346e87005079f7793ba9bed4159edaec e5f92fc2d9c2e2b52c02671c9a92acf9a021e5c9d9b0206629934719f8be8273
+{
+  "result": "error",
+  "error": "reward 0 is <= the transaction fee"
+}
+```
+
+[27-Mar-19 07:33 PM] TonyL#3577
+But when reward is claimable - it was done by design as I remember that anybody can unlock it
+
+[27-Mar-19 07:34 PM] TonyL#3577
+```One twist that makes it a bit unexpected is that anybody should be able to unlock the funds that were locked, as long as it ends up in the locking address. The reason for this is that SPV servers want to be supported and while locking can be done via normal sendrawtransaction, it requires a native node to do the unlocking. By allowing anybody to be able to unlock, then there can be a special node that unlocks all locked funds when they are ready. This way, from the user's point of view, they lock the funds and after it is matured, it reappears in their wallet.```
+
+[27-Mar-19 07:34 PM] TonyL#3577
+https://github.com/KomodoPlatform/Mastering_CryptoConditions/blob/master/all_chapters.md#chapter-7---rewards-example
+
+{Embed}
+https://github.com/KomodoPlatform/Mastering_CryptoConditions/blob/master/all_chapters.md
+KomodoPlatform/Mastering_CryptoConditions
+How to write utxo based CryptoConditions contracts for KMD chains - by jl777 - KomodoPlatform/Mastering_CryptoConditions
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[27-Mar-19 07:37 PM] TonyL#3577
+```This allowed anyone to just keep on unlockign all funds, no amtter if they locked them or the minrelease had passed
+just constantly unlock as soon as funds were locked```
+If it worked like this - now it seems fixed
+
+[28-Mar-19 02:12 AM] Alright#0419
+@TonyL need to hack the tx creation code to do it
+
+[28-Mar-19 02:12 AM] Alright#0419
+Haven't had a chance to try joker's new code, will try it tomorrow
+
+{Reactions}
+3040_kingpeepo 
+
+[28-Mar-19 07:15 AM] jl777c#5810
+so there is a bug in new rewards?
+
+[28-Mar-19 07:26 AM] blackjok3r#3181
+old bug
+
+[28-Mar-19 07:26 AM] blackjok3r#3181
+it never checked if minrelease had passed at all in validation
+
+[28-Mar-19 07:27 AM] blackjok3r#3181
+just unlocked with 0 rewards
+
+[28-Mar-19 07:28 AM] blackjok3r#3181
+`CC Eval EVAL_REWARDS Invalid: no elegible rewards spending tx 3f13dfdd13a9119f57b101d445c8264b436dac0808853bd2bcc1ddde8f30b529` 
+moved some things around so that it now does this if the reward is calcualted as 0.
+
+[28-Mar-19 07:28 AM] blackjok3r#3181
+Also should have the effect of recover tx not being able to be done unlesss there is a reward actually avalible
+
+[28-Mar-19 07:28 AM] jl777c#5810
+ok, so the mainstream functionality is still working and new errors are actually valid errors
+
+[28-Mar-19 07:29 AM] blackjok3r#3181
+how it used minrelease wa a ccduration, for calcualting how mcuh rewards are there, and if the minrelese was not met, then it returned 0.
+
+[28-Mar-19 07:29 AM] blackjok3r#3181
+but validation did not check that reward was zero and invalidate
+
+[28-Mar-19 07:29 AM] blackjok3r#3181
+it just allowed reward to be zero
+
+[28-Mar-19 07:30 AM] blackjok3r#3181
+so you could unlock the plan before minrelease time... This is what I was saying the other day, but I worked out how to fix it.
+
+[28-Mar-19 07:30 AM] blackjok3r#3181
+Unless it of course broken something else
+
+[28-Mar-19 07:31 AM] jl777c#5810
+just making sure nothing that should be working broke, i didnt understand tonyL bug
+
+[28-Mar-19 07:31 AM] blackjok3r#3181
+Alright is testing it at the moment I pushed some more fixes to my repo. Havent heard back from him yet, but the block he said contained the erronous tx in it will not validate with my fixes.
+
+[28-Mar-19 07:32 AM] blackjok3r#3181
+Likely any chain with rewards CC will hard fork from this I would say we need to be careful
+
+[28-Mar-19 07:34 AM] jl777c#5810
+yes, we need to do a resync test
+
+[28-Mar-19 07:34 AM] jl777c#5810
+and maybe timestamp activate the fix
+
+[28-Mar-19 07:34 AM] jl777c#5810
+i like the idea of timestamp activating such risky consensus changes
+
+[28-Mar-19 07:45 AM] blackjok3r#3181
+yes its a good idea. I used a timestamp activation for LABS notary era's seems to work ok... BUt Ithink the sapling code is safer to use than my hack of invalidating all blocks until the time from future time is past.
+
+[28-Mar-19 07:47 AM] jl777c#5810
+if the blocktimestamp is used against a future activation timestamp, that seems safe enough. the problem with sapling was that it couldnt go on and off and on again without making all sorts of problems, so I had to latch it
+
+[28-Mar-19 07:47 AM] jl777c#5810
+as long as we update the field before the fix activates, then it is not a problem
+
+{Reactions}
+👍 
+
+[28-Mar-19 08:24 AM] Alright#0419
+0 rewards validation works
+
+[28-Mar-19 08:24 AM] Alright#0419
+checking that recover mode only works from locker now
+
+[28-Mar-19 08:28 AM] Alright#0419
+@blackjok3r I think `no elegible rewards` if breaks recover mode entirely
+
+[28-Mar-19 08:28 AM] Alright#0419
+also there is a typo there
+
+[28-Mar-19 08:28 AM] Alright#0419
+eligible*
+
+[28-Mar-19 08:29 AM] blackjok3r#3181
+that might happen
+
+[28-Mar-19 08:30 AM] blackjok3r#3181
+it may need a diffrent way to flag minrelease
+
+[28-Mar-19 08:30 AM] blackjok3r#3181
+closed PR
+
+[28-Mar-19 08:35 AM] blackjok3r#3181
+no
+
+[28-Mar-19 08:35 AM] blackjok3r#3181
+its fine ... reward calc doesnt actually look for utxos... its only checking duration
+
+[28-Mar-19 08:35 AM] blackjok3r#3181
+You will need to wait until duration has passed minrelease to claim your recover
+
+[28-Mar-19 08:35 AM] blackjok3r#3181
+@Alright
+
+[28-Mar-19 08:36 AM] blackjok3r#3181
+leaving PR closed as it will take at least a day for you to lock coins long enough to test it.
+
+[28-Mar-19 08:37 AM] Alright#0419
+I made a plan with 0 minrelease
+
+[28-Mar-19 08:38 AM] Alright#0419
+Can recover mode *only* work if there is not enough funding?
+
+[28-Mar-19 08:38 AM] Alright#0419
+doesn't seem to work like that
+

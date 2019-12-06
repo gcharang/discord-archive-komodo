@@ -1,0 +1,459 @@
+==============================================================
+Guild: Komodo
+Channel: cc-prices
+Topic: ./komodod -ac_cbopret=7 -ac_prices="LTC, BCHABC, XMR, IOTA, ZEC, WAVES, LSK, DCR, RVN, DASH, XEM, BTS, ICX, HOT, STEEM, ENJ, STRAT" -pubkey=<yourpubkey> -ac_name=REKT0 -ac_cclib=prices -ac_cc=10777 -ac_reward=3000000000 -ac_supply=120000000 -ac_pubkey=039433dc3749aece1bd568f374a45da3b0bc6856990d7da3cd175399577940a775 -ac_perc=77777 -ac_blocktime=600 -addnode=5.9.102.210 &
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[24-Apr-19 05:12 PM] jl777c#5810
+why is redline strange?
+
+[24-Apr-19 05:13 PM] TonyL#3577
+It's connected to dimxy repo daemon
+
+[24-Apr-19 05:13 PM] TonyL#3577
+Graphs part I not touched at all
+
+[24-Apr-19 05:13 PM] TonyL#3577
+But it looks totally different from http://159.69.45.70:8050/ which connected to jl777
+
+[24-Apr-19 05:14 PM] jl777c#5810
+yes, that is what I am saying.
+
+[24-Apr-19 05:14 PM] jl777c#5810
+greenline seems wrong
+
+[24-Apr-19 05:14 PM] TonyL#3577
+Orange fluctuate very little also
+
+[24-Apr-19 05:15 PM] jl777c#5810
+it makes it a much more realtime signal. maybe it is some test version i made. whatever it is, maybe we consider using that mode?
+
+[24-Apr-19 05:16 PM] TonyL#3577
+Lines on this graph http://18.219.69.40:777/ looks adequate, not sure what is the difference in calculations
+
+[24-Apr-19 05:18 PM] jl777c#5810
+it is in the smooth function call
+
+[24-Apr-19 05:20 PM] jl777c#5810
+oh, maybe it is due to DAYWINDOW 7
+
+{Reactions}
+💯 
+
+[24-Apr-19 05:20 PM] jl777c#5810
+that makes it a one hour delay
+
+[24-Apr-19 05:20 PM] jl777c#5810
+this opens up 2% attack
+
+[24-Apr-19 05:22 PM] TonyL#3577
+Most probably - it's daemon with DAYWINDOW 7, yes
+
+[24-Apr-19 05:26 PM] jl777c#5810
+that explains it
+
+[24-Apr-19 05:26 PM] jl777c#5810
+redline needs to be shifted by DAYWINDOW
+
+[24-Apr-19 05:26 PM] jl777c#5810
+or not displayed if it is so short
+
+[24-Apr-19 05:27 PM] TonyL#3577
+Aha, I see - it shifting same 24 hours what have no sense with such daemon
+
+[24-Apr-19 05:29 PM] TonyL#3577
+http://18.219.69.40:777/ - changed shift to 1 hour
+
+[24-Apr-19 05:29 PM] TonyL#3577
+Difference is visible only with zoom now, so can just not display it in this mode
+
+[24-Apr-19 05:35 PM] jl777c#5810
+agreed
+
+[24-Apr-19 07:08 PM] dimxy#2587
+What I am still concerned with is how to get the cashout price.
+it was suggested to use the smoothed price at the cashout moment for it.
+But smoothed price is calculated as 24h-period-averaged value and it is actually correlated to raw price at 24h ago point. 
+So at the cashout moment the actual raw price might be high, but we may get it it as low just because it was also low 24h ago.
+
+[24-Apr-19 07:09 PM] jl777c#5810
+it is the average value of DAYWINDOW
+
+[24-Apr-19 07:09 PM] jl777c#5810
+it is correlated to the average value, so maybe 12 hours ago if it is a steady increase/decline
+
+[24-Apr-19 07:10 PM] jl777c#5810
+since we calculate the costbasis from the smoothed, what is wrong with using smoothed for cashout?
+
+[24-Apr-19 07:11 PM] jl777c#5810
+for longer term positions, it wont really matter that much
+
+[24-Apr-19 07:21 PM] dimxy#2587
+ok, I'll make changes and let's see what we get as profits/losses and compare it with the chart
+
+[25-Apr-19 07:28 AM] jl777c#5810
+is it my imagination or is this getting almost ready for public testing?
+
+[25-Apr-19 07:29 AM] jl777c#5810
+we can start testing before all the validations as getting user feedback is likely an important factor that will take time and can be done in parallel with validation
+
+[25-Apr-19 07:46 AM] dimxy#2587
+yes, I'm finishing the lastest changes for added bets and  making the validation less strict
+and  hope it is ready for testing
+
+[25-Apr-19 12:25 PM] Markus#5464
+@jl777c how does the whole concept look like? will u be able to bet on any crypto either going up or down? will u pay with that crypto u bet on and get paid in that crypto or will there be a standard coin/token used?
+
+[25-Apr-19 12:36 PM] jl777c#5810
+for now you bet in the native coin, but we plan to add token betting
+
+[25-Apr-19 12:37 PM] jl777c#5810
+with token betting you could then bet the supported gateways CC coins
+
+[25-Apr-19 12:37 PM] jl777c#5810
+you can bet long or short, with margin for any synthetic you can construct out of the prices at http://159.69.45.70:8050/
+
+[25-Apr-19 01:43 PM] jl777c#5810
+@dimxy you will need to have some global exposure based limiting of positionsize leverage
+
+[25-Apr-19 01:43 PM] jl777c#5810
+it wont be possible to be exact but you should be able to deterministically calculate the total amount of bets that are possible to accept in a given block
+
+[25-Apr-19 01:44 PM] jl777c#5810
+then using that to approve/reject bets during validation
+
+[25-Apr-19 01:44 PM] jl777c#5810
+this way, we can avoid the system being bankrupted no matter what and if people want to allow more bets, additional funds need to be able to be added to the global balance
+
+[25-Apr-19 01:57 PM] dimxy#2587
+so it probably should take into account existing bets and  total bankroll  amount and set some bet limit to protect bankroll to go negative?
+
+[25-Apr-19 01:58 PM] jl777c#5810
+yes
+
+[25-Apr-19 01:58 PM] jl777c#5810
+so at first only small bets would be able to do maxleverage
+
+[25-Apr-19 01:59 PM] jl777c#5810
+but as people get rekt the bankroll gets bigger and people can bet more and more
+
+[25-Apr-19 01:59 PM] jl777c#5810
+I want to make a REKT as a sidechain for BET, and then have the profits go to snapshot payments CC
+
+[25-Apr-19 02:48 PM] Markus#5464
+Will there be a explorer or so for open positions/rekt contracts/closed positions?
+
+[25-Apr-19 02:51 PM] TonyL#3577
+I'm working on demo interface (http://18.219.69.40:777/)
+
+[25-Apr-19 02:51 PM] TonyL#3577
+So it's not hard to get lists of open/closed positions now and I think that somebody will make beauty explorer
+
+[25-Apr-19 02:57 PM] jl777c#5810
+@Markus i forgot to mention that anybody can rekt any open position eligible to be rekt and collect a fee. sort of like mining
+
+[25-Apr-19 03:15 PM] TonyL#3577
+First person who will implement rekt mining pool (which will not mine coins but rekt positions) should be monopolist for some time 😃
+
+[25-Apr-19 05:57 PM] TonyL#3577
+```./komodo-cli -ac_name=REKT0 pricesbet 1 1 "BTC_USD, !"
+parsed synthetic: BTC_USD ! 
+opcode=1 opstr=BTC_USD need=0 depth=0
+depth++=1
+opcode=8192 opstr=! need=1 depth=0
+depth++=1
+prices_syntheticvec() depth.1 not empty
+{
+  "result": "error",
+  "error": "invalid synthetic"
+}
+```
+How to propertly use `!` (not) operator?  
+Thought it should open USD_BTC position
+
+[25-Apr-19 05:58 PM] TonyL#3577
+```./komodo-cli -ac_name=REKT0 pricesbet 1 1 "BTC_USD, JPY_USD, !"
+parsed synthetic: BTC_USD JPY_USD ! 
+opcode=1 opstr=BTC_USD need=0 depth=0
+depth++=1
+prices_syntheticvec() incorrect opcode=JPY_USD
+{
+  "result": "error",
+  "error": "invalid synthetic"
+}
+```
+Or this one ^^ ( planned as BTC_JPY )
+
+[25-Apr-19 05:59 PM] TonyL#3577
+With second one it's clear (`prices_syntheticvec() incorrect opcode=JPY_USD`)
+
+[25-Apr-19 06:03 PM] TonyL#3577
+Aha, weights are mandatory now
+`./komodo-cli -ac_name=REKT0 pricesbet 1 1 "BTC_USD, 1, STRAT_BTC, 1"`  for two tickers only transaction generating option
+
+Have also no luck so far with ```* /  ! ``` symbols usage
+
+[25-Apr-19 06:05 PM] jl777c#5810
+* and / need 2 values in stack
+
+[25-Apr-19 06:06 PM] jl777c#5810
+! consumes 1
+
+[25-Apr-19 06:06 PM] jl777c#5810
+there needs to be 0 at the end
+
+[25-Apr-19 06:06 PM] jl777c#5810
+"BTC_USD, !, 1"
+
+[25-Apr-19 06:06 PM] jl777c#5810
+should be USD/BTC
+
+[25-Apr-19 06:07 PM] TonyL#3577
+```./komodo-cli -ac_name=REKT0 pricesbet 1 1 "BTC_USD, !, 1"
+bash: !,: event not found```
+
+[25-Apr-19 06:11 PM] TonyL#3577
+```./komodo-cli -ac_name=REKT0 pricesbet 1 1 "BTC_USD, \!, 1"
+parsed synthetic: BTC_USD \! 1 
+opcode=1 opstr=BTC_USD need=0 depth=0
+depth++=1
+prices_syntheticvec() incorrect opcode=\!
+{
+  "result": "error",
+  "error": "invalid synthetic"
+}
+```
+and not parsing when I'm screening
+
+[25-Apr-19 06:13 PM] jl777c#5810
+maybe use %2? not sure the ascii value for !
+
+[25-Apr-19 06:15 PM] TonyL#3577
+For `!` ASCII code should be 33
+
+[25-Apr-19 06:16 PM] jl777c#5810
+%21
+
+[25-Apr-19 06:17 PM] TonyL#3577
+```./komodo-cli -ac_name=REKT0 pricesbet 1 1 "BTC_USD, %21, 1"
+parsed synthetic: BTC_USD %21 1 
+opcode=1 opstr=BTC_USD need=0 depth=0
+depth++=1
+prices_syntheticvec() incorrect opcode=%21
+{
+  "result": "error",
+  "error": "invalid synthetic"
+}
+```
+
+[25-Apr-19 06:17 PM] jl777c#5810
+no idea
+
+[25-Apr-19 06:17 PM] jl777c#5810
+i guess special chars need some special handling? or maybe it isnt parsing right at all?
+
+[25-Apr-19 06:19 PM] jl777c#5810
+bugs for dimxy to fix
+
+[25-Apr-19 06:19 PM] TonyL#3577
+https://github.com/dimxy/komodo/blob/prices-rpc/src/cc/prices.cpp#L464 - yes I think some special handling is needed here becasue I cant see way how to pass exactly `!`
+
+{Embed}
+https://github.com/dimxy/komodo/blob/prices-rpc/src/cc/prices.cpp
+dimxy/komodo
+Komodo. Contribute to dimxy/komodo development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/21120539?s=400&v=4
+
+[25-Apr-19 06:20 PM] TonyL#3577
+`!` is special reserved unix symbol, can pass `\!`
+
+[25-Apr-19 06:22 PM] jl777c#5810
+maybe we can change it to a different symbol
+
+[25-Apr-19 06:22 PM] TonyL#3577
+I propose very pythonic `not` 😃
+
+[25-Apr-19 06:23 PM] jl777c#5810
+"inv"
+
+{Reactions}
+👍 
+
+[25-Apr-19 06:23 PM] jl777c#5810
+do * and / work?
+
+[25-Apr-19 06:24 PM] TonyL#3577
+Can't find combination to make it work
+
+[25-Apr-19 06:24 PM] TonyL#3577
+```./komodo-cli -ac_name=REKT0 pricesbet 1 1 "BTC_USD, 1, *, STRAT_BTC, 1"
+parsed synthetic: BTC_USD 1 * STRAT_BTC 1 
+opcode=1 opstr=BTC_USD need=0 depth=0
+depth++=1
+opcode=2049 opstr=1 need=1 depth=0
+prices_syntheticvec() incorrect not enough operands for opcode=*
+{
+  "result": "error",
+  "error": "invalid synthetic"
+}
+```
+
+[25-Apr-19 06:25 PM] jl777c#5810
+* needs 2 on the stack
+
+[25-Apr-19 06:25 PM] jl777c#5810
+"BTC_USD, USD_JPY, *, 1"
+
+[25-Apr-19 06:25 PM] TonyL#3577
+Ah, I see. I 've tried to use as in algebra (A*B)
+
+[25-Apr-19 06:25 PM] jl777c#5810
+like an HP calculator
+
+[25-Apr-19 06:25 PM] jl777c#5810
+forth rpn
+
+[25-Apr-19 06:26 PM] TonyL#3577
+` ./komodo-cli -ac_name=REKT0 pricesbet 1 1 "BTC_USD, STRAT_BTC, *, 1"` this option worked
+
+[25-Apr-19 06:26 PM] jl777c#5810
+* and / take 2 items on the top of stack
+
+[25-Apr-19 06:26 PM] jl777c#5810
+at the end there must be 0
+
+[25-Apr-19 06:27 PM] jl777c#5810
+,nnn adds the top of stack to the accumulator
+
+[25-Apr-19 06:29 PM] TonyL#3577
+```./komodo-cli -ac_name=REKT0 pricesbet 1 1 "BTC_USD, STRAT_BTC, *, 1"```
+was expected STRAT/USD price
+And it works correct!
+```
+./komodo-cli -ac_name=REKT0 pricesinfo 3c585d062a616524db0476ea9809ef1d7873d6f05a5e3d8090d65e57fed175c2
+{
+  "rekt": 0,
+  "batontxid": "3c585d062a616524db0476ea9809ef1d7873d6f05a5e3d8090d65e57fed175c2",
+  "profits": 0.00000000,
+  "costbasis": 0.94510000,
+  "positionsize": 1.00000000,
+  "equity": 1.00000000,
+  "addedbets": 0.00000000,
+  "leverage": 1,
+  "firstheight": 3250,
+  "firstprice": 0.94514612,
+  "lastprice": 0.94510000,
+  "height": 3250,
+  "test_daywindow": 7
+}
+```
+
+[25-Apr-19 06:37 PM] TonyL#3577
+```./komodo-cli -ac_name=REKT0 pricesbet 1 1 "BTC_USD, STRAT_BTC, /, 1"```
+```{
+  "rekt": 0,
+  "batontxid": "4869ff2e9414a5a6b0ca9f1dcea69b6122a3dbb36874dbcb1042d05dc10ca317",
+  "profits": 0.00000000,
+  "costbasis": 10572439.63450000,
+  "positionsize": 1.00000000,
+  "equity": 1.00000000,
+  "addedbets": 0.00000000,
+  "leverage": 1,
+  "firstheight": 3250,
+  "firstprice": 10572439.63458409,
+  "lastprice": 10572439.63450000,
+  "height": 3250,
+  "test_daywindow": 7
+}
+```
+
+Not sure how to get such price, it not seems correct
+
+By my calculations it should be:
+BTC_USD * BTC_STRAT = ~5500 * ~5800 = ~32352000
+
+[25-Apr-19 06:58 PM] jl777c#5810
+overflow?
+
+[25-Apr-19 06:58 PM] jl777c#5810
+seems like bugs
+
+[25-Apr-19 09:05 PM] Smedley#8094
+Will the bankroll be generated through a premine? Also if gateways cc is used how will the bankroll be generated?
+
+[25-Apr-19 09:24 PM] jl777c#5810
+bankroll will need to be funded if it is a sidechain
+
+[25-Apr-19 09:24 PM] jl777c#5810
+if it is a standalone chain then there can be a premine, but then you arent betting anything with known value
+
+[26-Apr-19 03:34 AM] TonyL#3577
+Daemon on dimxy repo got out sync tonight, tried to resync without luck:
+```ht.3271: lag.22670 5508.6767 USD, 4270.6457 GBP, 4948.1853 EUR, GBPUSD 1.289893, EURUSD 1.113272, EURGBP 0.863073 [502]
+CC Eval EVAL_PRICES Invalid: incorrect vout to spend spending tx 4869ff2e9414a5a6b0ca9f1dcea69b6122a3dbb36874dbcb1042d05dc10ca317
+CC Eval EVAL_PRICES Invalid: incorrect vout to spend spending tx d94b64c5b63c885939c5412164c5c6b715ff3a3fd44a8db93403002f54497221
+CC Eval EVAL_PRICES Invalid: incorrect vout to spend spending tx d94b64c5b63c885939c5412164c5c6b715ff3a3fd44a8db93403002f54497221
+```
+```  "blocks": 3270,
+  "longestchain": 3313,
+```
+
+[26-Apr-19 05:54 AM] jl777c#5810
+CC Eval EVAL_PRICES Invalid: incorrect vout to spend spending tx 4869ff2e9414a5a6b0ca9f1dcea69b6122a3dbb36874dbcb1042d05dc10ca317
+all validation needs to be disabled until it is merged into my repo and I update all my nodes
+
+[26-Apr-19 07:10 AM] dimxy#2587
+I've reviewed all validation once more (updated my repo). Might need to use reconsiderblock to force sync
+
+[26-Apr-19 07:14 AM] jl777c#5810
+the issue is that my nodes are not running with any validation, so if the validation on your nodes reject any tx it will fork
+
+[26-Apr-19 07:15 AM] dimxy#2587
+yes as TonyL use my repo with faulty validation he might need to  force resync after updating
+
+[26-Apr-19 07:15 AM] jl777c#5810
+aha, ok, that works too
+
+[26-Apr-19 07:15 AM] dimxy#2587
+Now priceinfo output is like this:
+./komodo-cli -ac_name=REKT0 pricesinfo de6327969f7357f69d800e9eefa5fae707cac178852f5d383fba55cf615471fe
+{
+  "status": "open",
+  "rekt": 0,
+  "batontxid": "7a1600158ad706da4f79d6cccaa5ea43130039412332dab4adb4759deff89548",
+  "bets": [
+    {
+      "positionsize": 0.11111000,
+      "profits": -0.00036666,
+      "costbasis": 5461.77130000,
+      "firstheight": 3270
+    },
+    {
+      "positionsize": 0.30300000,
+      "profits": -0.00003030,
+      "costbasis": 5444.09860000,
+      "firstheight": 3331
+    }
+  ],
+  "leverage": 1,
+  "TotalPositionSize": 0.41411000,
+  "TotalProfits": -0.00039696,
+  "equity": 0.41371304,
+  "LastPrice": 5443.76890000,
+  "LastHeight": 3335
+}
+-----------------
+So it outputs an array with inital bet and subsequent additions
+and totals after it
+
+[26-Apr-19 07:18 AM] jl777c#5810
+if you are allowing more funds to be added, but each is treated as an independent bet? with the 24hrs scanning for MAX costbasis
+
+[26-Apr-19 07:18 AM] jl777c#5810
+otherwise future knowledge is being used with the addition of funds
+
+[26-Apr-19 07:25 AM] dimxy#2587
+For a new added bet I calculate a new costbasis beginning from the block where the bet was added and for 24h  (as max value)
+

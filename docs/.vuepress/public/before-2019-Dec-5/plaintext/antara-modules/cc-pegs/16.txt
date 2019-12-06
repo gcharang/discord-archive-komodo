@@ -1,0 +1,331 @@
+==============================================================
+Guild: Komodo
+Channel: cc-pegs
+Topic: The Pegs Antara modules is a mechanism for creating a decentralized stable coin, pegged to any asset like fiat currency, stock, crypto that has a reliable price source 
+Intro + RPC: https://docs.komodoplatform.com/basic-docs/antara/antara-api/pegs.html
+User tutorial: https://docs.komodoplatform.com/basic-docs/antara/antara-tutorials/pegs-module-user-tutorial.html
+Peg Creator tutorial: https://docs.komodoplatform.com/basic-docs/antara/antara-tutorials/pegs-module-creator-tutorial.html
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[11-Nov-19 10:52 AM] Mihailo#5902
+@jl777c I gave a thought on solving the parallel withdraw problem on friday and over the weekend. I have and idea to create another msig address from the same pubkeys (if possible) and move the funds that are used for withdraw over there. This would solve both parallel withdraw and the balance thing as we would know how much is left. Ofc, the withdraw should expire after sometime and those fund need to be returned to the deposit address so it can be used again and have correct balance. That part is IMHO little bit picky as we have to be sure funds are not stuck at temp address.
+
+[11-Nov-19 10:54 AM] jl777c#5810
+great!
+
+[11-Nov-19 10:54 AM] jl777c#5810
+just change the order of the pubkeys in the redeemscript
+
+[11-Nov-19 10:54 AM] jl777c#5810
+you can make N! different msig addresses from N pubkeys
+
+[11-Nov-19 10:55 AM] Mihailo#5902
+Aha, so if the order of keys is 1,3,2 it wil give different address than 1,2,3.
+
+[11-Nov-19 10:57 AM] jl777c#5810
+the msig address is rmd160(sha256(redeemscript))
+
+[11-Nov-19 10:57 AM] Mihailo#5902
+👍
+
+[11-Nov-19 10:58 AM] Mihailo#5902
+Ok, so I'll try this with oraclefeed. And I will introduce withdraw expiration (basicallly it will check tx time and if some time has passed it will not look it as pending anymore)
+
+[11-Nov-19 11:35 AM] Mihailo#5902
+For 1of1 gateway can I generate somehow another address from the pubkey and to always be the same?
+
+[11-Nov-19 11:38 AM] jl777c#5810
+might need to have a dummy pubkeys and make it a 1of2
+
+[11-Nov-19 11:38 AM] jl777c#5810
+then you can make the second pubkey any random one to make a new address
+
+[11-Nov-19 11:39 AM] Mihailo#5902
+Ok, it is not really important right now. As usually MofN gateway will be used. 1of1 we use for test, but I don't expect any significant use in production.
+
+[11-Nov-19 11:39 AM] Mihailo#5902
+Ah, I can use 1of2 address from the same pubkey!
+
+[11-Nov-19 11:41 AM] jl777c#5810
+but same pubkey twice is the same address in both A B vs B A
+
+[11-Nov-19 11:42 AM] Mihailo#5902
+Yes, but it is different address than single pubkey address. I just need different address!
+
+{Reactions}
+🙂 
+
+[11-Nov-19 11:52 AM] jl777c#5810
+oh, yes a 1of1 msig is different than p2pk/p2pkh
+
+{Reactions}
+👍 
+
+[12-Nov-19 11:03 AM] Mihailo#5902
+@jl777c Is there a way that the utxo is found from mempool like with listunspent with regular rpc commands. I want to move funds from deposit address to tmp address and right away create raw tx using those utxos from tmp address. I would like to avoid waiting it to be mined and then creating raw tx in another step as it would need another tx and syncing with external chain...
+
+[12-Nov-19 11:26 AM] Mihailo#5902
+Or maybe I don't need to look for unspents, but just send funds to tmpaddress and then use that txid and vout as vin for createrawtx.
+
+[12-Nov-19 11:27 AM] jl777c#5810
+yes
+
+[12-Nov-19 11:27 AM] jl777c#5810
+you can getrawmempool and scan for the utxo to spend, but if you know precisely the txid already, it is easier
+
+[12-Nov-19 11:28 AM] Mihailo#5902
+I will know it as I will first make move of funds and then right away createrawtransaction
+
+[12-Nov-19 11:31 AM] Mihailo#5902
+Ahhhhhhhhhh, I didn't thought about this enough. To move the funds from deposit to temp address it again needs to have signing process done 😔
+
+[12-Nov-19 11:31 AM] Mihailo#5902
+I mix 1of1 and multisig situations when thinking as I was testing a lot with 1of1 gateway...
+
+[12-Nov-19 12:35 PM] Mihailo#5902
+For the sake of knowing exact balance and for parallel withdraw, it would be good to reserve the utxos that will be spent in withdraw. The best way was to spend them to temp address as it would have exact utxo and the rest utxo would be available for spending in other withdraws. But as this also needs multiple signing process, something else must be done in order to solve this.
+
+[12-Nov-19 12:40 PM] jl777c#5810
+maybe think in terms of managing the total balance in convenient sizes. the msig signers can prepare these utxos while collecting the 5% rewards
+
+[12-Nov-19 12:50 PM] Mihailo#5902
+The collecting rewards thing haven't been made yet, and this will also be difficult as multi signing thing must be done. Nevertheless, even if we have convenient sizes we must mark that utxo will be spent in order to both know exact balance at the moment and to avoid using same utxo in two parallel withdraws.
+
+[12-Nov-19 12:54 PM] jl777c#5810
+how about 8 parallel withdraws
+
+[12-Nov-19 12:55 PM] jl777c#5810
+prepare ahead of time 1/8th of balance in each of 8 subaddresses. for each withdraw, do a userpubkey % 8 to find which of the 8 parallel tracks it will use and single thread within each.
+
+[12-Nov-19 12:55 PM] jl777c#5810
+the restriction is that no more than 1/8th of total balance can be withdrawn at once, which seems an acceptable limitation
+
+[12-Nov-19 12:56 PM] jl777c#5810
+each withdraw track, can then use a baton to ensure only one pending withdraw at a time
+
+[12-Nov-19 12:57 PM] jl777c#5810
+as a withdraw happens, then a rebalancing of funds in the 7 other addresses would need to happen, maybe just do this once per day, along with collection of rewards
+
+[12-Nov-19 12:57 PM] jl777c#5810
+something like this. where the withdraws are constrained to allow multiple withdraws that dont conflict at all
+
+[12-Nov-19 12:58 PM] jl777c#5810
+and total balance info can be put into the opreturn and validated that it properly adjusts from the previous balance, this way we dont need an external source for balance info
+
+[12-Nov-19 01:07 PM] Mihailo#5902
+Hmmm, I have to think about it little bit. Splitting in 8 different balances is ok, and baton (on AC side I suppose) would resolve reserving utxos for withdraw. The rebalancing thing would require automated "withdraw" of all 8 balances back to new 8 balances and the siging process to be done....
+
+[12-Nov-19 01:08 PM] Mihailo#5902
+In the beginning when there are little deposits, it will be probably difficult to iwthdraw your deposit as it can be more than 1/8 of balance...
+
+[12-Nov-19 01:17 PM] jl777c#5810
+unless, we make specific set of initial deposits to cover the startup case
+
+[12-Nov-19 01:18 PM] jl777c#5810
+with a daily rebalancing, the msig nodes can just spend all the 8 balances to the 8 addresses in a single rebalancing transaction, i guess skipping any pending withraws
+
+[12-Nov-19 01:18 PM] jl777c#5810
+if an incremental method can be made, it would be better
+
+[12-Nov-19 01:20 PM] jl777c#5810
+maybe a just in time process where funds are kept in the main msig address and only transferred to the 8 withdraw balance addresses, as needed. it is an extra transaction, but if we can do this, then it handles the case when there are not enough funds in the 1/8th address
+
+[12-Nov-19 01:20 PM] jl777c#5810
+once that case is handled, if we notice that there are already enough funds in the 1/8th address, then the transfer from main address can be skipped
+
+[12-Nov-19 01:20 PM] jl777c#5810
+i think it is a matter to carefully track the 9 balances, and 8 pending withdraws
+
+[12-Nov-19 01:21 PM] Mihailo#5902
+Every transfer is again multi sig tx which needs signing
+
+[12-Nov-19 01:21 PM] jl777c#5810
+and there are the new funds that are coming in, that start as unallocated. maybe they can be moved to the 1/8th address with the lowest balance, so this is the incremental aspect
+
+[12-Nov-19 01:21 PM] jl777c#5810
+yes, i am assuming that automating a msig tx is achieved already
+
+[12-Nov-19 01:22 PM] Mihailo#5902
+We have automated signing process, but it is slow and it requires txs on AC.
+
+[12-Nov-19 01:23 PM] jl777c#5810
+so the various states that a utxo can be in needs to be tracked and then make sure that the opreturn data has the required summaries. it could be that we have an "intialize" process that takes all the existing balances and gets things into a proper state
+
+[12-Nov-19 01:23 PM] jl777c#5810
+as long as it is automated, slow is ok, just not too slow. 10 blocks for a signature is 10 minutes, which seems ok
+
+[12-Nov-19 01:24 PM] Mihailo#5902
+This all brings complexity of the system to a whole new level and creates space for errors. The utxo system was a perfect thing but with msig it is difficult to use it as it requires complete process for signing
+
+[12-Nov-19 01:25 PM] jl777c#5810
+maybe we need to do it like iguana notarizer and make it direct p2p to get the msig tx signed
+
+[12-Nov-19 01:26 PM] jl777c#5810
+but regardless of signing method, i think as long as a withdraw progresses toward completion, or times out and can be resubmitted, it will be complex, but will still work
+
+[12-Nov-19 01:27 PM] Mihailo#5902
+That would be great, to reduce the overhead we have for signing and to have instant signing. Then we would be able to move the funds to temp address.
+
+[12-Nov-19 01:28 PM] jl777c#5810
+what if you used the mempool?
+
+[12-Nov-19 01:28 PM] Mihailo#5902
+For what?
+
+[12-Nov-19 01:28 PM] jl777c#5810
+why wait for confirmations to complete the signing?
+
+[12-Nov-19 01:28 PM] jl777c#5810
+couldnt the msig signers scan the mempool and see if there is any new tx that needs to be signed?
+
+[12-Nov-19 01:30 PM] Mihailo#5902
+Can't remember why I did it this way. I think there was some issue, but maybe it can be done.
+
+[12-Nov-19 01:34 PM] Mihailo#5902
+So the flow would be like this:
+- withdraw tx created (on AC)
+- oraclefeed takes utxos and make utxo to temp address in exact amount
+- signing is done immediately in mempool and external tx broadcasted
+- then createrawtx can be done right away without waiting for previous external tx to be mined
+- signing again starts and it finishes completely in mempool
+- now the real withdraw tx is broadcasted on external chain (but waiting for previous tx to be mined)
+
+[12-Nov-19 01:37 PM] Mihailo#5902
+I think there was some problem with race condition for signing, and one by one tx was making it ok.
+
+[12-Nov-19 01:37 PM] jl777c#5810
+maybe separate the rawtx construction and signing
+
+[12-Nov-19 01:37 PM] Mihailo#5902
+But with a baton, there will not be any race condition
+
+[12-Nov-19 01:38 PM] jl777c#5810
+each node can independently sign the same rawtx and just submit the signature in an opretuen
+
+[12-Nov-19 01:38 PM] jl777c#5810
+then you can combine M of the signatures to make a valid signed transaction
+
+[12-Nov-19 01:40 PM] Mihailo#5902
+I think there will be no problem with that as long as I'm using sequential signing with a baton. If two nodes want to sign and spend baton at the sametime, one will succed and other won't as baton will be spent
+
+[12-Nov-19 01:42 PM] Mihailo#5902
+This temp address thing wil take one more txfee from the external funds so the user will receive amount-2*txfees-non-spending marker fee. For expensive coins I think we can set txfee to minimum and marker fee can be like 1k sat
+
+[12-Nov-19 01:43 PM] Mihailo#5902
+We could also make markers 1 sat, is there anything against this?
+
+[12-Nov-19 01:50 PM] jl777c#5810
+it might fall below dust threshold
+
+[12-Nov-19 01:50 PM] jl777c#5810
+can the marker be on the AC side?
+
+[12-Nov-19 01:50 PM] jl777c#5810
+i mean baton
+
+[12-Nov-19 01:56 PM] Mihailo#5902
+Baton is on AC side, but the non-spendable marker to mark that the external withdraw has been executed and prevent double withdraws must be on external chain. That is why I'm asking how low we can go with the amount?
+
+[12-Nov-19 01:57 PM] Mihailo#5902
+And baton on the ac side will in the end be spent to the nodes pubkey which does markdone tx on AC
+
+[12-Nov-19 02:00 PM] jl777c#5810
+i think 500 or 600 sats is the dust level for a lot of chains
+
+[12-Nov-19 02:01 PM] Mihailo#5902
+Ok so we can go with 1k sat
+
+[12-Nov-19 02:01 PM] Mihailo#5902
+This will be insignificant for BTC
+
+[12-Nov-19 02:01 PM] jl777c#5810
+a 10 cents per BTC withdraw is not so bad, we just need to have a minimum withdraw so the percentage is reasonable max
+
+[12-Nov-19 02:04 PM] Mihailo#5902
+With 100k BTC price this will be 1$. With 10k it is 0.10$
+
+[12-Nov-19 02:38 PM] jl777c#5810
+it seems acceptable, just have a minimum withdraw big enough so it is never more than 5% fee
+
+[15-Nov-19 01:59 PM] Mihailo#5902
+@jl777c So I have totaly refactored the logic of gateways withdraw (for now on importgateway to test) and it seems this will be better. The flow goes like this:
+- withdraw tx created by user
+- when confirmed/notarized, oraclefeed takes one withdraw at the time and creates raw tx
+- signing happens in mempool so it should be fast and while not signed completely no new withdraws are processed
+- when it is signed completely it is broadcasted on external chain and markedone
+- then new withdraw is taken from the queue and processed
+So we have parallel withdraws created, but serial processing of them one by one (probably it can be more than one per block as everything happens in mempool).
+
+And now thee is only the question of checking balance, as I think the n/2 consensus is not good because when the withdraw is broadcasted externally in that moment the balance is lowered and until it reaches n/2 nodes publishing it in the mean time another withdraw could be created. So I suggest we use minimum that is reporeted in latest oraclesdata. Even if some node reports false balance that is lower, it could only get withdraws halted until we resolve it.
+
+[15-Nov-19 02:01 PM] jl777c#5810
+this does sound a lot better! serialized, but processed via mempool is a good trick!
+
+[15-Nov-19 02:01 PM] jl777c#5810
+that will allow precise calculation of available balances
+
+[15-Nov-19 02:03 PM] Mihailo#5902
+Yes, just hope there will not be some problem because everything is in mempool, if some tx does not reach mined block it could block others that depend on it...
+
+[15-Nov-19 02:05 PM] jl777c#5810
+in that case it will get mined in the next block. given a chain of mempool tx, it cant be mined out of order!
+
+[15-Nov-19 02:10 PM] Mihailo#5902
+Yeah
+
+[15-Nov-19 02:10 PM] Mihailo#5902
+Just thinking if something can cause problems
+
+[15-Nov-19 02:10 PM] jl777c#5810
+it might cause tx to expire and invalidate a chain if it isnt mined in time
+
+[15-Nov-19 02:12 PM] jl777c#5810
+make sure to disable expiration. if you dont use nlocktime and set expireblocks to 0, it wont expire. of course, then you wont collect the rewards... so i think we need to make sure that rewards are actively collected to not lose too much unclaimed rewards. then when needed to do a withdraw, it is only a few hours of lost rewards. that will keep the mempool chain of tx all valid, regardless of how long they take to confirm.
+
+[15-Nov-19 02:12 PM] jl777c#5810
+also, rebroadcasting the unconfirmed rawtx until it confirms will assure that it will eventually confirm
+
+[15-Nov-19 02:36 PM] Mihailo#5902
+Are you talking about external txs or on AC?
+
+[15-Nov-19 04:08 PM] jl777c#5810
+for any mempool tx chain. rebroadcasting will maximize chance it is mined sooner than later. important thing is to make sure the tx cannot expire via the mempool expiration, or for KMD via nlocktime being too old
+
+[18-Nov-19 10:35 AM] Mihailo#5902
+I have set locktime to 0 for createrawtransaction on all chains, and for Sapling chains I have set expiryheight to 10000 that should be enough for approx. 7 days when blocktime is 1 min. But the withdraw will expire probably in an few hours as now when signing is in mempool it should execute at worst after hour or so (after initial withdraw tx is confirmed for chains without notarziation).
+
+[18-Nov-19 10:36 AM] jl777c#5810
+ok
+
+[18-Nov-19 10:37 AM] Mihailo#5902
+I didn't know that expiryheight 0 is to not expire at all, I can set 0 instead!
+
+[18-Nov-19 10:37 AM] Mihailo#5902
+But I didn't get the reward part you mentioned...
+
+[18-Nov-19 10:39 AM] jl777c#5810
+i guess you can claim rewards even with locktime of 0, but the output wont be valid for claiming as it needs locktime
+
+[18-Nov-19 10:40 AM] jl777c#5810
+so we would need to have a daily rewards claiming among the msig nodes to minimize the lost rewards from not claiming
+
+[18-Nov-19 10:40 AM] jl777c#5810
+during withdraws
+
+[18-Nov-19 10:40 AM] Mihailo#5902
+Are you speaking about the rewards for holding KMD?
+
+[18-Nov-19 10:40 AM] jl777c#5810
+if you remember, to claim rewards in KMD, it needs to be one hour old and be >10KMD and have locktime set
+
+[18-Nov-19 10:40 AM] jl777c#5810
+yes
+
+[18-Nov-19 10:41 AM] jl777c#5810
+this is the funds that pays for the msig signers running the nodes long term
+
+[18-Nov-19 10:41 AM] Mihailo#5902
+Ok, I haven't at all approached the reward thing yet. Aha, ok that is the business logic for msig signers.
+

@@ -1,0 +1,445 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[25-Sep-18 08:52 AM] TonyL#3577
+```./komodo-cli -ac_name=ORCL1 getrawmempool
+[
+  "d3e37e2ba83cfc0191189ba3316079157c513845d01e9c30253c59ec10e7921f"
+]
+``` in mempool now
+
+[25-Sep-18 08:53 AM] TonyL#3577
+First withdrawal broadcasted:
+```return true without gateways validation
+47132762ff6a679c2c9d3310dc4bf323b1f614309e5b468eaa207ba168761888
+```
+
+[25-Sep-18 08:53 AM] TonyL#3577
+But oraclefeed wasn't up ouch
+
+[25-Sep-18 08:54 AM] TonyL#3577
+Nice case for manual confirmation so
+
+[25-Sep-18 08:56 AM] TonyL#3577
+```./komodo-cli -ac_name=ORCL1 gatewayspending 1023f2c31f8d5e06854cd8c3ef103679b8d2af2c4ba14ea16646dd2a10332c55 KMD
+{
+  "coin": "KMD",
+  "pending": [
+    {
+      "txid": "47132762ff6a679c2c9d3310dc4bf323b1f614309e5b468eaa207ba168761888",
+      "txidaddr": "RCC5dA5a4ZZV6kQgHKprxcYcoRgBodPsjo",
+      "withdrawaddr": "RMLBM7dNHUqsfnExV3H9uHeZzPi5dsYSkv",
+      "amount": "0.00000100",
+      "depositaddr": "RH8mu756oZMoYWLKKUh3GXJfvHizEhyFEd",
+      "signeraddr": "RH8mu756oZMoYWLKKUh3GXJfvHizEhyFEd"
+    }
+  ],
+  "queueflag": 1
+}
+```
+
+[25-Sep-18 08:56 AM] TonyL#3577
+gatewayspending worked as expected
+
+[25-Sep-18 08:58 AM] TonyL#3577
+`withdrawaddr` bind is correct https://kmdexplorer.io/address/RMLBM7dNHUqsfnExV3H9uHeZzPi5dsYSkv
+
+[25-Sep-18 08:59 AM] TonyL#3577
+So should it proceed now from pending if I enable `oraclefeed` ?
+
+[25-Sep-18 09:06 AM] jl777c#5810
+yes
+
+[25-Sep-18 09:06 AM] TonyL#3577
+```Powered by CoinDesk (https://www.coindesk.com/price/) 6409.98000000
+coin.KMD vs KMD
+loadfile null size.(/tmp/oraclefeed.importaddress)
+set refcoin RH8mu756oZMoYWLKKUh3GXJfvHizEhyFEd <- KMD [./komodo-cli] M.1 of N.1
+broadcast ORCL1 txid.(96604224e4c4c40e90338fe4782d3b2ae27da3f7345b3be88c6ab365965e7814)
+KMD ht.1024899 <- 83a30f009a3d2382eb7c538d48c7f77ff8cfc2143f921a1ec0e981c24f2bcc7eefe9b40a0d6bac98753f8aad48ed4d4acf7400982fba060d595e211feb77096791c85336
+sendtoaddress RCC5dA5a4ZZV6kQgHKprxcYcoRgBodPsjo 0.00010000 txid.(401c83f369c1cdebd1b84c9799b1f309fa6254aab5de91ab424c13405248d3c3)
+error code: -6
+error message:
+Insufficient funds
+```
+Is it taking funds from node wallet instead of gatewayswallet address?
+
+[25-Sep-18 09:06 AM] jl777c#5810
+oraclefeed needs to be running with a wallet having the gateway deposit address
+
+[25-Sep-18 09:07 AM] jl777c#5810
+RH8mu756oZMoYWLKKUh3GXJfvHizEhyFEd
+
+[25-Sep-18 09:08 AM] TonyL#3577
+Yes it's gateways deposit address, have 0.2 KMD on it:
+```
+./komodo-cli -ac_name=ORCL1 gatewaysinfo 1023f2c31f8d5e06854cd8c3ef103679b8d2af2c4ba14ea16646dd2a10332c55
+{
+  "result": "success",
+  "name": "Gateways",
+  "pubkey": "03431a95c761c491e38a891425009cff5f9eaa3aa3d3d4945dd17f3d0bfcff2590",
+  "coin": "KMD",
+  "oracletxid": "1fa7299d755eb909f9835863fcafce74298a762648656404ab73b5661f43f829",
+  "taddr": 0,
+  "prefix": 60,
+  "prefix2": 85,
+  "deposit": "RH8mu756oZMoYWLKKUh3GXJfvHizEhyFEd",
+  "tokenid": "3852b3e1b24bc927758f49ded16114437ab52e5fb9afa201c47bb85e28372ea8",
+  "totalsupply": "1000000.00000000",
+  "remaining": "999999.90010200",
+  "issued": "0.09989800"
+}```
+
+[25-Sep-18 09:11 AM] TonyL#3577
+```    if ( (retjson= get_komodocli(refcoin,&retstr,acname,"gatewaysmarkdone",bits256_str(str,withtxid),coin,bits256_str(str2,cointxid),"")) != 0 )
+    {
+        komodobroadcast(refcoin,acname,retjson);
+        free_json(retjson);
+    }```
+Isn't it should broadcast in komodo main chain instead of AC ? Just wondering.
+
+[25-Sep-18 09:13 AM] TonyL#3577
+Oh there is ` update_gatewayspending` also sorry
+
+[25-Sep-18 09:17 AM] jl777c#5810
+why did 401c83f369c1cdebd1b84c9799b1f309fa6254aab5de91ab424c13405248d3c3 get insufficient funds?
+
+[25-Sep-18 09:20 AM] TonyL#3577
+Should node have some KMD ?
+
+[25-Sep-18 09:20 AM] TonyL#3577
+I guess it's may be the reason
+
+[25-Sep-18 09:20 AM] jl777c#5810
+?\
+
+[25-Sep-18 09:20 AM] jl777c#5810
+?
+
+[25-Sep-18 09:20 AM] jl777c#5810
+RH8mu756oZMoYWLKKUh3GXJfvHizEhyFEd needs to have funds
+
+[25-Sep-18 09:20 AM] jl777c#5810
+wallet needs to be able to spend those funds
+
+[25-Sep-18 09:20 AM] jl777c#5810
+how else could it work?
+
+[25-Sep-18 09:21 AM] TonyL#3577
+I thought same, just wondering now
+
+[25-Sep-18 09:21 AM] TonyL#3577
+RH8mu756oZMoYWLKKUh3GXJfvHizEhyFEd have 0.2 KMD
+
+[25-Sep-18 09:22 AM] jl777c#5810
+validateaddress on that node?
+
+[25-Sep-18 09:23 AM] jl777c#5810
+the node running oraclefeed
+
+[25-Sep-18 09:23 AM] TonyL#3577
+```./komodo-cli -ac_name=ORCL1 validateaddress RH8mu756oZMoYWLKKUh3GXJfvHizEhyFEd
+{
+  "isvalid": true,
+  "address": "RH8mu756oZMoYWLKKUh3GXJfvHizEhyFEd",
+  "scriptPubKey": "76a91456297e9af2eeafc349acb2056e3115419eb4c64e88ac",
+  "segid": 43,
+  "ismine": true,
+  "iswatchonly": false,
+  "isscript": false,
+  "pubkey": "03431a95c761c491e38a891425009cff5f9eaa3aa3d3d4945dd17f3d0bfcff2590",
+  "iscompressed": true,
+  "account": ""
+```
+
+[25-Sep-18 09:23 AM] jl777c#5810
+listunspent
+
+[25-Sep-18 09:31 AM] TonyL#3577
+@jl777c there are 3476 entries
+
+[25-Sep-18 09:31 AM] TonyL#3577
+Are we looking for something specific?
+
+[25-Sep-18 09:57 AM] jl777c#5810
+RH8mu756oZMoYWLKKUh3GXJfvHizEhyFEd
+
+[25-Sep-18 09:58 AM] TonyL#3577
+`./komodo-cli -ac_name=ORCL1 listunspent 1 9999999 "[\"RH8mu756oZMoYWLKKUh3GXJfvHizEhyFEd\"]"` yes I  called for this address
+
+[25-Sep-18 09:58 AM] TonyL#3577
+Got 3000+ entries
+
+[25-Sep-18 10:07 AM] jl777c#5810
+how can there be 3000+ entries?
+
+[25-Sep-18 10:08 AM] jl777c#5810
+what address is that? it should have been a fresh address and have only the deposits made!
+
+[25-Sep-18 10:08 AM] jl777c#5810
+otherwise funds are all mixed together and makes a big mess
+
+[25-Sep-18 10:12 AM] TonyL#3577
+It's an GatewayDeposit address - not used for anything else
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/494088805842812938/listunspent.txt
+
+[25-Sep-18 10:13 AM] jl777c#5810
+you were mining to it?
+
+[25-Sep-18 10:13 AM] TonyL#3577
+Yes mining was enabled on this node for some time I think
+
+[25-Sep-18 10:14 AM] jl777c#5810
+well, it is not any good idea to do that, but it should still work
+
+[25-Sep-18 10:14 AM] jl777c#5810
+what happens when you run the oraclefeed now?
+
+[25-Sep-18 10:17 AM] TonyL#3577
+```BTC/USD 6398.9525
+Powered by CoinDesk (https://www.coindesk.com/price/) 6398.95250000
+coin.KMD vs KMD
+loadfile null size.(/tmp/oraclefeed.importaddress)
+set refcoin RH8mu756oZMoYWLKKUh3GXJfvHizEhyFEd <- KMD [./komodo-cli] M.1 of N.1``` 
+Now it's only output I get from oraclefeed
+
+[25-Sep-18 10:18 AM] TonyL#3577
+Execution just ends after it
+
+[25-Sep-18 10:19 AM] jl777c#5810
+it crashes?
+
+[25-Sep-18 10:19 AM] jl777c#5810
+goes back to commandline?
+
+[25-Sep-18 10:19 AM] TonyL#3577
+Just back to commandline
+
+[25-Sep-18 10:20 AM] jl777c#5810
+I am assuming the RH8mu756oZMoYWLKKUh3GXJfvHizEhyFEd doesnt have a lot of actual money in it
+
+[25-Sep-18 10:20 AM] jl777c#5810
+if so, DM me the passphrase and I will troubleshoot
+
+[25-Sep-18 10:20 AM] jl777c#5810
+you can continue on the automation side while I isolate the proble,
+
+[25-Sep-18 10:20 AM] TonyL#3577
+Ok, thanks and sorry for stucking 😃
+
+[25-Sep-18 10:21 AM] jl777c#5810
+likely it is a bug in oraclefeed
+
+[25-Sep-18 10:21 AM] jl777c#5810
+need the exact way you start oraclefeed
+
+[25-Sep-18 10:22 AM] TonyL#3577
+```./oraclefeed ORCL1 1fa7299d755eb909f9835863fcafce74298a762648656404ab73b5661f43f829 03431a95c761c491e38a891425009cff5f9eaa3aa3d3d4945dd17f3d0bfcff2590 Ihh 1023f2c31f8d5e06854cd8c3ef103679b8d2af2c4ba14ea16646dd2a10332c55````
+
+[25-Sep-18 10:23 AM] TonyL#3577
+Before automation have to check also if tokens crediting to correct pubkey now after `gatewaysclaim`
+
+[25-Sep-18 10:24 AM] jl777c#5810
+ok, plz stop it on your node
+
+[25-Sep-18 10:24 AM] TonyL#3577
+terminated `oraclefeed`
+
+[25-Sep-18 11:31 AM] jl777c#5810
+on my node it created: https://kmdexplorer.ru/tx/7562ae27c01b98609f6bc7e6fdd586a0f3c8f2ea3955bd30aab89ec1c8453dc4
+
+[25-Sep-18 11:37 AM] jl777c#5810
+it did get an error trying to spend the marker vout, forgot to importprivkey for the gateway address
+
+[25-Sep-18 11:45 AM] jl777c#5810
+@TonyL pushed fix to gatewaysmarkdone, also you need to import the wif for the gateways normal address in the oraclefeed node. it is also needing more funds as oracledata is not finding any funds, so do an oraclessubscribe
+
+[25-Sep-18 11:45 AM] jl777c#5810
+from what I can tell, the withdraw worked
+
+[25-Sep-18 11:45 AM] jl777c#5810
+it automatically detected the withdraw
+
+[25-Sep-18 11:45 AM] jl777c#5810
+processed it
+
+[25-Sep-18 11:45 AM] jl777c#5810
+marked it as done
+
+[25-Sep-18 01:15 PM] Mylo#8306
+```
+Business case how to:
+ 1 - Create your blockchain using Komodo’s Assetchain
+ 2 - Create tokens for on-chain representation of real world assets
+ 3 - Convert tokens to gateway enforcement (so they can be redeemed when “cashed out”)
+ 4 - Create an oracle (used to maintain the price feed of the real world asset onto the blockchain)
+ 5 - Bind the token and gateway to the oracle so prices reflect accurate data on-chain when fed updates
+ 6 - Use the sample “Oracle Feed” dApp to feed the accurate pricing from the real world to on-chain data
+ 7 - Use the gateway to redeem (cashout) the token value when customer requests
+```
+@jl777c @TonyL 👆 does this simplify the "Token, Gateway & Oracle" solution for tradeable and cash-out-able  tokens.  Whether they are other crypto, real world assets etc.   i used tony's pad notes.
+
+[25-Sep-18 01:19 PM] jl777c#5810
+gateways CC requires a bitcoin protocol coin
+
+[25-Sep-18 01:20 PM] jl777c#5810
+but given a manual gateway, the same effect can be achieved. There can be a chicken gateway, where tokens are issued when chickens are deposited. and chickens are delivered when the tokens are delivered
+
+[25-Sep-18 01:24 PM] Mylo#8306
+cool i was hoping to stretch it to chickens or chicken-representatives, thanks!
+
+[25-Sep-18 02:34 PM] TonyL#3577
+I've bought a Raspberri PI  - now thinking which "IOT like" stuff better to connect to make some dope demonstration for oracles - can make some custom oraclesfeed which will just grab data from my device/file. But all my ideas so far got not much practical sense. @Mylo If you have some ideas on this matter - I may try to implement). I think I may start from temperature to chain or try to implement some cases with data transfer/proofing from IP cameras
+
+[25-Sep-18 02:37 PM] TonyL#3577
+@jl777c  great that it's work! Looks like it's possible now to make all or almost all flow if be gentle. Just came home - will re-test deposit now and proceed to automation
+
+[25-Sep-18 04:46 PM] Mylo#8306
+With temperature, there’s your telemetry info for supply chain.
+GPS coordinates for fishing cross reference data.  Motion sensor for fallen over alarm for healthcare or fence/perimeter for prison.
+Maybe gauge for electricity supply/use is better and you can make your own crypto electric bills which would work well for an off-grid economy using PoS.
+
+[25-Sep-18 04:48 PM] TonyL#3577
+@Mylo Great! Had same idea with motion sensor - wanna call it "proof of penetration", may be usable in pornography as well 😂
+
+[25-Sep-18 04:48 PM] Mylo#8306
+But for your PC (not Pi) use `dmidecode` and get fan RPM and oracle-ize it !
+
+[25-Sep-18 04:48 PM] Mylo#8306
+New consensus 😃
+
+[25-Sep-18 04:49 PM] TonyL#3577
+Or/also network bandwidth  🤔
+
+[25-Sep-18 04:52 PM] Mylo#8306
+Ok oracle ideas have worn off.  Need a new CC
+
+[25-Sep-18 04:52 PM] Mylo#8306
+😃
+
+[25-Sep-18 04:54 PM] TonyL#3577
+Each new CC is more interesting than previous one. I had a blockgasm after dice, but then boom oracle and then booom gateways
+
+{Reactions}
+👆 (3) 😅 (2) 
+
+[25-Sep-18 04:55 PM] jl777c#5810
+my next one is prices CC, decentralized bitmex using gateway CC tokens
+
+{Reactions}
+💯 (3) 😮 
+
+[25-Sep-18 04:55 PM] jl777c#5810
+this will allow any -ac_cc chain to do real KMD betting
+
+[25-Sep-18 05:27 PM] Mylo#8306
+shame there's not a "holy shishkebab!" emoji.
+
+[25-Sep-18 05:32 PM] jl777c#5810
+also we figured out how to do channels CC with gateways assets
+
+[25-Sep-18 05:32 PM] jl777c#5810
+so BTC token mempool tx secured by dPoW!
+
+[25-Sep-18 10:11 PM] Mylo#8306
+Oh gosh...that’s a non doublespendable instant payment channel for any bitcoin protocol coin (or anything gateway-able, including chickens) and it is arguably “streamable” using existing infrastructure like explorers.
+
+[25-Sep-18 10:14 PM] jl777c#5810
+yes
+
+[25-Sep-18 10:14 PM] jl777c#5810
+not bad for a couple months work on CC
+
+[26-Sep-18 06:04 AM] TonyL#3577
+@jl777c is it ok that for a new gateway (but created from the same pubkey) deposit address is the same - means it's const on AC for pubkey?
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/494388656635904000/unknown.png
+
+[26-Sep-18 06:22 AM] TonyL#3577
+I've enabled `oraclefeed` for a brandnew oracle and bindtxid (on node with same pubkey) but it's still trying to proceed old withdraw for other oracle/bindtxid which was succesfully proceed yesterday
+
+[26-Sep-18 06:22 AM] TonyL#3577
+```./oraclefeed ORCL1 0b36a2a9d4298993f345de5bcce3f6ae5c81cac5eca6993a6536893b3ceda0e3 03431a95c761c491e38a891425009cff5f9eaa3aa3d3d4945dd17f3d0bfcff2590 Ihh aa7772268babec6b65555b242a6b0e3eadbfd641b5ef9120a9de446e4e3db2c1
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   673    0   673    0     0  23206      0 --:--:-- --:--:-- --:--:-- 23206
+BTC/USD 6435.7975
+Powered by CoinDesk (https://www.coindesk.com/price/) 6435.79750000
+coin.KMD vs KMD
+loadfile null size.(/tmp/oraclefeed.importaddress)
+set refcoin RH8mu756oZMoYWLKKUh3GXJfvHizEhyFEd <- KMD [./komodo-cli] M.1 of N.1
+broadcast ORCL1 txid.(0aee6f71a654861c2ec15fead7620c9caeb0b5dfe717a19d4915d15ea9f1982d)
+KMD ht.1026173 <- 7da80f00577cad144a306d46abdab45b5d0d67204daed37f5f4438ce9421fcf7d4c9d802b5694033ca21e2928f1b1949c1c4cc9da48c8253a3fb637e4822d8c939e6bd76
+already did withdraw KMD RMLBM7dNHUqsfnExV3H9uHeZzPi5dsYSkv 0.00000100 processed
+spend ORCL1 47132762ff6a679c2c9d3310dc4bf323b1f614309e5b468eaa207ba168761888/v2 as marker
+error code: -25
+error message:
+```
+
+[26-Sep-18 06:46 AM] TonyL#3577
+```end of loop
+cointxid.fbff4f068786fd124bb5e5e36462573811dbc1123f70350ce124693032dfe00b m.0 of n.1
+couldnt find merkleroot for ht.1026189 KMD oracle.0b36a2a9d4298993f345de5bcce3f6ae5c81cac5eca6993a6536893b3ceda0e3 m.0 vs n.1```
+
+Also - what is the best solution in situation like this? (can't gatewaysdeposit because no height in oracle) Have I revoke deposit somehow or add merkleroot data manually? 
+
+I just wonder that might be very useful to add some argument/parameter to `oraclefeed` to get merkleroot for "desired" height. It's quite easy to miss one height let's say because of network instability which can cause some missed deposits
+
+[26-Sep-18 06:53 AM] TonyL#3577
+By some reason have a gap right on needed place, guess restarted the tool this moment :/
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/494401037843562497/unknown.png
+
+[26-Sep-18 08:05 AM] TonyL#3577
+Hackerman next level coming
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/494419169165705227/unknown.png
+
+{Reactions}
+😂 (2) 😲 (2) shexy (3) 💪 
+
+[26-Sep-18 08:06 AM] jl777c#5810
+oraclefeed should be kept running
+
+[26-Sep-18 08:06 AM] jl777c#5810
+I guess it is good to be able to specify to it a specific height to add to oracledata
+
+{Reactions}
+👍 
+
+[26-Sep-18 08:21 AM] TonyL#3577
+@SHossain  I think I'll combine this how-to guide draft (will finish gateway operating related parts on fly) http://pad.supernet.org/cc_gateways_guide with this automation tool - will implement as printout hints  / man for each part
+
+[26-Sep-18 08:31 AM] SHossain#0007
+Sure. Thanks.
+
+[26-Sep-18 08:32 AM] TonyL#3577
+http://coingeek.com/bitcoin-bch-secured-file-storage-available-through-bitcoin-files-protocol/ while we have oracles ...
+
+{Embed}
+http://coingeek.com/bitcoin-bch-secured-file-storage-available-through-bitcoin-files-protocol
+Bitcoin BCH secured file storage available through Bitcoin Files P...
+A new feature for the Bitcoin BCH network has been added this past weekend, continuing the development of the world’s leading retail-driven cryptocurrency.
+https://coingeek.com/app/uploads/2018/09/bitcoin-bch-secured-file-storage-available-bitcoin-files-protocol.jpg
+
+[26-Sep-18 08:39 AM] Mylo#8306
+hey @TonyL you want another ridiculous locking utxo product to make?  i'll give you an idea.   first one is free.... an IDE where each character in a source file can be locked, so the escaped backslash \ in a curl script can't be deleted.  it will save devops engineers loads of cumulative hours worldwide.
+
+[26-Sep-18 08:40 AM] Mylo#8306
+then we port it to DNA molecules.
+
+[26-Sep-18 08:40 AM] TonyL#3577
+Heey @Mylo I'm in love with DevOps culture but not sure if my coding skills are enough for IDE making on this stage 😂
+

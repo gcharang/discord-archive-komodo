@@ -1,0 +1,449 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[16-Mar-19 11:31 AM] ComputerGenie 👴🏼📢#7004
+imo, 'disablecb' should be something like 'forcecb', but that's just me
+
+[16-Mar-19 11:33 AM] gcharang#6833
+I think its about perspective
+we are telling the daemon to disable the coinbase and treat it like a normal tx
+which causes the the pool software to be forced to use the tx given from the blocktemplate
+
+[16-Mar-19 11:34 AM] ComputerGenie 👴🏼📢#7004
+`we are telling the daemon to disable the coinbase`
+but, you're not
+It's literally the opposite of that
+
+[16-Mar-19 11:35 AM] gcharang#6833
+```
+./komodo-cli -ac_name=FOUNDER1 getblocktemplate '{"mode":"disablecb"}'                                   Saturday 16 March 2019 03:22:51 PM IST
+{
+  "capabilities": [
+    "proposal"
+  ],
+  "version": 4,
+  "previousblockhash": "01f6056388dc95ab29b6cbd91e24d9a15b88239b1eaac403d96a99d1b125bc49",
+  "finalsaplingroothash": "3e49b5f954aa9d3545bc6c37744661eea48d7c34e3000d82b7f0010c30f4c2fb",
+  "transactions": [
+    {
+      "data": "0400008085202f89010000000000000000000000000000000000000000000000000000000000000000ffffffff0402920100ffffffff0200e1f50500000000232102009f86b600624aaa7b4bdf0ccd97f60d2cb4e123d6dec7bab2f150fd8beaddd5ac80c3c9010000000023210225f1cbbda1a0c406bb8f6dc7a589d88b2f9e28cd4fdb3f59139f8aff1f5d270aacbddd8c5c000000000000000000000000000000",
+      "hash": "ef2439647114594968c4a1ebb9c5b96eb875691b3822c0dcae556663a52c212d",
+      "depends": [
+      ],
+      "fee": 0,
+      "sigops": 2
+    }
+  ],
+  "longpollid": "01f6056388dc95ab29b6cbd91e24d9a15b88239b1eaac403d96a99d1b125bc49403",
+  "target": "020fab0000000000000000000000000000000000000000000000000000000000",
+  "mintime": 1552735245,
+  "mutable": [
+    "time",
+    "transactions",
+    "prevblock"
+  ],
+  "noncerange": "00000000ffffffff",
+  "sigoplimit": 60000,
+  "sizelimit": 4194304,
+  "curtime": 1552735677,
+  "bits": "20020fab",
+  "height": 402
+}
+```
+
+[16-Mar-19 11:35 AM] ComputerGenie 👴🏼📢#7004
+the "disable" is that the *stratum* creation is disabled
+
+[16-Mar-19 11:36 AM] gcharang#6833
+without `disablecb`, there is also a `coinbase` array, but with it, that same transaction is added to the txns array, did I understand it all wrong?
+
+[16-Mar-19 11:39 AM] ComputerGenie 👴🏼📢#7004
+unless it's been changed since @blackjok3r initially wrote it, the idea is:
+the daemon creates the proper "template"
+the stratum uses the template as a literal (rather than the "normal" instance where the stratum creates a custom coinbase tx)
+the stratum then must take any "pool fees" out later in the payout
+
+[16-Mar-19 11:40 AM] ComputerGenie 👴🏼📢#7004
+that's what makes it work "for every type"
+
+[16-Mar-19 11:40 AM] ComputerGenie 👴🏼📢#7004
+because the cb tx *always* is what the daemon says it is
+
+[16-Mar-19 11:41 AM] blackjok3r#3181
+its both what you arte saying at the same time 😄
+
+{Reactions}
+😄 
+
+[16-Mar-19 11:41 AM] ComputerGenie 👴🏼📢#7004
+😛
+
+[16-Mar-19 11:41 AM] blackjok3r#3181
+it remvoes the coinbase from the JSON
+
+[16-Mar-19 11:41 AM] blackjok3r#3181
+and also does what geinie says
+
+[16-Mar-19 11:41 AM] blackjok3r#3181
+does it really matter what its called... it works
+
+[16-Mar-19 11:41 AM] ComputerGenie 👴🏼📢#7004
+how do you have a cb if it removes the cb?
+
+[16-Mar-19 11:41 AM] ComputerGenie 👴🏼📢#7004
+now I'm lost 😕
+
+[16-Mar-19 11:43 AM] ComputerGenie 👴🏼📢#7004
+`... it works` on that much, we've always agreed 😛
+
+[16-Mar-19 11:46 AM] ComputerGenie 👴🏼📢#7004
+```JSON
+decoderawtransaction 0400008085202f89010000000000000000000000000000000000000000000000000000000000000000ffffffff0402920100ffffffff0200e1f50500000000232102009f86b600624aaa7b4bdf0ccd97f60d2cb4e123d6dec7bab2f150fd8beaddd5ac80c3c9010000000023210225f1cbbda1a0c406bb8f6dc7a589d88b2f9e28cd4fdb3f59139f8aff1f5d270aacbddd8c5c000000000000000000000000000000
+{
+  "txid": "ef2439647114594968c4a1ebb9c5b96eb875691b3822c0dcae556663a52c212d",
+  "overwintered": true,
+  "version": 4,
+  "versiongroupid": "892f2085",
+  "locktime": 1552735677,
+  "expiryheight": 0,
+  "vin": [
+    {
+      "coinbase": "02920100",
+      "sequence": 4294967295
+    }
+  ],
+  "vout": [
+    {
+      "value": 1.00000000,
+      "valueZat": 100000000,
+      "n": 0,
+      "scriptPubKey": {
+        "asm": "02009f86b600624aaa7b4bdf0ccd97f60d2cb4e123d6dec7bab2f150fd8beaddd5 OP_CHECKSIG",
+        "hex": "2102009f86b600624aaa7b4bdf0ccd97f60d2cb4e123d6dec7bab2f150fd8beaddd5ac",
+        "reqSigs": 1,
+        "type": "pubkey",
+        "addresses": [
+          "RRPbgogM3y9euHSQQwQQg9pPqLESYGNt6q"
+        ]
+      }
+    },
+    {
+      "value": 0.30000000,
+      "valueZat": 30000000,
+      "n": 1,
+      "scriptPubKey": {
+        "asm": "0225f1cbbda1a0c406bb8f6dc7a589d88b2f9e28cd4fdb3f59139f8aff1f5d270a OP_CHECKSIG",
+        "hex": "210225f1cbbda1a0c406bb8f6dc7a589d88b2f9e28cd4fdb3f59139f8aff1f5d270aac",
+        "reqSigs": 1,
+        "type": "pubkey",
+        "addresses": [
+          "RUfCUd3UryKJ49baQvSuAs42wakNunvvfT"
+        ]
+      }
+    }
+  ],
+  "vjoinsplit": [
+  ],
+  "valueBalance": 0.00000000,
+  "vShieldedSpend": [
+  ],
+  "vShieldedOutput": [
+  ]
+}```
+
+[16-Mar-19 11:47 AM] ComputerGenie 👴🏼📢#7004
+I'm not seeing how it "remvoes the coinbase from the JSON"
+it's literally right there
+
+[16-Mar-19 11:50 AM] ComputerGenie 👴🏼📢#7004
+@blackjok3r ?
+
+[16-Mar-19 11:50 AM] blackjok3r#3181
+it removes the object called "coinbase"
+
+[16-Mar-19 11:51 AM] blackjok3r#3181
+the coinbase is not usualy in the transactions object
+
+[16-Mar-19 11:51 AM] blackjok3r#3181
+it moves it to there
+
+[16-Mar-19 11:54 AM] ComputerGenie 👴🏼📢#7004
+ok, so what's the fundamental difference of a "coinbasetxn" object, beyond tittle hierarchy (I never noticed the change when we talked about it before)?
+
+[16-Mar-19 11:56 AM] blackjok3r#3181
+The problem was that the knomp (or my understanding of JS) refused to use the tx from that object
+
+[16-Mar-19 11:56 AM] blackjok3r#3181
+so I used the daemon to stick it into the transactions array
+
+[16-Mar-19 11:56 AM] blackjok3r#3181
+so it was parsed through as a nromal transaction
+
+[16-Mar-19 11:56 AM] blackjok3r#3181
+then I disabled the entire code path that builds the coinbase
+
+[16-Mar-19 11:57 AM] ComputerGenie 👴🏼📢#7004
+oh, so this way it works with a "normal" stratum instead of just yours?
+
+[16-Mar-19 11:57 AM] blackjok3r#3181
+I dont think so no
+
+[16-Mar-19 11:58 AM] blackjok3r#3181
+Really a stratum could use the disablecb logic without a change to the daemon
+
+[16-Mar-19 11:58 AM] blackjok3r#3181
+but I couldnt get that way to work
+
+[16-Mar-19 11:58 AM] blackjok3r#3181
+Once it worked I just left it alone, because tbh I had no idea what I was doing.
+
+[16-Mar-19 11:59 AM] ComputerGenie 👴🏼📢#7004
+I'll have to look into it more after I get pirate solo finalized, because I also didn't do anything with it because yours "just worked" so I just pointed folks to it
+It seems bits of it might not work in the way I thought they did
+
+[16-Mar-19 12:01 PM] blackjok3r#3181
+yes, it was an extremly simple solution... becasuse JS sucks and doing it any other way would have not worked.. at least for me. 😆
+
+[16-Mar-19 12:03 PM] ComputerGenie 👴🏼📢#7004
+The way I had read it, your blockTemplate.js just used the daemon template rather than calling transactions.js to create the cb manually; nothing more
+I'm glad this came up now, given the work I'll be doing next week already
+
+[16-Mar-19 12:04 PM] blackjok3r#3181
+no, because of the merkle calcualtion I think it was, I had to pass the coinbasee into the array of transactions as tx 0 on the daemon side. 
+The reqrite the merkle tree function in the stratum
+
+[16-Mar-19 12:04 PM] blackjok3r#3181
+and a few other things to make it not build the coinbase at all.. 
+The rest of the changes are realted to rtaking fees, and are all in the paytment processor and were a LOT mor complicated than that
+
+[16-Mar-19 12:05 PM] ComputerGenie 👴🏼📢#7004
+well I knew the latter, that was always my sticking point with it in theory, but that's still a separate matter 😛
+
+[16-Mar-19 12:06 PM] blackjok3r#3181
+tbh taking the fee was never a priotity but I wanted to amke sure the pool software was backwards compatible with all the config options
+
+[16-Mar-19 12:07 PM] blackjok3r#3181
+it "works" in that my ZEX pool hasnt been restarted since I set it up, its still running some extremly old STAKED komodod with billions of prints
+
+[16-Mar-19 12:07 PM] blackjok3r#3181
+😂
+
+[16-Mar-19 12:10 PM] ComputerGenie 👴🏼📢#7004
+I still think the whole thing needs a fresh start and stop using bastardized js from 2014 🤷🏽
+
+[16-Mar-19 12:10 PM] dukeleto#7326
+yes plz
+
+[16-Mar-19 12:10 PM] blackjok3r#3181
+agreed, but who has time for that :troll_cool:
+
+[16-Mar-19 12:15 PM] ComputerGenie 👴🏼📢#7004
+Well, I'm already doing a rewrite of the payments for the solo setups, so that "sticking point" is kinda moot for me now
+
+[16-Mar-19 12:36 PM] gcharang#6833
+@blackjok3r 
+```md
+- There are many features in the Komodo Ecosystem that can make an asset chain's daemon produce non-standard coinbase transactions. Examples include an assetchain parameter that creates new coins for a specified pubkey in every block or a CC module that adds outputs to the coinbase transaction.
+- This can be dealt using a mode called `disablecb`
+  - Usage: `./komodo-cli getblocktemplate '{"mode":"disablecb"}'`
+- The block template produced using this mode doesn't have the `"coinbasetxn": { ... } json object` but adds the coinbase transction to the `"transactions":[ ... ] array` just like a regular transaction.
+- Now the pool software can use the `"transactions":[ ... ] array` to create a block and take fees in the payment processor.
+```
+this is what I am adding to the docs. Any corrections/additions?
+
+{Reactions}
+shexy 
+
+[16-Mar-19 12:36 PM] blackjok3r#3181
+yes thats exactly how it works
+
+{Reactions}
+👍 
+
+[16-Mar-19 12:37 PM] blackjok3r#3181
+good job
+
+{Reactions}
+👆🏽 
+
+[16-Mar-19 01:00 PM] Mylo#8306
+what is stratum ELI5 ?
+
+[16-Mar-19 01:15 PM] ComputerGenie 👴🏼📢#7004
+@Mylo 
+Long ago, slush came up with a "middle man" theory for a pool to get the relevant data from the daemon and have the pool decide what work to dole out to workers.
+With "stratum" (in theory, at least), not every worker is working with the exact same random variable.
+This gives the pool both greater control and, in theory, a greater chance of finding a block.
+Core developers loved slush and this new theory so much that the code for giving a miner work directly was entirely stripped out of the code and the "stratum" method became the new way of doing things
+
+[16-Mar-19 01:16 PM] Mylo#8306
+like a traffic cop?
+
+[16-Mar-19 01:16 PM] ComputerGenie 👴🏼📢#7004
+sort of, yes
+
+[16-Mar-19 01:16 PM] Mylo#8306
+a juggling traffic cop
+
+[16-Mar-19 01:16 PM] ComputerGenie 👴🏼📢#7004
+a "layer" (stratum) between the daemon and the miner
+
+[16-Mar-19 01:18 PM] Mylo#8306
+ahhhhh, bless you genie, you beautiful & fierce pink unicorn
+
+[16-Mar-19 01:18 PM] ComputerGenie 👴🏼📢#7004
+lol
+
+[16-Mar-19 04:19 PM] FishyGuts#5085
+What's it take to start a KMD asset chain?  I have someone asking considering a project.
+
+[16-Mar-19 04:20 PM] FishyGuts#5085
+He's capable but if needed who should he contact?
+Github can get him started?  Or komododocs?
+
+[16-Mar-19 04:26 PM] jl777c#5810
+https://docs.komodoplatform.com/komodo/create-Komodo-Assetchain.html
+
+[16-Mar-19 04:37 PM] dukeleto#7326
+sudo make me an asset chain
+
+[16-Mar-19 04:37 PM] dukeleto#7326
+i have vague memory of somebody making a web GUI to help generate your AC params
+
+[16-Mar-19 04:38 PM] dukeleto#7326
+@FishyGuts with my recent patch, you can now do `komodod --help` and all asset chain parameters are documented
+
+[16-Mar-19 04:38 PM] dukeleto#7326
+not sure if that has hit the `dev` branch yet, but it's on `jl777` branch
+
+[16-Mar-19 04:43 PM] FishyGuts#5085
+And if they want dPoW?  Who should they contact?
+You guys rock, thanks
+
+[16-Mar-19 04:45 PM] dukeleto#7326
+@FishyGuts have them talk to @siu - Chainmakers
+
+[16-Mar-19 04:46 PM] siu - Chainmakers#3920
+#chainmakers does the dpow activations.
+
+[16-Mar-19 04:52 PM] Mylo#8306
+web gui is on hold, nice to have a blockchain appliance with text input.  less maintenance, less to go wrong, less dependencies.
+
+[16-Mar-19 04:52 PM] Mylo#8306
+"on hold" = busy.
+
+[16-Mar-19 04:53 PM] Mylo#8306
+https://raw.githubusercontent.com/imylomylo/cakeshopinabox/master/screenshots/cakeshop-kmdice.png
+
+{Embed}
+https://raw.githubusercontent.com/imylomylo/cakeshopinabox/master/screenshots/cakeshop-kmdice.png
+https://raw.githubusercontent.com/imylomylo/cakeshopinabox/master/screenshots/cakeshop-kmdice.png
+
+[16-Mar-19 04:53 PM] Mylo#8306
+can text-i-fy that web gui using `dialog`
+
+[16-Mar-19 04:54 PM] Mylo#8306
+see if i can do it next week.
+
+[16-Mar-19 04:57 PM] Mylo#8306
+https://codepen.io/imylomylo/full/XyxvEz
+
+{Embed}
+Mylo Mylo
+https://codepen.io/imylomylo/full/XyxvEz
+Vuetify AC Stepper Forms
+...
+https://s3-us-west-2.amazonaws.com/i.cdpn.io/1193073.XyxvEz.83f7e7fd-b4c0-4936-b431-1afbb64f2f97.png
+
+[16-Mar-19 04:57 PM] Mylo#8306
+if anyone wants to fork it on codepen.   vuetify, i  can help someone take it over
+
+[16-Mar-19 05:04 PM] D.rabbani#9094
+hi there just wanted to ask that i f i have negative balance  ? and confirmations -1 ? can i use zapwallettxes ?
+
+[16-Mar-19 05:04 PM] D.rabbani#9094
+to overcome the issue ?
+
+[16-Mar-19 05:06 PM] blackjok3r#3181
+yes
+
+[16-Mar-19 05:06 PM] dukeleto#7326
+conf -1 means it was re-orged
+
+[16-Mar-19 05:06 PM] blackjok3r#3181
+not on a staking chain.
+
+[16-Mar-19 05:06 PM] blackjok3r#3181
+it cna mean it was orphaned block
+
+[16-Mar-19 05:06 PM] D.rabbani#9094
+so will it resolve the issue ?
+
+[16-Mar-19 05:07 PM] dukeleto#7326
+@Mylo i am thinking of stupid-simple thing like http://myhush.org/config-generator/ which generates the CLI command to make a new asset chain
+
+[16-Mar-19 05:07 PM] blackjok3r#3181
+its supposed to delete them, but it fails to do it cleanly... so I had to fix it with a startup fix that restors the txns to fix the wallet... and they then forever have confirms = -1
+
+[16-Mar-19 05:07 PM] D.rabbani#9094
+yes its a POS chain
+
+[16-Mar-19 05:07 PM] dukeleto#7326
+maybe I can abuse that code to do what I want
+
+{Reactions}
+labs 
+
+[16-Mar-19 05:08 PM] dukeleto#7326
+@blackjok3r i was not clear, but I mean "it was re-orged away", which is the same as saying it was orphaned. It could have also been re-orged and stayed in main chain, but then it would not have conf -1. We are agreeing 😃
+
+{Reactions}
+👍 
+
+[16-Mar-19 05:08 PM] D.rabbani#9094
+so can i carry on with zapwallettxes ?
+
+[16-Mar-19 05:09 PM] D.rabbani#9094
+can someone please answer me than 😄 i think the block was orphaned as well that is why there is several conf with -1 on it
+
+[16-Mar-19 05:09 PM] blackjok3r#3181
+zapwallet will fix it yes
+
+[16-Mar-19 05:09 PM] D.rabbani#9094
+okai
+
+[16-Mar-19 05:09 PM] D.rabbani#9094
+thanks
+
+[16-Mar-19 05:14 PM] D.rabbani#9094
+nope it didnt solve
+
+[16-Mar-19 05:14 PM] D.rabbani#9094
+although not much balance on that one
+
+[16-Mar-19 05:14 PM] D.rabbani#9094
+but still i wanted to know the reason
+
+[16-Mar-19 05:14 PM] D.rabbani#9094
+i think probably its because of the account feature like they have use getaccountaddress "NAme"
+
+[16-Mar-19 05:14 PM] D.rabbani#9094
+certain account balances are still in negative
+
+[16-Mar-19 05:17 PM] blackjok3r#3181
+never use accounts they dont really work
+
+[16-Mar-19 05:32 PM] D.rabbani#9094
+yes told them but they didnt listen
+
+[16-Mar-19 05:32 PM] D.rabbani#9094
+is there any solution @blackjok3r  to overcome the issue
+
+[16-Mar-19 05:32 PM] D.rabbani#9094
+i have tried rescan and zapwallettxes
+

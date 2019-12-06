@@ -1,0 +1,373 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[24-Apr-19 12:42 PM] Alright#0419
+they want to embed what data?
+
+[24-Apr-19 12:44 PM] dukeleto#7326
+```
+Thanks for this PR.
+
+When the format for Sapling incoming viewing keys (section 5.6.6 of the protocol spec) was defined, I overlooked that there would not be sufficient information to tell which address it was meant for. We'll need to consider whether the external format should change in order to include that information, before merging this PR or equivalent.
+```
+
+[24-Apr-19 12:44 PM] dukeleto#7326
+https://github.com/zcash/zcash/pull/3822
+
+{Embed}
+https://github.com/zcash/zcash/pull/3822
+Add support for importing and exporting sapling ivk #3060 by bmlis...
+This is the implementation of support for importing and exporting incoming viewing keys for Sapling. We needed that for creating MVP of our product and it doesn&#39;t look like #3060 will be im...
+https://avatars0.githubusercontent.com/u/16122764?s=400&v=4
+
+[24-Apr-19 12:44 PM] Alright#0419
+Ahhh yes, that would be good to have
+
+[24-Apr-19 12:44 PM] Alright#0419
+it's not a hard fork or anything, is it?
+
+[24-Apr-19 12:44 PM] dukeleto#7326
+no
+
+[24-Apr-19 12:45 PM] dukeleto#7326
+this is RPC level stuff
+
+[24-Apr-19 12:45 PM] dukeleto#7326
+it's like a new kind of private key, which is only for sapling zaddrs and only gives you "watchonly" access to incoming xtns
+
+[24-Apr-19 12:45 PM] Alright#0419
+new format can be <view key><z addr> 😂
+
+[24-Apr-19 12:46 PM] Alright#0419
+why does it need to be "embedded"
+
+[24-Apr-19 12:47 PM] dukeleto#7326
+@Alright can't tell which level of irony or trolling you are on 😅
+
+[24-Apr-19 12:47 PM] dukeleto#7326
+@Alright what you describe is very similar, just very wasteful of space
+
+[24-Apr-19 12:48 PM] dukeleto#7326
+bech32 representation of something takes more bytes than storing a pubkey as a 64bit int in a special way, then doing one base58/bech32 of the whole thing
+
+[24-Apr-19 12:49 PM] dukeleto#7326
+@jl777c anywhere you want to use an IVK, you will need to store zaddr+IVK, does that work for your needs?
+
+[24-Apr-19 12:49 PM] jl777c#5810
+we are worried about space when the current state is not having any way of doing it
+
+[24-Apr-19 12:50 PM] jl777c#5810
+it will be used in atomic swaps, which will need to include chain, zaddr, etc
+
+[24-Apr-19 12:50 PM] dukeleto#7326
+@jl777c and you plan to store all that in the memo field, yes?
+
+[24-Apr-19 12:50 PM] jl777c#5810
+each use case would need to simply store it, like if  a wallet uses it, it should put it in the wallet
+
+[24-Apr-19 12:50 PM] dukeleto#7326
+there is plenty of room there, it's unused space in most transactions
+
+[24-Apr-19 12:50 PM] jl777c#5810
+makes sense to keep everything in the memo, including ordermatch details
+
+[24-Apr-19 12:51 PM] jl777c#5810
+i thought something was horribly broken and that is why it wasnt merged
+
+[24-Apr-19 12:51 PM] jl777c#5810
+this just means that it requires the caller to track some extra data. seems one of the sillier reasons to not have what is basically a critically needed functionality
+
+[24-Apr-19 12:51 PM] jl777c#5810
+with this, you can also prove you sent payments
+
+[24-Apr-19 12:51 PM] dukeleto#7326
+Last official word: `We'll need to consider whether the external format should change in order to include that information, before merging this PR or equivalent.`
+
+[24-Apr-19 12:52 PM] dukeleto#7326
+so Zcash needs to consider whether the format *should* change
+
+[24-Apr-19 12:52 PM] dukeleto#7326
+They didn't give the author of the PR any direction at all
+
+[24-Apr-19 12:52 PM] dukeleto#7326
+that was 2 months ago, the PR just gets more stale
+
+[24-Apr-19 12:53 PM] jl777c#5810
+we should thank the author for a perfectly usable viewing kyes
+
+[24-Apr-19 12:53 PM] dukeleto#7326
+This is pretty standard zec behavior. They often let my trivial commits sit for months while they decide about minutiae
+
+[24-Apr-19 12:54 PM] dukeleto#7326
+https://github.com/zcash/zcash/pull/3822#issuecomment-486216118
+
+{Embed}
+https://github.com/zcash/zcash/pull/3822
+Add support for importing and exporting sapling ivk #3060 by bmlis...
+This is the implementation of support for importing and exporting incoming viewing keys for Sapling. We needed that for creating MVP of our product and it doesn&#39;t look like #3060 will be im...
+https://avatars0.githubusercontent.com/u/16122764?s=400&v=4
+
+[24-Apr-19 12:54 PM] dukeleto#7326
+I thanked the author
+
+[24-Apr-19 12:55 PM] dukeleto#7326
+@jl777c worst case is that ZEC comes out with an amazing new IVK format, and we upgrade to that. I agree with you, let's use this, it's very nice
+
+[24-Apr-19 12:56 PM] jl777c#5810
+i remember seeing something about being able to efficiently detect incoming amounts to a large number of different addresses
+
+[24-Apr-19 12:56 PM] jl777c#5810
+do you know about that?
+
+[24-Apr-19 12:57 PM] dukeleto#7326
+@jl777c maybe, describe it a bit more?
+
+[24-Apr-19 12:57 PM] jl777c#5810
+currently if your wallet has 10,000 addresses, it is very slow to detect incoming amounts
+
+[24-Apr-19 12:57 PM] dukeleto#7326
+"diversified addresses" are a thing, I don't know if those have been merged
+
+[24-Apr-19 12:57 PM] jl777c#5810
+yes, what is it?
+
+[24-Apr-19 12:57 PM] dukeleto#7326
+yes, "diversified addresses"
+
+[24-Apr-19 12:58 PM] dukeleto#7326
+let me make sure I use the correct terminology
+
+[24-Apr-19 01:00 PM] dukeleto#7326
+@jl777c basically, it's BIP32 for sapling, called ZIP32: https://github.com/zcash/zips/blob/master/zip-0032.rst
+
+{Embed}
+https://github.com/zcash/zips/blob/master/zip-0032.rst
+zcash/zips
+Zcash Improvement Proposals. Contribute to zcash/zips development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/16122764?s=400&v=4
+
+[24-Apr-19 01:00 PM] dukeleto#7326
+@jl777c https://github.com/zcash/zcash/pull/3492
+
+{Embed}
+https://github.com/zcash/zcash/pull/3492
+Use ZIP 32 for all Sapling spending keys by str4d · Pull Request ...
+The wallet now only stores Sapling extended spending keys, and thus can
+only be used with keys generated from an HDSeed via ZIP 32. This means
+that all Sapling keys and addresses generated by users...
+https://avatars0.githubusercontent.com/u/16122764?s=400&v=4
+
+[24-Apr-19 01:00 PM] dukeleto#7326
+it's recently merged, but I don't think it's being fully utilized
+
+[24-Apr-19 01:01 PM] dukeleto#7326
+the TLDR is this: It means you can give out a unique shielded address, that can't be linked to any other zaddr
+
+[24-Apr-19 01:01 PM] dukeleto#7326
+but has the same private key as your "main zaddr"
+
+[24-Apr-19 01:02 PM] dukeleto#7326
+I think. Please correct me if I am wrong.
+
+[24-Apr-19 01:02 PM] jl777c#5810
+so it is more efficient to see if funds came in from a bunch of addresses?
+
+[24-Apr-19 01:02 PM] jl777c#5810
+i dont see it
+
+[24-Apr-19 01:02 PM] jl777c#5810
+if it is just bip32, you would still need to check all the different addresses
+
+[24-Apr-19 01:07 PM] dukeleto#7326
+Many diversified addresses can map to one IVK, is one thing
+
+[24-Apr-19 01:07 PM] dukeleto#7326
+so that means you import one IVK but listen to N diversified addresses
+
+[24-Apr-19 01:07 PM] dukeleto#7326
+I don't know about performance implications
+
+[24-Apr-19 01:07 PM] dukeleto#7326
+and docs about this stuff is almost non-existent
+
+[24-Apr-19 01:12 PM] jl777c#5810
+oh, then you can tell a deposit came into one of the addresses, but then wouldnt it be needed to scan all addresses, or there is some extra data in the ivk that shows which diversified address? i guess we need to wait for docs
+
+[24-Apr-19 01:40 PM] dukeleto#7326
+@jl777c that is what I was talking about, if you don't know which diversified address, you have to do a full scan. There are no docs, in the spec or code, currently
+
+[24-Apr-19 01:41 PM] dukeleto#7326
+https://twitter.com/dukeleto/status/1121045671715454976
+
+{Embed}
+Duke Leto (@dukeleto)
+https://twitter.com/dukeleto/status/1121045671715454976
+$KMD and $HUSH have merged support for Zcash Sapling incoming view keys (IVKs) thanks to @radix42 carrying an elderly + abandoned Github PR thru the desert from $ZEC world.
+Things persisted in not being what they seemed.
+https://t.co/J7NuW9Qs0V
+https://pbs.twimg.com/media/D47BGAIW4AEg0Ue.jpg:large
+Twitter
+
+{Reactions}
+😄 (2) 🙌 
+
+[24-Apr-19 01:41 PM] dukeleto#7326
+spreading the good word
+
+[24-Apr-19 02:12 PM] scubapanda#2485
+@dukeleto Sorry if this is a trivial question but I didn't get the point of incoming viewing key keeping track of the address it's related to. How would one do this? Wouldn't this only be useful if you have the private/spending key in the wallet already? To find out which addresses the viewing key is good for, without the private key already in the wallet, you'll always have to scan the chain to see which transactions it matches? If the private key, matching this viewing key, is already there, can't you then just check which one of these existing private keys it 'matches' - if any.
+
+[24-Apr-19 02:15 PM] mrlynch#5735
+ehr ma gherd, this will make my life sooo much easier
+
+[24-Apr-19 03:11 PM] dukeleto#7326
+@scubapanda not sure you understand. This is like "watchonly" addresses for shielded addresses
+
+[24-Apr-19 03:30 PM] dukeleto#7326
+@Decker `1. libcurl.mk now changed to build against static openssl from deps.` - pretty sure this broke the os x build
+
+[24-Apr-19 03:31 PM] dukeleto#7326
+from 03794dc20877
+
+[24-Apr-19 11:55 PM] ComputerGenie 👴🏼📢#7004
+any one know what would be so different about a larger rewards block that would cause daemon to kick out `ERROR: ContextualCheckBlock: contains a non-final transaction` when my pool tries to submit a block?
+
+[24-Apr-19 11:58 PM] ComputerGenie 👴🏼📢#7004
+seems to only happen if over 20 KMD
+
+[25-Apr-19 12:06 AM] Alright#0419
+https://github.com/jl777/komodo/blob/49f9276e8a98cf2be53f8bcd8494b9a0136a4e1a/src/main.cpp#L828
+
+https://github.com/jl777/komodo/blob/49f9276e8a98cf2be53f8bcd8494b9a0136a4e1a/src/primitives/transaction.h#L419
+
+`nSequence == std::numeric_limits<uint32_t>::max()`
+
+{Embed}
+https://github.com/jl777/komodo/blob/49f9276e8a98cf2be53f8bcd8494b9a0136a4e1a/src/main.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+{Embed}
+https://github.com/jl777/komodo/blob/49f9276e8a98cf2be53f8bcd8494b9a0136a4e1a/src/primitives/transaction.h
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[25-Apr-19 12:07 AM] Alright#0419
+no idea what that means though lol
+
+[25-Apr-19 12:07 AM] Alright#0419
+that's the condition triggering it though
+
+[25-Apr-19 12:20 AM] ComputerGenie 👴🏼📢#7004
+maybe because the incoming UTXO over the 30day cap something needs to be different about my block?
+or an issue in the latest dev branch?
+
+[25-Apr-19 01:35 AM] dukeleto#7326
+@ComputerGenie 👴🏼📢 finalized transactions, oh the joy
+
+[25-Apr-19 01:35 AM] dukeleto#7326
+@Alright that means "set nSequence to the largest value allowed to be stored in a uint32_t"
+
+[25-Apr-19 01:36 AM] dukeleto#7326
+I didn't know about "finalized" until recently, it's really low level stuff, below the level of confirmations
+
+[25-Apr-19 01:40 AM] dukeleto#7326
+@ComputerGenie 👴🏼📢 non-finalized means the transaction does not meet the requirements for timestamps and median blocktimes and it all gets very hairy
+
+[25-Apr-19 01:41 AM] dukeleto#7326
+it's not a bug in your code, sounds like funky timestamps that were by accident or perhaps somebody playing with timewarp attacks
+
+[25-Apr-19 01:42 AM] dukeleto#7326
+`IsFinalTx()` in src/main.cpp has a printf you can uncomment to get more debug data
+
+[25-Apr-19 03:40 AM] Alright#0419
+do we have a "go-to" repo for insight?
+
+[25-Apr-19 03:41 AM] Alright#0419
+where was the notarized height thing added? What's everyone using?
+
+[25-Apr-19 03:41 AM] NickH#5815
+Hey all, I asked over in mining and got an answer I didn't think was sufficient.  Anyone know why the -mineraddress flag doesn't work?  Is it true we need to use the -pubkey?
+
+[25-Apr-19 03:41 AM] Alright#0419
+it's deprecated
+
+[25-Apr-19 03:41 AM] Alright#0419
+use pubkey, it has basically the same effect
+
+[25-Apr-19 03:41 AM] Alright#0419
+what is it you're trying to do?
+
+[25-Apr-19 03:42 AM] NickH#5815
+We (Luxor) run nodes in multiple regions and provide the address of the wallet in the payment processor node.  We weren't seeing the blocks found in other regions showing up in the payment processor's wallet, and found that the coinbase is being sent to a different wallet address
+
+[25-Apr-19 03:42 AM] NickH#5815
+Alright, pubkey it is
+
+[25-Apr-19 03:42 AM] NickH#5815
+Thanks!
+
+[25-Apr-19 03:42 AM] Alright#0419
+Not sure I understand
+
+[25-Apr-19 03:42 AM] Alright#0419
+your stratum should be dictating the address it mines to, no?
+
+[25-Apr-19 03:42 AM] Alright#0419
+@NickH
+
+[25-Apr-19 03:43 AM] NickH#5815
+We use the coinbasetx provided in the GBT.
+
+[25-Apr-19 03:43 AM] Alright#0419
+Ah then yes, `-pubkey` will work
+
+[25-Apr-19 03:43 AM] NickH#5815
+Until now, hadn't had an occasion to write the serialization logic for generating our own Coinbase
+
+[25-Apr-19 03:44 AM] Alright#0419
+careful though, it makes all change outputs go to that address as well
+
+[25-Apr-19 03:47 AM] Alright#0419
+@NickH this wouldn't happen to be your pool's address, would it? `RNvBniFAsGdddGncKm7p8WZbBz8JPuJkRY`
+
+[25-Apr-19 03:48 AM] Alright#0419
+that address has been mining < 3 KMD block rewards for some reason
+
+[25-Apr-19 03:55 AM] NickH#5815
+that's not us
+
+[25-Apr-19 10:34 AM] dukeleto#7326
+@Alright @CHMEX added notarized for me, migrated it from old hush explorer. I don't know the "main kmd insight repo" and I also would like to know
+
+[25-Apr-19 10:34 AM] jl777c#5810
+@SHossain should know
+
+[25-Apr-19 10:35 AM] SHossain#0007
+https://github.com/DeckerSU/komodo-explorers-install
+
+{Embed}
+https://github.com/DeckerSU/komodo-explorers-install
+DeckerSU/komodo-explorers-install
+Install script for KMD and assets Insight explorer install - DeckerSU/komodo-explorers-install
+https://avatars3.githubusercontent.com/u/22120003?s=400&v=4
+
+[25-Apr-19 10:35 AM] SHossain#0007
+this is the main setup repo
+
+[25-Apr-19 10:37 AM] SHossain#0007
+@Decker has automated scripts to compile and launch
+
+[25-Apr-19 10:38 AM] jl777c#5810
+dont we have a repo that has links to all the main repos?
+
+[25-Apr-19 10:38 AM] jl777c#5810
+do we have a repo of docker images?
+

@@ -1,0 +1,575 @@
+==============================================================
+Guild: Komodo
+Channel: dev-nspv
+Topic: ./komodod -nSPV=1 -ac_reward=100000000  -ac_name=NSPV -ac_supply=10000000000 -ac_cc=2 -addressindex=1 -spentindex=1 -connect=5.9.102.210 &
+./komodod -nSPV=1 -addnode=5.9.253.195 &
+https://drive.google.com/drive/folders/1ZvzrhNBQgroejTKPl0kCOTJ8h7XMnO2M?usp=sharing
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[13-Jul-19 04:14 PM] jl777c#5810
+added skipcounts (max 127 for now) to listunspent and listtransactions
+
+[13-Jul-19 04:15 PM] jl777c#5810
+next item will take more time as it involves getting mempool state into nSPV, expected next release will be tuesday
+
+[13-Jul-19 04:15 PM] jl777c#5810
+will squeeze in bugfixes for CC rpc as they are reported
+
+[13-Jul-19 05:29 PM] TonyL#3577
+`did anyone notice yet that CC works with nSPV?`
+thats just fantastic!
+
+[13-Jul-19 05:30 PM] jl777c#5810
+i still need to implement the mempool lookup functions to get to 90% coverage, currently i estimate 80% should work, at least mostly
+
+[13-Jul-19 05:36 PM] jl777c#5810
+not sure if the automated tests will work well enough with the current state of things, some calls might even crash
+
+[13-Jul-19 05:38 PM] TonyL#3577
+CC unit tests made with regtest so will not work with nSPV from a box
+
+[13-Jul-19 05:44 PM] TonyL#3577
+will work on making CC tests more flexible (possibility to run on any real chain, not only hardcoded regtest one) after hardfork  - should help for a lot in different cases and nSPV CCs testing as well
+
+[13-Jul-19 06:02 PM] jl777c#5810
+ok
+
+[13-Jul-19 06:02 PM] TonyL#3577
+nspv_getinfo works on OSX:
+```Antons-Air:src antonlysakov$ ./komodo-cli nspv_getinfo
+{
+  "result": "success",
+  "nSPV": "superlite",
+  "address": "RQ1mvCUcziWzRwE8Ugtex29VjoFjRzxQJT",
+  "pubkey": "03aa464529c190398d44017c3d7a71a854ad195a9d396bf84182679c242bb60085",
+  "wifexpires": 752,
+  "height": 1441331,
+  "chaintip": "0b7cb4d51a974214986424bcdd049a241f2ef510151bb99ba282a4ad24c18ee4",
+  "notarization": {
+    "notarized_height": 1441300,
+    "notarized_blockhash": "00000000855a88ca889bdb9e59f780729d50ae3fa9f8d4f122c773689189d6b0",
+    "notarization_txid": "c5dc7dcfe71c11bc32811976c3f2ee2eb7ef0f947877ff35c7a8796ee1e2e1fe",
+    "notarization_txidheight": 1441313,
+    "notarization_desttxid": "163a3949d2cdc9c7886879c002db5998eb93f7bd80efe3fe524ec54c8bbce739"
+  },
+  "header": {
+    "height": 1441331,
+    "blockhash": "0b7cb4d51a974214986424bcdd049a241f2ef510151bb99ba282a4ad24c18ee4",
+    "hashPrevBlock": "0a8f5815a05a6589a62a1ddde6b1a4c07eae26a72dfc1fd23c111aa9ce521b80",
+    "hashMerkleRoot": "5b037c531b99b51c899006eb30eb6c4c706a7d1a39a2b7d6285842ff09d8acf7",
+    "nTime": 1563040864,
+    "nBits": 486610088
+  },
+  "lastpeer": "23.254.165.16:7770"
+}
+``` 
+but cant spend ```./komodo-cli nspv_spend RQ1mvCUcziWzRwE8Ugtex29VjoFjRzxQJT 1
+{
+  "result": "error",
+  "address": "",
+  "srcaddr": "RQ1mvCUcziWzRwE8Ugtex29VjoFjRzxQJT",
+  "nodeheight": 0,
+  "infoheight": 1441330,
+  "error": "couldnt get addressutxos"
+}
+``` (no any prints)
+
+[13-Jul-19 06:03 PM] TonyL#3577
+using same peer/wif/commit as on Ubuntu (on ubuntu now spending works fine)
+
+[13-Jul-19 06:03 PM] TonyL#3577
+```./komodo-cli nspv_listunspent
+{
+  "result": "error",
+  "error": "no utxos result"
+}
+```
+
+[13-Jul-19 06:03 PM] jl777c#5810
+does listunspent work?
+
+[13-Jul-19 06:04 PM] jl777c#5810
+i should add lastpeer to that error
+
+[13-Jul-19 06:04 PM] TonyL#3577
+last peer in nspv_getinfo ` "lastpeer": "23.254.165.16:7770"`
+
+[13-Jul-19 06:04 PM] TonyL#3577
+```  "result": "success",
+  "nSPV": "superlite",
+  "address": "RQ1mvCUcziWzRwE8Ugtex29VjoFjRzxQJT",
+  "pubkey": "03aa464529c190398d44017c3d7a71a854ad195a9d396bf84182679c242bb60085",
+  "wifexpires": 619,``` and I'm logined
+
+[13-Jul-19 06:06 PM] jl777c#5810
+doex txproof work?
+
+[13-Jul-19 06:07 PM] TonyL#3577
+```./komodo-cli nspv_txproof  d712c3027c4e48d80ed42ff55fe383e11955a30c066d8c235a45ec32e26bd890 1441324
+req txproof d712c3027c4e48d80ed42ff55fe383e11955a30c066d8c235a45ec32e26bd890/v0 at height.1441324
+ADD CACHE txproof d712c3027c4e48d80ed42ff55fe383e11955a30c066d8c235a45ec32e26bd890
+got txproof response 1563041250 size.3316 d712c3027c4e48d80ed42ff55fe383e11955a30c066d8c235a45ec32e26bd890 ht.1441324
+{
+  "txid": "d712c3027c4e48d80ed42ff55fe383e11955a30c066d8c235a45ec32e26bd890",
+  "height": 1441324,
+  "txlen": 1637,
+  "txprooflen": 1622,
+  "lastpeer": "23.254.165.16:7770"
+}
+```
+
+[13-Jul-19 06:08 PM] jl777c#5810
+nspv_notarizations?
+
+[13-Jul-19 06:08 PM] jl777c#5810
+nspv_hdrsproof?
+
+[13-Jul-19 06:09 PM] TonyL#3577
+both calls works
+
+[13-Jul-19 06:09 PM] jl777c#5810
+what about the NSPV chain, that is easier to debug
+
+[13-Jul-19 06:10 PM] TonyL#3577
+where NSPV chain params can be found? On channel top can see only link on medium article
+
+[13-Jul-19 06:10 PM] Mark81#4505
+is there windows version for komodd.exe that has iln support?
+
+[13-Jul-19 06:10 PM] jl777c#5810
+click it, it will bring up the rest
+
+{Reactions}
+🙏 
+
+[13-Jul-19 06:10 PM] jl777c#5810
+windows still has some issues (as usual)
+
+[13-Jul-19 06:11 PM] Mark81#4505
+hmmm is there site for like it used to be for latests komodod executables?
+
+[13-Jul-19 06:11 PM] TonyL#3577
+thank you for params 😃
+
+[13-Jul-19 06:11 PM] TonyL#3577
+when clicked link just link opened in browser
+
+[13-Jul-19 06:12 PM] TonyL#3577
+maybe I have different discord
+
+[13-Jul-19 06:12 PM] TonyL#3577
+could you please send a few NSPV to RQ1mvCUcziWzRwE8Ugtex29VjoFjRzxQJT ?
+
+[13-Jul-19 06:13 PM] jl777c#5810
+use faucet
+
+[13-Jul-19 06:13 PM] TonyL#3577
+oh right
+
+[13-Jul-19 06:14 PM] TonyL#3577
+```./komodo-cli -ac_name=NSPV faucetget
+got utxos response 1563041631 size.201
+req txproof 002f8cbf6fe0a0ae371c1565c08d0450f19a89cbb5d1742083add9d6544bce00/v0 at height.0
+ADD CACHE txproof 002f8cbf6fe0a0ae371c1565c08d0450f19a89cbb5d1742083add9d6544bce00
+got txproof response 1563041632 size.368 002f8cbf6fe0a0ae371c1565c08d0450f19a89cbb5d1742083add9d6544bce00 ht.0
+nValue too small or already spent in mempool
+req txproof 8458898f3c6ef1d3be1670496901d1061fe18b32a72b70012a2927c05ef242f7/v0 at height.0
+no pnodes
+txproof timeout
+txproof error 0000000000000000000000000000000000000000000000000000000000000000 != 8458898f3c6ef1d3be1670496901d1061fe18b32a72b70012a2927c05ef242f7
+couldnt get tx
+cant find faucet inputs
+{
+  "result": "error",
+  "error": "couldnt create faucet get transaction"
+}
+```
+
+[13-Jul-19 06:14 PM] jl777c#5810
+no pnodes
+
+[13-Jul-19 06:14 PM] TonyL#3577
+```./komodo-cli -ac_name=NSPV nspv_getinfo
+{
+  "result": "success",
+  "nSPV": "superlite",
+  "address": "RQ1mvCUcziWzRwE8Ugtex29VjoFjRzxQJT",
+  "pubkey": "03aa464529c190398d44017c3d7a71a854ad195a9d396bf84182679c242bb60085",
+  "wifexpires": 742,
+  "height": 2667,
+  "chaintip": "08022ef5b8a7941f09121fc107783196a6c923cd94fb9c56305ddee6623fe1fa",
+  "notarization": {
+    "notarized_height": 0,
+    "notarized_blockhash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "notarization_txid": "0000000000000000000000000000000000000000000000000000000000000000",
+    "notarization_txidheight": 0,
+    "notarization_desttxid": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "header": {
+    "height": 2667,
+    "blockhash": "08022ef5b8a7941f09121fc107783196a6c923cd94fb9c56305ddee6623fe1fa",
+    "hashPrevBlock": "0103ac0769462e27dd3d9cef9cda5840e833b8f5587313db76fb8d091e44bd0d",
+    "hashMerkleRoot": "867d67902a692e8df9e61102fa4e0e168c3b7d5380aca5c5e3b68e1769279459",
+    "nTime": 1563017935,
+    "nBits": 537417098
+  },
+  "lastpeer": "5.9.102.210:20266"
+}
+```
+
+[13-Jul-19 06:14 PM] jl777c#5810
+this is osx?
+
+[13-Jul-19 06:15 PM] TonyL#3577
+On next call dont have error about pnodes:
+```./komodo-cli -ac_name=NSPV faucetget
+nValue too small or already spent in mempool
+req txproof 8458898f3c6ef1d3be1670496901d1061fe18b32a72b70012a2927c05ef242f7/v0 at height.0
+ADD CACHE txproof 8458898f3c6ef1d3be1670496901d1061fe18b32a72b70012a2927c05ef242f7
+got txproof response 1563041679 size.291 8458898f3c6ef1d3be1670496901d1061fe18b32a72b70012a2927c05ef242f7 ht.0
+nValue too small or already spent in mempool
+cant find faucet inputs
+{
+  "result": "error",
+  "error": "couldnt create faucet get transaction"
+}
+```
+
+[13-Jul-19 06:15 PM] TonyL#3577
+yes, now will try on Ubuntu
+
+[13-Jul-19 06:16 PM] TonyL#3577
+same on ubuntu
+
+[13-Jul-19 06:16 PM] TonyL#3577
+```./komodo-cli -ac_name=NSPV faucetget
+got utxos response 1563041759 size.201
+req txproof 002f8cbf6fe0a0ae371c1565c08d0450f19a89cbb5d1742083add9d6544bce00/v0 at height.0
+ADD CACHE txproof 002f8cbf6fe0a0ae371c1565c08d0450f19a89cbb5d1742083add9d6544bce00
+got txproof response 1563041759 size.368 002f8cbf6fe0a0ae371c1565c08d0450f19a89cbb5d1742083add9d6544bce00 ht.0
+nValue too small or already spent in mempool
+req txproof 8458898f3c6ef1d3be1670496901d1061fe18b32a72b70012a2927c05ef242f7/v0 at height.0
+no pnodes
+txproof timeout
+txproof error 0000000000000000000000000000000000000000000000000000000000000000 != 8458898f3c6ef1d3be1670496901d1061fe18b32a72b70012a2927c05ef242f7
+couldnt get tx
+cant find faucet inputs
+{
+  "result": "error",
+  "error": "couldnt create faucet get transaction"
+}
+```
+
+[13-Jul-19 06:17 PM] TonyL#3577
+oh on ubuntu version is not correct, updating. but on OSX is latest
+
+[13-Jul-19 06:18 PM] jl777c#5810
+without listunspent, it seems not many tx will work
+
+[13-Jul-19 06:18 PM] jl777c#5810
+sent you some funds
+
+[13-Jul-19 06:20 PM] jl777c#5810
+it seems i broke faucetget today, worked yesterday.
+
+[13-Jul-19 06:20 PM] jl777c#5810
+investigating
+
+[13-Jul-19 06:20 PM] TonyL#3577
+```./komodo-cli -ac_name=NSPV nspv_listunspent
+got utxos response 1563042031 size.89
+{
+  "result": "success",
+  "utxos": [
+  ],
+  "address": "RQ1mvCUcziWzRwE8Ugtex29VjoFjRzxQJT",
+  "isCC": 0,
+  "height": 2667,
+  "numutxos": 0,
+  "balance": 0,
+  "lastpeer": "5.9.102.210:20266"
+}
+```
+
+[13-Jul-19 06:21 PM] jl777c#5810
+i just started a miner, its in mempool
+
+[13-Jul-19 06:21 PM] TonyL#3577
+at least it works (it OSX)
+
+[13-Jul-19 06:21 PM] TonyL#3577
+so maybe ```./komodo-cli nspv_listunspent
+{
+  "result": "error",
+  "error": "no utxos result"
+}
+``` on KMD is just seednode issue
+
+[13-Jul-19 06:21 PM] jl777c#5810
+yes, i think some sort of packet alignment problem on osx, but it is mostly working
+
+[13-Jul-19 06:22 PM] jl777c#5810
+add the 5.9.253.199 to 203 peers
+
+[13-Jul-19 06:26 PM] TonyL#3577
+```./komodod -nSPV=1 -addnode=5.9.253.199 -addnode=5.9.253.200 -addnode=5.9.253.201 -addnode=5.9.253.202 -addnode=5.9.253.203 &
+``` this way?
+
+[13-Jul-19 06:26 PM] jl777c#5810
+ok
+
+[13-Jul-19 06:26 PM] jl777c#5810
+you can verify via getpeerinfo
+
+[13-Jul-19 06:26 PM] TonyL#3577
+```./komodo-cli nspv_getinfo
+no pnodes
+{
+  "result": "success",
+  "nSPV": "superlite",
+  "height": 0,
+```
+
+[13-Jul-19 06:27 PM] TonyL#3577
+```./komodo-cli -ac_name=NSPV faucetinfo
+nValue too small or already spent in mempool
+req txproof cb96a0718faa3cde7385750df2e4f8e8502208709572dae5908b8fe16961c627/v0 at height.0
+ADD CACHE txproof cb96a0718faa3cde7385750df2e4f8e8502208709572dae5908b8fe16961c627
+got txproof response 1563042456 size.300 cb96a0718faa3cde7385750df2e4f8e8502208709572dae5908b8fe16961c627 ht.0
+nValue too small or already spent in mempool
+nValue too small or already spent in mempool
+{
+  "result": "success",
+  "name": "Faucet",
+  "funding": "0.00000000"
+}```
+
+[13-Jul-19 06:27 PM] TonyL#3577
+maybe 0 balance is a problem?
+
+[13-Jul-19 06:28 PM] jl777c#5810
+i duplicated the faucet bug
+
+{Reactions}
+👌 
+
+[13-Jul-19 06:49 PM] jl777c#5810
+pushed fix to nSPV branch
+
+[13-Jul-19 06:50 PM] jl777c#5810
+i added a too extreme error check, which basically broke all CC spends
+
+[13-Jul-19 06:50 PM] jl777c#5810
+should be much happier now
+
+[13-Jul-19 07:01 PM] TonyL#3577
+```./komodo-cli -ac_name=NSPV faucetget
+found valid txid after 28020 iterations 1563044440
+{
+  "result": "success",
+  "hex": "0400008085202f890100b00442ce59236297f3a4a205cf48ba0a14e15976fe580c26be7e1963e1fc00000000007b4c79a276a072a26ba067a565802103682b255c40d0cde8faee381a1a50bbb89980ff24539cb8518e294d3a63cefe128140be6cd0235a8ff85ba3f52dee940bad781af722bd8adaf807f65f64cf098cd6dd07f3d8e761100c65f2c8e47049b260a1413678d9ad48bfe9e4d2cfa118bab844a100af038001e4a10001ffffffff039048610200000000302ea22c8020e029c511da55523565835887e412e5a0c9b920801b007000df45e545f25028248103120c008203000401cc8096980000000000232103aa464529c190398d44017c3d7a71a854ad195a9d396bf84182679c242bb60085ac0000000000000000086a06e447cbdcad0e00000000000000000000000000000000000000"
+}
+```
+
+[13-Jul-19 07:01 PM] TonyL#3577
+```./komodo-cli -ac_name=NSPV nspv_broadcast 0400008085202f890100b00442ce59236297f3a4a205cf48ba0a14e15976fe580c26be7e1963e1fc00000000007b4c79a276a072a26ba067a565802103682b255c40d0cde8faee381a1a50bbb89980ff24539cb8518e294d3a63cefe128140be6cd0235a8ff85ba3f52dee940bad781af722bd8adaf807f65f64cf098cd6dd07f3d8e761100c65f2c8e47049b260a1413678d9ad48bfe9e4d2cfa118bab844a100af038001e4a10001ffffffff039048610200000000302ea22c8020e029c511da55523565835887e412e5a0c9b920801b007000df45e545f25028248103120c008203000401cc8096980000000000232103aa464529c190398d44017c3d7a71a854ad195a9d396bf84182679c242bb60085ac0000000000000000086a06e447cbdcad0e00000000000000000000000000000000000000
+got broadcast response 1563044450 size.37 001f64980d6c276ae4253090ab89c9997c261b95399b7ae01b5ed1d93b972100 retcode.-3
+{
+  "result": "success",
+  "expected": "001f64980d6c276ae4253090ab89c9997c261b95399b7ae01b5ed1d93b972100",
+  "broadcast": "001f64980d6c276ae4253090ab89c9997c261b95399b7ae01b5ed1d93b972100",
+  "retcode": -3,
+  "type": "error adding to mempool",
+  "lastpeer": "5.9.102.210:20266"
+}
+```
+
+[13-Jul-19 07:02 PM] TonyL#3577
+but tx was rejected - I wonder that because it's not fresh address (got one tx from you), let me try another one
+
+[13-Jul-19 07:03 PM] TonyL#3577
+```./komodo-cli -ac_name=NSPV nspv_broadcast 0400008085202f890100b00442ce59236297f3a4a205cf48ba0a14e15976fe580c26be7e1963e1fc00000000007b4c79a276a072a26ba067a565802103682b255c40d0cde8faee381a1a50bbb89980ff24539cb8518e294d3a63cefe1281409f01097ff54afc6b56e262353d2fd9042e4491e8eb88d7f207d7385064e3854c72e4ad58be58fac60a6f59cfc0462c491c6edd5b03f94a7e73485c37383894d7a100af038001e4a10001ffffffff039048610200000000302ea22c8020e029c511da55523565835887e412e5a0c9b920801b007000df45e545f25028248103120c008203000401cc8096980000000000232102a0fda1f679d5e8583c3d8d2b9a0efd3727838836b01fc7f19a3ba7ecb5a4d05fac0000000000000000086a06e447fc91ff0a00000000000000000000000000000000000000
+got broadcast response 1563044609 size.37 0013c918fba43aaf81e8ffc70abb151e47fd42096ef124a6dace4119d854e600 retcode.1
+{
+  "result": "success",
+  "expected": "0013c918fba43aaf81e8ffc70abb151e47fd42096ef124a6dace4119d854e600",
+  "broadcast": "0013c918fba43aaf81e8ffc70abb151e47fd42096ef124a6dace4119d854e600",
+  "retcode": 1,
+  "type": "broadcast and mempool",
+  "lastpeer": "5.9.102.210:20266"
+}
+``` aha, for a fresh address seems fine
+
+[13-Jul-19 07:04 PM] TonyL#3577
+now it's much easier to drain faucets with nspv btw - no need to restart wallet with new pubkey - can just nspv_login with new address
+
+[13-Jul-19 07:04 PM] jl777c#5810
+yes, that is how it should work. nSPV is pretty handy
+
+[13-Jul-19 07:04 PM] jl777c#5810
+oh, the nSPV branch has nspv_listtransactions
+
+[13-Jul-19 07:04 PM] jl777c#5810
+also i added skipcount parameter to that and listunspent
+
+[13-Jul-19 07:05 PM] jl777c#5810
+dont go above skipcount of 127 for now. i didnt want to hardfork the network twices in a day
+
+[13-Jul-19 07:06 PM] TonyL#3577
+```./komodo-cli -ac_name=NSPV nspv_listtransactions
+got txids response 1563044747 size.265
+{
+  "result": "success",
+  "txids": [
+    {
+      "height": 2668,
+      "txid": "bbb529a739a8ef70e7ce4e6f9f4e0473694de6f8f05ee61d172a8d7b610e8217",
+      "vout": 0,
+      "value": 77.7
+    },
+    {
+      "height": 2678,
+      "txid": "b6ddd6254f2da7da6df6839ee92920e4192cb87a3a7a91f016e534979cfe2148",
+      "vout": 0,
+      "value": 1
+    },
+    {
+      "height": 2678,
+      "txid": "b6ddd6254f2da7da6df6839ee92920e4192cb87a3a7a91f016e534979cfe2148",
+      "vout": 0,
+      "value": -77.7
+    },
+    {
+      "height": 2678,
+      "txid": "b6ddd6254f2da7da6df6839ee92920e4192cb87a3a7a91f016e534979cfe2148",
+      "vout": 1,
+      "value": 76.6999
+    }
+  ],
+  "address": "RQ1mvCUcziWzRwE8Ugtex29VjoFjRzxQJT",
+  "isCC": 0,
+  "height": 2772,
+  "numtxids": 4,
+  "lastpeer": "5.9.102.210:20266"
+}
+```
+
+[13-Jul-19 07:06 PM] TonyL#3577
+now can make tx history in pywallet with this call
+
+[13-Jul-19 07:06 PM] jl777c#5810
+cool, it has -77.7 when you spend it!
+
+[13-Jul-19 07:07 PM] jl777c#5810
+maybe when the value is negative the "vout" should be "vin"?
+
+[13-Jul-19 07:09 PM] TonyL#3577
+yes some groupping would be helpful
+
+[13-Jul-19 07:09 PM] TonyL#3577
+to display vins and vouts of single tx together
+
+[13-Jul-19 07:10 PM] jl777c#5810
+what exact was b6ddd6254f2da7da6df6839ee92920e4192cb87a3a7a91f016e534979cfe2148
+
+[13-Jul-19 07:11 PM] TonyL#3577
+I sent 1 coin to myself
+
+[13-Jul-19 07:11 PM] jl777c#5810
+need all the vins and vouts to see how it maps to the above list
+
+[13-Jul-19 07:11 PM] jl777c#5810
+my guess is 1 vin0 for 77.7 and 2 vouts, 1 and 76.9999
+
+[13-Jul-19 07:12 PM] jl777c#5810
+there seems no way to link it to the 77.7 from bbb529a739a8ef70e7ce4e6f9f4e0473694de6f8f05ee61d172a8d7b610e8217
+
+[13-Jul-19 07:13 PM] TonyL#3577
+first `77.7` it's your tx, 
+`-77.7` input in tx which I sent to myself `76.6999` change `1` actual tx amount
+
+[13-Jul-19 07:13 PM] TonyL#3577
+I wonder this way, let me make full node to check
+
+[13-Jul-19 07:15 PM] jl777c#5810
+it seems very complex to make it intelligible... maybe just list all entries for the same txid together, at least you can tell if a txid was a payment you made or a payment you did
+
+[13-Jul-19 07:15 PM] TonyL#3577
+https://paste.ubuntu.com/p/vvdzfTwhcP/
+
+[13-Jul-19 07:15 PM] jl777c#5810
+yes, so the "vout" should be "vin" when it is negative
+
+[13-Jul-19 07:16 PM] jl777c#5810
+pushed that fix
+
+[13-Jul-19 07:17 PM] TonyL#3577
+would be great if all vin/vouts of `b6ddd6254f2da7da6df6839ee92920e4192cb87a3a7a91f016e534979cfe2148` combined to single list
+
+[13-Jul-19 07:17 PM] jl777c#5810
+for now just display it as raw data
+
+[13-Jul-19 07:17 PM] jl777c#5810
+at least all the data is there without needing to do a bunch of gettransactions
+
+{Reactions}
+💯 
+
+[13-Jul-19 07:18 PM] TonyL#3577
+ok, in general I can iterate and just combine if next one txid is the same as previous one (so make such vin/vouts lists for txids on gui side)
+
+[13-Jul-19 07:18 PM] jl777c#5810
+any shortfall would be the payment to an external address
+
+[13-Jul-19 07:18 PM] jl777c#5810
+other than the txfee
+
+[13-Jul-19 07:18 PM] jl777c#5810
+a positive amount is change
+
+[13-Jul-19 07:18 PM] jl777c#5810
+negative amount is spending a utxo
+
+[13-Jul-19 07:19 PM] jl777c#5810
+so you spent 77.7, got change and payment of 1 and 76.9999, cant tell which is the change
+
+[13-Jul-19 07:22 PM] TonyL#3577
+```./komodo-cli -ac_name=NSPV nspv_listtransactions
+got txids response 1563045724 size.265
+{
+  "result": "success",
+  "txids": [
+    {
+      "height": 2668,
+      "txid": "bbb529a739a8ef70e7ce4e6f9f4e0473694de6f8f05ee61d172a8d7b610e8217",
+      "value": 77.7,
+      "vout": 0
+    },
+    {
+      "height": 2678,
+      "txid": "b6ddd6254f2da7da6df6839ee92920e4192cb87a3a7a91f016e534979cfe2148",
+      "value": 1,
+      "vout": 0
+    },
+    {
+      "height": 2678,
+      "txid": "b6ddd6254f2da7da6df6839ee92920e4192cb87a3a7a91f016e534979cfe2148",
+      "value": -77.7,
+      "vin": 0
+    },
+    {
+      "height": 2678,
+      "txid": "b6ddd6254f2da7da6df6839ee92920e4192cb87a3a7a91f016e534979cfe2148",
+      "value": 76.6999,
+      "vout": 1
+    }
+```
+
+[13-Jul-19 07:23 PM] TonyL#3577
+parseable now 😃
+
+[13-Jul-19 07:26 PM] jl777c#5810
+do spends get to all 0 retcodes on the first time now?
+

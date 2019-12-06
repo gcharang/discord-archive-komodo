@@ -1,0 +1,1688 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Komodo - feed-tweets</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+
+    <style>
+        /* === GENERAL === */
+
+@font-face {
+    font-family: Whitney;
+    src: url(https://discordapp.com/assets/6c6374bad0b0b6d204d8d6dc4a18d820.woff);
+    font-weight: 300;
+}
+
+@font-face {
+    font-family: Whitney;
+    src: url(https://discordapp.com/assets/e8acd7d9bf6207f99350ca9f9e23b168.woff);
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: Whitney;
+    src: url(https://discordapp.com/assets/3bdef1251a424500c1b3a78dea9b7e57.woff);
+    font-weight: 500;
+}
+
+@font-face {
+    font-family: Whitney;
+    src: url(https://discordapp.com/assets/be0060dafb7a0e31d2a1ca17c0708636.woff);
+    font-weight: 600;
+}
+
+@font-face {
+    font-family: Whitney;
+    src: url(https://discordapp.com/assets/8e12fb4f14d9c4592eb8ec9f22337b04.woff);
+    font-weight: 700;
+}
+
+body {
+    font-family: "Whitney", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 17px;
+}
+
+a {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+img {
+    object-fit: contain;
+}
+
+.markdown {
+    white-space: pre-wrap;
+    line-height: 1.3;
+    overflow-wrap: break-word;
+}
+
+.spoiler {
+    border-radius: 3px;
+}
+
+.quote {
+    border-left: 4px solid;
+    border-radius: 3px;
+    margin: 8px 0;
+    padding-left: 10px;
+}
+
+.pre {
+    font-family: "Consolas", "Courier New", Courier, monospace;
+}
+
+.pre--multiline {
+    margin-top: 4px;
+    padding: 8px;
+    border: 2px solid;
+    border-radius: 5px;
+}
+
+.pre--inline {
+    padding: 2px;
+    border-radius: 3px;
+    font-size: 85%;
+}
+
+.mention {
+    font-weight: 500;
+}
+
+.emoji {
+    width: 1.45em;
+    height: 1.45em;
+    margin: 0 1px;
+    vertical-align: -0.4em;
+}
+
+.emoji--small {
+    width: 1rem;
+    height: 1rem;
+}
+
+.emoji--large {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* === INFO === */
+
+.info {
+    display: flex;
+    max-width: 100%;
+    margin: 0 5px 10px 5px;
+}
+
+.info__guild-icon-container {
+    flex: 0;
+}
+
+.info__guild-icon {
+    max-width: 88px;
+    max-height: 88px;
+}
+
+.info__metadata {
+    flex: 1;
+    margin-left: 10px;
+}
+
+.info__guild-name {
+    font-size: 1.4em;
+}
+
+.info__channel-name {
+    font-size: 1.2em;
+}
+
+.info__channel-topic {
+    margin-top: 2px;
+}
+
+.info__channel-message-count {
+    margin-top: 2px;
+}
+
+.info__channel-date-range {
+    margin-top: 2px;
+}
+
+/* === CHATLOG === */
+
+.chatlog {
+    max-width: 100%;
+    margin-bottom: 24px;
+}
+
+.chatlog__message-group {
+    display: flex;
+    margin: 0 10px;
+    padding: 15px 0;
+    border-top: 1px solid;
+}
+
+.chatlog__author-avatar-container {
+    flex: 0;
+    width: 40px;
+    height: 40px;
+}
+
+.chatlog__author-avatar {
+    border-radius: 50%;
+    height: 40px;
+    width: 40px;
+}
+
+.chatlog__messages {
+    flex: 1;
+    min-width: 50%;
+    margin-left: 20px;
+}
+
+.chatlog__author-name {
+    font-size: 1em;
+    font-weight: 500;
+}
+
+.chatlog__timestamp {
+    margin-left: 5px;
+    font-size: .75em;
+}
+
+.chatlog__message {
+    padding: 2px 5px;
+    margin-right: -5px;
+    margin-left: -5px;
+    background-color: transparent;
+    transition: background-color 1s ease;
+}
+
+.chatlog__content {
+    font-size: .9375em;
+    word-wrap: break-word;
+}
+
+.chatlog__edited-timestamp {
+    margin-left: 3px;
+    font-size: .8em;
+}
+
+.chatlog__attachment-thumbnail {
+    margin-top: 5px;
+    max-width: 50%;
+    max-height: 500px;
+    border-radius: 3px;
+}
+
+.chatlog__embed {
+    margin-top: 5px;
+    display: flex;
+    max-width: 520px;
+}
+
+.chatlog__embed-color-pill {
+    flex-shrink: 0;
+    width: 4px;
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+}
+
+.chatlog__embed-content-container {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 10px;
+    border: 1px solid;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+.chatlog__embed-content {
+    width: 100%;
+    display: flex;
+}
+
+.chatlog__embed-text {
+    flex: 1;
+}
+
+.chatlog__embed-author {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.chatlog__embed-author-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 9px;
+    border-radius: 50%;
+}
+
+.chatlog__embed-author-name {
+    font-size: .875em;
+    font-weight: 600;
+}
+
+.chatlog__embed-title {
+    margin-bottom: 4px;
+    font-size: .875em;
+    font-weight: 600;
+}
+
+.chatlog__embed-description {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.chatlog__embed-fields {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.chatlog__embed-field {
+    flex: 0;
+    min-width: 100%;
+    max-width: 506px;
+    padding-top: 10px;
+}
+
+.chatlog__embed-field--inline {
+    flex: 1;
+    flex-basis: auto;
+    min-width: 150px;
+}
+
+.chatlog__embed-field-name {
+    margin-bottom: 4px;
+    font-size: .875em;
+    font-weight: 600;
+}
+
+.chatlog__embed-field-value {
+    font-size: .875em;
+    font-weight: 500;
+}
+
+.chatlog__embed-thumbnail {
+    flex: 0;
+    margin-left: 20px;
+    max-width: 80px;
+    max-height: 80px;
+    border-radius: 3px;
+}
+
+.chatlog__embed-image-container {
+    margin-top: 10px;
+}
+
+.chatlog__embed-image {
+    max-width: 500px;
+    max-height: 400px;
+    border-radius: 3px;
+}
+
+.chatlog__embed-footer {
+    margin-top: 10px;
+}
+
+.chatlog__embed-footer-icon {
+    margin-right: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    vertical-align: middle;
+}
+
+.chatlog__embed-footer-text {
+    font-weight: 500;
+    font-size: .75em;
+}
+
+.chatlog__reactions {
+    display: flex;
+}
+
+.chatlog__reaction {
+    display: flex;
+    align-items: center;
+    margin: 6px 2px 2px 2px;
+    padding: 3px 6px;
+    border-radius: 3px;
+}
+
+.chatlog__reaction-count {
+    min-width: 9px;
+    margin-left: 6px;
+    font-size: .875em;
+}
+
+.chatlog__bot-tag {
+    margin-left: 0.3em;
+    background: #7289da;
+    color: #ffffff;
+    font-size: 0.625em;
+    padding: 1px 2px;
+    border-radius: 3px;
+    vertical-align: middle;
+    line-height: 1.3;
+    position: relative;
+    top: -.2em;
+}
+    </style>
+    <style>
+        /* === GENERAL === */
+
+body {
+    background-color: #36393e;
+    color: #dcddde;
+}
+
+a {
+    color: #0096cf;
+}
+
+.spoiler {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.quote {
+    border-color: #4f545c;
+}
+
+.pre {
+    background-color: #2f3136 !important;
+}
+
+.pre--multiline {
+    border-color: #282b30 !important;
+    color: #839496 !important;
+}
+
+.mention {
+    color: #7289da;
+}
+
+/* === INFO === */
+
+.info__guild-name {
+    color: #ffffff;
+}
+
+.info__channel-name {
+    color: #ffffff;
+}
+
+.info__channel-topic {
+    color: #ffffff;
+}
+
+/* === CHATLOG === */
+
+.chatlog__message-group {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.chatlog__author-name {
+    color: #ffffff;
+}
+
+.chatlog__timestamp {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+.chatlog__message--highlighted {
+    background-color: rgba(114, 137, 218, 0.2) !important;
+}
+
+.chatlog__message--pinned {
+    background-color: rgba(249, 168, 37, 0.05);
+}
+
+.chatlog__edited-timestamp {
+    color: rgba(255, 255, 255, 0.2);
+}
+
+.chatlog__embed-content-container {
+    background-color: rgba(46, 48, 54, 0.3);
+    border-color: rgba(46, 48, 54, 0.6);
+}
+
+.chatlog__embed-author-name {
+    color: #ffffff;
+}
+
+.chatlog__embed-author-name-link {
+    color: #ffffff;
+}
+
+.chatlog__embed-title {
+    color: #ffffff;
+}
+
+.chatlog__embed-description {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.chatlog__embed-field-name {
+    color: #ffffff;
+}
+
+.chatlog__embed-field-value {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.chatlog__embed-footer {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.chatlog__reaction {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.chatlog__reaction-count {
+    color: rgba(255, 255, 255, 0.3);
+}
+    </style>
+
+    <script>
+        function scrollToMessage(event, id) {
+            var element = document.getElementById('message-' + id);
+
+            if (element !== null && element !== undefined) {
+                event.preventDefault();
+
+                element.classList.add('chatlog__message--highlighted');
+
+                window.scrollTo({
+                    top: element.getBoundingClientRect().top - document.body.getBoundingClientRect().top - (window.innerHeight / 2),
+                    behavior: 'smooth'
+                });
+
+                window.setTimeout(function() {
+                    element.classList.remove('chatlog__message--highlighted');
+                }, 2000);
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/styles/solarized-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.pre--multiline').forEach((block) => {
+                hljs.highlightBlock(block);
+            });
+        });
+    </script>
+</head>
+<body>
+
+<div class="info">
+    <div class="info__guild-icon-container">
+        <img class="info__guild-icon" src="https://cdn.discordapp.com/icons/412898016371015680/a_157cb08c4198ad53b9e9b7168c930571.png" />
+    </div>
+    <div class="info__metadata">
+        <div class="info__guild-name">Komodo</div>
+        <div class="info__channel-name">feed-tweets</div>
+
+            <div class="info__channel-topic">Wondering what we&#39;ve been tweeting? You can find all our tweets here. Follow us on Twitter here: https://twitter.com/KomodoPlatform and support Komodo by retweeting.</div>
+
+        <div class="info__channel-message-count">21 messages</div>
+
+            <div class="info__channel-date-range">
+                    Before 05-Dec-19 12:00 AM
+            </div>
+    </div>
+</div>
+
+<div class="chatlog">
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/354615658148790275/044bcacc04371b80ce2d731fdb0f9694.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="sφldat#8733" data-user-id="354615658148790275">sφldat</span>
+
+
+                <span class="chatlog__timestamp">10-Jul-19 10:15 AM</span>
+
+                    <div class="chatlog__message " data-message-id="598457240483135488" id="message-598457240483135488">
+                        <div class="chatlog__content">
+                            <span class="markdown">12k views</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/443046399089573899/c78ee2379ad5c58481e0bae743c61bb4.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Meyse#0952" data-user-id="443046399089573899">Meyse</span>
+
+
+                <span class="chatlog__timestamp">12-Jul-19 07:55 AM</span>
+
+                    <div class="chatlog__message " data-message-id="599146923643109396" id="message-599146923643109396">
+                        <div class="chatlog__content">
+                            <span class="markdown"><a href="https://twitter.com/komodoregames/status/1149574211888746496">https://twitter.com/komodoregames/status/1149574211888746496</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+                                                    <img class="chatlog__embed-author-icon" src="https://pbs.twimg.com/profile_images/1130745970768187394/TqYYX-x8_bigger.png" />
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://twitter.com/komodoregames">K64 (@komodoregames)</a>
+                                                    </span>
+                                            </div>
+
+
+                                        <div class="chatlog__embed-description"><span class="markdown">Thanks again to @bartroorda for bringing a great presentation at #K64 #game expo. Check out the video <a href="https://t.co/1nMK4nQ12G">https://t.co/1nMK4nQ12G</a> to have an overview of blockchain #ecosystem in #TheHague and join the meetup today at @blockbar070 @The_Hague_Tech Start your #blockchain journey ...</span></div>
+
+                                    </div>
+
+                                </div>
+
+
+                                    <div class="chatlog__embed-footer">
+                                                <img class="chatlog__embed-footer-icon" src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" />
+
+                                        <span class="chatlog__embed-footer-text">
+                                                    Twitter
+                                                    
+
+                                        </span>
+                                    </div>
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/354615658148790275/044bcacc04371b80ce2d731fdb0f9694.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="sφldat#8733" data-user-id="354615658148790275">sφldat</span>
+
+
+                <span class="chatlog__timestamp">12-Jul-19 12:43 PM</span>
+
+                    <div class="chatlog__message " data-message-id="599219286669524993" id="message-599219286669524993">
+                        <div class="chatlog__content">
+                            <span class="markdown"><a href="https://twitter.com/Aaron92171213/status/1149659435427516417">https://twitter.com/Aaron92171213/status/1149659435427516417</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+                                                    <img class="chatlog__embed-author-icon" src="https://pbs.twimg.com/profile_images/921773265978306560/auminEZj_bigger.jpg" />
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://twitter.com/Aaron92171213">Aaron (@Aaron92171213)</a>
+                                                    </span>
+                                            </div>
+
+
+                                        <div class="chatlog__embed-description"><span class="markdown">This is an excellent chart highlighting exactly why $KMD should be in the top 20 marketcap. Fundamentally, it just blows other platforms out of the water. $BTC $ETH <a href="https://t.co/dg3sKliMh9">https://t.co/dg3sKliMh9</a></span></div>
+
+                                    </div>
+
+                                </div>
+
+
+                                    <div class="chatlog__embed-footer">
+                                                <img class="chatlog__embed-footer-icon" src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" />
+
+                                        <span class="chatlog__embed-footer-text">
+                                                    Twitter
+                                                    
+
+                                        </span>
+                                    </div>
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/453946766157414425/45a03688f5cbc0708f068732b99ec0c2.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Senda#7983" data-user-id="453946766157414425">Senda</span>
+
+
+                <span class="chatlog__timestamp">12-Jul-19 05:37 PM</span>
+
+                    <div class="chatlog__message " data-message-id="599293365330116618" id="message-599293365330116618">
+                        <div class="chatlog__content">
+                            <span class="markdown"><a href="https://twitter.com/TheSuperSenda/status/1149733762688679936?s=19">https://twitter.com/TheSuperSenda/status/1149733762688679936?s=19</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+                                                    <img class="chatlog__embed-author-icon" src="https://pbs.twimg.com/profile_images/1047221396697468928/km3cjpwc_bigger.jpg" />
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://twitter.com/TheSuperSenda">Senda (@TheSuperSenda)</a>
+                                                    </span>
+                                            </div>
+
+
+                                        <div class="chatlog__embed-description"><span class="markdown">In honor of the @KomodoPlatform rebrand on Monday, July 15, I have reedit this design. @Hdexrocks ;)  If the logo changes, I will have to make new designs <img class="emoji " alt="😅" title="😅" src="https://twemoji.maxcdn.com/2/72x72/1f605.png" /> $KMD #Komodo #Bitcoin $BTC</span></div>
+
+                                    </div>
+
+                                </div>
+
+                                    <div class="chatlog__embed-image-container">
+                                        <a class="chatlog__embed-image-link" href="https://pbs.twimg.com/media/D_SrcHzX4AEuwNC.jpg:large">
+                                            <img class="chatlog__embed-image" src="https://pbs.twimg.com/media/D_SrcHzX4AEuwNC.jpg:large" />
+                                        </a>
+                                    </div>
+
+                                    <div class="chatlog__embed-footer">
+                                                <img class="chatlog__embed-footer-icon" src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" />
+
+                                        <span class="chatlog__embed-footer-text">
+                                                    Twitter
+                                                    
+
+                                        </span>
+                                    </div>
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/356887295154061312/60e2fca18af290ea4ff83f98e2a60393.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="tese#3502" data-user-id="356887295154061312">tese</span>
+
+
+                <span class="chatlog__timestamp">13-Jul-19 03:44 AM</span>
+
+                    <div class="chatlog__message " data-message-id="599445953845395478" id="message-599445953845395478">
+                        <div class="chatlog__content">
+                            <span class="markdown">15 july -&gt; Amazon Prime Days + Komodo rebrand +Antara + AWS , we all should be ready to retweet and spread the word  that day 
+
+<a href="https://twitter.com/CTservices4u/status/1149881783535767552?s=19">https://twitter.com/CTservices4u/status/1149881783535767552?s=19</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+                                                    <img class="chatlog__embed-author-icon" src="https://pbs.twimg.com/profile_images/1148366951829397504/tOXRs8O7_bigger.jpg" />
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://twitter.com/CTservices4u">Carlos Tesedo (@CTservices4u)</a>
+                                                    </span>
+                                            </div>
+
+
+                                        <div class="chatlog__embed-description"><span class="markdown">15th july 
+
+@KomodoPlatform launches Antara Framework + Blockchain Builder on #AWS + Rebrand 
+
+First #AmazonPrimeDay by @amazon 
+
+Is the most desired monday ever!
+
+<a href="https://t.co/v30sYzK5ci">https://t.co/v30sYzK5ci</a></span></div>
+
+                                    </div>
+
+                                </div>
+
+
+                                    <div class="chatlog__embed-footer">
+                                                <img class="chatlog__embed-footer-icon" src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" />
+
+                                        <span class="chatlog__embed-footer-text">
+                                                    Twitter
+                                                    
+
+                                        </span>
+                                    </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="599446303189106691" id="message-599446303189106691">
+                        <div class="chatlog__content">
+                            <span class="markdown">Maybe komodo can make a bounty here in discord to benefit supporters and motivate people to help maximizing the possible audience in social networks</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/199678872294260736/cfe5cd90164867a2fc086c591dc46386.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="dxer666#8963" data-user-id="199678872294260736">dxer666</span>
+
+
+                <span class="chatlog__timestamp">15-Jul-19 07:22 AM</span>
+
+                    <div class="chatlog__message " data-message-id="600225622098444288" id="message-600225622098444288">
+                        <div class="chatlog__content">
+                            <span class="markdown"><a href="https://twitter.com/sunofdays/status/1150662743827070976">https://twitter.com/sunofdays/status/1150662743827070976</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+                                                    <img class="chatlog__embed-author-icon" src="https://pbs.twimg.com/profile_images/895154461651468288/_fOdCCeU_bigger.jpg" />
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://twitter.com/sunofdays">Crypto666 (@sunofdays)</a>
+                                                    </span>
+                                            </div>
+
+
+                                        <div class="chatlog__embed-description"><span class="markdown">$kmd rebrand...
+
+$btc
+ i take this video today <img class="emoji " alt="😀" title="😀" src="https://twemoji.maxcdn.com/2/72x72/1f600.png" /> <a href="https://t.co/MvSh7A7fFy">https://t.co/MvSh7A7fFy</a></span></div>
+
+                                    </div>
+
+                                        <div class="chatlog__embed-thumbnail-container">
+                                            <a class="chatlog__embed-thumbnail-link" href="https://pbs.twimg.com/ext_tw_video_thumb/1150662561039343616/pu/img/325VrTSzTtM5k-AX.jpg">
+                                                <img class="chatlog__embed-thumbnail" src="https://pbs.twimg.com/ext_tw_video_thumb/1150662561039343616/pu/img/325VrTSzTtM5k-AX.jpg" />
+                                            </a>
+                                        </div>
+                                </div>
+
+
+                                    <div class="chatlog__embed-footer">
+                                                <img class="chatlog__embed-footer-icon" src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" />
+
+                                        <span class="chatlog__embed-footer-text">
+                                                    Twitter
+                                                    
+
+                                        </span>
+                                    </div>
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/443046399089573899/c78ee2379ad5c58481e0bae743c61bb4.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Meyse#0952" data-user-id="443046399089573899">Meyse</span>
+
+
+                <span class="chatlog__timestamp">15-Jul-19 03:37 PM</span>
+
+                    <div class="chatlog__message " data-message-id="600350262850355201" id="message-600350262850355201">
+                        <div class="chatlog__content">
+                            <span class="markdown"><a href="https://twitter.com/komodoregames/status/1150782299845382146">https://twitter.com/komodoregames/status/1150782299845382146</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+                                                    <img class="chatlog__embed-author-icon" src="https://pbs.twimg.com/profile_images/1130745970768187394/TqYYX-x8_bigger.png" />
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://twitter.com/komodoregames">K64 (@komodoregames)</a>
+                                                    </span>
+                                            </div>
+
+
+                                        <div class="chatlog__embed-description"><span class="markdown">Another milestone we have made - 1,000 followers today!<img class="emoji " alt="🎉" title="🎉" src="https://twemoji.maxcdn.com/2/72x72/1f389.png" /><img class="emoji " alt="🍻" title="🍻" src="https://twemoji.maxcdn.com/2/72x72/1f37b.png" /> <img class="emoji " alt="💕" title="💕" src="https://twemoji.maxcdn.com/2/72x72/1f495.png" /> A big thanks to our #community around the world. #K64 team is working hard to make the #NextLevelGaming possible with #komodo #blockchain technology. Join our Discord to grow with us <a href="https://t.co/aPSP9wCg">https://t.co/aPSP9wCg</a>...</span></div>
+
+                                    </div>
+
+                                        <div class="chatlog__embed-thumbnail-container">
+                                            <a class="chatlog__embed-thumbnail-link" href="https://pbs.twimg.com/tweet_video_thumb/D_hmRHcXoAA6cMd.jpg">
+                                                <img class="chatlog__embed-thumbnail" src="https://pbs.twimg.com/tweet_video_thumb/D_hmRHcXoAA6cMd.jpg" />
+                                            </a>
+                                        </div>
+                                </div>
+
+
+                                    <div class="chatlog__embed-footer">
+                                                <img class="chatlog__embed-footer-icon" src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" />
+
+                                        <span class="chatlog__embed-footer-text">
+                                                    Twitter
+                                                    
+
+                                        </span>
+                                    </div>
+                            </div>
+                        </div>
+
+                        <div class="chatlog__reactions">
+                                <div class="chatlog__reaction">
+                                    <img class="emoji emoji--small" alt="🔥" title="🔥" src="https://twemoji.maxcdn.com/2/72x72/1f525.png" />
+                                    <span class="chatlog__reaction-count">2</span>
+                                </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/453946766157414425/45a03688f5cbc0708f068732b99ec0c2.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Senda#7983" data-user-id="453946766157414425">Senda</span>
+
+
+                <span class="chatlog__timestamp">16-Jul-19 11:00 AM</span>
+
+                    <div class="chatlog__message " data-message-id="600642821174853635" id="message-600642821174853635">
+                        <div class="chatlog__content">
+                            <span class="markdown"><a href="https://twitter.com/TheSuperSenda/status/1151083556480987136">https://twitter.com/TheSuperSenda/status/1151083556480987136</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+                                                    <img class="chatlog__embed-author-icon" src="https://pbs.twimg.com/profile_images/1047221396697468928/km3cjpwc_bigger.jpg" />
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://twitter.com/TheSuperSenda">Senda (@TheSuperSenda)</a>
+                                                    </span>
+                                            </div>
+
+
+                                        <div class="chatlog__embed-description"><span class="markdown">@KomodoPlatform awesome rebrand, new whitepaper, an End-To-End Portfolio of Products &amp; Services, #AtomicDex, open source... $KMD #BTC #Komodo #blockchain</span></div>
+
+                                    </div>
+
+                                </div>
+
+                                    <div class="chatlog__embed-image-container">
+                                        <a class="chatlog__embed-image-link" href="https://pbs.twimg.com/media/D_l4GTOWsAEuPer.jpg:large">
+                                            <img class="chatlog__embed-image" src="https://pbs.twimg.com/media/D_l4GTOWsAEuPer.jpg:large" />
+                                        </a>
+                                    </div>
+
+                                    <div class="chatlog__embed-footer">
+                                                <img class="chatlog__embed-footer-icon" src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" />
+
+                                        <span class="chatlog__embed-footer-text">
+                                                    Twitter
+                                                    
+
+                                        </span>
+                                    </div>
+                            </div>
+                        </div>
+
+                        <div class="chatlog__reactions">
+                                <div class="chatlog__reaction">
+                                    <img class="emoji emoji--small" alt="💎" title="💎" src="https://twemoji.maxcdn.com/2/72x72/1f48e.png" />
+                                    <span class="chatlog__reaction-count">1</span>
+                                </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/453946766157414425/45a03688f5cbc0708f068732b99ec0c2.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Senda#7983" data-user-id="453946766157414425">Senda</span>
+
+
+                <span class="chatlog__timestamp">18-Jul-19 12:05 PM</span>
+
+                    <div class="chatlog__message " data-message-id="601384041714810895" id="message-601384041714810895">
+                        <div class="chatlog__content">
+                            <span class="markdown"><a href="https://twitter.com/TheSuperSenda/status/1151821545666486272">https://twitter.com/TheSuperSenda/status/1151821545666486272</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+                                                    <img class="chatlog__embed-author-icon" src="https://pbs.twimg.com/profile_images/1047221396697468928/km3cjpwc_bigger.jpg" />
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://twitter.com/TheSuperSenda">Senda (@TheSuperSenda)</a>
+                                                    </span>
+                                            </div>
+
+
+                                        <div class="chatlog__embed-description"><span class="markdown">A classic, rebranded. #Decentralized @KomodoPlatform #AtomicDEX #atomicswaps Take me to the decentralized era... <img class="emoji " alt="🚀" title="🚀" src="https://twemoji.maxcdn.com/2/72x72/1f680.png" /></span></div>
+
+                                    </div>
+
+                                </div>
+
+                                    <div class="chatlog__embed-image-container">
+                                        <a class="chatlog__embed-image-link" href="https://pbs.twimg.com/media/D_wXXCeXoAErppi.jpg:large">
+                                            <img class="chatlog__embed-image" src="https://pbs.twimg.com/media/D_wXXCeXoAErppi.jpg:large" />
+                                        </a>
+                                    </div>
+
+                                    <div class="chatlog__embed-footer">
+                                                <img class="chatlog__embed-footer-icon" src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" />
+
+                                        <span class="chatlog__embed-footer-text">
+                                                    Twitter
+                                                    
+
+                                        </span>
+                                    </div>
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/453946766157414425/45a03688f5cbc0708f068732b99ec0c2.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Senda#7983" data-user-id="453946766157414425">Senda</span>
+
+
+                <span class="chatlog__timestamp">20-Jul-19 12:35 PM</span>
+
+                    <div class="chatlog__message " data-message-id="602116474504740876" id="message-602116474504740876">
+                        <div class="chatlog__content">
+                            <span class="markdown"><a href="https://twitter.com/TheSuperSenda/status/1152557207801749504">https://twitter.com/TheSuperSenda/status/1152557207801749504</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+                                                    <img class="chatlog__embed-author-icon" src="https://pbs.twimg.com/profile_images/1151869756611448833/0Dqq62Oe_bigger.png" />
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://twitter.com/TheSuperSenda">Senda (@TheSuperSenda)</a>
+                                                    </span>
+                                            </div>
+
+
+                                        <div class="chatlog__embed-description"><span class="markdown">When you see the potential and evolution of @KomodoPlatform ecosystem, something changes in your mind.  #KMD $KMD @KMD_Platform_ES @MrKomodoWorld @komodoregames @Pungoio @PirateChain @Chainzillaio @VerusCoin @zaddex_com @utrumdotio @MyHushTeam @TheHempCoin @barterlly</span></div>
+
+                                    </div>
+
+                                </div>
+
+                                    <div class="chatlog__embed-image-container">
+                                        <a class="chatlog__embed-image-link" href="https://pbs.twimg.com/media/D_60qf4XYAAUdYB.jpg:large">
+                                            <img class="chatlog__embed-image" src="https://pbs.twimg.com/media/D_60qf4XYAAUdYB.jpg:large" />
+                                        </a>
+                                    </div>
+
+                                    <div class="chatlog__embed-footer">
+                                                <img class="chatlog__embed-footer-icon" src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" />
+
+                                        <span class="chatlog__embed-footer-text">
+                                                    Twitter
+                                                    
+
+                                        </span>
+                                    </div>
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/449560371636731904/6553cc8e3b18276a2da9ede73c71c89a.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Patrick Friggens#2418" data-user-id="449560371636731904">Patrick Friggens</span>
+
+
+                <span class="chatlog__timestamp">05-Sep-19 07:28 AM</span>
+
+                    <div class="chatlog__message " data-message-id="619071454717280256" id="message-619071454717280256">
+                        <div class="chatlog__content">
+                            <span class="markdown"><a href="https://twitter.com/PirateReijo/status/1169510555889164288?s=20">https://twitter.com/PirateReijo/status/1169510555889164288?s=20</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+                                                    <img class="chatlog__embed-author-icon" src="https://pbs.twimg.com/profile_images/1112681553359003649/-heI01nj_bigger.png" />
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://twitter.com/PirateReijo">Pirate Reijo ❌&#127988;‍☠️⚡️ (@PirateReijo)</a>
+                                                    </span>
+                                            </div>
+
+
+                                        <div class="chatlog__embed-description"><span class="markdown">The Establishment is doing it&#39;s best to promote Pirate $ARRR <img class="emoji " alt="🏴" title="🏴" src="https://twemoji.maxcdn.com/2/72x72/1f3f4.png" />‍<img class="emoji " alt="☠" title="☠" src="https://twemoji.maxcdn.com/2/72x72/2620.png" />️and @AtomicDex $KMD.
+
+@PirateChain <a href="https://t.co/F4Y3MGydfE">https://t.co/F4Y3MGydfE</a> #privacycoin
+
+$ADA $BCH $BNB $BTC $EOS $ETH $LTC $XLM $XRP $XMR $ZEC #ERC20 #atomicswaps #AtomicDEX #blockchain #cryptocurrency #DEX
+
+https:...</span></div>
+
+                                    </div>
+
+                                </div>
+
+
+                                    <div class="chatlog__embed-footer">
+                                                <img class="chatlog__embed-footer-icon" src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" />
+
+                                        <span class="chatlog__embed-footer-text">
+                                                    Twitter
+                                                    
+
+                                        </span>
+                                    </div>
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/421787503154954254/ad7ac4c9fe41037c9a9d0d1034e840a4.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Aron“XuanLeeeeee“Goldberg#3393" data-user-id="421787503154954254">Aron“XuanLeeeeee“Goldberg</span>
+
+
+                <span class="chatlog__timestamp">26-Sep-19 07:57 AM</span>
+
+                    <div class="chatlog__message " data-message-id="626688833731166208" id="message-626688833731166208">
+                        <div class="chatlog__content">
+                            <span class="markdown"><a href="https://twitter.com/XuanXuan007/status/1177129876136103936?s=20">https://twitter.com/XuanXuan007/status/1177129876136103936?s=20</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+                                                    <img class="chatlog__embed-author-icon" src="https://pbs.twimg.com/profile_images/1096028092278157312/-U9ioUBt_bigger.png" />
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://twitter.com/XuanXuan007">XuanLeeeeee (@XuanXuan007)</a>
+                                                    </span>
+                                            </div>
+
+
+                                        <div class="chatlog__embed-description"><span class="markdown">How To Make A Blockchain With #Komodo&#39;s Antara Composer.
+
+#Billions of Configurations
+#Bitcoin-Level Security
+#Full-Seed Nodes &amp; Miners
+#and much more, look at the video and see that it was never easier to create your own blockchain. 
+
+@KomodoPlatform $KMD
+<a href="https://t.co/rxW">https://t.co/rxW</a>...</span></div>
+
+                                    </div>
+
+                                </div>
+
+
+                                    <div class="chatlog__embed-footer">
+                                                <img class="chatlog__embed-footer-icon" src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" />
+
+                                        <span class="chatlog__embed-footer-text">
+                                                    Twitter
+                                                    
+
+                                        </span>
+                                    </div>
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/417671530642931713/642d63430e500c6bad1d661d367ae0f7.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Andersen#8337" data-user-id="417671530642931713">Andersen</span>
+
+
+                <span class="chatlog__timestamp">26-Sep-19 08:09 AM</span>
+
+                    <div class="chatlog__message " data-message-id="626691695274360854" id="message-626691695274360854">
+                        <div class="chatlog__content">
+                            <span class="markdown"><a href="https://twitter.com/coincodecap/status/1177130687759028224">https://twitter.com/coincodecap/status/1177130687759028224</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+                                                    <img class="chatlog__embed-author-icon" src="https://pbs.twimg.com/profile_images/1081923167751421952/N_l8n3XT_bigger.jpg" />
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://twitter.com/coincodecap">CoinCodeCap (@coincodecap)</a>
+                                                    </span>
+                                            </div>
+
+
+                                        <div class="chatlog__embed-description"><span class="markdown">Komodo published a new release 0.0.1 Release.  
+ <a href="https://t.co/bebTNmadOM">https://t.co/bebTNmadOM</a> 
+ @KomodoPlatform 
+ $KMD  #Komodo #KMD</span></div>
+
+                                    </div>
+
+                                </div>
+
+
+                                    <div class="chatlog__embed-footer">
+                                                <img class="chatlog__embed-footer-icon" src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" />
+
+                                        <span class="chatlog__embed-footer-text">
+                                                    Twitter
+                                                    
+
+                                        </span>
+                                    </div>
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/449560371636731904/6553cc8e3b18276a2da9ede73c71c89a.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Patrick Friggens#2418" data-user-id="449560371636731904">Patrick Friggens</span>
+
+
+                <span class="chatlog__timestamp">27-Sep-19 06:45 AM</span>
+
+                    <div class="chatlog__message " data-message-id="627032933458247682" id="message-627032933458247682">
+                        <div class="chatlog__content">
+                            <span class="markdown"><a href="https://twitter.com/naomibrockwell/status/1177304668596297729">https://twitter.com/naomibrockwell/status/1177304668596297729</a></span>
+
+                                <span class="chatlog__edited-timestamp" title="27-Sep-19 06:45 AM">(edited)</span>
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+                                                    <img class="chatlog__embed-author-icon" src="https://pbs.twimg.com/profile_images/1118599576435470336/FkOD1aAB_bigger.png" />
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://twitter.com/naomibrockwell">Naomi ₿rockwell (@naomibrockwell)</a>
+                                                    </span>
+                                            </div>
+
+
+                                        <div class="chatlog__embed-description"><span class="markdown">Google just announced &quot;Quantum Supremacy&quot; &amp; media went wild about what this means: Completely predictive climate models? Break encryption entirely? Should we be worried about bitcoin? 7pmET I chat to a Quantum Computing expert about the facts vs the hype.
+
+<a href="https://t.co/qHA">https://t.co/qHA</a>...</span></div>
+
+                                    </div>
+
+                                </div>
+
+                                    <div class="chatlog__embed-image-container">
+                                        <a class="chatlog__embed-image-link" href="https://pbs.twimg.com/media/EFagWGcXkAEZ3c4.jpg:large">
+                                            <img class="chatlog__embed-image" src="https://pbs.twimg.com/media/EFagWGcXkAEZ3c4.jpg:large" />
+                                        </a>
+                                    </div>
+
+                                    <div class="chatlog__embed-footer">
+                                                <img class="chatlog__embed-footer-icon" src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" />
+
+                                        <span class="chatlog__embed-footer-text">
+                                                    Twitter
+                                                    
+
+                                        </span>
+                                    </div>
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/405380797537976320/f51f63b4c27453cc022a59c1491fb09b.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Cryptoon#3362" data-user-id="405380797537976320">Cryptoon</span>
+
+
+                <span class="chatlog__timestamp">31-Oct-19 11:24 AM</span>
+
+                    <div class="chatlog__message " data-message-id="639424496750821464" id="message-639424496750821464">
+                        <div class="chatlog__content">
+                            <span class="markdown"><a href="https://twitter.com/Jacobstoon/status/1189865234078601216?s=20">https://twitter.com/Jacobstoon/status/1189865234078601216?s=20</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+                                                    <img class="chatlog__embed-author-icon" src="https://pbs.twimg.com/profile_images/1180909596/meer_014_bigger.JPG" />
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://twitter.com/Jacobstoon">CrypToon (@Jacobstoon)</a>
+                                                    </span>
+                                            </div>
+
+
+                                        <div class="chatlog__embed-description"><span class="markdown">Could be in a worse place to join in on the action! @AtomicDex allows you to swap anywhere and everywhere, fully decentralized!
+
+Be sure to join and get a slice of the prizes <img class="emoji " alt="💰" title="💰" src="https://twemoji.maxcdn.com/2/72x72/1f4b0.png" /><img class="emoji " alt="💰" title="💰" src="https://twemoji.maxcdn.com/2/72x72/1f4b0.png" />! Thanks to all that donated to the prizepool! @KomodoPlatform $KMD @webworker01 <a href="https://t">https://t</a>...</span></div>
+
+                                    </div>
+
+                                </div>
+
+                                    <div class="chatlog__embed-image-container">
+                                        <a class="chatlog__embed-image-link" href="https://pbs.twimg.com/media/EINAGdaX0AAAQ6Z.jpg:large">
+                                            <img class="chatlog__embed-image" src="https://pbs.twimg.com/media/EINAGdaX0AAAQ6Z.jpg:large" />
+                                        </a>
+                                    </div>
+
+                                    <div class="chatlog__embed-footer">
+                                                <img class="chatlog__embed-footer-icon" src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" />
+
+                                        <span class="chatlog__embed-footer-text">
+                                                    Twitter
+                                                    
+
+                                        </span>
+                                    </div>
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/403205523433848833/f9743e65de5a99ac46e42421a4db87a5.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="farl#9964" data-user-id="403205523433848833">farl</span>
+
+
+                <span class="chatlog__timestamp">31-Oct-19 11:34 AM</span>
+
+                    <div class="chatlog__message " data-message-id="639427074972450828" id="message-639427074972450828">
+                        <div class="chatlog__content">
+                            <span class="markdown"><a href="https://twitter.com/farl/status/1189862984870498304?s=20">https://twitter.com/farl/status/1189862984870498304?s=20</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+                                                    <img class="chatlog__embed-author-icon" src="https://pbs.twimg.com/profile_images/795339519100878848/VufLpqWL_bigger.jpg" />
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://twitter.com/farl">Peter Farla ⚡️ (@farl)</a>
+                                                    </span>
+                                            </div>
+
+
+                                        <div class="chatlog__embed-description"><span class="markdown">Do you love #stackingsats? <img class="emoji " alt="💚" title="💚" src="https://twemoji.maxcdn.com/2/72x72/1f49a.png" />Come join the Komodo AtomicDEX Stress Test now and win up to 777KMD (~$420) from @KomodoPlatform
+ #atomicDEX #trueDEX
+<a href="https://t.co/wfAANMrRP2">https://t.co/wfAANMrRP2</a></span></div>
+
+                                    </div>
+
+                                </div>
+
+
+                                    <div class="chatlog__embed-footer">
+                                                <img class="chatlog__embed-footer-icon" src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" />
+
+                                        <span class="chatlog__embed-footer-text">
+                                                    Twitter
+                                                    
+
+                                        </span>
+                                    </div>
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/405380797537976320/f51f63b4c27453cc022a59c1491fb09b.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Cryptoon#3362" data-user-id="405380797537976320">Cryptoon</span>
+
+
+                <span class="chatlog__timestamp">10-Nov-19 10:22 AM</span>
+
+                    <div class="chatlog__message " data-message-id="643032804426252299" id="message-643032804426252299">
+                        <div class="chatlog__content">
+                            <span class="markdown"><a href="https://twitter.com/jacobstoon/status/1193473559932342272?s=21">https://twitter.com/jacobstoon/status/1193473559932342272?s=21</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+                                                    <img class="chatlog__embed-author-icon" src="https://pbs.twimg.com/profile_images/1180909596/meer_014_bigger.JPG" />
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://twitter.com/Jacobstoon">CrypToon (@Jacobstoon)</a>
+                                                    </span>
+                                            </div>
+
+
+                                        <div class="chatlog__embed-description"><span class="markdown">Looks like @Bilaxy_exchange volume is the driving force behind the recent @KomodoPlatform $KMD uptick. Chinese volume and interest in KMD spiking? Price following the Chinese ratings for this undervalued gem? <img class="emoji " alt="🤔" title="🤔" src="https://twemoji.maxcdn.com/2/72x72/1f914.png" /><img class="emoji " alt="🚀" title="🚀" src="https://twemoji.maxcdn.com/2/72x72/1f680.png" /></span></div>
+
+                                    </div>
+
+                                </div>
+
+                                    <div class="chatlog__embed-image-container">
+                                        <a class="chatlog__embed-image-link" href="https://pbs.twimg.com/media/EJAR35DXUAAg0De.jpg:large">
+                                            <img class="chatlog__embed-image" src="https://pbs.twimg.com/media/EJAR35DXUAAg0De.jpg:large" />
+                                        </a>
+                                    </div>
+
+                                    <div class="chatlog__embed-footer">
+                                                <img class="chatlog__embed-footer-icon" src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" />
+
+                                        <span class="chatlog__embed-footer-text">
+                                                    Twitter
+                                                    
+
+                                        </span>
+                                    </div>
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/417671530642931713/642d63430e500c6bad1d661d367ae0f7.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Andersen#8337" data-user-id="417671530642931713">Andersen</span>
+
+
+                <span class="chatlog__timestamp">14-Nov-19 05:29 PM</span>
+
+                    <div class="chatlog__message " data-message-id="644589861541642280" id="message-644589861541642280">
+                        <div class="chatlog__content">
+                            <span class="markdown"><a href="https://twitter.com/AtomicWallet/status/1195029529015857153">https://twitter.com/AtomicWallet/status/1195029529015857153</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+                                                    <img class="chatlog__embed-author-icon" src="https://pbs.twimg.com/profile_images/1189923982180593669/4zVSV03U_bigger.jpg" />
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://twitter.com/AtomicWallet">AtomicWallet.io (@AtomicWallet)</a>
+                                                    </span>
+                                            </div>
+
+
+                                        <div class="chatlog__embed-description"><span class="markdown">Welcome $KMD to Atomic Wallet! <img class="emoji " alt="🦎" title="🦎" src="https://twemoji.maxcdn.com/2/72x72/1f98e.png" /> @KomodoPlatform is the pioneer in Atomic Swaps. Huge respect to have them on board! <a href="https://t.co/ei2M8cw9nv">https://t.co/ei2M8cw9nv</a></span></div>
+
+                                    </div>
+
+                                </div>
+
+                                    <div class="chatlog__embed-image-container">
+                                        <a class="chatlog__embed-image-link" href="https://pbs.twimg.com/media/EJWZBBbXsAAMGE5.jpg:large">
+                                            <img class="chatlog__embed-image" src="https://pbs.twimg.com/media/EJWZBBbXsAAMGE5.jpg:large" />
+                                        </a>
+                                    </div>
+
+                                    <div class="chatlog__embed-footer">
+                                                <img class="chatlog__embed-footer-icon" src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" />
+
+                                        <span class="chatlog__embed-footer-text">
+                                                    Twitter
+                                                    
+
+                                        </span>
+                                    </div>
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/455875544366579734/921554f7634b5aa498403d7d03d4067e.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Mixic#3188" data-user-id="455875544366579734">Mixic</span>
+
+
+                <span class="chatlog__timestamp">19-Nov-19 01:06 PM</span>
+
+                    <div class="chatlog__message " data-message-id="646335580342452227" id="message-646335580342452227">
+                        <div class="chatlog__content">
+                            <span class="markdown"><a href="https://komodorus.pro/komodo-platform/5-stabilnyh-monet-vkljucheny-v-spisok-dlja-torgovli-na-atomicdex/">https://komodorus.pro/komodo-platform/5-stabilnyh-monet-vkljucheny-v-spisok-dlja-torgovli-na-atomicdex/</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://komodorus.pro/author/admin/">admin</a>
+                                                    </span>
+                                            </div>
+
+                                            <div class="chatlog__embed-title">
+                                                    <a class="chatlog__embed-title-link" href="https://komodorus.pro/komodo-platform/5-stabilnyh-monet-vkljucheny-v-spisok-dlja-torgovli-na-atomicdex/"><span class="markdown">5 стабильных монет включены в список...</span></a>
+                                            </div>
+
+                                        <div class="chatlog__embed-description"><span class="markdown">Обновления и разработки Команда Komodo рада сообщить, что пакет&#160;стабильных монет&#160;включен в список для торговли на&#160;&#160;AtomicDEX&#160; USD Coin (USDC) True USD</span></div>
+
+                                    </div>
+
+                                        <div class="chatlog__embed-thumbnail-container">
+                                            <a class="chatlog__embed-thumbnail-link" href="https://komodorus.pro/wp-content/uploads/2019/11/%D0%A2%D0%BE%D1%80%D0%B3%D0%BE%D0%B2%D0%BB%D1%8F-%D1%86%D0%B8%D1%84%D1%80%D0%BE%D0%B2%D1%8B%D0%BC%D0%B8-%D0%B0%D0%BA%D1%82%D0%B8%D0%B2%D0%B0%D0%BC%D0%B8.png">
+                                                <img class="chatlog__embed-thumbnail" src="https://komodorus.pro/wp-content/uploads/2019/11/%D0%A2%D0%BE%D1%80%D0%B3%D0%BE%D0%B2%D0%BB%D1%8F-%D1%86%D0%B8%D1%84%D1%80%D0%BE%D0%B2%D1%8B%D0%BC%D0%B8-%D0%B0%D0%BA%D1%82%D0%B8%D0%B2%D0%B0%D0%BC%D0%B8.png" />
+                                            </a>
+                                        </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/avatars/455875544366579734/921554f7634b5aa498403d7d03d4067e.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Mixic#3188" data-user-id="455875544366579734">Mixic</span>
+
+
+                <span class="chatlog__timestamp">30-Nov-19 12:08 PM</span>
+
+                    <div class="chatlog__message " data-message-id="650307223196532747" id="message-650307223196532747">
+                        <div class="chatlog__content">
+                            <span class="markdown"><a href="https://twitter.com/RusKomodo/status/1200747575302901760?s=20">https://twitter.com/RusKomodo/status/1200747575302901760?s=20</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(29,161,242,1)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+                                                    <img class="chatlog__embed-author-icon" src="https://pbs.twimg.com/profile_images/1154624623075627008/wnyoYWjN_bigger.jpg" />
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://twitter.com/RusKomodo">Komodo Platform RUS (@RusKomodo)</a>
+                                                    </span>
+                                            </div>
+
+
+                                        <div class="chatlog__embed-description"><span class="markdown">Большие шаги в принятии #Komodo $KMD на этой неделе <img class="emoji " alt="👍" title="👍" src="https://twemoji.maxcdn.com/2/72x72/1f44d.png" />
+
+<img class="emoji " alt="✨" title="✨" src="https://twemoji.maxcdn.com/2/72x72/2728.png" />С благодарностью к @metalpaysme и @VCCExchange <img class="emoji " alt="🤗" title="🤗" src="https://twemoji.maxcdn.com/2/72x72/1f917.png" />
+
+<a href="https://t.co/rNWsCbU4dx">https://t.co/rNWsCbU4dx</a>
+
+#blockchain #trust #decentralized #Exchanges #Security #privacy #private</span></div>
+
+                                    </div>
+
+                                </div>
+
+
+                                    <div class="chatlog__embed-footer">
+                                                <img class="chatlog__embed-footer-icon" src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" />
+
+                                        <span class="chatlog__embed-footer-text">
+                                                    Twitter
+                                                    
+
+                                        </span>
+                                    </div>
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+        </div>
+</div>
+
+</body>
+</html>

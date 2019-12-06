@@ -1,0 +1,437 @@
+==============================================================
+Guild: Komodo
+Channel: kmdlabs
+Topic: Please read pinned messages
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[25-Jan-19 11:34 AM] Alright#0419
+latest master
+
+[25-Jan-19 11:35 AM] Alright#0419
+it seems that it can have two different magic values
+
+[25-Jan-19 11:35 AM] Alright#0419
+seems based on how it starts up
+
+[25-Jan-19 11:35 AM] Alright#0419
+sit that and do `ctrl + c`, `enter` over and over
+
+[25-Jan-19 11:35 AM] Alright#0419
+you'll see what I mean
+
+[25-Jan-19 11:35 AM] Alright#0419
+just keep restarting it
+
+[25-Jan-19 11:37 AM] blackjok3r#3181
+ok checking it
+
+[25-Jan-19 11:37 AM] Alright#0419
+let me check getinfo for each magic value
+
+[25-Jan-19 11:37 AM] Alright#0419
+might give some insight
+
+[25-Jan-19 11:38 AM] blackjok3r#3181
+I think I know what it is
+
+[25-Jan-19 11:38 AM] blackjok3r#3181
+but im not sure how to fix it exactly
+
+[25-Jan-19 11:39 AM] Alright#0419
+```
+komodo-cli -ac_name=PAYME getinfo
+{
+  "version": 2001526,
+  "protocolversion": 170007,
+  "KMDversion": "0.3.3b",
+  "notarized": 0,
+  "prevMoMheight": 0,
+  "notarizedhash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "notarizedtxid": "0000000000000000000000000000000000000000000000000000000000000000",
+  "notarizedtxid_height": "mempool",
+  "KMDnotarized_height": 0,
+  "notarized_confirms": 0,
+  "walletversion": 60000,
+  "balance": 0.00000000,
+  "blocks": 0,
+  "longestchain": 0,
+  "timeoffset": 0,
+  "tiptime": 1231006505,
+  "connections": 0,
+  "proxy": "",
+  "difficulty": 1,
+  "testnet": false,
+  "keypoololdest": 1548415931,
+  "keypoolsize": 101,
+  "paytxfee": 0.00000000,
+  "relayfee": 0.00000100,
+  "errors": "",
+  "name": "PAYME",
+  "sapling": -1,
+  "p2pport": 18657,
+  "rpcport": 18658,
+  "StakedEra": 0,
+  "magic": -871792139,
+  "premine": 1000,
+  "reward": "1",
+  "halving": "0",
+  "decay": "0",
+  "endsubsidy": "1",
+  "staked": 90
+}
+modo1@ubuntu-16gb-nbg1-1:~/mtlabs$ komodo-cli -ac_name=PAYME getinfo
+{
+  "version": 2001526,
+  "protocolversion": 170007,
+  "KMDversion": "0.3.3b",
+  "notarized": 0,
+  "prevMoMheight": 0,
+  "notarizedhash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "notarizedtxid": "0000000000000000000000000000000000000000000000000000000000000000",
+  "notarizedtxid_height": "mempool",
+  "KMDnotarized_height": 0,
+  "notarized_confirms": 0,
+  "walletversion": 60000,
+  "balance": 0.00000000,
+  "blocks": 0,
+  "longestchain": 0,
+  "timeoffset": 0,
+  "tiptime": 1231006505,
+  "connections": 0,
+  "proxy": "",
+  "difficulty": 1,
+  "testnet": false,
+  "keypoololdest": 1548415931,
+  "keypoolsize": 101,
+  "paytxfee": 0.00000000,
+  "relayfee": 0.00000100,
+  "errors": "",
+  "name": "PAYME",
+  "sapling": -1,
+  "p2pport": 28969,
+  "rpcport": 18658,
+  "StakedEra": 0,
+  "magic": 357749469,
+  "premine": 1000,
+  "reward": "1",
+  "halving": "0",
+  "decay": "0",
+  "endsubsidy": "1",
+  "staked": 90
+}
+
+```
+
+[25-Jan-19 11:39 AM] blackjok3r#3181
+`val = ASSETCHAINS_COMMISSION | (((int64_t)ASSETCHAINS_STAKED & 0xff) << 32)`
+where ASSETCHAINS_STAKED is actual an int32_t
+@jl777c  
+Could doing the above sometimes give diffrent values? 
+this is to calculate the magic value.
+
+[25-Jan-19 11:40 AM] blackjok3r#3181
+either that, or its overflowing something
+
+[25-Jan-19 11:42 AM] jl777c#5810
+it is cast to int64, so that should have predictable results
+
+[25-Jan-19 11:42 AM] jl777c#5810
+different values indicates some uninitialized value
+
+[25-Jan-19 11:42 AM] blackjok3r#3181
+because I changed ASSETCHAINS_STAKED to a int32 and then just cast it as 64 so that the magic was backwards compatible... seemed to work. must be something else
+
+[25-Jan-19 11:45 AM] blackjok3r#3181
+hmm its not changin for me 🤔
+
+[25-Jan-19 11:45 AM] Alright#0419
+just keep doing it lol
+
+[25-Jan-19 11:45 AM] Alright#0419
+works on both of my machines
+
+[25-Jan-19 11:45 AM] Alright#0419
+almost always ends up with 18...
+
+[25-Jan-19 11:47 AM] blackjok3r#3181
+`>>>>>>>>>> PAYME: p2p.28969 rpc.28970 magic.1552d2dd 357749469 1000 coins` about 20 times
+
+[25-Jan-19 11:48 AM] blackjok3r#3181
+`000000000000000000000000000000000000000000000000000000000000000000010000000000000001000000000000000000000000000000000000000000000002000000000000005a00000001a005000000f00e1d4d000000a91460087a27868c871c683ec65bda5a26445b440a6187 extralen.113 crc0.3d72a1b1
+`
+
+[25-Jan-19 11:50 AM] Alright#0419
+still can't get it to happen?
+
+[25-Jan-19 11:50 AM] blackjok3r#3181
+no
+
+[25-Jan-19 11:50 AM] Alright#0419
+I just triple checked that it's the same exact command running
+
+[25-Jan-19 11:50 AM] jl777c#5810
+the printout from the conflicting magics is needed: 000000000000000000000000000000000000000000000000000000000000000000010000000000000001000000000000000000000000000000000000000000000002000000000000005a00000001a005000000f00e1d4d000000a91460087a27868c871c683ec65bda5a26445b440a6187 extralen.113 crc0.3d72a1b1
+
+[25-Jan-19 11:50 AM] Alright#0419
+ok
+
+[25-Jan-19 11:52 AM] Alright#0419
+https://pastebin.com/raw/KfU5Rtnc
+
+[25-Jan-19 11:55 AM] blackjok3r#3181
+mine is always teh shorter one...
+
+[25-Jan-19 11:57 AM] jl777c#5810
+init nonz to 0
+
+[25-Jan-19 11:58 AM] jl777c#5810
+99% sure that is the bug
+
+[25-Jan-19 11:58 AM] blackjok3r#3181
+thanks
+
+[25-Jan-19 11:59 AM] blackjok3r#3181
+@Alright  pushed possible fix
+
+[25-Jan-19 12:16 PM] blackjok3r#3181
+Also pushed code, for LABS fungible chains, any chains not called LABS exactly but LABSxxx.... have 0 comission and 0 block reward hardcoded into the source. No matter what chain params are setm, the coinbase is always exactly 0.
+
+[25-Jan-19 12:16 PM] jorian#4555
+If anyone wants to get a vps and not just a droplet or whatever : https://my.snel.com/?affid=62117 (including shameless referral link)
+
+{Embed}
+Sevtap
+https://my.snel.com/?affid=62117
+Snel.com - Your friendly hosting provider
+Fast hosting services with a focus on great customer experience.
+https://keycdn.snel.com/wp-content/uploads/bee.png
+
+[25-Jan-19 12:16 PM] jorian#4555
+You can pay with kmd
+
+[25-Jan-19 12:17 PM] blackjok3r#3181
+WOW nice 😄
+
+[25-Jan-19 12:17 PM] blackjok3r#3181
+*all labs notaries are in that data centre*
+
+[25-Jan-19 12:17 PM] jorian#4555
+Haha
+
+[25-Jan-19 12:17 PM] jorian#4555
+I've been using it for some time
+
+[25-Jan-19 12:17 PM] jorian#4555
+Service is good
+
+[25-Jan-19 12:17 PM] Alright#0419
+joker, seems that fix works
+
+[25-Jan-19 12:18 PM] blackjok3r#3181
+great
+
+[25-Jan-19 12:18 PM] Alright#0419
+@jl777c the other day when I was testing ac_cclib I believe this happened as well
+
+[25-Jan-19 12:18 PM] Alright#0419
+remember when I thought it wouldn't start mining, but it was just the nodes not connected
+
+[25-Jan-19 12:18 PM] Alright#0419
+I attributed it to a mistake on my part, but I'm pretty sure this is what happened
+
+[25-Jan-19 12:19 PM] jl777c#5810
+yes, same bug would be random based on top of stack values. sorry, i missed the indentation level of the nonz init
+
+[25-Jan-19 12:20 PM] CrisF#3405
+Don't know if related and not user error, but yesterday had different p2p ports (didn't check magic) like this on Marmara.
+
+[25-Jan-19 12:22 PM] jl777c#5810
+yes, all chains would have been affected with this bug
+
+{Reactions}
+👌 
+
+[25-Jan-19 12:25 PM] Alright#0419
+did marmara project launch a chain?
+
+[25-Jan-19 12:28 PM] jl777c#5810
+just test chains for early features
+
+[25-Jan-19 12:29 PM] Alright#0419
+Ah damn, been missing out on all the fun
+
+[25-Jan-19 12:30 PM] CrisF#3405
+Yes, just test chain.  Trying out Tony's TUI.
+
+[25-Jan-19 12:33 PM] jl777c#5810
+the requirements for MARMARA is still evolving, I am making custom CC for it, but without validations for now
+
+[25-Jan-19 12:36 PM] CrisF#3405
+I'm getting this```+ cd src/cc/
++ ./makecclib
+In file included from ../amount.h:24:0,
+                 from ../primitives/transaction.h:24,
+                 from ../primitives/block.h:24,
+                 from cclib.cpp:19:
+../serialize.h:41:10: fatal error: boost/optional.hpp: No such file or directory
+ #include <boost/optional.hpp>
+``` when building komodo on non-NN node.
+
+[25-Jan-19 12:39 PM] blackjok3r#3181
+I think install BOOST as a dep
+
+[25-Jan-19 12:39 PM] blackjok3r#3181
+I know what these problems are
+
+[25-Jan-19 12:40 PM] blackjok3r#3181
+but changing all the includes to hardcoded paths inside the komodo folder doesnt seem like a good solution
+
+[25-Jan-19 12:41 PM] CrisF#3405
+Will try `sudo apt-get install libboost-all-dev`
+
+[25-Jan-19 12:41 PM] blackjok3r#3181
+yeah that will fix it I think
+
+{Reactions}
+👌 
+
+[25-Jan-19 01:03 PM] CrisF#3405
+Got up to ```make[2]: *** No rule to make target 'cclib.so', needed by 'komodod'.  Stop.```
+I tried ```~/komodo/src/cc$ make```  manually but ```make: *** No targets specified and no makefile found.  Stop.```
+
+[25-Jan-19 01:03 PM] blackjok3r#3181
+./makecclib
+
+[25-Jan-19 01:03 PM] blackjok3r#3181
+not make
+
+{Reactions}
+👌 
+
+[25-Jan-19 01:04 PM] CrisF#3405
+re-trying
+
+[25-Jan-19 01:07 PM] Alright#0419
+surprised changing org name was so seamless
+
+[25-Jan-19 01:09 PM] CrisF#3405
+Looks good as `KMDLabs`
+
+[25-Jan-19 01:15 PM] Alright#0419
+going to sound really stupid, but I just want to put this out there
+
+[25-Jan-19 01:15 PM] Alright#0419
+it's definitively "KMDLabs" and not "Komodo Labs"
+
+{Reactions}
+👍 
+
+[25-Jan-19 01:37 PM] CrisF#3405
+@blackjok3r That worked 😃
+
+{Reactions}
+👍 
+
+[25-Jan-19 02:33 PM] Alright#0419
+@TonyL just claimed the 200 KMD, I'll give 50 KMD to the second person to do it
+
+{Reactions}
+👍 (2) 🔥 😳 
+
+[25-Jan-19 02:34 PM] blackjok3r#3181
+nice
+
+[25-Jan-19 02:34 PM] blackjok3r#3181
+resyncing KMD on my LABS notary... after updating it was just saying all blocks were invalid
+
+[25-Jan-19 02:35 PM] blackjok3r#3181
+was going to use bootstrap but it seems I should test a full sync to amke sure it can actually sync :S
+
+[25-Jan-19 02:35 PM] blackjok3r#3181
+then need to setup a nunch of VMs now i've free'd up 36GB of ram.
+
+[25-Jan-19 02:39 PM] CrisF#3405
+```05eac5969bbf2e0183b209a41c4e6290c7fcb09f03c113cb18a58418233046ab mined LABST block 158!``` says I'm mining blocks, but no balance showing.
+
+[25-Jan-19 02:39 PM] blackjok3r#3181
+how are you mining?
+
+[25-Jan-19 02:39 PM] blackjok3r#3181
+using -pubkey ?
+
+[25-Jan-19 02:40 PM] CrisF#3405
+On staked.
+
+[25-Jan-19 02:40 PM] CrisF#3405
+pubkey should be set.
+
+[25-Jan-19 02:41 PM] blackjok3r#3181
+block 158 is not in the chain
+
+[25-Jan-19 02:41 PM] blackjok3r#3181
+it prints that earlier on I think
+
+[25-Jan-19 02:41 PM] blackjok3r#3181
+like before the block is validated... I am in the proicess of redoing test VMs on server then I will check this.. might move or remove that print to stop further confusion
+
+[25-Jan-19 02:42 PM] blackjok3r#3181
+also there is no block reward
+
+[25-Jan-19 02:42 PM] blackjok3r#3181
+it slowly ramps up over 10800 blocks
+
+{Reactions}
+abusedsmily 
+
+[25-Jan-19 02:44 PM] blackjok3r#3181
+to make sure
+
+[25-Jan-19 02:44 PM] blackjok3r#3181
+do `getblock 05eac5969bbf2e0183b209a41c4e6290c7fcb09f03c113cb18a58418233046ab`
+
+[25-Jan-19 02:44 PM] blackjok3r#3181
+then copy the first transaction
+
+[25-Jan-19 02:44 PM] blackjok3r#3181
+and do `getrawtransaction <txid> 1` on that
+
+[25-Jan-19 02:46 PM] CrisF#3405
+```./asset-cli LABST getblock 05eac5969bbf2e0183b209a41c4e6290c7fcb09f03c113cb18a58418233046ab
+error code: -5
+error message:
+Block not found```
+
+[25-Jan-19 02:46 PM] blackjok3r#3181
+yep... it mined an invalid block.. it happens
+
+[25-Jan-19 02:47 PM] blackjok3r#3181
+if it happens constantly then something is very wrong
+
+[25-Jan-19 02:47 PM] CrisF#3405
+```0d4ed241f2a336a9e01f6b4e7f0ddf0e8f26ad528e6f8bdbb1a43808d61a07b8 mined LABST block 158!
+```
+
+[25-Jan-19 02:48 PM] CrisF#3405
+There are quite a few now.
+
+[25-Jan-19 02:48 PM] CrisF#3405
+all block 158.
+
+[25-Jan-19 02:50 PM] blackjok3r#3181
+that is the next block.. what does debug.log say
+
+[25-Jan-19 02:52 PM] CrisF#3405
+```2019-01-25 14:52:17 ERROR: CheckBlock: failed slow_checkPOW
+```
+
+[25-Jan-19 02:52 PM] CrisF#3405
+A wall of that.
+
+[25-Jan-19 02:53 PM] blackjok3r#3181
+ok cool... that makes sense
+
+[25-Jan-19 02:53 PM] blackjok3r#3181
+but why 😿
+

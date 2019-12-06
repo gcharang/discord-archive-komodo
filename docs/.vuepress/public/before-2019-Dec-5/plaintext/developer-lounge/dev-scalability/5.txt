@@ -1,0 +1,319 @@
+==============================================================
+Guild: Komodo
+Channel: dev-scalability
+Topic: Discussion about Komodo scalability. Komodo has demonstrated 20,000 TPS.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[30-May-18 08:42 PM] jl777#0000
+yes
+
+[30-May-18 08:42 PM] jl777#0000
+it is being done inside KMD now, but using code from iguana. maybe I botched the port?
+
+[30-May-18 08:42 PM] jl777#0000
+it could be endian reversed in iguana_merkle internal values? not setup to debug it, but you can basically change iguana_merkle to something that is your MoM calc
+
+[30-May-18 08:42 PM] libscott#0000
+memcpy(&tree[i],pindex->hashMerkleRoot.begin(),sizeof(bits256));
+
+[30-May-18 08:42 PM] libscott#0000
+prob that
+
+[30-May-18 08:43 PM] libscott#0000
+ok I'll try
+
+[30-May-18 08:54 PM] shossain#0000
+1056 notarizations since i started
+
+[30-May-18 08:55 PM] shossain#0000
+nice
+
+[30-May-18 08:55 PM] shossain#0000
+1 chain doesn't have balance. so, that leaves us 2 that hasn't notarized yet
+
+[30-May-18 09:13 PM] libscott#0000
+@SHossain can you update to latest `momo`?
+
+[30-May-18 09:14 PM] shossain#0000
+👍🏼
+
+[30-May-18 09:14 PM] libscott#0000
+notarisations will be different
+
+[30-May-18 09:16 PM] shossain#0000
+updating
+
+[30-May-18 09:22 PM] shossain#0000
+started iguana
+
+[30-May-18 09:30 PM] shossain#0000
+@libscott notarization started
+
+[30-May-18 09:35 PM] libscott#0000
+cool
+
+[30-May-18 09:35 PM] libscott#0000
+👍
+
+[30-May-18 09:52 PM] shossain#0000
+```MoMoM.["TXSCL00d", "857535", "0"] -> {"coin":"TXSCL00d","kmdheight":857535,"ccid":0,"MoMs":[],"notarization_hash":"0000000000000000000000000000000000000000000000000000000000000000","MoMoM":"0000000000000000000000000000000000000000000000000000000000000000","data":"00000000000000000000000000000000000000000000000000000000000000000000000000000000"}```
+it is showing `ccid:0` not `3`
+
+[30-May-18 09:55 PM] libscott#0000
+dat no good
+
+[30-May-18 09:55 PM] libscott#0000
+but there's also no MoMs?
+
+[30-May-18 09:59 PM] shossain#0000
+nope
+
+[30-May-18 10:00 PM] libscott#0000
+In this case there's 2 notary sigs right?
+
+[30-May-18 10:00 PM] shossain#0000
+also, now all 64 chains notarizing
+
+[30-May-18 10:00 PM] shossain#0000
+yes
+
+[30-May-18 10:03 PM] libscott#0000
+i wonder why there's no moms.. I see TXSCL004.ht.628 repeated
+
+[30-May-18 10:03 PM] libscott#0000
+does that mean its notarising multiple times for a block?
+
+[30-May-18 10:03 PM] jl777#0000
+what happens with a height_MoM call?
+
+[30-May-18 10:03 PM] jl777#0000
+the same call that iguana would make
+
+[30-May-18 10:04 PM] jl777#0000
+or i guess calc_MoM
+
+[30-May-18 10:33 PM] libscott#0000
+if it's calling MoMoMdata maybe my rpc call is messed up
+
+[30-May-18 10:33 PM] libscott#0000
+probably actually
+
+[30-May-18 10:34 PM] jl777#0000
+it should call to get the getinfo to get the prevMoMheight, then calcMoM then MoMoMdata
+
+[30-May-18 10:36 PM] libscott#0000
+MoMoMdata accepts any height
+
+[30-May-18 10:39 PM] jl777#0000
+ok, i think you need to run a testnet notarizing node to troubleshoot this
+
+[30-May-18 10:50 PM] libscott#0000
+at what point does the assetchain report it's ccid for a notarisation to KMD?
+
+[30-May-18 11:00 PM] jl777#0000
+in the MoM data of the notarization, the CCid is the first integer
+
+[30-May-18 11:02 PM] libscott#0000
+i understand that in MoMoMdata the `data` key contains "{ccid}{MoMoM}"
+
+[30-May-18 11:02 PM] libscott#0000
+so the backnotarisation contains the ccid
+
+[30-May-18 11:04 PM] libscott#0000
+but how does iguana put the ccid into the forward notarisation?
+
+[30-May-18 11:05 PM] jl777#0000
+let me check
+
+[30-May-18 11:06 PM] jl777#0000
+sorry, it gets it from the MoMoM data!
+
+[30-May-18 11:07 PM] jl777#0000
+it wont be in the forward notarization... I guess we need to change that?
+
+[30-May-18 11:07 PM] libscott#0000
+Yea, otherwise it can't select the notarisations for the MoMoMdata
+
+[30-May-18 11:07 PM] libscott#0000
+also MoMoMdata needs to be called with the ccid
+
+[30-May-18 11:08 PM] jl777#0000
+MoMdepth is 32 bits, but really it cant go beyond 16bits. is 16 bits enough for CCid?
+
+[30-May-18 11:09 PM] libscott#0000
+yes... but... ccid is the next 4 bytes after MoMdepth
+
+[30-May-18 11:10 PM] libscott#0000
+so it could go there?
+
+[30-May-18 11:12 PM] jl777#0000
+i think that would mess up the existing parsing...
+
+[30-May-18 11:13 PM] jl777#0000
+the full CCid can be in the MoMoMdata
+
+[30-May-18 11:14 PM] jl777#0000
+i know its a bit redundant and maybe we can streamline it after it works
+
+[30-May-18 11:14 PM] jl777#0000
+almost done with changes
+
+[30-May-18 11:14 PM] libscott#0000
+currently MoMoMdata['data'] is 38 bytes, "{ccid}{momom}{0}"
+
+[30-May-18 11:20 PM] jl777#0000
+@SHossain: updated jl777 branch to pass in the CCid in the upper 16 bits of MoMdepth, changes need to be made for anything parsing the OP_RETURN data, but nothing else should need to be changed
+
+[30-May-18 11:21 PM] jl777#0000
+also the CCid for a chain will be printed when notarizing starts and for each round
+
+[30-May-18 11:22 PM] shossain#0000
+testing
+
+[30-May-18 11:23 PM] jl777#0000
+I think I need to update komodod too, but it should at least get the CCid data to libscott's code now
+
+[30-May-18 11:24 PM] libscott#0000
+I think you are still missing a call to get the ccid from the assetchain no?
+
+[30-May-18 11:25 PM] libscott#0000
+Unless you have another way to get it
+
+[30-May-18 11:32 PM] jl777#0000
+getinfo call to the assetchain has non-zero CCid
+
+[30-May-18 11:32 PM] jl777#0000
+when notarizing assetchain, the notary just calls getinfo to get the CCid
+
+[30-May-18 11:34 PM] jl777#0000
+it is all encoded and komodo dev branch should properly support the encoded CCid in the upper part of MoMdepth. you might need to rebase for it to properly parse the non-zero CCid notarizations
+
+[30-May-18 11:34 PM] shossain#0000
+```MoMoM.["TXSCL019", "857645", "0"] -> {"coin":"TXSCL019","kmdheight":857645,"ccid":0,"MoMs":[],"notarization_hash":"0000000000000000000000000000000000000000000000000000000000000000","MoMoM":"0000000000000000000000000000000000000000000000000000000000000000","data":"00000000000000000000000000000000000000000000000000000000000000000000000000000000"}
+TXSCL019.ht.716 opretlen.76 src_or_dest.0 dest.(KMD) lastbest.857645 paxwdcrc.6236764c
+```
+
+[30-May-18 11:34 PM] shossain#0000
+using the latest iguana
+
+[30-May-18 11:36 PM] jl777#0000
+that should have been there for a long time
+
+[30-May-18 11:36 PM] jl777#0000
+on startup of notarizing when doing dpow call, what was printed?
+
+[30-May-18 11:40 PM] libscott#0000
+so, if it's a forward notarisation, ccid is upper 16 bits of MoMdepth, but if its a backnotarisation it's separate
+
+[30-May-18 11:40 PM] libscott#0000
+?
+
+[30-May-18 11:41 PM] jl777#0000
+you need to update komodod for proper parsing of the new notarization data, but for now we are not getting the CCid passed through. I see it in the getinfo posts you did before CCid:3, so it should appear in the dpow prints and at the start of each notrizaton round
+
+[30-May-18 11:42 PM] jl777#0000
+sorry, MoMdepth
+
+[30-May-18 11:42 PM] jl777#0000
+yes I used the previously all 0's of the upper 16 bits of MoMoMdepth
+
+[30-May-18 11:43 PM] jl777#0000
+so it goes into the forward notarization
+
+[30-May-18 11:43 PM] jl777#0000
+the back notarization can have the full 32bits
+
+[30-May-18 11:44 PM] jl777#0000
+it would also provide an additional error check to make sure the back notarization data is valid
+
+[30-May-18 11:44 PM] libscott#0000
+does backnotarisation have MoM?
+
+[30-May-18 11:45 PM] jl777#0000
+backnotarization will have whatever you put in the MoMoMdata
+
+[30-May-18 11:45 PM] libscott#0000
+but prior to MoMoMdata does it have MoM after symbol
+
+[30-May-18 11:45 PM] jl777#0000
+oh, but yes, it will have the MoMdata that was put in the forward notarization
+
+[30-May-18 11:45 PM] jl777#0000
+MoMdepth
+
+[30-May-18 11:45 PM] shossain#0000
+i will make it do only 2 chains for now
+
+[30-May-18 11:45 PM] libscott#0000
+ok 👍
+
+[30-May-18 11:46 PM] jl777#0000
+for historical reasons the name of the function to create the notarization extra data is: int32_t dpow_paxpending(uint8_t *hex,int32_t hexsize,uint32_t *paxwdcrcp,bits256 MoM,uint32_t MoMdepth,uint16_t CCid,int32_t src_or_dest,struct dpow_block *bp)
+
+[30-May-18 11:46 PM] jl777#0000
+there should be no mysteries for you about this data flow
+
+[30-May-18 11:47 PM] jl777#0000
+you can check that function in dpow_rpc.c to see exactly what its doing
+
+[30-May-18 11:47 PM] jl777#0000
+@SHossain: what appears when you do the dpow api call?
+
+[30-May-18 11:47 PM] jl777#0000
+it should print immediately
+
+[30-May-18 11:48 PM] shossain#0000
+dopow call hasn't started for the 2 chains now
+
+[30-May-18 11:48 PM] libscott#0000
+dev branch? dpow_paxpending doesnt handle ccid here
+
+[30-May-18 11:49 PM] shossain#0000
+```
+
+[30-May-18 11:49 PM] shossain#0000
+02a4a6c21b41a3903ef9ca37617d1b93fe74c9b5d5cc72d67b4e3524981f334acd DPOW with pubkey.(02a4a6c21b41a3903ef9ca37617d1b93fe74c9b5d5cc72d67b4e3524981f334acd) RFUN8XezmmZt47pzVmoz7aN5LtFNV9pyuj.valid1 TXSCL -> KMD RFUN8XezmmZt47pzVmoz7aN5LtFNV9pyuj.valid1, num.1 freq.2 minsigs.2 CCid.3
+{"result":"success","tag":"13803625721012352820"}
+02a4a6c21b41a3903ef9ca37617d1b93fe74c9b5d5cc72d67b4e3524981f334acd DPOW with pubkey.(02a4a6c21b41a3903ef9ca37617d1b93fe74c9b5d5cc72d67b4e3524981f334acd) RFUN8XezmmZt47pzVmoz7aN5LtFNV9pyuj.valid1 TXSCL000 -> KMD RFUN8XezmmZt47pzVmoz7aN5LtFNV9pyuj.valid1, num.2 freq.2 minsigs.2 CCid.3
+{"result":"success","tag":"10229542731861897425"}
+INIT with 2 notaries
+[KMD].0 TXSCL 048bdac32f91b057f5d4e78a37df257c21fb3d9475e8cd717e95c0980f683d27 height.4757 vs last.4756
+[1] notarize TXSCL->KMD 06a8d4a810e6aa1f8d4226f4a795ff05f637a7b381daf451cb71a51ea7624370 ht.4756 minsigs.2 duration.72000 start.1527724053 MoM[22] 9094bf45e5a7fa1bddd8b457e6b53f5a9432729598b55e1c9068985c64924bd3 CCid.3
+[KMD].0 TXSCL000 01deaed4d0053a598b8a8cc73d36310de90f69aaabef3fb301057ea912b82f3b height.10433 vs last.10432
+[1] notarize TXSCL000->KMD 024b78224da9d68b3ad909e290ad972090538bb5ee7b170a96e684cf8420434a ht.10432 minsigs.2 duration.72000 start.1527724053 MoM[6] 42d4fcdce0de5393bbd15f9c2642919523f9e1f7e29f3829be0f7d650ce2955d CCid.3
+
+[30-May-18 11:49 PM] shossain#0000
+slack deaded for me
+
+[30-May-18 11:49 PM] jl777#0000
+@libscott: sorry, its there now. got confused and updated komodo dev branch
+
+[30-May-18 11:50 PM] shossain#0000
+i am using iguana from jl777 branch
+
+[30-May-18 11:50 PM] jl777#0000
+ok, it is getting the CCid properly
+
+[30-May-18 11:50 PM] jl777#0000
+so now a notarization should end up with MoMdepth of (3 << 16) | depth,
+
+[30-May-18 11:50 PM] jl777#0000
+i merged jl777 into dev for iguana
+
+[30-May-18 11:50 PM] jl777#0000
+so doesnt matter which is used
+
+[30-May-18 11:51 PM] jl777#0000
+you should update komodod also as if you dont it could get confused with the new MoMdepth that will be around 200,000
+
+[30-May-18 11:52 PM] libscott#0000
+uh... I'm a bit dumb, that means I can sequence two R/Ws of uint16_t right? ie, `READWRITE((uint16_t)MoMdepth); READWRITE((uint16_t)CCid)`
+
+[30-May-18 11:52 PM] jl777#0000
+not 100% sure about endianness of READWRITE, but I think so
+
+[30-May-18 11:53 PM] libscott#0000
+i dont know why it needed to be mixed with MoMdepth though, the space after was open I thought
+

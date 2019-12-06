@@ -1,0 +1,135 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"424224648889106444";"Mihailo#5902";"02-Jan-19 03:30 PM";"But also, what is the difference with S format as you can use it to store binary represented data also... If validation do not forbid other data...";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 03:31 PM";"only printable chars, 7 bits";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 03:32 PM";"actually a bit less than 7 bits";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 03:33 PM";"but it is convenient";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 03:40 PM";"Hmmm, I'm trying to understand now D format but seem to be confused.
+So the S(s) format is hex data stored: 0123456789abcdef...
+D(d) should be binary so for example 1111 will be stored like this in bytes (because of %02x): 01010101";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 03:44 PM";"Ah, sorry. It will not be stored like that. It is stored in opret normal 1111. But why `sprintf(&str[i<<1],""%02x"",data[offset++]);`?";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 03:46 PM";"str[0] gets 2 bytes for hex at data[offset]";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 03:46 PM";"string is 1:1 bytes";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 03:51 PM";"Little bit confusing the packing of data in oracles :P
+I realize now that two digits are stored in one byte...
+So in case of 1111 it will be sotred in two bytes 11|11. Then when extracted it will be like this in str:
+str[0]=1 and str[1]=1 (because %02x will print to str[0] and str[1])
+str[2]=1 and str[3]=1";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 03:53 PM";"yes";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 03:54 PM";"sprintf -> &str[i<<1] that is the key";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 03:54 PM";"But what about S(s) format? str[i]=data[offset++]; So one char will be equal one byte which stores to hex digits (aa for example)?";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 03:54 PM";"And this will not be printable...";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 03:54 PM";"but you cant put 0xaa in ascii";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 03:55 PM";"well maybe with some sort of \ escaping its possible";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 03:55 PM";"Yes you can, but what will be the print of samples?";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 03:55 PM";"however such non-ascii prints";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 03:55 PM";"we might want to make sure all strings only have printable chars";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 03:56 PM";"or change the output to emit nonprintable in some sane way";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 04:02 PM";"I just posted to s format 03aabbcc and I'm getting:
+`error: couldn't parse reply from server` for oraclesamples";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 04:03 PM";"crashed?";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 04:04 PM";"No, just printig this";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 04:04 PM";"probably it made unprintable string";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 04:04 PM";"And then I posted regular data but it still cannot print...";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 04:04 PM";"Yes";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 04:07 PM";"oraclesamples output for string needs to generate error for unprintable";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 04:11 PM";"I just realised we need to describe S(s) and D(d) formats little bit better.
+S is for storing string data that needs to be converted in ascii codes values in hex char by char so for ""test"" it needs to be `74657374` (0x74 0x65 0x73 0x74)
+D is for stroing any data as binary(hex) (not just binary digits 0 and 1), so you can store `01aa34b74c` and it will be stored as `01aa34b74c` (01|aa|34|b7|4c as 5 bytes)";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 04:12 PM";"yes that is correct";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 04:12 PM";"@TonyL D is not just for binary digits 😉";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 04:12 PM";"binary data";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 04:12 PM";"Yep";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 04:12 PM";"as in raw data";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 04:13 PM";"In a hurry I confused myself as binary for binary digits 😛";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 04:13 PM";"not binary format";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 04:13 PM";"hex string to define it but it gets mapped to binary bits";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 04:18 PM";"Ok, so the changes for oracles RPC should be:
+- data should match specified length otherwise return error
+- S(s) format to be limited to printable chars (ASCII 32-127) ????
+- D(d) format to be limited to hex chars (0-9, a-f) ???";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 04:18 PM";"yes";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 04:19 PM";"And I think oraclessamples should ignore non prinatble strings, as if someone posts manually bad tx it will break oraclesamples...";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 04:19 PM";"ok";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 04:19 PM";"As we are not changing validation";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 04:20 PM";"yes, this will just filter things at rpc level, but someone can make invalid data entries if they want";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 04:23 PM";"Ok, I'm on it.";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 05:25 PM";"@jl777c  S(s) and D(d) formats cannot be combined with orher formats?";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 05:27 PM";"they should be able to";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 05:27 PM";"Ok then";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 09:36 PM";"@TonyL  I see you have added check for oracles format in create. By the way it is done now, it is not possible to combine formats except Ihh that you made exception.";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 09:38 PM";"this is in oraclescreate?";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 09:38 PM";"Yes, in rpcwallet.cpp";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 09:39 PM";"but any sort of format string should be allowed";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 09:40 PM";"Well I think there was problem as oraclescreate was accepting anything as format even invalid chars so he wanted to limit it. But it should just be checked if the chars from format string are valid formats...";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 09:40 PM";"yes, i missed that such a change was made. sorr";"";"";
+"455741312273219595";"jl777c#5810";"02-Jan-19 09:41 PM";"needs to be any valid format char in the string";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 09:41 PM";"Np, I'll change it now when I add sanity checks to oracles";"";"";
+"405011811511828481";"Alright#0419";"02-Jan-19 10:26 PM";"@Mihailo @jl777c might be misunderstanding this convo, but I believe it's already limited to the 13 defined formats";"";"";
+"405011811511828481";"Alright#0419";"02-Jan-19 10:27 PM";"I was playing around with it the other day force adding additional garbage formats to see if anything would go wrong. You can broadcast an oraclescreate with any format, it'll show the custom format in oraclesinfo, but you can't really do anything with it";"";"";
+"405011811511828481";"Alright#0419";"02-Jan-19 10:27 PM";"you need to edit the code itself to create a tx with any format other than the 13 defined ones";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 10:29 PM";"Yes it is limited to 13 defined formats but only one format, S or s or t or c ... But you cannot say Stc or tttccc";"";"";
+"405011811511828481";"Alright#0419";"02-Jan-19 10:29 PM";"to be frank, I don't understand the need for any format other than S";"";"";
+"405011811511828481";"Alright#0419";"02-Jan-19 10:29 PM";"everything can be done with S format alone as far as I can tell";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 10:30 PM";"I would say differently, no other than D. As in D you can represent anything. S is limitied only to ASCII chars so for text...";"";"";
+"405011811511828481";"Alright#0419";"02-Jan-19 10:31 PM";"you can represent hex with S although I guess that uses twice as much data because it's doing hex -> ascii -> hex?";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 10:32 PM";"Yes";"";"";
+"405011811511828481";"Alright#0419";"02-Jan-19 10:32 PM";"Am I understanding that correctly? I wrote scripts to make any arbitrary data work with S and have been using that for everything since";"";"";
+"424224648889106444";"Mihailo#5902";"02-Jan-19 10:32 PM";"So D is the ultimate format 😉";"";"😄 (1)";
+"405011811511828481";"Alright#0419";"02-Jan-19 10:32 PM";"noted";"";"";
+"371114647052615681";"Mylo#8306";"03-Jan-19 02:20 AM";"for convenience & correctness probably.   if you are only saving numbers in a string-only oracle data format, then it removes the possibliity of a string->numberWithDecimals casting problem in whatever language a dapp developer uses.
+
+if you are going to force dapp developers to convert to bytes, then it just adds a bit of complexity for ""weekend coders"" like myself or noobs to make errors or a barrier.
+
+maybe.";"";"";
+"371114647052615681";"Mylo#8306";"03-Jan-19 02:23 AM";"and validation is a key feature of blockchains.   so if data invalidation can creep in at a higher level, may as well not have a BC";"";"";
+"272003866906722306";"TonyL#3577";"03-Jan-19 05:49 AM";"@Mihailo It was possible to input anything as format when I made this check. I've discussed it's with JL when made 😀";"";"";
+"455741312273219595";"jl777c#5810";"03-Jan-19 05:53 AM";"i didnt realize you would limit the total possible formats to single items";"";"";
+"272003866906722306";"TonyL#3577";"03-Jan-19 05:57 AM";"Hmm actually I've asked should I hardcode types or not - you said like a binary type cover everything and if I know any other useful formats I should propose some and this list most probably will not be changed often";"";"";
+"272003866906722306";"TonyL#3577";"03-Jan-19 05:59 AM";"Oh got it - I just implemented it wrong I guess";"";"";
+"455741312273219595";"jl777c#5810";"03-Jan-19 07:00 AM";"needed to scan each letter of format string and error if any are not supported";"";"";
+"272003866906722306";"TonyL#3577";"03-Jan-19 10:14 AM";"Oh, seems I had big confusion regards this binary types 😆 
+Thanks for clarification @Mihailo";"";"";
+"424224648889106444";"Mihailo#5902";"03-Jan-19 10:21 AM";"@TonyL Np, and don't worry about format checks, you just got it wrong 😉";"";"👌 (1)";
+"272003866906722306";"TonyL#3577";"03-Jan-19 12:42 PM";"https://s3.us-east-2.amazonaws.com/tonyl777/upload_file_to_oracle.gif
+Kinda simple oracle file uploader 😃";"";"👍 (1)";
+"424224648889106444";"Mihailo#5902";"03-Jan-19 01:14 PM";"Try it with 64k file 😛";"";"";
+"272003866906722306";"TonyL#3577";"03-Jan-19 01:25 PM";"Chunking is under development 😃 Used `d` type for version used in this gif
+If file is > 256 bytes in hex it's saying now ""File is too big - develop new version""";"";"";
+"272003866906722306";"TonyL#3577";"03-Jan-19 01:43 PM";"Thanks @Deleted User ! Thats the main idea - make things simple for understanding by demonstration";"";"👍 (2)";
+"272003866906722306";"TonyL#3577";"03-Jan-19 01:44 PM";"http://kmd.solutions/ preparing content for my secret educating project 😃";"";"";
+"272003866906722306";"TonyL#3577";"03-Jan-19 02:40 PM";"```For example, if the datapoint is comprised of a 4byte timestamp and an 8byte number the format string would be: ""IL""```
+Read carefully trough Mastering Cryptoconditions Oracles chapter, realised now how terrible was my RPC check, oh 🙀
+I just not understood that it's possible to combine different types when wrote this check";"";"";
+"272003866906722306";"TonyL#3577";"03-Jan-19 02:43 PM";"Hmm, can I create let's say `DDD` oracle - and what is the limitation for single oracle data elements amount?  🤔";"";"";
+"424224648889106444";"Mihailo#5902";"03-Jan-19 03:16 PM";"I don't know what is the limitation of OP_RETURN vout, but I think there should be no multiple S or D formats. There is check for format string size in oraclescreate but it is very big `format.size() > 4096`.";"";"";
+"424224648889106444";"Mihailo#5902";"03-Jan-19 03:16 PM";"I thought about S and D also an I think we should probably limit on S or one D per oracle";"";"";
+"455741312273219595";"jl777c#5810";"03-Jan-19 06:39 PM";"10000 bytes total";"";"";
+"371114647052615681";"Mylo#8306";"04-Jan-19 02:54 AM";"what is this slow typing tech demo?  :trollface: 
+and nano?  :trollface: :trollface: 
+
+that's awesome, thanks @TonyL @Mihailo for your collab on manual hex demos.
+
+what use cases does this create (with automation etc. in a dapp)?
+- a step in a key approval processes etc.";"";"";
+"371114647052615681";"Mylo#8306";"04-Jan-19 02:55 AM";"i'd like to republish the gif on kmd website next week if that's cool.";"";"";
+"272003866906722306";"TonyL#3577";"04-Jan-19 03:21 AM";"@Mylo Can make a special geek edition gif with vi and turbotype if needed 😂 :trollface: 
+Immutable documents, code on blockchain, binaries on blockchain. You can put something as encoded cookie file for safety maybe to be sure that it's immutable 🤔 
+I just dump file as binary hex, and calculate it's length in bytes to suite the oracle data format. So it may be any file - not only text one as in example on gif.
+Sure, maybe I'll have more interesting one with larger file before next week - next app goal is to upload and download `komodod` 😃";"";"";
+"371114647052615681";"Mylo#8306";"04-Jan-19 03:33 AM";"can you have say 5,000,000 oracles storing small documents (proof of ownership/authenticity) on a blockchain?  have you hit any performance degradation when more than XX oracles exist on a chain?
+
+or is there a different way to store 5,000,0000 records on 1 oracle and an index number with tx of upload?";"";"";
+"272003866906722306";"TonyL#3577";"04-Jan-19 03:34 AM";"Hmm I didn't create such a big amount - but now I'm creating separate oracle for each file so It's easy to make such test";"";"";
+"272003866906722306";"TonyL#3577";"04-Jan-19 03:35 AM";"Just oracleslist needs to be cached";"";"";
+"371114647052615681";"Mylo#8306";"04-Jan-19 03:35 AM";"does 1 oracle act as a registry that can contain json data that a dapp can search.
+
+oh cool, yeah see how you go.  `coinsupply` has a behaviour where if you do 50000 blocks, it takes a few seconds but if you do all of the blocks at once it takes a loooong time.  be good to know these types of things.";"";"";
+"371114647052615681";"Mylo#8306";"04-Jan-19 03:36 AM";"leave it with `nano`, it shows you're human 😄";"";"😃 (1)";
+"272003866906722306";"TonyL#3577";"04-Jan-19 03:37 AM";"Hmm NoSQL DB on oracle 🤔";"";"";
+"272003866906722306";"TonyL#3577";"04-Jan-19 03:37 AM";"But it's public. But we can encrypt data";"";"";
+"272003866906722306";"TonyL#3577";"04-Jan-19 03:38 AM";"JSON we also can put as hex for compression";"";"";
+"272003866906722306";"TonyL#3577";"04-Jan-19 03:38 AM";"Just make a note in description or name that it's JSON which we need";"";"";
+"371114647052615681";"Mylo#8306";"04-Jan-19 03:39 AM";"also if you create 1000 oracles at block 2000 then another 1000 oracles at block 2100.  does that have same performance as 1000 oracles block 2000, 200 oracles block 2500, 600 oracles block 4000, 200 oracles block 5000.";"";"";
+"371114647052615681";"Mylo#8306";"04-Jan-19 03:40 AM";"idk the underlying mechanics of 'cost'";"";"";
+"371114647052615681";"Mylo#8306";"04-Jan-19 03:41 AM";"and if you query oracle that was created 5000 blocks ago, does it respond as quickly as a recently created oracle.";"";"";
+"272003866906722306";"TonyL#3577";"04-Jan-19 03:44 AM";"It's interesting thing to check (old oracles). As I remember @blackjok3r tried oracles with heavy load (uploaded big files in chunks) and performance was good";"";"";

@@ -1,0 +1,534 @@
+==============================================================
+Guild: Komodo
+Channel: dev-marketmaker
+Topic: Discussion about AtomiAPI and its market making tech.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[08-Jul-19 10:10 AM] sindresorhus#8187
+We don't want the latest. We want to lock it to a tested version for reproducible builds.
+
+[08-Jul-19 10:11 AM] sindresorhus#8187
+We will have something like this in package.json to define the mm2 version to download at build-time:
+
+```
+"marketmaker": {
+        "version": "e31bd721f",
+        "hashes": {
+            "macos": "a8e998a16faf3092ececacc525f34a1319cfea6a0d71a746d6dca6ae40d7ae875123963abe992bb2d95a7dd7e7a14e882ec53c3fcf1377dc1c190894759e3679",
+            "linux": "e45a132cccf805e7f331c91f1e1b400a181494b0fbe351cabf9ec19e5ea0b496cd3738625f2b5bdf7df97756d68c6d9dd4f96a0f41f720294ec7d7625c57db78",
+            "windows": "de2ac267dbda882d5a3024de615950d64e454d3fd6a9a668628013ff31032d2dda3f39e1606172347810415f4013f794e0d98896e3d79b92b62abd59b2cba941"
+        }
+    }
+```
+
+[08-Jul-19 10:12 AM] artem.pikulin#0794
+The commit hash is received from `git rev-parse --short HEAD`, the git version on Linux CI agent is different so it provides shorter result.
+
+[08-Jul-19 10:12 AM] sindresorhus#8187
+I see
+
+[08-Jul-19 10:15 AM] artem.pikulin#0794
+I will set the `--short=9` explicitly so it will always provide same length commit hash, and ok, directory nesting will be removed too.
+
+[08-Jul-19 10:16 AM] sindresorhus#8187
+Thanks 😃
+
+[08-Jul-19 10:16 AM] sindresorhus#8187
+I could of course do it, but that means everyone will have to take into account those inconsistencies. Better to have it it done at the source.
+
+{Reactions}
+👍 
+
+[08-Jul-19 10:26 AM] artem.pikulin#0794
+@sindresorhus http://195.201.0.6/mm2/ - done
+
+[08-Jul-19 10:26 AM] artem.pikulin#0794
+
+{Attachments}
+https://cdn.discordapp.com/attachments/449950331577565194/597735219533053974/unknown.png
+
+[08-Jul-19 10:26 AM] artem.pikulin#0794
+
+{Attachments}
+https://cdn.discordapp.com/attachments/449950331577565194/597735314886230036/unknown.png
+
+[08-Jul-19 10:26 AM] artem.pikulin#0794
+
+{Attachments}
+https://cdn.discordapp.com/attachments/449950331577565194/597735372222627840/unknown.png
+
+[08-Jul-19 10:41 AM] sindresorhus#8187
+@artem.pikulin Thanks. Works great.
+
+{Reactions}
+🤝 
+
+[09-Jul-19 09:54 PM] daemonfox#6136
+trying to launch this in Win10
+
+[09-Jul-19 09:54 PM] daemonfox#6136
+What is used for syntax to pass the launch args?
+
+[09-Jul-19 09:55 PM] daemonfox#6136
+Ive tried a few things but im not sure how it wants to accept args from win cmd line
+
+[09-Jul-19 09:55 PM] daemonfox#6136
+mm2.exe {"gui":"MM2GUI", "netid":9999, "userhome":"C:\Users\XXXX\AppData\Roaming\marketmaker", "passphrase":"12345", "rpc_password":"12345"}
+
+[09-Jul-19 09:56 PM] daemonfox#6136
+09 21:52:52, mm2:191] mm2:288] couldnt parse.({gui:MM2GUI,).key must be a string at line 1 column 2
+
+[09-Jul-19 09:57 PM] daemonfox#6136
+tried same as komodod using -arg=VALUE and tried pointing it to the app data dir with MM2.json and these values lik a komod conf file
+
+[09-Jul-19 10:27 PM] daemonfox#6136
+think i almost have it...
+
+[09-Jul-19 10:46 PM] daemonfox#6136
+cant get the userhome value to pass escapes
+
+[09-Jul-19 11:38 PM] daemonfox#6136
+\"userhome\":\"C:\Users\testuser\AppData\Roaming\marketmaker\"
+
+[09-Jul-19 11:38 PM] daemonfox#6136
+not sure what im doing wrong there... using the \"/${HOME#"/"}\" value it acts like it wants to start but says it cant find the COINS file
+
+[09-Jul-19 11:39 PM] daemonfox#6136
+Not sure what default directory it is looking for in Win10
+
+[10-Jul-19 01:13 AM] artem.pikulin#0794
+@daemonfox Hi, `it wants to start but says it cant find the COINS file` - https://developers.atomicdex.io/basic-docs/atomicdex/atomicdex-tutorials/atomicdex-walkthrough.html#setting-up-the-coin-list, MM2 looks for `coins` file in it's working dir. The recommended coins file to use is https://github.com/jl777/coins/blob/master/coins
+
+{Embed}
+https://developers.atomicdex.io/basic-docs/atomicdex/atomicdex-tutorials/atomicdex-walkthrough.html
+DEX Walkthrough | AtomicDEX Documentation
+Documentation for developers building on AtomicDEX
+
+{Embed}
+https://github.com/jl777/coins/blob/master/coins
+jl777/coins
+coin parameters and all files needed for GUI support - jl777/coins
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[10-Jul-19 01:15 AM] artem.pikulin#0794
+Please try to download/copy this file and put it in MM2 directory.
+
+[10-Jul-19 01:18 AM] artem.pikulin#0794
+You may also remove the `userhome` arg from JSON, I think we will deprecate it soon.
+
+[10-Jul-19 01:20 AM] artem.pikulin#0794
+`tried same as komodod using -arg=VALUE and tried pointing it to the app data dir with MM2.json and these values lik a komod conf file` MM2 doesn't parse the command line arguments passed in `-arg=VALUE` way. Please also make sure that MM2.json file contains the `json`, komodo conf format is `ini` so this won't be accepted by MM2.
+
+[10-Jul-19 01:29 AM] daemonfox#6136
+without the userhome arg, where would the default directory be in Win10?
+
+[10-Jul-19 01:37 AM] daemonfox#6136
+omg... disregard its just dumb Windows "start in" related crap... once I moved to actually be in the directory instead of just launching with full path, it started just fine.
+
+[10-Jul-19 01:43 AM] daemonfox#6136
+SUCCESS! {"address":"RLE1WnJj9eggyZwhebVgRquywMGZEAR57t","balance":"0","coin":"RICK","result":"success"}
+
+{Reactions}
+Komodo 
+
+[10-Jul-19 01:49 AM] artem.pikulin#0794
+As I can see `userhome` arg is not really used now and should be deprecated. It was used only for `native` mode, but as of now MM2 will look for daemon config (like `komodo.conf`) in user home directory by default.
+
+[10-Jul-19 03:02 AM] daemonfox#6136
+Yes it appears my issue was working directory... oddly enough i can call mm2.exe help from any current directory in cmd... but to launch the actual running daemon in Win10 I had to cd to the folder with the coins file (which also held the binaries) and it launched just fine.
+
+[11-Jul-19 03:20 PM] sindresorhus#8187
+@artem.pikulin Is support for ETH/ERC20 in Electrum mode in mm v2 planned?
+
+[11-Jul-19 03:31 PM] sindresorhus#8187
+@artem.pikulin mmv1 had a `kickstart` endpoint. I assume that's not needed anymore? I noticed in mmv2 that when I quit during a swap, it automatically resumes when it's started again.
+
+[11-Jul-19 03:45 PM] sindresorhus#8187
+@artem.pikulin In mmv2 there's a `enable` endpoint, but the inverse is missing. Any plans to add a `disable` endpoint? (This was there in mmv1)
+
+[11-Jul-19 04:43 PM] cipi#4502
+`curl --url "http://127.0.0.1:7783" --data "{\"userpass\":\"$userpass\",\"method\":\"enable\",\"coin\":\"ETH\",\"urls\":[\"http://eth1.cipig.net:8555\",\"http://eth2.cipig.net:8555\",\"http://eth3.cipig.net:8555\"],\"swap_contract_address\":\"0x8500AFc0bc5214728082163326C2FF0C73f4a871\",\"gas_station_url\":\"https://ethgasstation.info/json/ethgasAPI.json\"}"`
+
+[11-Jul-19 04:45 PM] sindresorhus#8187
+@cipi Can you explain that?
+
+[11-Jul-19 04:45 PM] sindresorhus#8187
+@cipi Regarding https://github.com/jl777/coins/commit/88a8de8cf2ae46b0ad35f35478056b2fdd8a2fbf, why was PIZZA and BEER removed in favor of MORTY? Having only one test currency means it's not actually possible to trade between two test currencies. And shouldn't https://www.atomicexplorer.com/#/faucet be updated?
+
+{Embed}
+https://www.atomicexplorer.com/
+Atomic Explorer
+Atomic Explorer
+
+[11-Jul-19 04:46 PM] cipi#4502
+that is the command to enable ETH, or any other ERC20 token
+
+[11-Jul-19 04:47 PM] cipi#4502
+we habe RICK and MORTY as testcoins, you can trade between the two, there are orderbook-entries
+
+[11-Jul-19 04:47 PM] sindresorhus#8187
+@cipi The mmv2 docs says it's not supported: https://github.com/artemii235/developer-docs/blob/mm/docs/basic-docs/atomicdex/atomicdex-api.md
+> Electrum mode is available for utxo-based coins only; this includes Bitcoin and Bitcoin-based forks. Electrum mode is not available for ETH/ERC20.
+
+{Embed}
+https://github.com/artemii235/developer-docs/blob/mm/docs/basic-docs/atomicdex/atomicdex-api.md
+artemii235/developer-docs
+Contribute to artemii235/developer-docs development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/15745003?s=400&v=4
+
+[11-Jul-19 04:48 PM] cipi#4502
+because electrum refers to coins, not ot erc20-tokens
+
+[11-Jul-19 04:48 PM] sindresorhus#8187
+Oh, ok. I misunderstood. So ETOMIC is not needed anymore?
+
+[11-Jul-19 04:48 PM] cipi#4502
+no, no ETOMIC needed
+
+[11-Jul-19 04:51 PM] sindresorhus#8187
+Great. Thanks 😃
+
+[11-Jul-19 05:01 PM] sindresorhus#8187
+@cipi Shouldn't https://www.atomicexplorer.com/#/faucet be updated to RICK and MORTY?
+
+{Embed}
+https://www.atomicexplorer.com/
+Atomic Explorer
+Atomic Explorer
+
+[11-Jul-19 05:02 PM] cipi#4502
+sure, but i don't know who is in charge, maybe @ca333
+
+[11-Jul-19 05:02 PM] sindresorhus#8187
+@cipi And are there any block explorers for RICK and MORTY?
+
+[11-Jul-19 05:41 PM] cipi#4502
+@sindresorhus https://rick.kmd.dev and https://morty.kmd.dev
+
+{Embed}
+https://rick.kmd.dev
+Komodo Explorer
+Komodo Insight. View detailed information on all komodo transactions and block. {{ $root.title + $root.titleDetail }}
+
+{Embed}
+https://morty.kmd.dev
+Komodo Explorer
+Komodo Insight. View detailed information on all komodo transactions and block. {{ $root.title + $root.titleDetail }}
+
+[11-Jul-19 05:44 PM] SHossain#0007
+@sindresorhus RICK & MORTY fauces are already there
+
+{Reactions}
+✅ 
+
+[11-Jul-19 05:44 PM] SHossain#0007
+for both coins since the coin launch
+
+[11-Jul-19 05:44 PM] SHossain#0007
+https://www.atomicexplorer.com/#/faucet/morty
+https://www.atomicexplorer.com/#/faucet/rick
+
+{Embed}
+https://www.atomicexplorer.com/
+Atomic Explorer
+Atomic Explorer
+
+{Embed}
+https://www.atomicexplorer.com/
+Atomic Explorer
+Atomic Explorer
+
+[11-Jul-19 05:47 PM] kmdkrazy#8280
+you replaced PIZZA and BEER with Rick and Morty?  nice!
+
+{Reactions}
+👍🏼 
+
+[11-Jul-19 09:52 PM] ca333#0118
+as aforementioned by shossain we have explorers and faucets in place since the launch. dexstats.info is hosting explorers too: https://morty.explorer.dexstats.info/ and https://rick.explorer.dexstats.info/
+
+{Embed}
+https://morty.explorer.dexstats.info/
+Komodo Explorer
+Komodo Insight. View detailed information on all komodo transactions and block. {{ $root.title + $root.titleDetail }}
+
+{Embed}
+https://rick.explorer.dexstats.info/
+Komodo Explorer
+Komodo Insight. View detailed information on all komodo transactions and block. {{ $root.title + $root.titleDetail }}
+
+[11-Jul-19 09:55 PM] phm87#7395
+@ca333  I didn't suscribe yet to atomicDEX beta. The hardfork is in few days. Will have I the time to register after hardfork or is it more safe to register right now and try it after hardfork ?
+
+{Reactions}
+👍🏼 
+
+[11-Jul-19 09:56 PM] phm87#7395
+(I began to read the API docs but I didn't register)
+
+[11-Jul-19 10:20 PM] ca333#0118
+no problem @phm87 feel free to sign up whenever you can - the earlier you register the sooner you will be invited to the beta program.
+
+[12-Jul-19 02:02 AM] artem.pikulin#0794
+@sindresorhus Hi!
+` Is support for ETH/ERC20 in Electrum mode in mm v2 planned?` - as `cipi` explained electrum is not applicable to ETH/ERC20, and yes, there's no need for proxy tokens anymore.
+`mmv1 had a kickstart endpoint. I assume that's not needed anymore? I noticed in mmv2 that when I quit during a swap, it automatically resumes when it's started again.` - yes, MM2 kickstarts swaps by itself upon restart, but it needs some help - coins should be enabled to continue the swaps, please call the https://developers.atomicdex.io/basic-docs/atomicdex/atomicdex-api.html#coins-needed-for-kick-start and enable the returned tickers asap on MM2 start.
+
+{Embed}
+https://developers.atomicdex.io/basic-docs/atomicdex/atomicdex-api.html
+DEX API | AtomicDEX Documentation
+Documentation for developers building on AtomicDEX
+
+[12-Jul-19 02:13 AM] artem.pikulin#0794
+`In mmv2 there's a enable endpoint, but the inverse is missing. Any plans to add a disable endpoint? (This was there in mmv1)` - disabling a coin is possible, but will require some effort as we need to take account of following:
+1. If there're ongoing swaps with coin the `disable` should be denied for sure.
+2. If there're active orders using a coin, what should we do? Cancel them? Or deny `disable` till the orders explicitly canceled by user?
+
+[12-Jul-19 05:00 AM] rainbro7#4735
+Artem is pro
+
+[12-Jul-19 10:38 AM] sindresorhus#8187
+>  yes, MM2 kickstarts swaps by itself upon restart, but it needs some help - coins should be enabled to continue the swaps, please call the 
+
+Thanks. Will do.
+
+[12-Jul-19 10:39 AM] sindresorhus#8187
+> 2. If there're active orders using a coin, what should we do? Cancel them? Or deny disable till the orders explicitly canceled by user?
+
+I think the API should return an error explaining that there's an order in progress so the user needs to cancel that before disabling the coin.
+
+[12-Jul-19 10:41 AM] sindresorhus#8187
+I opened an issue for this: https://github.com/artemii235/SuperNET/issues/459
+
+{Embed}
+https://github.com/artemii235/SuperNET/issues/459
+Add `disable` endpoint · Issue #459 · artemii235/SuperNET
+Per discussion in Discord. disabling a coin is possible, but will require some effort as we need to take account of following: If there&#39;re ongoing swaps with coin the disable should be deni...
+https://avatars1.githubusercontent.com/u/15745003?s=400&v=4
+
+[12-Jul-19 10:45 AM] sindresorhus#8187
+@artem.pikulin Is it possible to cancel a swap? I tried using the `cancel_order` endpoint using the swap UUID I got from `my_recent_swaps`, but I'm just getting an error:
+
+> Order with uuid 02744126-bf1b-431b-bbae-f0cf397b1ee6 is not found
+
+I assume there's a difference between a swap UUID and order UUID? But how do I convert between the two?
+
+I also noticed `my_recent_swaps` is missing a `cancellable` property to indicate whether it can be cancelled. `my_orders` has this property. Is this intentional or just forgotten?
+
+[12-Jul-19 10:54 AM] artem.pikulin#0794
+Swap cancel is possible on some stages, it's possible to add RPC method to abort swap if it's not on critical stage, however it will require some effort and refactoring, I think it won't be implemented in near future.
+
+[12-Jul-19 11:00 AM] artem.pikulin#0794
+It's not very hard to cancel it on the node, but to provide good UX we should also notify the other node that we canceled the ongoing swap, because if we don't have such notification the user might think that app doesn't work and then maybe even submit a bug report about failed swap. And this part is not easy because we don't have such `canceled` notifications between swap participants.
+
+[12-Jul-19 04:18 PM] sindresorhus#8187
+@artem.pikulin Okey. So for what stages does `cancel_order` currently work? Does it work at all currently? I need to know what stages to disable the cancel button on a swap or if I need to just hide at all together for now.
+
+[12-Jul-19 06:24 PM] artem.pikulin#0794
+@sindresorhus Hi, `cancel_order` works when cancellable == true, which actually means that order is not being matched right now. Please note also that swap is not order, it's different entity - the result of matching the order with another order.  In your situation when you call `buy/sell` you create the `TakerOrder` that is getting matched and deleted immediately, created swap takes the uuid of the order (it will be changed in the future as current TakerOrder is always `fill`, but the goal is to allow multiple matches for TakerOrder).
+
+[12-Jul-19 06:26 PM] artem.pikulin#0794
+The MakerOrder is already allowed to have multiple matches, to track swaps created by this order please check https://github.com/artemii235/developer-docs/blob/mm/docs/basic-docs/atomicdex/atomicdex-api.md#response-maker-order, it has 
+```
+"started_swaps":[
+                "60aaacca-ed31-4633-9326-c9757ea4cf78"
+            ],
+```
+
+{Embed}
+https://github.com/artemii235/developer-docs/blob/mm/docs/basic-docs/atomicdex/atomicdex-api.md
+artemii235/developer-docs
+Contribute to artemii235/developer-docs development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/15745003?s=400&v=4
+
+[12-Jul-19 06:27 PM] artem.pikulin#0794
+To catch the `cancellable == true` with `buy/sell` you should create the order that is not matching to any existing in the orderbook, it will wait for 30 seconds and then it will be converted to MakerOrder.
+
+[12-Jul-19 06:30 PM] artem.pikulin#0794
+Summary: when you call `buy/sell` following happens:
+1. TakerOrder is created.
+2. If order is matched and filled swap is created. Swap takes the uuid of the order. Order is deleted.
+3. If order is not matched it can be cancelled. If it's not matched and not cancelled in 30 seconds it's converted to MakerOrder.
+
+[12-Jul-19 06:36 PM] artem.pikulin#0794
+4. MakerOrder can be matched with several TakerOrders until it's filled. It might be not cancellable if it has unfinished match(es) - got matching TakerOrder, but swap is not started yet.
+
+[13-Jul-19 05:27 AM] t0sma#0368
+@CHMEX Is there an update of Atomic swap stats with the launch of AtomicDex? (mm2.0) on dexstats.info ?
+
+[13-Jul-19 05:36 AM] CHMEX#0686
+@t0sma To my knowledge mm2.0 does not provide an api atm to get the counts. It will be possible to show the orderbook and prices
+
+[14-Jul-19 11:40 AM] t0sma#0368
+OK. Thanks
+
+[14-Jul-19 12:00 PM] michelvankessel#7656
+Hello! I have a quick question and would like to know if someone knows the answer. I am from the Blackcoin community and we are listed on BarterDEX v1. We would like to know if we get listed on BarterDEX v2 or if we have to be added to the list (again).  the community noticed BLK not being present on this list - https://www.atomicexplorer.com/#/coins
+
+{Embed}
+https://www.atomicexplorer.com/
+Atomic Explorer
+Atomic Explorer
+
+[14-Jul-19 02:39 PM] sindresorhus#8187
+@artem.pikulin Thanks for elaborating. I don't think it's worth having a "Cancel" button in HyperDEX if it only works in such a narrow situation. I'll just hide the cancel buttons until https://github.com/artemii235/SuperNET/issues/463 is implemented at some point.
+
+{Embed}
+https://github.com/artemii235/SuperNET/issues/463
+Add ability to cancel a swap at any non-critical step · Issue #46...
+Currently, the cancel_order endpoint is not very useful as it only really works if you&#39;re a maker and only for the first 30 seconds. Swap cancel is possible on some stages, it&#39;s pos...
+https://avatars1.githubusercontent.com/u/15745003?s=400&v=4
+
+[14-Jul-19 02:41 PM] sindresorhus#8187
+> 2. If order is matched and filled swap is created. Swap takes the uuid of the order. Order is deleted.
+
+@artem.pikulin#0794 I think it's awkward that the order is deleted right after being matched. The current way everything works feels a bit inconsistent. It would be nicer if an "order" existed from you do a buy/sell order all the way until it's done, no matter what. Will that be the case when https://github.com/artemii235/SuperNET/issues/451 is fixed?
+
+{Embed}
+https://github.com/artemii235/SuperNET/issues/451
+Persist order history · Issue #451 · artemii235/SuperNET
+Just opening this so I can track when it&#39;s implemented. It&#39;s a bit tricky situation as of now, MM2 doesn&#39;t persist the order history yet, order_status returns the active ord...
+https://avatars1.githubusercontent.com/u/15745003?s=400&v=4
+
+[14-Jul-19 02:57 PM] jorian#4555
+@michelvankessel read this: https://github.com/jl777/coins
+
+{Embed}
+https://github.com/jl777/coins
+jl777/coins
+coin parameters and all files needed for GUI support - jl777/coins
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[14-Jul-19 02:57 PM] jorian#4555
+```{
+    "coin": "BLK",
+    "name": "lore",
+    "fname": "Blackcoin",
+    "isPoS": 1,
+    "rpcport": 15715,
+    "pubtype": 25,
+    "p2shtype": 85,
+    "wiftype": 153,
+    "txfee": 100000
+  },
+```
+
+[14-Jul-19 02:58 PM] jorian#4555
+these are the coin parameters right now
+
+[14-Jul-19 02:58 PM] jorian#4555
+if you want to correct them, read the readme to try and test it yourself by changing the parameters to the correct ones if they are wrong. if you get a working swap, you can make a pull request to the repository to be added
+
+[14-Jul-19 02:59 PM] jorian#4555
+the AtomicDEX (beta) is a product from Komodo Platform, you'll need to talk to the platform team members to be added
+
+[14-Jul-19 03:00 PM] jorian#4555
+like any other GUI such as HyperDEX or Chainswap
+
+[14-Jul-19 03:00 PM] jorian#4555
+usually these GUIs use the coins repository for their coin parameters
+
+[14-Jul-19 03:00 PM] michelvankessel#7656
+@jorian thank you!
+
+[14-Jul-19 03:01 PM] jorian#4555
+👍
+
+[14-Jul-19 03:13 PM] sindresorhus#8187
+@artem.pikulin I'm confused how to now enable a ETH/ERC20-based coin. The docs only says how to enable ETH.
+
+I have this for the `enable` endpoint:
+
+```
+{
+    method: 'enable',
+    coin: 'MYTH',
+    urls: [
+        'http://eth1.cipig.net:8555',
+        'http://eth2.cipig.net:8555',
+        'http://eth3.cipig.net:8555',
+    ],
+    swap_contract_address: '0x8500AFc0bc5214728082163326C2FF0C73f4a871', // Swap smart contract on the ETH mainnet
+    mm2: 1
+}
+```
+
+Where do I put in the `MYTH` contract address? I'm clearly misunderstanding how this all works.
+
+Here's the MYTH token: https://etherscan.io/token/0x277ab4b9dde09a8e710fd755deeb9d0d9532d047
+
+[14-Jul-19 04:17 PM] cipi#4502
+@sindresorhus the contract address is in the coins file: https://github.com/jl777/coins/blob/master/coins#L1260 (example for BAT)
+every ERC20 coin on the ETH chain can be enabled with the same urls (`eth1-3.cipig.net:8555`)
+
+{Embed}
+https://github.com/jl777/coins/blob/master/coins
+jl777/coins
+coin parameters and all files needed for GUI support - jl777/coins
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[14-Jul-19 04:58 PM] sindresorhus#8187
+@cipi Thanks, that did it. I was fooled into thinking that didn't work initially as some tokens don't work at all: https://github.com/artemii235/SuperNET/issues/464
+
+{Embed}
+https://github.com/artemii235/SuperNET/issues/464
+Can't enable some ETH/ERC20 coins · Issue #464 · artemii235/SuperNET
+I get an error when I try to enable this ETH/ERC20 token: coins.js (passed to mm2): { coin: &#39;MYTH&#39;, name: &#39;Unicoin&#39;, decimals: 18, etomic: &#39;0x277ab4b9dde09a8...
+https://avatars1.githubusercontent.com/u/15745003?s=400&v=4
+
+[14-Jul-19 05:01 PM] cipi#4502
+you need to use `0x277AB4b9DDE09A8E710fd755deeB9d0d9532d047` as MYTH contract address (some chars are upper case)
+
+[14-Jul-19 05:02 PM] cipi#4502
+take the value shown on the page https://etherscan.io/address/0x277ab4b9dde09a8e710fd755deeb9d0d9532d047 under `Contract` as contract address, not the address as in the URL
+
+[14-Jul-19 05:05 PM] sindresorhus#8187
+@cipi Then a lot of the coins in https://github.com/jl777/coins/blob/master/coins are incorrect too. Many of the ones I tested that failed are taken directly from there. For example: https://github.com/jl777/coins/blob/4ecd07f4991ce27eb067e3a025fc2fd593ea7f0f/coins#L1049-L1053
+
+{Embed}
+https://github.com/jl777/coins/blob/master/coins
+jl777/coins
+coin parameters and all files needed for GUI support - jl777/coins
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+{Embed}
+https://github.com/jl777/coins/blob/4ecd07f4991ce27eb067e3a025fc2fd593ea7f0f/coins
+jl777/coins
+coin parameters and all files needed for GUI support - jl777/coins
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[14-Jul-19 05:12 PM] sindresorhus#8187
+@cipi https://github.com/jl777/coins/issues/332
+
+{Embed}
+https://github.com/jl777/coins/issues/332
+Many of the `etomic` addresses are invalid · Issue #332 · jl777/...
+They are in lowercase-only format, which means they&#39;re not checksummed, but mm2 requires checksummed smart contract addresses. For example: coins/coins Line 1052 in 4ecd07f &quot;etomic...
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[14-Jul-19 05:15 PM] cipi#4502
+wen need to test all the coins that worked with mm1 again with mm2... if they are working, they get the setting `"mm2": 1` in the coins file, like in this PR: https://github.com/jl777/coins/commit/97fce4f0f15bed19cf705329985805574cfd59c6
+if you find contract addressess that are not working, please make a PR to the above repo
+
+{Embed}
+https://github.com/jl777/coins/commit/97fce4f0f15bed19cf705329985805574cfd59c6
+VIA is mm2 compatible · jl777/coins@97fce4f
+https://avatars2.githubusercontent.com/u/32116761?s=200&v=4
+
+[14-Jul-19 05:30 PM] sindresorhus#8187
+@cipi I would argue this is unrelated. Testing all the coins is going to take forever. This can be fixed pretty easily. If there are lowercase addresses, they need to be changed to the checksummed one.
+
+[14-Jul-19 05:38 PM] cipi#4502
+sure, but you need to test the coins anyway before using them in mm2
+
+[14-Jul-19 05:41 PM] cipi#4502
+erc20 tokens can change contract address or move to own chain, or some are not working like in mm1, eg USDT... it needs to be tested
+
+[14-Jul-19 05:41 PM] sindresorhus#8187
+@cipi I'll do a PR with the smart contract fixes tomorrow.
+
+[14-Jul-19 05:42 PM] sindresorhus#8187
+@artem.pikulin Why is the `avevolume` property of the `orderbook` endpoint marked as deprecated? It's a useful property we use in HyperDEX. Any chance it could be kept?
+

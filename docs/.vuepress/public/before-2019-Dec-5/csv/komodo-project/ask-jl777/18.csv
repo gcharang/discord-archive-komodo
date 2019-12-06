@@ -1,0 +1,267 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"347922216429813760";"grewalsatinder#9653";"25-Aug-18 11:56 AM";"np";"";"";
+"389448688218537987";"dnris#0024";"27-Aug-18 08:09 AM";"Can merge pull request? https://github.com/jl777/coins/pull/144";"";"";
+"455741312273219595";"jl777c#5810";"27-Aug-18 09:51 AM";"Chapter 7 - rewards example
+The next CC contract in complexity is the rewards CC contract. This is designed to capture what most people like about masternodes, without anything else, ie. the rewards!
+
+The idea is to allow people to lock funds for some amount of time and get an extra reward. We also want to support having more than one rewards plan at a time and to allow customization of plan details. One twist that makes it a bit unexpected is that anybody should be able to unlock the funds that were locked, as long as it ends up in the locking address. The reason for this is that SPV servers want to be supported and while locking can be done via normal sendrawtransaction, it requires a native node to do the unlocking. By allowing anybody to be able to unlock, then there can be a special node that unlocks all locked funds when they are ready. This way, from the user's point of view, they lock the funds and after it is matured, it reappears in their wallet.
+
+The above requirements leads us to using the global CC address for the rewards contract to lock the funds in. That allows anybody to properly sign the unlock, but of course that is not enough, we need to make sure they are following all the unlock requirements. Primarily that the funds go back to the locking address.";"";"";
+"455741312273219595";"jl777c#5810";"27-Aug-18 09:52 AM";"The four aspects of the rewards plan that are customizable are:
+APR, minseconds, maxseconds, mindeposit
+
+This allows each plan to set a different APR (up to 25%, anything above is becoming silly), the minimum time funds must be locked, the maximum time they are earning rewards and the minimum that can be deposited.";"";"";
+"455741312273219595";"jl777c#5810";"27-Aug-18 09:52 AM";"So the tx that creates the rewards plan will have these attributes and it is put into the OP_RETURN data. All the other calls will reference the plan creation txid and inherit these parameters from the creation tx. This means it is an important validation to do, to make sure the funding txid is a valid funding txid.
+
+Since it is possible that the initial funding will be used up, there needs to be a way for more funding to be added to the rewards plan.
+
+Having multiple possible rewards plans means it is useful to have rpc calls to get information about them. Hence: rewardslist returns the list of rewards creation txids and rewardsinfo <txid> returns the details about a specific rewards plan.
+
+A locking transaction sends funds to the rewards CC address, along with a normal (small) tx to the address that the unlock should go to. This allows the validation of the proper unlocking.";"";"Komodo (2)";
+"455741312273219595";"jl777c#5810";"27-Aug-18 10:33 AM";"Chapter 8 - assets example
+In some respects the assets CC is the most complex, it was actually the first one that I coded. It is however using a simple model, even for the DEX functions, so while it is quite involved, it does not have the challenge/response complexity of dice.
+
+There are two major aspects to creating tokens. First is to create and track it, down to every specific satoshi. The second is solving how to implement DEX functions of trading assets.
+
+The model used is ""colored coins"". This means that the token creating txid issues the assets as denoted by all the satoshis, so locking 1 COIN issues 100 million tokens. This multiplication will allow creation of plenty of assets. We want to preserve all the tokens created across all allowed operations. The way this is achieved is that all operations attaches the token creation txid in its OP_RETURN, along with the specified operation.";"";"";
+"455741312273219595";"jl777c#5810";"27-Aug-18 10:33 AM";"Ownership of tokens are represented by the colored satoshis in the CC address for the user's pubkey. This allows using the standard utxo system to automatically track ownership of the tokens. This automatic inheritance is one of the big advantages of utxo CC contracts that compensates for the slightly more work needed to implement a CC contract.
+
+So now we have the standard CC addresss, list and info commands that provide the CC addresses, list of all tokens and info on specific tokens and the ability to create and transfer tokens. Any amount of tokens can be created from 1 to very large numbers and using standard addressbalance, addressutxo type of commands, the details of all assets owned can be determined for a specific pubkey.
+
+Now we can solve the DEX part of the tokenization, which turns out to be much simpler than initially imagined. We start with bidding for a specific token. Funds for the bid are locked into the global CC address, along with the desired token and price. This creates a bid utxo that is able to be listed via an orderbook rpc call. To fill the bid, a specific bid utxo is spent with the appropriate number of assets and change and updated price for the unfilled amount. if the entire amount is filled, then it wont appear in the orderbook anymore.
+
+asks work by locking assets along with the required price. Partial fills can be supported and the rpc calls can mask the utxo-ness of the funds/assets needed by automatically gathering the required amount of funds to fill the specific amount.";"";"";
+"455741312273219595";"jl777c#5810";"27-Aug-18 10:33 AM";"With calls to cancel the pending bid or ask, we get a complete set of rpc calls that can support a COIN-centric DEX. 
+
+In the future, it is expected that a token swap rpc can be supported to allow directly swapping one token for another, but at first it is expected that there wont be sufficient volumes for such token to token swaps, so it was left out of the initial implementation.
+
+With just these rpc calls and associated validation, we get the ability to issue tokens and trade them on a DEX!";"";"";
+"455741312273219595";"jl777c#5810";"27-Aug-18 10:48 AM";"create
+ vin.0: normal input
+ vout.0: issuance assetoshis to CC
+ vout.1: tag sent to normal address of AssetsCCaddress
+ vout.2: normal output for change (if any)
+ vout.n-1: opreturn [EVAL_ASSETS] ['c'] [origpubkey] ""<assetname>"" ""<description>""
+ 
+transfer
+ vin.0: normal input
+ vin.1 .. vin.n-1: valid CC outputs
+ vout.0 to n-2: assetoshis output to CC
+ vout.n-2: normal output for change (if any)
+ vout.n-1: opreturn [EVAL_ASSETS] ['t'] [assetid]
+ 
+buyoffer:
+ vins.*: normal inputs (bid + change)
+ vout.0: amount of bid to unspendable
+ vout.1: normal output for change (if any)
+ vout.n-1: opreturn [EVAL_ASSETS] ['b'] [assetid] [amount of asset required] [origpubkey]
+
+cancelbuy:
+ vin.0: normal input
+ vin.1: unspendable.(vout.0 from buyoffer) buyTx.vout[0]
+ vout.0: vin.1 value to original pubkey buyTx.vout[0].nValue -> [origpubkey]
+ vout.1: normal output for change (if any)
+ vout.n-1: opreturn [EVAL_ASSETS] ['o'] [assetid]
+ 
+fillbuy:
+ vin.0: normal input
+ vin.1: unspendable.(vout.0 from buyoffer) buyTx.vout[0]
+ vin.2+: valid CC output satisfies buyoffer (*tx.vin[2])->nValue
+ vout.0: remaining amount of bid to unspendable
+ vout.1: vin.1 value to signer of vin.2
+ vout.2: vin.2 assetoshis to original pubkey
+ vout.3: CC output for assetoshis change (if any)
+ vout.4: normal output for change (if any)
+ vout.n-1: opreturn [EVAL_ASSETS] ['B'] [assetid] [remaining asset required] [origpubkey]";"";"";
+"455741312273219595";"jl777c#5810";"27-Aug-18 10:48 AM";"selloffer:
+ vin.0: normal input
+ vin.1+: valid CC output for sale
+ vout.0: vin.1 assetoshis output to CC to unspendable
+ vout.1: CC output for change (if any)
+ vout.2: normal output for change (if any)
+ vout.n-1: opreturn [EVAL_ASSETS] ['s'] [assetid] [amount of native coin required] [origpubkey]
+  
+cancel:
+ vin.0: normal input
+ vin.1: unspendable.(vout.0 from exchange or selloffer) sellTx/exchangeTx.vout[0] inputTx
+ vout.0: vin.1 assetoshis to original pubkey CC sellTx/exchangeTx.vout[0].nValue -> [origpubkey]
+ vout.1: normal output for change (if any)
+ vout.n-1: opreturn [EVAL_ASSETS] ['x'] [assetid]
+ 
+fillsell:
+ vin.0: normal input
+ vin.1: unspendable.(vout.0 assetoshis from selloffer) sellTx.vout[0]
+ vin.2+: normal output that satisfies selloffer (*tx.vin[2])->nValue
+ vout.0: remaining assetoshis -> unspendable
+ vout.1: vin.1 assetoshis to signer of vin.2 sellTx.vout[0].nValue -> any
+ vout.2: vin.2 value to original pubkey [origpubkey]
+ vout.3: CC asset for change (if any)
+ vout.4: CC asset2 for change (if any) 'E' only
+ vout.5: normal output for change (if any)
+ vout.n-1: opreturn [EVAL_ASSETS] ['S'] [assetid] [amount of coin still required] [origpubkey]";"";"😲 (1)";
+"347922216429813760";"grewalsatinder#9653";"27-Aug-18 10:49 AM";"is this in chapter 8 ?";"";"";
+"347922216429813760";"grewalsatinder#9653";"27-Aug-18 10:49 AM";"okay read again. yep, so adding it to chapter 8";"";"";
+"347922216429813760";"grewalsatinder#9653";"27-Aug-18 10:55 AM";"added these 2 chapters to git too.";"";"👍 (3)";
+"402562688254738432";"Yassin#3685";"27-Aug-18 11:12 AM";"👍";"";"";
+"455741312273219595";"jl777c#5810";"27-Aug-18 02:12 PM";"Chapter 9 - dice example
+The dice CC contract is actually more complex in the sequences required than the assets/tokens CC. The reason is the need for realtime response by the dealer node, but also having a way to resolve bets if the dealer node is not online. The dice CC contract shows how to build in such a challenge/response mechanism, which likely will be very useful for many other realtime interactive CC contracts.
+
+First, let us describe the issues that the dice CC contract needs to solve. Foremost is that it needs to be random and fair. It should also have realtime response and a fallback timeout in case the realtime response doesnt happen. As with the rewards CC contract, multiple dice plans are supported. Each plan can be customized as to the following:  minbet, maxbet, maxodds, timeoutblocks
+
+This allows each plan to control the risk exposure and also advertises to everyone when dicebets expire and a timeout win";"";"";
+"455741312273219595";"jl777c#5810";"27-Aug-18 02:12 PM";"can be claimed. In event the dealer node does not process a dicebet in time, in order to prevent dealer nodes from simply not responding to dicebets that they lose, a timeout must go to the dicebet player. A short timeframe means that the dealer would need to be running multiple redundant nodes to make sure they can respond in time. If the timeout is set to long, then many players would prefer to use a different dice plan with a shorter timeout.
+
+Now to describe how to ensure a proper random number that is fair. The method chosen was for the dealer node to create transactions with hash of their entropy in the OP_RETURN. Then the dicebet player would select a specific entropy tx and include their (unhashed) entropy to their OP_RETURN. This allows the dealer node to immediately determine if the dicebet won or lost. If the dicebet included the hash of the bettor entropy, then another step would be needed. However, doing so would allow some timeouts to end with a refund, rather than an automatic win for the dicebet player.";"";"";
+"455741312273219595";"jl777c#5810";"27-Aug-18 02:12 PM";"One additional technique used to keep all required data on the blockchain is the dealer entropy value calculation. The vin0 txid is used as one of the privkeys to calculate a shared secret and then hashed to remove links to the original privkey. This method allows recreating the dealer's entropy value (by the dealer node) given the blockchain itself, which means there is no need for any local storage.
+
+This allows the dealer node to recreate the unhashed entropy value used and so when the dicebet transaction is seen (in the mempool!), the dealer node can immediately determine if it is a winner or a loser. This is done by creating a dealer hash vs. a bettor hash via:
+
+dealer hash: SHA256(dealer entropy + bettor entropy)
+bettor hash: SHA256(bettor entropy + dealer entropy)
+
+The same values are used, but in different order. The resulting hashes are compared arithmetically for 1:1 bets and the standard industry use is used for the higher odds: https://dicesites.com/provably-fair
+
+The dealer creates a dice plan and then also needs to create entropy transactions. Each win or loss that creates change also creates entropy transactions by the dealer, but timeout transactions wont as it needs to be created by the dealer node to prevent cheating. The dealer tx are locked into the global dice CC address, as is the dicebet transaction, which selects a specific entropy tx to ""roll"" against. Then the dicefinish process by the dealer will spend the dicebet outputs either all to itself for a loss, or the winning amount to th dice bettor's address. For dicebets that are not dicefinish'ed by the dealer, anybody is able to do a timeout completion.";"";"";
+"455741312273219595";"jl777c#5810";"27-Aug-18 02:12 PM";"createfunding:
+ vins.*: normal inputs
+ vout.0: CC vout for funding
+ vout.1: owner vout
+ vout.2: dice marker address vout for easy searching
+ vout.3: normal change
+ vout.n-1: opreturn 'F' sbits minbet maxbet maxodds timeoutblocks
+
+addfunding (entropy):
+ vins.*: normal inputs
+ vout.0: CC vout for locked entropy funds
+ vout.1: tag to owner address for entropy funds
+ vout.2: normal change
+ vout.n-1: opreturn 'E' sbits fundingtxid hentropy
+
+bet:
+ vin.0: entropy txid from house (must validate vin0 of 'E')
+ vins.1+: normal inputs
+ vout.0: CC vout for locked entropy
+ vout.1: CC vout for locked bet
+ vout.2: tag for bettor's address (txfee + odds)
+ vout.3: change
+ vout.n-1: opreturn 'B' sbits fundingtxid entropy
+
+loser:
+ vin.0: normal input
+ vin.1: betTx CC vout.0 entropy from bet
+ vin.2: betTx CC vout.1 bet amount from bet
+ vin.3+: funding CC vout.0 from 'F', 'E', 'W', 'L' or 'T'
+ vout.0: funding CC to entropy owner
+ vout.1: tag to owner address for entropy funds
+ vout.2: change to fundingpk
+ vout.n-1: opreturn 'L' sbits fundingtxid hentropy proof
+
+winner:
+ same as loser, but vout.2 is winnings
+ vout.3: change to fundingpk
+ vout.n-1: opreturn 'W' sbits fundingtxid hentropy proof
+
+timeout:
+ same as winner, just without hentropy or proof
+
+WARNING: there is an attack vector that precludes betting any large amounts, it goes as follows:
+ 1. do dicebet to get the house entropy revealed
+ 2. calculate bettor entropy that would win against the house entropy
+ 3. reorg the chain and make a big bet using the winning entropy calculated in 2.
+
+ In order to mitigate this, the disclosure of the house entropy needs to be delayed beyond a reasonable reorg depth (notarization). It is recommended for production dice game with significant amounts of money to use such a delayed disclosure method.";"";"";
+"455741312273219595";"jl777c#5810";"27-Aug-18 02:13 PM";">>>>>>>>>>>>> with this, I have completed documenting the existing CC contracts";"";"";
+"249256116150730753";"PHBA2061#2530";"27-Aug-18 04:24 PM";"Hi James, sorry if this is a dumb question, with CC, is it possible to create standard like ERC-721 non-fungible tokens ? Thank you for the answer.";"";"";
+"455741312273219595";"jl777c#5810";"27-Aug-18 04:30 PM";"it is already created";"";"Komodo (1)";
+"455741312273219595";"jl777c#5810";"27-Aug-18 04:30 PM";"the assets CC can use a single satoshi to create a token";"";"👍 (4),😻 (1),👏 (1)";
+"455741312273219595";"jl777c#5810";"27-Aug-18 04:30 PM";"it will get a unique tokenid";"";"";
+"371114647052615681";"Mylo#8306";"28-Aug-18 08:03 AM";"will there be a need to look up on an explorer MoM (or MoMoM) data like we currently do for tx/address/blockhash etc.?";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 08:05 AM";"not sure what your context is";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 08:05 AM";"MoM* are needed to create SPV type of proof for a cross chain transaction";"";"";
+"371114647052615681";"Mylo#8306";"28-Aug-18 08:06 AM";"```[] matched.1 VALID (KMD) MoM.c699793514265ede421b6e5b35d541b007d7ac10a16ef3114ce2ea2460a02541 [682] CCid.3328
+``` just output from komodod syncing on a server with spinning HDD, and it crashed for some reason.  just curious.";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 08:06 AM";"a dapp would use KMD to generate this proof to submit to whatever chain needs to know";"";"";
+"371114647052615681";"Mylo#8306";"28-Aug-18 08:07 AM";"ok thanks";"";"";
+"389448688218537987";"dnris#0024";"28-Aug-18 09:05 AM";"jl777 missing icon coin img.png 😃";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 09:06 AM";"for what coin? it is more up to cipi for the coins repo";"";"";
+"389448688218537987";"dnris#0024";"28-Aug-18 09:13 AM";"ImageCoin  logo there https://github.com/jl777/coins/pull/144";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 09:19 AM";"if the image file is not submitted via pull request, what am I to do?";"";"";
+"389448688218537987";"dnris#0024";"28-Aug-18 09:45 AM";"https://user-images.githubusercontent.com/2696213/44648136-ff3c3a00-a9d7-11e8-92d3-6928e963cda5.png file there";"";"";
+"389448688218537987";"dnris#0024";"28-Aug-18 09:45 AM";"upload to https://github.com/jl777/coins/tree/master/icons";"";"";
+"389448688218537987";"dnris#0024";"28-Aug-18 09:46 AM";"I cannot create upload: message :
+ Uploads are disabled.
+File uploads require push access to this repository.";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 09:51 AM";"you need to make a pull request";"";"";
+"272003866906722306";"TonyL#3577";"28-Aug-18 09:52 AM";"@dnris you have to add this file in your local repo to /coins/icons folder, commit this file adding and PR after.
+As I can see you've just added logo as a comment to your PR which was merged";"";"";
+"371114647052615681";"Mylo#8306";"28-Aug-18 11:10 AM";"will a deadlock in a CC bring down the assetchain it is in?";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 11:30 AM";"what do you mean by deadlock ?";"";"";
+"371114647052615681";"Mylo#8306";"28-Aug-18 11:35 AM";"In https://github.com/jl777/komodo/blob/FSM/src/cc/CC%20made%20easy#L197 you refer to a deadlock.  Which I'm finding hard to picture...i guess an infinite loop, or some other programming error.
+
+The <CC>Validate function returns a bool.  Whilst in there doing your custom validation rules, don't get caught in a ""deadlock"", because some-fundamental-blockchain-process is going on.   Must return true/false.
+
+What is the PreventCC function in CCutils.cpp doing?
+
+Constraining txid to start/end with 00.  Neat trick.";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 11:36 AM";"if you do a lock on a mutex while already under a lock of that mutex, it will deadlock, basically it will wait until the first lock is released, but it cant as you locked it twice";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 11:37 AM";"https://en.wikipedia.org/wiki/Deadlock";"";"";
+"371114647052615681";"Mylo#8306";"28-Aug-18 11:43 AM";"OK - i was looking specifically for LOCK  e.g. LOCK(cs_main) within your CC examples and started to make those wrong assumptions :)
+
+Thanks.   It's a great slow read and it's sinking in.   If my rusty cpp brain can follow/deconstruct it, it's gonna be good.   I'll keep reading and discover more.  The dice contract i'm presuming will unlock (pardon the pun) a bunch of ideas for games and i'm interested in sharing KV storage between 2 parties and a CC.  This should be do-able?";"";"";
+"371114647052615681";"Mylo#8306";"28-Aug-18 11:44 AM";"*gonna be good for more proficient cpp/utxo coders.";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 12:42 PM";"anything on the blockchain is available to the CC contract";"";"";
+"389448688218537987";"dnris#0024";"28-Aug-18 01:18 PM";"https://github.com/jl777/coins/pull/145";"";"";
+"389448688218537987";"dnris#0024";"28-Aug-18 01:19 PM";"@jl777c";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 01:23 PM";"there is no need to add the JSON to coins again. there is also merge conflict";"";"";
+"389448688218537987";"dnris#0024";"28-Aug-18 01:23 PM";"now resolved";"";"";
+"455741312273219595";"jl777c#5810";"28-Aug-18 01:27 PM";"but you are adding the same JSON again at the end of the coins file";"";"";
+"389448688218537987";"dnris#0024";"28-Aug-18 01:32 PM";"ya sorry https://github.com/jl777/coins/pull/146";"";"";
+"389448688218537987";"dnris#0024";"28-Aug-18 01:32 PM";"now ok";"";"";
+"389448688218537987";"dnris#0024";"28-Aug-18 01:36 PM";"🚀";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 11:14 AM";"to verify the ztransactions!";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 11:14 AM";"nobody will have any idea about anybody else's coins, but can be assured it is valid and verified by the blockchain";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:08 PM";"yes, waiting for someone to launch such a chain, it will be quite interesting. the blockreward is the only source of coins that are visible, so it will have some utxo";"";"🤔 (2)";
+"242635006516658197";"jorian#4555";"29-Aug-18 12:19 PM";"would trading that on barterdex be possible?";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:21 PM";"no";"";"";
+"242635006516658197";"jorian#4555";"29-Aug-18 12:23 PM";"so it will be a chain on its own, basically. can't a centralized exchange work though?";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:27 PM";"if the central exchange accepts ztransaction deposits and sends out ztransaction withdraws, it can work";"";"";
+"242635006516658197";"jorian#4555";"29-Aug-18 12:27 PM";"exactly";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:28 PM";"but that is only because they havent implemented zaddresses";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:28 PM";"nothing stops them";"";"";
+"347922216429813760";"grewalsatinder#9653";"29-Aug-18 12:29 PM";"CC on z tx only chain would be really cool!";"";"";
+"347922216429813760";"grewalsatinder#9653";"29-Aug-18 12:29 PM";"Any ideas anyone has of usecase?";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:30 PM";"CC works on transparent vins/vouts";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:30 PM";"how?";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:30 PM";"it isnt magic";"";"🆗 (1)";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:30 PM";"and zaddresses are only known to each node";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:30 PM";"so you want a CC contract to somehow get chainwide consensus on private info only on some node's wallet.dat, in a different chain";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:31 PM";"sure sounds like magic would be required";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:31 PM";"well, it would be possible, just not anything that has been done yet";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:32 PM";"but it cant get consensus";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:32 PM";"so maybe it isnt even possible";"";"";
+"242635006516658197";"jorian#4555";"29-Aug-18 12:34 PM";"so this chain would be completely private, with only block rewards as public info. these then 'disappear' into z-addresses";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:34 PM";"yes";"";"";
+"242635006516658197";"jorian#4555";"29-Aug-18 12:34 PM";"it is what a lot of people complained about in the zcash vs monero debate, that zcash didn't force z-transactions";"";"";
+"242635006516658197";"jorian#4555";"29-Aug-18 12:34 PM";"now there is a chance to do it anyways";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:35 PM";"likely a practical way is via human escrow";"";"💯 (2)";
+"347922216429813760";"grewalsatinder#9653";"29-Aug-18 12:35 PM";"I'm trying to find what a good usecase will be for z tx only chain, other than full on privacy!";"";"";
+"242635006516658197";"jorian#4555";"29-Aug-18 12:36 PM";"i'm thinking with you";"";"";
+"347922216429813760";"grewalsatinder#9653";"29-Aug-18 12:36 PM";"tell us more 🙂";"";"";
+"242635006516658197";"jorian#4555";"29-Aug-18 12:39 PM";"it wuold be an economy of its own, but in order to achieve that, you would need a sort of openbazaar etc";"";"👌 (1)";
+"347922216429813760";"grewalsatinder#9653";"29-Aug-18 12:39 PM";"hmm.... 🤔";"";"";
+"242635006516658197";"jorian#4555";"29-Aug-18 12:40 PM";"i'm not that versed in Monero, but aren't we creating a Monero clone this way?";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:40 PM";"not any clone";"";"";
+"242635006516658197";"jorian#4555";"29-Aug-18 12:40 PM";"what would be the advantage of a zk-snarks coin over monero?";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:41 PM";"mixin set is all lifetime tx, instead of 10";"";"";
+"242635006516658197";"jorian#4555";"29-Aug-18 12:41 PM";"_moves to google_";"";"😂 (1),2⃣ (1)";
+"242635006516658197";"jorian#4555";"29-Aug-18 12:43 PM";"""It’s important to note that as of December 2017 only 4% of Zcash transactions were being shielded."" :p";"";"";
+"242635006516658197";"jorian#4555";"29-Aug-18 12:44 PM";"i wonder how much of KMD is shielded";"";"";
+"347922216429813760";"grewalsatinder#9653";"29-Aug-18 12:57 PM";"the docs don't have the example of different ways of creating blockchain.
+I remember James also gave those examples when he mentioned the assetchain params as he developed";"";"";
+"347922216429813760";"grewalsatinder#9653";"29-Aug-18 12:57 PM";"does anyone has those?";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:57 PM";"Maybe a gateway coin that is all private will be good";"";"";
+"242635006516658197";"jorian#4555";"29-Aug-18 12:57 PM";"ah: ```Zcash: offers the best anynomity set of the three. When you make a Z to Z transaction it is hidden among every private Z transaction ever made at the time of the transaction and into the future. (This is not to be confused with Zcash's public T addresses which offer no anynomity, or Z-T, or T-Z which show the transparent side if the transaction)```";"";"";
+"242635006516658197";"jorian#4555";"29-Aug-18 12:57 PM";"-ac_private=1";"";"";
+"455741312273219595";"jl777c#5810";"29-Aug-18 12:57 PM";"https://komodo-platform.readthedocs.io/en/latest/komodo/assetchain-params.html";"";"";
+"347922216429813760";"grewalsatinder#9653";"29-Aug-18 12:57 PM";"or in case not, can @jl777c please give me the set for creating BTC exactly assetchain ?";"";"";
+"242635006516658197";"jorian#4555";"29-Aug-18 12:57 PM";"it's all in the docs";"";"";

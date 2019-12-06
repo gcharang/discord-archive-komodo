@@ -1,0 +1,347 @@
+==============================================================
+Guild: Komodo
+Channel: notarynode
+Topic: Setup Guide: https://docs.komodoplatform.com/notary/setup-Komodo-Notary-Node.html
+Stats: https://komodostats.com
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[30-Jul-18 05:07 PM] siu - Chainmakers#3920
+hello guys
+
+[30-Jul-18 05:07 PM] siu - Chainmakers#3920
+im getting notice about EQL chain being forked
+
+[30-Jul-18 05:11 PM] siu - Chainmakers#3920
+./komodo-cli -ac_name=EQL getblockhash 63872
+00009ed2706b0eec783dab659ef0491c838acf1584264df9d4bec6b738ca950b
+
+[30-Jul-18 05:12 PM] siu - Chainmakers#3920
+ok... notaries seem to be in the same chain
+
+[30-Jul-18 05:53 PM] Mylo#8306
+`curl -s  https://komodostats.com/api/notary/summary.json  | jq '.[] | select(.ac_name =="EQL")' `
+
+[30-Jul-18 05:54 PM] Mylo#8306
+```$ ./eql getblockhash 63874
+00007647f15d0a426cfe51a1f3c7ecaab1669091fab950bbabfd4ceb3688c13d```
+
+[30-Jul-18 06:20 PM] Mylo#8306
+ooooh `bestblockhash` is handy  thanks
+
+[31-Jul-18 07:51 AM] jeezy#3408
+are there new iguana bootup parameters?
+
+[31-Jul-18 07:52 AM] jeezy#3408
+iguana_arg=${2:-notary}
+stdbuf -oL $1 ../agents/iguana -nosplit $iguana_arg  & #> iguana.log 2> error.log  &
+
+[31-Jul-18 07:52 AM] jeezy#3408
+like this?
+
+[31-Jul-18 08:11 AM] lukechilds#2707
+@jeezy I just added it to allow passing nosplit without having to fork the repo or hack the codebase:
+
+[31-Jul-18 08:11 AM] lukechilds#2707
+https://github.com/jl777/SuperNET/pull/932
+
+{Embed}
+https://github.com/jl777/SuperNET/pull/932
+Allow passing custom args to iguana by lukechilds · Pull Request ...
+This allows people to pass custom arguments to iguana without having to fork and maintain their own repo and keep it up to date with upstream.
+This is a backwards compatible change, default behavio...
+https://avatars2.githubusercontent.com/u/2123375?s=400&v=4
+
+[31-Jul-18 08:24 AM] lukechilds#2707
+btw if you're not sure about why code was changed, view the file in github, press the blame button and it will show you the commit for that line with the commit message explaining why it was changes (normally also linked to a PR/issue with further discussion)
+
+[31-Jul-18 08:46 AM] blackjok3r#3181
+@patchkez  I have subbmitted PR to komodo-tools repo. Updated all of a-teams scripts we are using and fixed my mess. Taken a few days and a lot of node down time, but its finally sorted out. 😅
+
+[31-Jul-18 08:50 AM] blackjok3r#3181
+I think that change to m_notary/_run still needs some work too... I had to manually merge that in for my fork, it was a breaking change to the way i am handling that... I guess I need to create a complete own iguana launcher like dragonriders did.
+
+[31-Jul-18 08:52 AM] blackjok3r#3181
+I have a few ideas there... Might explore soon, but node needs some time to recover after all those restarts. 😦
+
+[31-Jul-18 09:06 AM] lukechilds#2707
+for consolidating mining utxos
+
+[31-Jul-18 09:06 AM] lukechilds#2707
+I'm constructing a manual TX
+
+[31-Jul-18 09:06 AM] lukechilds#2707
+can I just set the output amount to the sum of all the inputs
+
+[31-Jul-18 09:06 AM] lukechilds#2707
+AKA 0 fee
+
+[31-Jul-18 09:06 AM] lukechilds#2707
+or will that never confirm?
+
+[31-Jul-18 09:56 AM] blackjok3r#3181
+you dont
+
+[31-Jul-18 09:57 AM] blackjok3r#3181
+https://github.com/blackjok3rtt/komodotools/blob/master/a-team/scripts.seed/sendawaynn.sh
+
+{Embed}
+https://github.com/blackjok3rtt/komodotools/blob/master/a-team/scripts.seed/sendawaynn.sh
+blackjok3rtt/komodotools
+komodotools - Scripts toolbox repository for Komodo and Iguana
+https://avatars3.githubusercontent.com/u/30971146?s=400&v=4
+
+[31-Jul-18 09:58 AM] blackjok3r#3181
+thats a modification to @Decker  script that we use. It will withdraw to cold storage, whenever the mined balance is over 3 blocks of KMD. I have it on cron every 2H. I will increase that out once f4a is removed.
+
+[31-Jul-18 09:58 AM] blackjok3r#3181
+its been running without issue for weeks now, not a single failed TX.
+
+[31-Jul-18 10:01 AM] blackjok3r#3181
+Im usless at git, so have no idea how to submit a PR with the right changes but I just created this, which seems to work.
+```#!/bin/bash
+# We don't add BEER/PIZZA to iguana so skip them, more skips can be added, mauybe this can be pulled as a prarm from assetchains.json
+declare -a skip=("BEER" "PIZZA")
+
+# Loop through assetchains.json and build the path to the approptiate coins file and run it.
+~/komodo/src/listassetchains | while read chain; do
+  if [[ " ${skip[@]} " =~ " ${chain} " ]]; then
+    pointless=0
+  else
+    coin="coins/$(echo $chain | awk '{print tolower($0)}')_7776"
+    $coin
+  fi
+done
+
+#add VRSC manually as its not listed in the assetchains.json
+coins/vrsc_7776```
+
+[31-Jul-18 10:02 AM] blackjok3r#3181
+This will automatically start all coins for iguana from the `assetchains.json` in komodo repo.
+
+[31-Jul-18 10:03 AM] blackjok3r#3181
+the idea being james doesn't need to manually add coins to `m_notary_run` any more, so its no longer required to constantly change that file, so we can have our own modifications and not have to manually merge them all the time. 😄
+
+[31-Jul-18 10:04 AM] blackjok3r#3181
+I made a few other changes to its stucture but want to test them first... not restarting my node again today. its on suicide mode as it is.
+
+[31-Jul-18 10:18 AM] blackjok3r#3181
+it just uses no fee 😕
+
+[31-Jul-18 10:22 AM] blackjok3r#3181
+sure
+
+[31-Jul-18 10:22 AM] blackjok3r#3181
+I think
+
+[31-Jul-18 10:43 AM] lukechilds#2707
+I expected it to work tbh
+
+[31-Jul-18 10:43 AM] lukechilds#2707
+you will just be low priority
+
+[31-Jul-18 10:46 AM] lukechilds#2707
+I'm using a 0.0002 txfee anyway, just to make sure I get my UTXO back quickly if I need to split for iguana
+
+[31-Jul-18 10:50 AM] lukechilds#2707
+BTC nodes normally won't relay 0 fee TXs but even that is just a config setting, not a consensus rule
+
+[31-Jul-18 11:05 AM] blackjok3r#3181
+I found out that KMD sent to your Notary address as change wint be split by iguana... my node was down to 6 UTXO until i sent it to myself.
+
+[31-Jul-18 11:06 AM] blackjok3r#3181
+internetingly though, if its change from a splitfund, it will work 😕
+
+[31-Jul-18 11:06 AM] Mylo#8306
+i ran out of UTXOs today.  i did a wallet clean out and wallet was locked.  first time i left iguana running, usually i turn it off.  3 hours of no ntz.
+
+[31-Jul-18 11:07 AM] lukechilds#2707
+I always leave it running when cleaning out a wallet
+
+[31-Jul-18 11:07 AM] lukechilds#2707
+I think it's normal to take a while to get back to speed
+
+[31-Jul-18 11:08 AM] Mylo#8306
+yeah but wallet was locked on kmd restart.  iguana couldn't split funds.
+
+[31-Jul-18 11:08 AM] lukechilds#2707
+_I think_ the other nodes blacklist you for a while for not responding, that's just an assumption though
+
+[31-Jul-18 11:08 AM] lukechilds#2707
+ohhh, gotcha
+
+[31-Jul-18 11:08 AM] lukechilds#2707
+why was your wallet locked?
+
+[31-Jul-18 11:09 AM] Mylo#8306
+nah we just blacklist you :trollface:
+
+[31-Jul-18 11:09 AM] lukechilds#2707
+:trollface:
+
+[31-Jul-18 11:09 AM] Mylo#8306
+dunno why it locked.  i thought maybe cos kmd stopped and restarted?
+
+[31-Jul-18 11:10 AM] blackjok3r#3181
+if you keep shutting down your iguana or stop responding you fefinatly get blacklisted... I dunno how or where in the code, but it happens... Mine was making 80% of BTC notarizations yesterday, restarted and its pretty much cdead now
+
+[31-Jul-18 11:10 AM] blackjok3r#3181
+changed nothing
+
+[31-Jul-18 11:11 AM] Decker#3767
+what does it mean "locked wallet"? komodod unable to spent every utxo or what?
+
+[31-Jul-18 11:12 AM] lukechilds#2707
+My KMD wallet's at 7MB but too scared to clean out cos my node's on fire
+
+[31-Jul-18 11:12 AM] Decker#3767
+Usually i clean my wallet after 20-25 Mb ...
+
+[31-Jul-18 11:13 AM] lukechilds#2707
+I try and keep it under 10
+
+[31-Jul-18 11:13 AM] lukechilds#2707
+but I think I have a slower server than most people here
+
+[31-Jul-18 11:13 AM] blackjok3r#3181
+under 10 seems to be the go to stay boosting along
+
+[31-Jul-18 11:13 AM] blackjok3r#3181
+but if you take it down too many times, or for too long you lose almost a day
+
+[31-Jul-18 11:14 AM] lukechilds#2707
+yep, I was doing it once a week
+
+[31-Jul-18 11:14 AM] lukechilds#2707
+but now I've made more perf improvements I'm getting more KMD txs so hitting 10MB way faster
+
+[31-Jul-18 11:14 AM] blackjok3r#3181
+with @webworker01 mining every single AC without ondemand blocks, wallets going to get super fat really quick.
+
+[31-Jul-18 11:15 AM] lukechilds#2707
+yeah I stopped mining cos it was fucking with my UTXOs and wallet.dats
+
+[31-Jul-18 11:15 AM] lukechilds#2707
+ACs are super lean now
+
+[31-Jul-18 11:15 AM] blackjok3r#3181
+mine to another pubkey with a seperate node./VM is the only way to mine AC.
+
+[31-Jul-18 11:15 AM] blackjok3r#3181
+seems it wont be required soon, too mnay others starting to mine them externally now
+
+[31-Jul-18 11:16 AM] blackjok3r#3181
+I hardly get any blocks on CPU
+
+[31-Jul-18 11:16 AM] Deleted User#0000
+am at 33 mb here
+
+[31-Jul-18 11:16 AM] lukechilds#2707
+yeah but don't you have a crazy server
+
+{Reactions}
+😂 
+
+[31-Jul-18 11:16 AM] blackjok3r#3181
+way out on top too
+
+[31-Jul-18 11:16 AM] Deleted User#0000
+lol
+
+[31-Jul-18 11:16 AM] Deleted User#0000
+my server is not crazy at all
+
+[31-Jul-18 11:16 AM] blackjok3r#3181
+yeah it is as old as BTC.
+
+[31-Jul-18 11:16 AM] lukechilds#2707
+oh really haha
+
+[31-Jul-18 11:17 AM] lukechilds#2707
+what specs?
+
+[31-Jul-18 11:17 AM] blackjok3r#3181
+dwy and chainmakers NA are same specs...
+
+[31-Jul-18 11:17 AM] blackjok3r#3181
+look at diffrence
+
+[31-Jul-18 11:17 AM] blackjok3r#3181
+lol
+
+[31-Jul-18 11:17 AM] Deleted User#0000
+I think I got 10% of alien servers power
+
+{Reactions}
+😂 
+
+[31-Jul-18 11:17 AM] blackjok3r#3181
+If thats the case mine is 0.01%
+
+[31-Jul-18 11:17 AM] lukechilds#2707
+I'm on a digital ocean droplet
+
+[31-Jul-18 11:17 AM] lukechilds#2707
+not even a compute one
+
+[31-Jul-18 11:18 AM] Deleted User#0000
+btw, any android dev around here ? I'm struggling on PeriodicWorkRequest... and that's the last step to finish this app
+
+[31-Jul-18 11:19 AM] lukechilds#2707
+I'm scared of real programming languages
+
+[31-Jul-18 11:19 AM] Deleted User#0000
+min worktime based on 15 min... Can't test stuff but just wait like a tard ><
+
+[31-Jul-18 11:19 AM] Decker#3767
+btw, is somebody here who using ramdisk to store wallet.dat or entire blockchain? does it significantly improoves nota count?
+
+[31-Jul-18 11:19 AM] lukechilds#2707
+it did for me
+
+[31-Jul-18 11:19 AM] lukechilds#2707
+but I also did a lot of other optimisations around the same time
+
+[31-Jul-18 11:19 AM] lukechilds#2707
+so hard to tell
+
+[31-Jul-18 11:20 AM] Decker#3767
+@lukechilds only wallet.dat on ramdisk or entire chain?
+
+[31-Jul-18 11:20 AM] Deleted User#0000
+entire chain O.O
+
+[31-Jul-18 11:20 AM] lukechilds#2707
+entire `~/.komodo` folder
+
+[31-Jul-18 11:20 AM] lukechilds#2707
+hehe
+
+[31-Jul-18 11:20 AM] lukechilds#2707
+KMD and all ACs
+
+[31-Jul-18 11:20 AM] blackjok3r#3181
+I have the entire `.komodo` folder in ram disk, but compared to reducing UTXO from 700 to less than 150
+
+[31-Jul-18 11:20 AM] Decker#3767
+👍
+
+[31-Jul-18 11:20 AM] Deleted User#0000
+crazy stuff
+
+[31-Jul-18 11:20 AM] blackjok3r#3181
+its hardly any diff
+
+[31-Jul-18 11:21 AM] lukechilds#2707
+yeah, I think UTXOs made a huge difference for me
+
+[31-Jul-18 11:21 AM] lukechilds#2707
+and wallet.dat
+
+[31-Jul-18 11:21 AM] lukechilds#2707
+I jsut did ramdisk around the same time
+
+[31-Jul-18 11:21 AM] blackjok3r#3181
+UTXO and wallet.dat on slower system is 1000% improvemtn
+

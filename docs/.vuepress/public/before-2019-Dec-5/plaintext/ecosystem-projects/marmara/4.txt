@@ -1,0 +1,352 @@
+==============================================================
+Guild: Komodo
+Channel: marmara
+Topic: 
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[29-May-19 10:17 AM] jl777c#5810
+yes, there is only 2 types of locked in v0, but we need three types
+
+[29-May-19 10:18 AM] jl777c#5810
+probably an address based on the creditloop txid
+
+{Reactions}
+👌 (2) 
+
+[29-May-19 01:35 PM] B. Gültekin Çetiner#0626
+True. In new versions, there are no different timelock intervals which were 3 months to 2 years before. Starting from Version 1 to above, We will have all coins locked to maximum block height which is around 4000 years.
+
+{Reactions}
+👌 
+
+[29-May-19 03:19 PM] B. Gültekin Çetiner#0626
+Activated16 will be cancelled. It is not needed any more.
+
+[29-May-19 03:20 PM] B. Gültekin Çetiner#0626
+It is due to 3 months to 2 years intervals.
+
+[29-May-19 03:21 PM] B. Gültekin Çetiner#0626
+Marmaralock function does not need blockheight, either. It will be locking all to maximum blockheight.
+
+{Reactions}
+👌 
+
+[29-May-19 04:50 PM] B. Gültekin Çetiner#0626
+Btw, Marmaralock will lock coins as activated ones and not as boosted.
+
+[29-May-19 04:51 PM] B. Gültekin Çetiner#0626
+Boosting will be automatic with marmarabatonapproval when baton is actually transferred.
+
+[29-May-19 05:04 PM] dimxy#2587
+yes, I'm just adding moving amount from locked to boosted in marmara_issue rpc
+
+[29-May-19 06:05 PM] dimxy#2587
+form the doc: `50% coins will be activated/timelocked to maximum blockheight.`
+Who will do this, miners? or users first receive coins as normal then lock them to max height?
+
+[29-May-19 06:05 PM] jl777c#5810
+it is already implemented
+
+[29-May-19 06:05 PM] jl777c#5810
+coinbase is locked half the time
+
+{Reactions}
+👍 (2) 
+
+[29-May-19 06:16 PM] dimxy#2587
+so it is not a personal but a single shared account?
+
+[29-May-19 06:17 PM] jl777c#5810
+it is a coinbase exception, applies to any address
+
+[29-May-19 06:19 PM] dimxy#2587
+ah yes, seems it sends coins to user cc address
+
+[29-May-19 06:47 PM] B. Gültekin Çetiner#0626
+Users can also lock coins as activated by using marmaralock but half of blocks comes as locked/activated.
+
+{Reactions}
+👌 
+
+[29-May-19 11:41 PM] B. Gültekin Çetiner#0626
+@jl777c  was coinbase exception in Marmara CC? We need to fix it to maximum blockheight instead of 3 months to 2 years intervals.
+
+[30-May-19 07:24 AM] jl777c#5810
+yes it is in v0
+
+[30-May-19 07:24 AM] jl777c#5810
+i dont remember the expiration height, wont be hard to change
+
+[30-May-19 07:25 AM] jl777c#5810
+also, even if you are able to unlock it, as long as you dont, it remains locked
+
+[30-May-19 09:15 AM] B. Gültekin Çetiner#0626
+We aggreed that the users will not be able unlock themselves. Locked/activated and boosted ones will be released to normal only by means of processes inside Marmara CC.
+
+[30-May-19 09:18 AM] jl777c#5810
+ok, in that case the actual unlock date doesnt matter so much, but it should be changed to the far future to be precise
+
+[30-May-19 09:19 AM] B. Gültekin Çetiner#0626
+Exactly. It might be even 777 years. 😉
+
+[01-Jun-19 08:03 AM] dimxy#2587
+What is the idea of activation (that is locking coins to the max height), isn't it simply like a bank deposit? So a user just sends his coins to 1of2 global,mypk address and would never spend them himself.
+It seems we do not need to store any height in the opreturn any more. 
+What do I need to change to make these new activated coins to be PoS? (Seems it is MarmaraPoScheck and it currently does not check height so maybe it should work with max height)
+
+{Reactions}
+👍 
+
+[01-Jun-19 09:19 AM] jl777c#5810
+correct about the height not needed
+
+[01-Jun-19 09:19 AM] jl777c#5810
+the PoS works with all utxos, there is special case handling for marmara to only use locked and inside there we can add a 3x multiplier for utxo locked and used in creditloop
+
+[01-Jun-19 10:43 AM] dimxy#2587
+so it needs to be done yet in komodo_stake?
+
+[01-Jun-19 10:56 AM] jl777c#5810
+everything is done other than the 3x multiplying
+
+[01-Jun-19 11:28 AM] dimxy#2587
+So we probably need to extend MarmaraPoScheck function to add support for lock-in-loop address (and it should return not just bool but different retcodes)
+
+[01-Jun-19 11:30 AM] dimxy#2587
+And as long as we make lock-in-loop address as Make1of2cond(marmarapk, createtxidpk) it becomes a shared account for all endorsers. But for staking we need to know how much each pk has in look-in-loop addresses, yes?
+
+[01-Jun-19 11:35 AM] jl777c#5810
+yes
+
+[01-Jun-19 11:35 AM] jl777c#5810
+actually the function is already there
+
+[01-Jun-19 11:35 AM] jl777c#5810
+given a utxo, it just needs to return the multiplier
+
+[01-Jun-19 11:35 AM] jl777c#5810
+let me find it
+
+[01-Jun-19 11:39 AM] dimxy#2587
+If all endorsers in a lock-in-loop account pay and spend always the equal part of the amount we might divide it by N. But the latest document states the lock-in-loop amount is spent in top to bottom order. So we probably would need to have a vector of each part stored
+
+[01-Jun-19 11:40 AM] jl777c#5810
+the staking would apply to the 1/N amount locked
+
+[01-Jun-19 11:40 AM] jl777c#5810
+komodo_txtime2 is the function you need to change
+
+[01-Jun-19 11:40 AM] jl777c#5810
+*valuep = tx.vout[n].nValue
+
+[01-Jun-19 11:41 AM] jl777c#5810
+just multiply that by 3, if it turns out to be a utxo locked in a creditloop
+
+[01-Jun-19 11:41 AM] jl777c#5810
+higher level code should only be staking locked utxo for marmara
+
+[01-Jun-19 11:41 AM] jl777c#5810
+code is a bit confusing, sorry, it evolved
+
+[01-Jun-19 11:52 AM] dimxy#2587
+np
+
+[01-Jun-19 10:15 PM] B. Gültekin Çetiner#0626
+@dimxy Congratulations. You discovered the key point. It is exactly like locking deposit to bank from which you earn the power to create more credits. But of course, the key difference is there is no real bank. You are your own bank. You need to run a node in system to get power of staking. You are also right about blockheight for locking. There needs to be no lockheight since activated/boosted coins can only be opened/released based on certain conditions.
+
+{Reactions}
+👍 
+
+[01-Jun-19 10:42 PM] B. Gültekin Çetiner#0626
+@jl777c I stated that during settlement process, first activated coins and then boosted coins should be utilized to pay for debt. I think, by this order, there may be more remaining coins in boosted accıunts and since we look at first amount of activated coins during issuance, there will be more chance to pay for debts especially when we use both Version 1 and Version 2 in the future used by the same person as mixed way when issuing. Do you have any comment or objection on this order?
+
+[01-Jun-19 10:46 PM] B. Gültekin Çetiner#0626
+When activated or boosted staking occurs, the half blocks are produced as activated coins. Using activated coins first during settlement may release more coins to normal.
+
+[01-Jun-19 10:48 PM] B. Gültekin Çetiner#0626
+We can change that order if it seems better to release boosted coins first.
+
+[01-Jun-19 10:51 PM] B. Gültekin Çetiner#0626
+The idea of releasing boosted first might be more logical since boosted is meaningful if there is credit loop. During settlement we remove the credit loop so it might be also meaningful to start first with boosted.
+
+[01-Jun-19 11:01 PM] B. Gültekin Çetiner#0626
+When issuing/endorsing credit, we will check if there is enough activated. If not enough, then we will ask the issuer/endorser to lock enough activated. All staked or mined coins will be locked to activated with 50% chance of course. Using activated first for settlement means using more funds from activated during settlement.
+
+[01-Jun-19 11:09 PM] B. Gültekin Çetiner#0626
+When credit loops are issued by the same person in a combined way in future when Version 1 and Version 2 are both available, the trust based credits in Version 2 might use activated/boosted ones during settlement. Of course, using Version 2 will require that this account should not be anonymous any more and take name, Global Id etc.
+
+[01-Jun-19 11:12 PM] B. Gültekin Çetiner#0626
+When both versions are used by the same person automated mode in Version 1 does not guarantee the 100 % collateralization. But as a start without Version 2 support, it will guarantee the credits.
+
+[01-Jun-19 11:18 PM] B. Gültekin Çetiner#0626
+If activated are used first during settlement, the issuer/endorser needs to lock more coins to Activated funds since we check for enough activated funds during issuance/endorsement in Version 1.
+
+[01-Jun-19 11:54 PM] B. Gültekin Çetiner#0626
+A parameter such as activatedfirst may be used but I do not know if it is really worth.
+
+[01-Jun-19 11:55 PM] B. Gültekin Çetiner#0626
+It will add some more complexity.
+
+[02-Jun-19 02:05 AM] B. Gültekin Çetiner#0626
+But of course, it has more flexibility and different communities may choose among two options.
+
+[02-Jun-19 05:32 AM] jl777c#5810
+i thought that after a creditloop is finished, all the boosted 1/N coins that are not used would revert to normal locked state
+
+[02-Jun-19 08:30 AM] B. Gültekin Çetiner#0626
+There will be remaining especially in later nodes since we clear from top-to-bottom. I think we should not touch them. Especially when thinking both modes in Version 1 and Version 2 working together in future. In trust based mode of Version 2, they will help us as special funds towards zero-nonredemption. Also latest endorsers with smaller collateralization will be accumulating in boosted which helps decentralization.
+
+[02-Jun-19 08:36 AM] B. Gültekin Çetiner#0626
+Yours is also another alternative for automated mode in Version 1.
+
+[02-Jun-19 08:39 AM] B. Gültekin Çetiner#0626
+After the credit loop is settled, we can revert all 1/N boosted to activated. That will promote people to issue credits with more credit loops. I think that is better alternative.
+
+[02-Jun-19 08:46 AM] jl777c#5810
+makes sense
+
+[02-Jun-19 08:51 AM] B. Gültekin Çetiner#0626
+Dear @dimxy shall I add @jl777c 's comment to requirements document? During settlement of credit loops, when the debt is cleared first with activated and then boosted from top accounts, all the boosted 1/N coins that are not used would revert to normal locked state, i.e. activated state.
+
+[02-Jun-19 08:53 AM] B. Gültekin Çetiner#0626
+@jl777c would it cause performance problem?
+
+[02-Jun-19 08:53 AM] B. Gültekin Çetiner#0626
+In longer credit loops?
+
+[02-Jun-19 08:54 AM] B. Gültekin Çetiner#0626
+We need to touch all remaining nodes in credit loop.
+
+[02-Jun-19 09:04 AM] jl777c#5810
+it depends on how it is implemented
+
+[02-Jun-19 09:12 AM] B. Gültekin Çetiner#0626
+It is code optimization issue then.
+
+[02-Jun-19 09:18 AM] jl777c#5810
+yes, on how the 3x locking is implemented, maybe it can be done without moving funds, not sure
+
+[02-Jun-19 09:31 AM] dimxy#2587
+I totally support returning locked-in-loop funds to activated state as if we do not do this after the settlement  the locked -in-loop funds would become useless.
+Please note how lock-in-loop fund is implemented - it is a 1of2 address in which 1st is marmara global pk and the 2nd is artificial unspendable createtxid pk. A createtxid is like an identifier which effectively binds funds to a specific credit loop.
+And another moment with it is that locked-in-loop fund is a common shared account to all endorsers in the loop
+
+{Reactions}
+👍 
+
+[02-Jun-19 10:40 AM] B. Gültekin Çetiner#0626
+@dimxy you are definitely right. They will be useless if they remain locked in boosted.  When we turn them into activated state, they will be used to create new credit Loops.
+
+[02-Jun-19 10:46 AM] B. Gültekin Çetiner#0626
+I could not get last part. If boosted in credit loop is common shared account then the later nodes will have same chance to earn. How do we separate/distribute resulting earned blocks obtained via 3x boosted staking to each endorser? And of course issuer?
+
+[02-Jun-19 11:26 AM] B. Gültekin Çetiner#0626
+I thought the boosted/locked in credit loop belongs to the account holder same as the activated.
+
+[02-Jun-19 11:26 AM] jl777c#5810
+once it is locked into a credit loop, it belongs to the creditloop
+
+[02-Jun-19 11:42 AM] B. Gültekin Çetiner#0626
+So how do we get 3x boosted earnings for each account?
+
+[02-Jun-19 11:44 AM] jl777c#5810
+staking is a special exemption and allowed
+
+[02-Jun-19 11:46 AM] B. Gültekin Çetiner#0626
+Does 3x boosted staking seek the contribution of each account in credit loop?
+
+[02-Jun-19 11:46 AM] jl777c#5810
+it will be separated by individual (i think that is easiest)
+
+[02-Jun-19 11:47 AM] jl777c#5810
+we need dimxy to answer implementation questions
+
+[02-Jun-19 11:51 AM] B. Gültekin Çetiner#0626
+I think testing will be difficult for boosted earnings of each account in a loop.
+
+[02-Jun-19 11:53 AM] B. Gültekin Çetiner#0626
+How do we test each account has 3x boosted earning relative to their contribution in common boosted account in loop?
+
+[02-Jun-19 12:29 PM] jl777c#5810
+statistically
+
+[02-Jun-19 06:31 PM] dimxy#2587
+Actually I have a concern how to manage lock-in-loop fund.
+The updated document says that in settlement the system writes off the cheque amount from issuer and endorsers' both activated and lock-in-loop addresses, from top to bottom.
+I think it is of course fair that issuer is responsible with all his funds: as he issued the credit and received goods for it then he should pay for it.
+But is this fair for an endorser to pay with all his money if the issuer defaults? 
+An endorser just gave goods and received goods, he actually gained none in total. Why should he be responsible with his both activated and locked coins?
+Isn't it fair if all the endorsers in a loop should be equaly responsible with their locked-in-loop coins if the issuer defaults? 
+That is, we could treat lock-in-loop coins as insurance fund which is spent only if the issuer defaults. 
+So if he defaults, all endorsers would pay in equal proportion (and it would be easy to manage lock-in-loop fund).
+
+[02-Jun-19 06:43 PM] jl777c#5810
+yes, take as much as possible from issuer
+
+[02-Jun-19 06:44 PM] jl777c#5810
+the remaining is split among all the endorsers, i think that is the idea of 1/N
+
+[03-Jun-19 12:45 AM] B. Gültekin Çetiner#0626
+They are all collectively responsible to pay for the debt of holder who has given given goods but received nothing. The trust based version works from top-to-bottom. The trust and responsibility decrease with each new endorser. The most responsible one is issuer and the least is holder (actually no responsibility at all). Actually all are responsible against the holder. In Version 1, the earlier nodes will earn much more with boosted staking than the later nodes. Think of the endorser just before the holder in a loop with 100 nodes. The node 99, the last endorser is last contributor joining and earned not much but pays equally with the first endorser who had gained a lot until the last contributor.
+
+[03-Jun-19 12:48 AM] B. Gültekin Çetiner#0626
+I think decreasing responsibility is more clear in Version 1.
+
+[03-Jun-19 12:49 AM] B. Gültekin Çetiner#0626
+The earlier endorsers earn more with boosted.
+
+[03-Jun-19 12:50 AM] B. Gültekin Çetiner#0626
+We also decided in our community to clear from top-to-bottom.
+
+[03-Jun-19 12:53 AM] B. Gültekin Çetiner#0626
+We need to discuss again within the community if we will change it.
+
+[03-Jun-19 12:55 AM] B. Gültekin Çetiner#0626
+The issuer gives the credit but with 100% collateralization at the first place.
+
+[03-Jun-19 12:56 AM] B. Gültekin Çetiner#0626
+Oc course, it is for Version 1.
+
+[03-Jun-19 12:57 AM] B. Gültekin Çetiner#0626
+In Version 2, the most trustful (and responsible) person should be the issuer since anyone in credit loop checks the credibility of the issuer before accepting a credit.
+
+[03-Jun-19 01:00 AM] B. Gültekin Çetiner#0626
+In law/culture, it says they are all responsible against the holder collectively but in  a chain manner.
+
+[03-Jun-19 01:07 AM] B. Gültekin Çetiner#0626
+The word used is muteselsilen which is used to show a hierarchy similar to family. First responsible person is grandfather, then father and  at the latest, the son comes.
+
+[03-Jun-19 01:08 AM] B. Gültekin Çetiner#0626
+The law is shaped according to culture.
+
+[03-Jun-19 01:47 AM] B. Gültekin Çetiner#0626
+``` An endorser just gave goods and received goods, he actually gained none in total. Why should he be responsible ```
+
+Do not endorsers earn with boosted? The earlier endorsers will earn more. It may not be clear in document. But this is what we intended. All participants except the holder will benefit with 3x boosted staking. Of course, earlier ones will earn more.
+
+[03-Jun-19 03:23 AM] B. Gültekin Çetiner#0626
+But I admit that I liked the idea of a common shared fund. We may utilize that in trust based version 2 as well with avalists' layer. We can keep avalists' collaterals in that common fund. Therefore, even in Version 2, we can use collateralization feature. They can make 3x boosted staking in common fund in Version 2.
+
+[03-Jun-19 03:24 AM] B. Gültekin Çetiner#0626
+There is avalist percentage in Version 2. If we can utilize avalist percentages for boosted staking that would be great.
+
+[03-Jun-19 03:26 AM] B. Gültekin Çetiner#0626
+I need to understand how you will be implementing that common fund.
+
+[03-Jun-19 03:27 AM] B. Gültekin Çetiner#0626
+Especially how 3x boosting is managed for every endorser.
+
+[03-Jun-19 09:06 AM] dimxy#2587
+```Do not endorsers earn with boosted? The earlier endorsers will earn more. It may not be clear in document```  This is perfectly clear. But these earnings are more like a bonus for being a guarantor of the debt and freezing money, aren't they? 
+Maybe your top-to-bottom schema is perfect and conforms the country law.
+I just wanted to remind other possible reasons for endorsers: 
+They all have put in lock-in-loop account the part of the collateral. In total it covers the debt for 100%. 
+So each of them has prepared to risk that locked amount if case of the issuer defaulting. If the issuer defaults, the risk happens and all of them pay the lock-in-loop amount.
+And it seems not quite fair if the system writes off all the debt from the first endorser only, not only money that he has prepared to risk but also other his money.
+(I'm not insisting on this, I'm only trying to work out reasons for the fair schema)
+
+[03-Jun-19 10:23 AM] B. Gültekin Çetiner#0626
+If it is acceptable for Communities universally, it is better. It should be multilaw. I aggree that we should not depend on one country only. Did you think what happens during settlement when we integrate Version 2 later? The issuer will be able create any amount and there needs to be no collateral during issuance. If it is in common fund, will other endorsers be able to differentiate the individual sharing of each issuer/endorser in common fund when thinking an issuer can have different credit Loops simultaneously? Will The common fund work out when we have both Version 1 and 2 together in use?
+

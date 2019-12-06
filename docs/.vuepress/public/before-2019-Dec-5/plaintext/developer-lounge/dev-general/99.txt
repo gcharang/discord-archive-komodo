@@ -1,0 +1,431 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[04-Jan-19 04:03 PM] blackjok3r#3181
+If the wallet was more corrupted it would take a diffrent path and likey fail to start, needing salvage wallet
+
+[04-Jan-19 04:04 PM] blackjok3r#3181
+it already does `CheckTransaction` on every txn in the wallet
+
+[04-Jan-19 04:04 PM] dukeleto#7326
+ok, i see now. you are inspecting "invalid" xtns, but not necessarily "corrupt", like via HD failure
+
+[04-Jan-19 04:04 PM] blackjok3r#3181
+the problem was that the DB key is right, but the data that comes outs is garbage
+
+[04-Jan-19 04:05 PM] blackjok3r#3181
+when garbage is given to CheckTransaction it fails... 😃
+
+[04-Jan-19 04:05 PM] dukeleto#7326
+wallet.dat stores a lot of weird data for an xtn
+
+[04-Jan-19 04:05 PM] blackjok3r#3181
+so you replace the txn... why rescan the entire chain 🤷
+
+[04-Jan-19 04:05 PM] dukeleto#7326
+from my side, i have code that parses wallet.dat and inspects the data. xtn data has a variable size, there is a lot going on there
+
+[04-Jan-19 04:05 PM] blackjok3r#3181
+they are stored in a key called "tx"<txid>""wtx data structure"
+
+[04-Jan-19 04:06 PM] dukeleto#7326
+@blackjok3r https://github.com/leto/zips/blob/zip400/zip-0400.rst#tx
+
+{Embed}
+https://github.com/leto/zips/blob/zip400/zip-0400.rst
+leto/zips
+Zcash Improvement Proposals. Contribute to leto/zips development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/30298?s=400&v=4
+
+[04-Jan-19 04:06 PM] dukeleto#7326
+CMerkleTx is what is stored
+
+[04-Jan-19 04:06 PM] dukeleto#7326
+also, memo data is stored for zaddr xtns
+
+[04-Jan-19 04:07 PM] dukeleto#7326
+so much data in an xtn key
+
+[04-Jan-19 04:07 PM] blackjok3r#3181
+it clearly extracts a wtx data steructure object ... my code works.. ive tested it 10 times today on a 50mb wallet with 17 corrupted tx feilds.
+
+[04-Jan-19 04:07 PM] dukeleto#7326
+i could probably flip a bit somewhere and your code would not think it's invalid, but it's still corrupt
+
+[04-Jan-19 04:07 PM] blackjok3r#3181
+the code that checks if it corrupt or not was already ther...
+
+[04-Jan-19 04:07 PM] blackjok3r#3181
+I just changed how it replaces the tx
+
+[04-Jan-19 04:08 PM] dukeleto#7326
+yes, that salvage code come from btc core
+
+[04-Jan-19 04:08 PM] blackjok3r#3181
+instead of brute forcing a full rescan... replace the borken txn only
+
+[04-Jan-19 04:08 PM] dukeleto#7326
+it's cool code, i don't think you are doing anything wrong. It's just that most people never touch wallet.dat stuff 😃
+
+[04-Jan-19 04:09 PM] dukeleto#7326
+does it replace zaddr xtns correctly, with memo data?
+
+[04-Jan-19 04:09 PM] blackjok3r#3181
+well I lost maybe 20H or more fo my life waiting for wallet rescans
+
+[04-Jan-19 04:09 PM] dukeleto#7326
+or is that not part of your needs? I have no idea what bug is causing this stuff
+
+[04-Jan-19 04:09 PM] blackjok3r#3181
+its how the staker deletes staking txns when it reorgs
+
+[04-Jan-19 04:09 PM] blackjok3r#3181
+wasnt able to fix it
+
+[04-Jan-19 04:09 PM] blackjok3r#3181
+neither was james in postest
+
+[04-Jan-19 04:10 PM] blackjok3r#3181
+so this is the only way to make it work realiably... its onyl an issue when yoiu have hundreds of thousands of txns
+
+[04-Jan-19 04:10 PM] blackjok3r#3181
+ztx is a tx
+
+[04-Jan-19 04:10 PM] blackjok3r#3181
+if GetTransaction can get it
+
+[04-Jan-19 04:10 PM] blackjok3r#3181
+then will be there
+
+[04-Jan-19 04:12 PM] dukeleto#7326
+@blackjok3r very cool stuff
+
+[04-Jan-19 04:13 PM] dukeleto#7326
+@blackjok3r if you ever have need for a plaintext dump of a wallet.dat, all keys and values, you might like https://github.com/leto/wack , which is how I wrote/researched the data in ZIP400
+
+{Embed}
+https://github.com/leto/wack
+leto/wack
+ack for wallet.dat's. Contribute to leto/wack development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/30298?s=400&v=4
+
+[04-Jan-19 04:13 PM] dukeleto#7326
+pretty sure i could make that remove any keys you wanted from the wallet, and give a new wallet, pretty easily. haven't done that yet
+
+[04-Jan-19 04:13 PM] blackjok3r#3181
+thanks. I think you mentiuoned this befoe and I lost it... I will save nookmark. might have saved me some time on this one to see what was wrong... this was one tricky bastrd to fix.
+
+[04-Jan-19 04:13 PM] dukeleto#7326
+your solution is best for this particular problem. My tool is more general
+
+{Reactions}
+👍 
+
+[04-Jan-19 04:13 PM] blackjok3r#3181
+been thinking about it for months
+
+[04-Jan-19 04:14 PM] dukeleto#7326
+it's `ack for wallets`, because I love ack: https://beyondgrep.com/
+
+{Reactions}
+😎 
+
+[04-Jan-19 05:29 PM] dukeleto#7326
+my next features to wack will be like nmap guessing your OS, I will guess the exact coin and version the wallet.dat came from. At first the problem seemed hard, but there are various tiny breadcrumbs left around the wallet.dat that actually allow you to tell which coin and which version of the coin the wallet.dat came from
+
+[04-Jan-19 05:32 PM] dukeleto#7326
+once we can guess the coin a wallet.dat came from, we can go ask blockexplorers "how much funds does address X have, if any?" and sum it all up, so we can have an automated tool that can look thru many wallet.dat (maybe corrupt, maybe old backups, etc) and tell you "this is how much transparent funds are in each of these wallets?". Will only work for transparent funds, but that is a feature, not a bug 😃
+
+[04-Jan-19 05:33 PM] dukeleto#7326
+it can already distinguish between ZEC/HUSH/KMD wallets
+
+{Reactions}
+👌 (2) 
+
+[05-Jan-19 07:25 AM] TonyL#3577
+Wanted to learn some C++ to better understand CC code. Downloaded book "C++ for beginners"
+1200 pages. 1200 pages for Beginners Carl! 😂
+
+{Reactions}
+👆🏽 
+
+[05-Jan-19 07:45 AM] blackjok3r#3181
+Not worth it ... just start copy pasting code from everywhere else until you understand what its doing... if somethign really doesnt make sense look up in book or google.
+
+[05-Jan-19 07:47 AM] TonyL#3577
+Hmm, I have a different approach on learning
+
+{Reactions}
+😎 
+
+[05-Jan-19 07:55 AM] jl777c#5810
+start with C, much much less
+
+[05-Jan-19 08:03 AM] TonyL#3577
+Is it possible to make CC contract on pure C?
+
+[05-Jan-19 08:06 AM] dukeleto#7326
+@TonyL the very first commit of Git by Linus is some very nice clean C code: https://github.com/git/git/commit/e83c5163316f89bfbde7d9ab23ca2e25604af290
+
+{Embed}
+https://github.com/git/git/commit/e83c5163316f89bfbde7d9ab23ca2e25604af290
+Initial revision of "git", the information manager from hell · gi...
+https://camo.githubusercontent.com/40f712d48ae6dfa1020ab42e766c173f9c6c0ad1/68747470733a2f2f312e67726176617461722e636f6d2f6176617461722f39356166366465353431636133393630663435623765333134363561366530313f643d68747470732533412532462532466769746875622e6769746875626173736574732e636f6d253246696d6167657325324667726176617461727325324667726176617461722d757365722d3432302e706e6726723d6726733d323030
+
+[05-Jan-19 08:06 AM] dukeleto#7326
+seems to be almost defaced with github comments, maybe reading via CLI is better
+
+[05-Jan-19 08:07 AM] dukeleto#7326
+`git log -p --reverse`
+
+[05-Jan-19 08:08 AM] TonyL#3577
+I coded on C in university, but it were easy labs. Like a solve equitations system, or printing CLI tools. Will look trough it, thanks!
+
+[05-Jan-19 08:08 AM] dukeleto#7326
+very little in cryptoconditions is really c++, except what it inherits and must use. Like James says, it's mostly pure C
+
+[05-Jan-19 08:13 AM] jl777c#5810
+I wrote it, and I try to avoid C++ stuff as much as possible
+
+[05-Jan-19 08:14 AM] ComputerGenie 👴🏼📢#7004
+https://github.com/git/git/blob/e83c5163316f89bfbde7d9ab23ca2e25604af290/README#L2 ❤
+
+{Embed}
+https://github.com/git/git/blob/e83c5163316f89bfbde7d9ab23ca2e25604af290/README
+git/git
+Git Source Code Mirror - This is a publish-only repository and all pull requests are ignored. Please follow Documentation/SubmittingPatches procedure for any of your improvements. - git/git
+https://avatars1.githubusercontent.com/u/18133?s=400&v=4
+
+[05-Jan-19 08:15 AM] TonyL#3577
+https://github.com/git/git/blob/e83c5163316f89bfbde7d9ab23ca2e25604af290/README#L13 :trollface:
+
+{Embed}
+https://github.com/git/git/blob/e83c5163316f89bfbde7d9ab23ca2e25604af290/README
+git/git
+Git Source Code Mirror - This is a publish-only repository and all pull requests are ignored. Please follow Documentation/SubmittingPatches procedure for any of your improvements. - git/git
+https://avatars1.githubusercontent.com/u/18133?s=400&v=4
+
+{Reactions}
+👆🏽 
+
+[05-Jan-19 08:19 AM] Mylo#8306
+i heard an interview once where he said he names software after himself lol
+
+[05-Jan-19 08:22 AM] grewalsatinder#9653
+I embarrassingly wasted a hell lot of my time in last few months on my silly way of learning and practicing Golang code. :(
+sorted that out on new year week(s)
+doing much better progress now on what I'm doing now.
+
+[05-Jan-19 08:23 AM] grewalsatinder#9653
+agree with James, just start basic C code to get started.
+and gradually do CC stuff.
+
+[05-Jan-19 08:27 AM] TonyL#3577
+Thanks for advices! Will go ahead from C so
+
+{Reactions}
+👍 
+
+[05-Jan-19 08:42 AM] blackjok3r#3181
+Started in iguana all pure C here also... C++ has far too many features to follow easily... I am slowly learning to understand what it does. Mostly just from reading other code ... I would likely be totally lost in any code base but komodod. Spent that many hours inside it reading... Can find most things and konw generally how data flows around.
+
+{Reactions}
+🙌 
+
+[05-Jan-19 09:22 AM] grewalsatinder#9653
+_"code logic flow"_
+
+{Reactions}
+🤐 
+
+[05-Jan-19 08:37 PM] ComputerGenie 👴🏼📢#7004
+Anyone know why a cli validateaddress returns:
+```JSON
+{
+    "isvalid": true,
+    "address": "RMXZ83u9fg9DR3VVuZc8a7Kyo9yBrjBKgG",
+    "scriptPubKey": "76a9148658e63676066358fc49330f2a83b94386e2a87c88ac",
+    "segid": 54,
+    "ismine": true,
+    "iswatchonly": false,
+    "isscript": false,
+    "pubkey": "03c020c1a93a6c9561f2296f581b1f867dd955659cfa3814aee9aeaa4ece3a428e",
+    "iscompressed": true,
+    "account": ""
+  }```
+but the same call with nodejs client returns
+```JSON
+{
+    "isvalid": true,
+    "address": "RMXZ83u9fg9DR3VVuZc8a7Kyo9yBrjBKgG",
+    "scriptPubKey": "76a9148658e63676066358fc49330f2a83b94386e2a87c88ac",
+    "segid": 54,
+    "ismine": false,
+    "iswatchonly": false,
+    "isscript": false
+}```
+
+[05-Jan-19 08:48 PM] ComputerGenie 👴🏼📢#7004
+standard NOMP-ish daemon.js client
+
+[05-Jan-19 08:50 PM] ComputerGenie 👴🏼📢#7004
+chain params are `-ac_supply=1000 -ac_staked=1 -ac_reward=1 -ac_end=1 -ac_cc=102` if that matters any
+
+[05-Jan-19 08:56 PM] ComputerGenie 👴🏼📢#7004
+It's worked for the last gajillion chains and I've never had it err like that b4 ¯\_(ツ)_/¯
+
+[05-Jan-19 09:01 PM] Alright#0419
+@ComputerGenie 👴🏼📢 can't reproduce that
+
+[05-Jan-19 09:01 PM] Alright#0419
+seems to me like the shorter call is from an older version of komodod?
+
+[05-Jan-19 09:02 PM] ComputerGenie 👴🏼📢#7004
+```$ git log -1
+commit 93f18db31afd9afb3103c89b3118c3932e7ab43e
+Author: jl777 <jameslee777@yahoo.com>
+Date:   Wed Dec 19 09:25:38 2018 -1100
+
+    Skip unspendable addresses in migrate
+```
+
+[05-Jan-19 09:02 PM] Alright#0419
+@ComputerGenie 👴🏼📢 `"ismine": false`
+
+[05-Jan-19 09:02 PM] Alright#0419
+that's why^
+
+[05-Jan-19 09:03 PM] ComputerGenie 👴🏼📢#7004
+@Alright I think you're reading the question wrong
+cli says true
+pool says false
+
+[05-Jan-19 09:03 PM] ComputerGenie 👴🏼📢#7004
+same address
+
+[05-Jan-19 09:04 PM] ComputerGenie 👴🏼📢#7004
+same daemon
+
+[05-Jan-19 09:04 PM] ComputerGenie 👴🏼📢#7004
+same PC
+
+[05-Jan-19 09:05 PM] grewalsatinder#9653
+See if node js code is parsing the json doing output of processed json
+
+[05-Jan-19 09:05 PM] grewalsatinder#9653
+Just a quick thought
+
+[05-Jan-19 09:08 PM] ComputerGenie 👴🏼📢#7004
+not in any odd way and I'm literally only seeing it with that chain
+swapped config to KMD, PIRATE, and COQUI and all worked as expected
+
+[05-Jan-19 09:08 PM] Alright#0419
+I still think you're sending the rpc call to the wrong daemon
+
+[05-Jan-19 09:09 PM] Alright#0419
+do a `getinfo` call the same way
+
+[05-Jan-19 09:09 PM] Alright#0419
+via nodejs
+
+[05-Jan-19 09:09 PM] ComputerGenie 👴🏼📢#7004
+getinfo comes back as expected
+
+[05-Jan-19 09:09 PM] ComputerGenie 👴🏼📢#7004
+as does getmininginfo
+
+[05-Jan-19 09:09 PM] Alright#0419
+do `importprivkey` via nodejs then try `validateaddress` again?
+
+[05-Jan-19 09:10 PM] ComputerGenie 👴🏼📢#7004
+will it even do an import for a key created by getnewaddress?
+
+[05-Jan-19 09:11 PM] Alright#0419
+sure it will
+
+[05-Jan-19 09:11 PM] Alright#0419
+I *really* think you are sending the rpc command to a daemon that doesn't own the wallet. It doesn't make sense that rpc vs cli would return different results
+
+[05-Jan-19 09:12 PM] ComputerGenie 👴🏼📢#7004
+I *really* think I'm not
+
+[05-Jan-19 09:14 PM] ComputerGenie 👴🏼📢#7004
+from stdout: `p2p.31666 rpc.31667`
+From config:
+```    "daemons": [
+        {
+            "host": "127.0.0.1",
+            "port": 31667,
+....
+    "p2p": {
+        "enabled": true,
+        "host": "127.0.0.1",
+        "port": 31666,```
+
+[05-Jan-19 09:15 PM] ComputerGenie 👴🏼📢#7004
+add in the fact that it's the only deamon I'm running on here....
+
+[05-Jan-19 09:16 PM] Alright#0419
+can you try `importprivkey` then `validateaddress` from nodejs?
+
+[05-Jan-19 09:16 PM] Alright#0419
+that will tell us op error or bug
+
+[05-Jan-19 09:19 PM] ComputerGenie 👴🏼📢#7004
+note to self: close ssh terminal before calling `getnewaddress`
+🤦🏽
+
+[05-Jan-19 09:20 PM] ComputerGenie 👴🏼📢#7004
+LOL I was calling the cli validate from another country
+
+[05-Jan-19 09:20 PM] ComputerGenie 👴🏼📢#7004
+literally
+
+[05-Jan-19 09:21 PM] ComputerGenie 👴🏼📢#7004
+ty @Alright I spent an hr being that dumb
+
+{Reactions}
+😝 (2) 🤗 
+
+[07-Jan-19 01:04 AM] dukeleto#7326
+trying to add something to insight (THE HORROR)
+
+[07-Jan-19 01:04 AM] dukeleto#7326
+```
+index 118fa78..dea5c7f 100644
+--- a/public/views/includes/header.html
++++ b/public/views/includes/header.html
+@@ -35,6 +35,8 @@
+           <strong>{{'Conn'|translate}}</strong> {{info.connections}}
+         </span> &middot;
+         <strong>{{'Height'|translate}}</strong> {{totalBlocks || info.blocks}}
++        </span> &middot;
++        <strong>{{'Notarized'|translate}}</strong> {{info.notarized}}
+       </div>
+       </li>
+       <li>
+```
+
+[07-Jan-19 01:05 AM] dukeleto#7326
+adding notarized block height to hush explorer
+
+[07-Jan-19 01:05 AM] dukeleto#7326
+but i am not initializing `info.notarized` correctly and can't find where the hell that is defined
+
+[07-Jan-19 01:06 AM] dukeleto#7326
+anybody know which file I need have `info.notarized` ? i think i have to modify a source file and generate the minified file and all that jazz
+
+{Reactions}
+💯 
+
+[07-Jan-19 02:16 AM] blackjok3r#3181
+if its in node.js likey its not defined anywhere and magically appears out of thin air 😂
+
+[07-Jan-19 02:28 AM] dukeleto#7326
+my eyes bled, i am not changing that minified file
+

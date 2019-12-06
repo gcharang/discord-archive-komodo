@@ -1,0 +1,542 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[12-Jul-19 06:10 PM] jl777c#5810
+can you make a PR into dev?
+
+[12-Jul-19 06:10 PM] jl777c#5810
+jl777/FSM is currently isolated due to the massive changes from brand new CC and nSPV
+
+[12-Jul-19 06:10 PM] dukeleto#7326
+i didn't know where I should send the PR, yeah I can send to dev
+
+[12-Jul-19 06:15 PM] dukeleto#7326
+github web UI was not happy about me changing my base branch from jl777 to dev, but `git cherry-pick` is saving the day
+
+[12-Jul-19 06:18 PM] dukeleto#7326
+@jl777c https://github.com/jl777/komodo/pull/1610
+
+{Embed}
+https://github.com/jl777/komodo/pull/1610
+Upstream Hush Supply Curve by leto · Pull Request #1610 · jl777/...
+This was tested on top of jl777 commit 368d284 and was able to completely sync from scratch on the Hush v3 mainnet, using ./src/hushd . I have also created an assetchains.json entry but it has not ...
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[12-Jul-19 06:19 PM] dukeleto#7326
+some NNs may assume that `assetchains.old` does not start HUSH, so there will need to be some adjusting by NNs whenever they want to use this stuff
+
+[12-Jul-19 07:00 PM] dukeleto#7326
+```
+--- a/src/komodo_defs.h
++++ b/src/komodo_defs.h
+@@ -18,7 +18,7 @@
+ #include "komodo_nk.h"
+
+ #define ASSETCHAINS_MINHEIGHT 128
+-#define ASSETCHAINS_MAX_ERAS 7
++#define ASSETCHAINS_MAX_ERAS 3
+```
+
+[12-Jul-19 07:00 PM] dukeleto#7326
+@jl777c that quick hack will make your branches run on OS X, until somebody can give a proper fix
+
+[12-Jul-19 07:02 PM] dukeleto#7326
+@TonyL this code is suspect to me:
+
+[12-Jul-19 07:02 PM] dukeleto#7326
+```
+    for ( i = numVals; i < ASSETCHAINS_MAX_ERAS; i++ )
+    {
+        outVals[i] = nLast;
+    }
+```
+
+[12-Jul-19 07:02 PM] dukeleto#7326
+from util.cpp
+
+[12-Jul-19 07:03 PM] dukeleto#7326
+not sure that works correctly on OS X when ASSETCHAINS_MAX_ERAS=7
+
+[12-Jul-19 07:07 PM] TonyL#3577
+access out of bounds maybe
+
+[12-Jul-19 07:09 PM] TonyL#3577
+https://en.cppreference.com/w/cpp/language/ub
+```int table[4] = {};
+bool exists_in_table(int v)
+{
+    // return true in one of the first 4 iterations or UB due to out-of-bounds access
+    for (int i = 0; i <= 4; i++) {
+        if (table[i] == v) return true;
+    }
+    return false;
+}```
+
+```
+May be compiled as (demo)
+
+exists_in_table(int):
+        movl    $1, %eax
+        ret```
+
+{Embed}
+https://en.cppreference.com/w/cpp/language/ub
+ub
+
+[12-Jul-19 07:10 PM] TonyL#3577
+I'm noob in C things, just guessing 😃
+
+[12-Jul-19 07:12 PM] jl777c#5810
+for (int i = 0; i <= 4; i++)
+
+[12-Jul-19 07:12 PM] jl777c#5810
+that loop needs 5 elements
+
+[12-Jul-19 07:12 PM] jl777c#5810
+osx is more strict about out of bound memory accesses
+
+{Reactions}
+📝 
+
+[12-Jul-19 07:22 PM] TonyL#3577
+btw, if somebody need to compile komodod on CentOS: 
+
+https://gist.github.com/tonymorony/ac80f269f8eb8a4c61509b2d5509c95b
+
+compiled yesterday on old CentOS 7 (1503), trick is just to compile recent compiler
+
+{Embed}
+https://gist.github.com/tonymorony/ac80f269f8eb8a4c61509b2d5509c95b
+komodod compile on CentOS-7-x86_64-DVD-1503-01
+GitHub Gist: instantly share code, notes, and snippets.
+https://avatars1.githubusercontent.com/u/24797699?s=400&v=4
+
+[12-Jul-19 07:24 PM] TonyL#3577
+oh yes, CentOS 7 shipping with mammoth gcc 😃
+
+{Reactions}
+😆 
+
+[13-Jul-19 02:37 PM] KomodoWorld#8282
+I first read about this idea almost two years ago, the concept has been expanded a lot but still incomplete. Is it interesting? `A third alternative... is to use the usual zero-confirmation payment approach, but add a special feature to the transaction that will act as a forfeit, should the scammer attempt a double spend of the money that he sent to the merchant`  https://gist.github.com/awemany/619a5722d129dec25abf5de211d971bd I know channel-cc but for using with many recipient needs a system of liquidity hubs that don't exist yet, isn't it?
+
+{Embed}
+https://gist.github.com/awemany/619a5722d129dec25abf5de211d971bd
+Solving the 0-conf problem using forfeits
+Solving the 0-conf problem using forfeits. GitHub Gist: instantly share code, notes, and snippets.
+https://avatars1.githubusercontent.com/u/13838274?s=400&v=4
+
+[13-Jul-19 02:38 PM] jl777c#5810
+a layer can be made on top of channels CC so you can have hubs that people connect to and two channel payments are made
+
+{Reactions}
+👍 
+
+[13-Jul-19 02:52 PM] dukeleto#7326
+https://twitter.com/williamsjoe/status/1149843075709231109
+
+{Embed}
+loam chomsky (@williamsjoe)
+https://twitter.com/williamsjoe/status/1149843075709231109
+10x engineers can breath underwater because they are usually swimming in the tears of joy other engineers have when doing peer reviews https://t.co/ty1QCUWFpT
+Twitter
+
+[13-Jul-19 02:52 PM] dukeleto#7326
+much talk of 10X engineers again, this meme isn't dead yet
+
+[13-Jul-19 03:08 PM] jl777c#5810
+what is funny?
+
+[13-Jul-19 03:10 PM] dukeleto#7326
+@jl777c "10X engineer" is a very very divisive term in US silicon valley tech world
+
+[13-Jul-19 03:10 PM] jl777c#5810
+never heard of it
+
+[13-Jul-19 03:10 PM] dukeleto#7326
+some people use it plainly, to mean a dev that is 10X or more productive than others
+
+[13-Jul-19 03:10 PM] dukeleto#7326
+but usually, it's used negatively
+
+[13-Jul-19 03:10 PM] dukeleto#7326
+there is a big backlash against "rockstar devs" aka "10X engineer"
+
+[13-Jul-19 03:11 PM] dukeleto#7326
+i.e. somebody that gets special treatment
+
+[13-Jul-19 03:11 PM] jl777c#5810
+why would 10x productivity be a negative?
+
+[13-Jul-19 03:11 PM] dukeleto#7326
+in a corporation, everybody should fit the same cogs
+
+[13-Jul-19 03:11 PM] dukeleto#7326
+if you don't fig into your cog-wheel, bean counters get upset
+
+[13-Jul-19 03:11 PM] dukeleto#7326
+10X engineers and "rockstars" don't fit
+
+[13-Jul-19 03:11 PM] jl777c#5810
+why the insult?
+
+[13-Jul-19 03:12 PM] dukeleto#7326
+exp(x) engineer, more like it
+
+[13-Jul-19 03:12 PM] jl777c#5810
+ok, thats better. 😃
+
+{Reactions}
+😅 (2) 
+
+[13-Jul-19 03:12 PM] dukeleto#7326
+and of course, there are exp(-x) engineers
+
+[13-Jul-19 03:12 PM] dukeleto#7326
+that ruin productivity of entire teams
+
+[13-Jul-19 03:13 PM] dukeleto#7326
+This thread, by an Indian startup guy is written at face value, he says 10X engineers are very valuable to very early startups: https://twitter.com/skirani/status/1149302828420067328
+
+{Embed}
+Shekhar Kirani (@skirani)
+https://twitter.com/skirani/status/1149302828420067328
+10x engineers
+
+Founders if you ever come across this rare breed of engineers, grab them. If you have a 10x engineer as part of your first few engineers, you increase the odds of your startup success significantly.
+
+OK, here is a tough question.
+
+How do you spot a 10x engin...
+Retweets
+496
+Likes
+1688
+Twitter
+
+[13-Jul-19 03:13 PM] dukeleto#7326
+and basically people are going wild, a lot of Social Justice Warrior type people, about how 10X engineers get special treatment and everybody should be treated the same/etc/etc
+
+[13-Jul-19 03:14 PM] jl777c#5810
+why should an order(s) magnitude more productive dev not be treated like an entire 10 dev team?
+
+{Reactions}
+PeepoThink 
+
+[13-Jul-19 03:16 PM] dukeleto#7326
+https://twitter.com/jessenoller/status/1149842895068811264
+
+{Embed}
+Jesse Noller (@jessenoller)
+https://twitter.com/jessenoller/status/1149842895068811264
+10x engineers are rare, if you find one don’t make eye contact. Approach slowly with eyes lowered and hands faced up. When you’re within 1.5 meters the 10x can’t observe you. 
+
+Pull out your enchanted axe and cut off the engineer’s horn. Eat under full moon. https:...
+Likes
+205
+Twitter
+
+{Reactions}
+😂 
+
+[13-Jul-19 03:17 PM] jl777c#5810
+sounds like jealousy
+
+[13-Jul-19 03:17 PM] jl777c#5810
+most anybody that works for 18hrs per day 7 days a week for 10 years straight can become a 10x or more
+
+[13-Jul-19 03:17 PM] jl777c#5810
+the trick is to make code one of the languages you "speak"
+
+[13-Jul-19 03:17 PM] jl777c#5810
+use the language processing everybody has
+
+[13-Jul-19 03:18 PM] jl777c#5810
+total immersion does the trick in most cases
+
+{Reactions}
+💯 (2) ✅ 
+
+[13-Jul-19 03:18 PM] dukeleto#7326
+If everybody sits at their desk 8 hours, and reads all the company emails, why should they be treated any less than somebody that is 10X or more productive? That is their reasoning.
+
+[13-Jul-19 03:18 PM] dukeleto#7326
+When 99% of your employees are not 10X, you must keep the majority happy
+
+[13-Jul-19 03:18 PM] dukeleto#7326
+and most people just occupy space
+
+[13-Jul-19 03:19 PM] jl777c#5810
+i guess professional sports players shouldnt get paid anymore than the weekend couch potato
+
+[13-Jul-19 03:33 PM] dukeleto#7326
+https://twitter.com/dukeleto/status/1150065560882941952
+
+{Embed}
+Duke Leto (@dukeleto)
+https://twitter.com/dukeleto/status/1150065560882941952
+The 10x engineer is much less common than 3 other kinds of engineers.
+e^x engineer is more than a linear multiple, they coalesce resources that would otherwise never be used.
+e^(-x) engineers ruin the productivity of entire teams/companies.
+log(x) engineers just go really ...
+https://pbs.twimg.com/media/D_Xahz9WwAMDc6_.jpg:large
+Twitter
+
+{Reactions}
+😂 💯 
+
+[13-Jul-19 06:10 PM] dukeleto#7326
+that is some subtle satire
+
+{Reactions}
+💯 
+
+[13-Jul-19 06:14 PM] dukeleto#7326
+also, some very good advice at the ~10:00 mark
+
+[13-Jul-19 06:14 PM] dukeleto#7326
+high level systems thinking and looking at how data flows thru the code, and how to optimize that
+
+{Reactions}
+👌 
+
+[13-Jul-19 08:33 PM] phm87#7395
+is this verushash v1 C implementation of @Decker still aligned with komodo assetchains using verushash v1 algo ? https://github.com/DeckerSU/verushash-example/blob/master/main.c#L175
+
+{Embed}
+https://github.com/DeckerSU/verushash-example/blob/master/main.c
+DeckerSU/verushash-example
+Contribute to DeckerSU/verushash-example development by creating an account on GitHub.
+https://avatars3.githubusercontent.com/u/22120003?s=400&v=4
+
+[13-Jul-19 08:41 PM] phm87#7395
+mmhhh as there is a cuda folder, I'm not sure that it is meant for cpu (and I need a cpu implementation in C)
+
+[13-Jul-19 08:54 PM] dukeleto#7326
+https://twitter.com/rickhanlonii/status/1150027915570098177
+
+{Embed}
+Rickyleaks (@rickhanlonii)
+https://twitter.com/rickhanlonii/status/1150027915570098177
+WHO DID THIS
+
+https://t.co/cr9IG8zD6o
+Retweets
+331
+Likes
+1266
+https://pbs.twimg.com/media/D_W4Ss_XYAAy3Jv.jpg:large
+Twitter
+
+{Reactions}
+😂 troll_king (2) 
+
+[13-Jul-19 10:42 PM] Stratchlayer#0625
+Tenx? 🤔
+
+[13-Jul-19 10:43 PM] Scytherion#3842
+helo
+
+[13-Jul-19 10:46 PM] Scytherion#3842
+ola
+
+[13-Jul-19 10:46 PM] Scytherion#3842
+sabe me dizer se aqui tem muita rain?
+
+[14-Jul-19 11:59 AM] michelvankessel#7656
+Hello! I have a quick question and would like to know if someone knows the answer. I am from the Blackcoin community and we are listed on BarterDEX v1. We would like to know if we get listed on BarterDEX v2 or if we have to be added to the list (again).  the community noticed BLK not being present on this list - https://www.atomicexplorer.com/#/coins
+
+{Embed}
+https://www.atomicexplorer.com/
+Atomic Explorer
+Atomic Explorer
+
+[14-Jul-19 12:08 PM] KomodoWorld#8282
+@michelvankessel Only a few coins are listed in the v2 beta and the number will be gradually increased with new releases. I suppose eventually the same coins will be listed as in v1
+
+[14-Jul-19 12:11 PM] michelvankessel#7656
+@KomodoWorld thank you for your prompt response. Please let me know if you want us to be part of the v2 beta. We have community members that would like to help
+
+[14-Jul-19 12:13 PM] KomodoWorld#8282
+I see you asked in #dev-marketmaker and someone will give you answer soon, maybe it can be added to one of next beta releases
+
+{Reactions}
+💯 
+
+[14-Jul-19 03:59 PM] dukeleto#7326
+@jl777c would it be possible to do something like this in KMD and would it provide any benefit from sidechannel attacks in our usecase? https://github.com/openbsd/src/commit/707316f931b35ef67f1390b2a00386bdd0863568
+
+{Embed}
+https://github.com/openbsd/src/commit/707316f931b35ef67f1390b2a00386bdd0863568
+Add protection for private keys at rest in RAM against speculation...
+and memory sidechannel attacks like Spectre, Meltdown, Rowhammer and
+Rambleed. This change encrypts private keys when they are not in use
+with a symmetic key that is derived from a relatively large...
+https://avatars0.githubusercontent.com/u/170281?s=200&v=4
+
+[14-Jul-19 05:43 PM] jl777c#5810
+that would be cool, but it would be a lot of work to find all the places to do this
+
+[16-Jul-19 03:36 AM] dukeleto#7326
+https://github.com/miguelmota/cointop
+
+{Embed}
+https://github.com/miguelmota/cointop
+miguelmota/cointop
+The fastest and most interactive terminal based UI application for tracking cryptocurrencies - miguelmota/cointop
+https://repository-images.githubusercontent.com/127352116/fecb4480-647b-11e9-8b07-8e837a20fc0f
+
+[16-Jul-19 03:37 AM] dukeleto#7326
+that looks nice for avoiding websites
+
+[16-Jul-19 03:46 AM] Mylo#8306
+i have a node that is on a wrong fork, on block 1444008 with longest chain 1444008.
+how do i make it find the correct fork?
+
+[16-Jul-19 03:47 AM] grewalsatinder#9653
+yes, it uses coingecko in it's API as it's showing in footnote
+
+[16-Jul-19 03:47 AM] grewalsatinder#9653
+*cointop
+
+[16-Jul-19 03:48 AM] Alright#0419
+@Mylo is it updated?
+
+[16-Jul-19 03:48 AM] grewalsatinder#9653
+@Mylo shouldn't restarting the daemon help? like it resolving the fork automatically. 🤔 of course after updating
+
+[16-Jul-19 03:49 AM] Mylo#8306
+good point, maybe this node isn't.
+
+[16-Jul-19 03:49 AM] Alright#0419
+Yea try just a restart after update if not try just `invalidateblock` the first block on the fork
+
+[16-Jul-19 03:49 AM] Alright#0419
+then reconsiderblock on the first block of the real chain
+
+[16-Jul-19 03:49 AM] Alright#0419
+it definitely was not updated at the time of the fork, but it would be good to know how to fix a node in that situation without having to resync
+
+[16-Jul-19 03:50 AM] Mylo#8306
+ok thanks, may 4th last update.  long ago.
+ok i had invalidateblock, missing the reconsiderblock for correct chain, thanks.   i haven't seen this in the fmanual 😄
+
+[16-Jul-19 11:09 AM] Mylo#8306
+@Alright this method worked!  @lukechilds maybe it will help you
+
+[16-Jul-19 11:24 AM] CMaurice#1685
+I'm on jl777/komodo * dev branch built Jun 8th, do I need to update anything?
+
+[16-Jul-19 11:27 AM] jl777c#5810
+what KMDversion in getinfo?
+
+[16-Jul-19 11:29 AM] CMaurice#1685
+"0.3.3b"
+
+[16-Jul-19 11:34 AM] jl777c#5810
+that is old, latest is 4a
+
+[16-Jul-19 11:34 AM] CMaurice#1685
+ok, thanks, for all of it
+
+[16-Jul-19 05:09 PM] dukeleto#7326
+https://github.com/libbtc/libbtc
+
+{Embed}
+https://github.com/libbtc/libbtc
+libbtc/libbtc
+Tiny Bitcoin Library written in C. Contribute to libbtc/libbtc development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/15213695?s=400&v=4
+
+[16-Jul-19 05:09 PM] dukeleto#7326
+That looks pretty nice
+
+[16-Jul-19 05:24 PM] jl777c#5810
+yes!
+
+[16-Jul-19 05:52 PM] dukeleto#7326
+@jl777c BLUR is using that to integrate BTC-isms into their cryptonote codebase. It seems high quality and is written by a guy that makes BTC reproducible builds. Seems high quality
+
+[16-Jul-19 05:58 PM] jl777c#5810
+a good choice
+
+[16-Jul-19 11:36 PM] Bryan_Beus#6442
+> why should an order(s) magnitude more productive dev not be treated like an entire 10 dev team?
+
+As a species we are incapable of treating ourselves fairly, or even in seeing ourselves fairly. 
+
+Only when we're surrounded by and involved in pure Chaos do we ever approach true fairness.
+
+ 100,000 years of evolution and we total suck at manufacturing fairness.
+
+I choose to punt. 
+
+Let's colonize Europa, Mars, and Vega ASAP. 
+
+The universe is but a trough of distractions for humans. 
+
+There's probably some other parallel universe where all the aliens that can actually deal with facts live. They sent us here as a massive distraction to keep us from meddling in the affairs of inter-universal peace.
+
+{Reactions}
+💯 
+
+[17-Jul-19 03:21 AM] dukeleto#7326
+https://twitter.com/da_667/status/1151324966895390720
+
+{Embed}
+🖕(☉言☉)🖕 (@da_667)
+https://twitter.com/da_667/status/1151324966895390720
+https://t.co/ME21x6GwHC
+https://pbs.twimg.com/media/D_pT8DFXYAIV5q2.png:large
+Twitter
+
+{Reactions}
+😂 
+
+[17-Jul-19 03:21 AM] dukeleto#7326
+pretty much the same in blockchain world
+
+[17-Jul-19 07:58 AM] Alright#0419
+trying to build komodod on a mac for the first time 
+Mojave 10.14.5
+following http://developers.komodoplatform.com/basic-docs/smart-chains/smart-chain-setup/installing-from-source.html#macos
+
+{Embed}
+http://developers.komodoplatform.com/basic-docs/smart-chains/smart-chain-setup/installing-from-source.html
+Installing Smart Chain Software From Source Code | Komodo Document...
+Documentation for developers building on Komodo
+
+{Reactions}
+abusedsmily 
+
+[17-Jul-19 07:58 AM] Alright#0419
+```
+$ ./zcutil/build-mac.sh -j8
+echo Configuring native_ccache...
+Configuring native_ccache...
+rm -rf /Users/user/komodo/depends/x86_64-apple-darwin18.5.0; mkdir -p /Users/user/komodo/depends/x86_64-apple-darwin18.5.0/lib; cd /Users/user/komodo/depends/x86_64-apple-darwin18.5.0; 
+mkdir -p /Users/user/komodo/depends/work/build/x86_64-apple-darwin18.5.0/native_ccache/3.3.1-063803a8fea/.
+cd /Users/user/komodo/depends/work/build/x86_64-apple-darwin18.5.0/native_ccache/3.3.1-063803a8fea/.;     PKG_CONFIG_LIBDIR=/Users/user/komodo/depends/x86_64-apple-darwin18.5.0/native/lib/pkgconfig PKG_CONFIG_PATH=/Users/user/komodo/depends/x86_64-apple-darwin18.5.0/native/share/pkgconfig PATH="/Users/user/komodo/depends/x86_64-apple-darwin18.5.0/native/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"   ./configure --host=x86_64-apple-darwin18.5.0 --disable-dependency-tracking --prefix=/Users/user/komodo/depends/x86_64-apple-darwin18.5.0/native         CC="gcc-8" CXX="g++-8" NM="nm" RANLIB="ranlib" AR="ar" CPPFLAGS="-I/Users/user/komodo/depends/x86_64-apple-darwin18.5.0/native/include    " LDFLAGS="-L/Users/user/komodo/depends/x86_64-apple-darwin18.5.0/native/lib    "
+configure: WARNING: unrecognized options: --disable-dependency-tracking
+configure: Configuring ccache
+checking build system type... i386-apple-darwin18.5.0
+checking host system type... x86_64-apple-darwin18.5.0
+checking for x86_64-apple-darwin18.5.0-gcc... gcc-8
+checking whether the C compiler works... no
+configure: error: in `/Users/user/komodo/depends/work/build/x86_64-apple-darwin18.5.0/native_ccache/3.3.1-063803a8fea':
+configure: error: C compiler cannot create executables
+See `config.log' for more details
+make: *** [/Users/user/komodo/depends/work/build/x86_64-apple-darwin18.5.0/native_ccache/3.3.1-063803a8fea/./.stamp_configured] Error 77
+```
+
+[17-Jul-19 07:59 AM] Alright#0419
+ask in #support no replies, thought this may be the better channel
+
+[17-Jul-19 07:59 AM] Alright#0419
+anyone know what the problem is here?
+

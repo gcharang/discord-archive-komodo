@@ -1,0 +1,389 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[24-Jul-18 08:17 PM] jl777c#5810
+that was a lot more than 12 hrs ago, I fixed your tx and it confirmed
+
+[24-Jul-18 08:17 PM] jl777c#5810
+so what bugs are actually still there?
+
+[24-Jul-18 08:18 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=ATEST tokenorders
+[
+  {
+    "funcid": "b",
+    "txid": "f3e2dd8fa7de03d488e3a7aef988998a5a1c48901d8636ebb886226eaf1fc9ff",
+    "vout": 0,
+    "amount": 1000,
+    "bidamount": 1000,
+    "origaddress": "R9sDyKt2kW5uJaoZT6GF9e3WRbGioBuhoZ",
+    "tokenid": "e7d034fb7dbad561c9a86dcbcc64aa89e1d311891b4e7c744280b7de13b1186f",
+    "totalrequired": 1000,
+    "price": 1
+  }
+]
+siu@T460:~/komodo/src$ ./komodo-cli -ac_name=ATEST tokenfillbid e7d034fb7dbad561c9a86dcbcc64aa89e1d311891b4e7c744280b7de13b1186f f3e2dd8fa7de03d488e3a7aef988998a5a1c48901d8636ebb886226eaf1fc9ff 100
+filltx wasnt for assetid
+error code: -1
+error message:
+basic_string::_M_construct null not valid
+```
+
+[24-Jul-18 08:18 PM] siu - Chainmakers#3920
+i guess the error means i wrote something wrong
+
+[24-Jul-18 08:20 PM] Alright#0419
+going to take a look at the tx, but I'm getting 
+```
+vin2 5000, vout2 100, vout3 4900, Got 1000.00000000 to origaddr.(RTNpztwViPEVACRbCi2B7w28QPuoByk3eC)
+ValidateAssetRemainder: totalunits 1000 != 100 (remaining_price 0 + 100 paidunits)
+CC Eval EVAL_ASSETS Invalid: mismatched remainder for fillbuy spending tx f3e2dd8fa7de03d488e3a7aef988998a5a1c48901d8636ebb886226eaf1fc9ff
+AssetValidate (B)
+vin2 5000, vout2 100, vout3 4900, Got 1000.00000000 to origaddr.(RTNpztwViPEVACRbCi2B7w28QPuoByk3eC)
+ValidateAssetRemainder: totalunits 1000 != 100 (remaining_price 0 + 100 paidunits)
+CC Eval EVAL_ASSETS Invalid: mismatched remainder for fillbuy spending tx f3e2dd8fa7de03d488e3a7aef988998a5a1c48901d8636ebb886226eaf1fc9ff
+```
+with tokenfillbid for this bid
+```
+  {
+    "funcid": "b",
+    "txid": "f3e2dd8fa7de03d488e3a7aef988998a5a1c48901d8636ebb886226eaf1fc9ff",
+    "vout": 0,
+    "amount": 1000,
+    "bidamount": 1000,
+    "origaddress": "R9sDyKt2kW5uJaoZT6GF9e3WRbGioBuhoZ",
+    "tokenid": "e7d034fb7dbad561c9a86dcbcc64aa89e1d311891b4e7c744280b7de13b1186f",
+    "totalrequired": 1000,
+    "price": 1
+  }
+```
+created the tx with `./komodo-cli -ac_name=ATEST tokenfillbid e7d034fb7dbad561c9a86dcbcc64aa89e1d311891b4e7c744280b7de13b1186f f3e2dd8fa7de03d488e3a7aef988998a5a1c48901d8636ebb886226eaf1fc9ff 100`
+
+[24-Jul-18 08:21 PM] Alright#0419
+Oh, got it to work with 1000 instead of 100
+
+[24-Jul-18 08:22 PM] Alright#0419
+the bid stays in the orderbook with 0'd amounts though
+
+[24-Jul-18 08:23 PM] siu - Chainmakers#3920
+you filled it
+
+[24-Jul-18 08:25 PM] Alright#0419
+is it possible to partially fill bids/asks?
+
+[24-Jul-18 08:25 PM] jl777c#5810
+it is these EVAL_ASSETS invalid messages I need to be able to fix it, along with details of the trade. Once you can get a specific error on a chain, then I need the raw bytes that create the error
+
+[24-Jul-18 08:25 PM] jl777c#5810
+yes partial fills should work
+
+[24-Jul-18 08:25 PM] jl777c#5810
+so each bug report would be the raw hex bytes that reproduces the bug. once things are setup, I can quickly reproduce it just by  a sendrawtransaction
+
+[24-Jul-18 08:26 PM] jl777c#5810
+of course you would need to maybe even setup a new asset to create a different bug as any activity might make the bug go away and if the bug goes away, I cant fix it
+
+[24-Jul-18 08:26 PM] siu - Chainmakers#3920
+{
+    "funcid": "b",
+    "txid": "a8d60a3ce429ccb885ad445e7a4534130a35d2424d1883c6513d0f4da2fe9a92",
+    "vout": 0,
+    "amount": 150,
+    "bidamount": 150,
+    "origaddress": "RQymbXA8FfWw2AaHv7oC8JRKo9W5HkFVMm",
+    "tokenid": "c5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b59",
+    "totalrequired": 100,
+    "price": 1.5
+  },
+
+[24-Jul-18 08:26 PM] siu - Chainmakers#3920
+this is mine
+
+[24-Jul-18 08:26 PM] siu - Chainmakers#3920
+can you fill it? @Alright
+
+[24-Jul-18 08:27 PM] siu - Chainmakers#3920
+and what command you use to fill it?
+
+[24-Jul-18 08:27 PM] jl777c#5810
+there is no restriction on who can fill orders, but it is easier if a different address does it so you can tell where the payments are going ti
+
+[24-Jul-18 08:27 PM] jl777c#5810
+and for now I need PRECISE and ACCURATE bug reports. none of this "it didnt work" type of reports as that does not help
+
+[24-Jul-18 08:27 PM] jl777c#5810
+reproduced bugs via raw hex
+
+[24-Jul-18 08:28 PM] jl777c#5810
+maybe make a bunch if bug assets, bug1, bug2, bug3, ... and experiment around until you create a new bug
+
+[24-Jul-18 08:28 PM] Alright#0419
+I'll give you the raw tx for that failed tokenfillbid in a moment
+
+[24-Jul-18 08:28 PM] jl777c#5810
+and no point to make variations of the same bug over and over, better to have different types of bugs
+
+[24-Jul-18 08:30 PM] jl777c#5810
+I will be offline soon and wont have time to troubleshoot, so maybe even make github issue out of each one and put in all the details I need to reproduce and understand the context. if it is a fill problem, how was the bid created, what commands were used, what is the rawhex, what error appears
+
+[24-Jul-18 08:30 PM] jl777c#5810
+I dont want to have to guess
+
+[24-Jul-18 08:30 PM] Alright#0419
+👌
+
+[24-Jul-18 08:30 PM] siu - Chainmakers#3920
+understood
+
+[24-Jul-18 08:31 PM] Alright#0419
+not able to fill that bid @siu - Chainmakers
+
+[24-Jul-18 08:31 PM] Alright#0419
+try another with a whole number for price
+
+[24-Jul-18 08:31 PM] Alright#0419
+might be that
+
+[24-Jul-18 08:32 PM] Alright#0419
+just filled another one of my own bids though
+
+[24-Jul-18 08:32 PM] jl777c#5810
+at first, lets try the easiest cases, which is overfilling or filling exactly
+
+[24-Jul-18 08:33 PM] jl777c#5810
+and making sure you have a single utxo big enough to do so
+
+[24-Jul-18 08:33 PM] jl777c#5810
+from there, you can make it progressively more complex scenario. theoretically it should find however many utxo needed to fill exactly what you specific.
+
+[24-Jul-18 08:34 PM] jl777c#5810
+also even if it looks like it works, odds are that it did it wrong, so you need to analyze what actually happened with all the inputs and outputs
+
+[24-Jul-18 08:34 PM] siu - Chainmakers#3920
+ok, a new one
+
+[24-Jul-18 08:34 PM] siu - Chainmakers#3920
+{
+    "funcid": "b",
+    "txid": "2d0cad1c94749958f4221b55a79b7718e14441ceab7e9e367e111fb5fc60178f",
+    "vout": 0,
+    "amount": 100,
+    "bidamount": 100,
+    "origaddress": "RQymbXA8FfWw2AaHv7oC8JRKo9W5HkFVMm",
+    "tokenid": "c5bbc34e6517c483afc910a3b0585c40da5c09b7c5d2d9757c5c5075e2d41b59",
+    "totalrequired": 100,
+    "price": 1
+  },
+
+[24-Jul-18 08:37 PM] Alright#0419
+getting 
+```
+error code: -1
+error message:
+basic_string::_M_construct null not valid
+```
+
+```
+filltx wasnt for assetid
+```
+
+[24-Jul-18 08:37 PM] Alright#0419
+checking out the txs, couple minutes
+
+[24-Jul-18 08:37 PM] Alright#0419
+that's while trying to create the tokenfillbid tx
+
+[24-Jul-18 08:38 PM] siu - Chainmakers#3920
+what are you buying the tokens with?
+
+[24-Jul-18 08:38 PM] siu - Chainmakers#3920
+ATEST?
+
+[24-Jul-18 08:39 PM] Alright#0419
+yes
+
+[24-Jul-18 08:39 PM] siu - Chainmakers#3920
+hmm
+
+[24-Jul-18 08:39 PM] jl777c#5810
+basic_string::_M_construct null not valid
+ that means the request got an error in creating the transaction
+
+[24-Jul-18 08:40 PM] siu - Chainmakers#3920
+i can buy my own token
+
+[24-Jul-18 08:41 PM] siu - Chainmakers#3920
+cant buy your orders
+
+[24-Jul-18 08:41 PM] siu - Chainmakers#3920
+the same for you
+
+[24-Jul-18 08:41 PM] jl777c#5810
+that's an interesting bug!
+
+[24-Jul-18 08:41 PM] Alright#0419
+I'm doing it from separate nodes
+
+[24-Jul-18 08:41 PM] Alright#0419
+although I did do tokentransfer between them
+
+[24-Jul-18 08:42 PM] jl777c#5810
+assets just after being created are in a different state, like coinbase
+
+[24-Jul-18 08:42 PM] jl777c#5810
+it could be not all cases properly handle it
+
+[24-Jul-18 08:42 PM] jl777c#5810
+it might be that it needs to be transferred before it can be traded
+
+[24-Jul-18 08:44 PM] jl777c#5810
+also faucet contract is ready to test
+
+[24-Jul-18 08:44 PM] Alright#0419
+faucet works as intended from what I can tell
+
+[24-Jul-18 08:44 PM] jl777c#5810
+it should be much easier to validate or find bugs
+
+[24-Jul-18 08:44 PM] Alright#0419
+gives you the block reward each time you do faucetget?
+
+[24-Jul-18 08:44 PM] Alright#0419
+is that correct?
+
+[24-Jul-18 08:44 PM] jl777c#5810
+gives you 1 coin
+
+[24-Jul-18 08:45 PM] Alright#0419
+Ok, let me look again
+
+[24-Jul-18 08:45 PM] jl777c#5810
+can you do a bunch of faucet gets in the same block?
+
+[24-Jul-18 08:45 PM] Alright#0419
+it gives the same raw tx
+
+[24-Jul-18 08:45 PM] Alright#0419
+so no?
+
+[24-Jul-18 08:45 PM] jl777c#5810
+and it has code (untested) to prevent using mempool utxo as vin
+
+[24-Jul-18 08:46 PM] jl777c#5810
+so if there is 1 big utxo in the faucet fund, 1 faucetget per block
+
+[24-Jul-18 08:46 PM] jl777c#5810
+unless bugs
+
+[24-Jul-18 08:46 PM] jl777c#5810
+and any stability or locking up issues?
+
+[24-Jul-18 08:46 PM] jl777c#5810
+those were nasty bugs
+
+[24-Jul-18 08:47 PM] jl777c#5810
+it could be just the bidfill and asks are the current bugs. try to break down the bidfill into the different scenarios and test each one
+
+[24-Jul-18 08:48 PM] Alright#0419
+no lock ups or crashes
+
+[24-Jul-18 08:49 PM] jl777c#5810
+good. it was a definite bug with a definite fix, but concerned there could be other cases. I dont think any other bitcoin protocol blockchain has contracts code with full access to prior blockchain data
+
+[24-Jul-18 08:50 PM] jl777c#5810
+the miner lockup was due to it doing a validateblock!
+
+[24-Jul-18 08:50 PM] Alright#0419
+Just had a node crash :/
+
+[24-Jul-18 08:50 PM] jl777c#5810
+which was under a lock
+
+[24-Jul-18 08:50 PM] Alright#0419
+Had something to do with setgenerate true I believe
+
+[24-Jul-18 08:50 PM] Alright#0419
+let me try to replicate
+
+[24-Jul-18 08:50 PM] jl777c#5810
+and the validation invoked the CC code, which deadlocked waiting for the lock to be released
+
+[24-Jul-18 08:50 PM] Alright#0419
+```
+komodod: checkqueue.h:189: CCheckQueueControl<T>::CCheckQueueControl(CCheckQueue<T>*) [with T = CScriptCheck]: Assertion `isIdle' failed.
+komodod: checkqueue.h:189: CCheckQueueControl<T>::CCheckQueueControl(CCheckQueue<T>*) [with T = CScriptCheck]: Assertion `isIdle' failed.
+Aborted (core dumped)
+```
+
+[24-Jul-18 08:51 PM] jl777c#5810
+reproducible?\
+
+[24-Jul-18 08:51 PM] Alright#0419
+do anything for you?
+
+[24-Jul-18 08:51 PM] Alright#0419
+Trying
+
+[24-Jul-18 08:51 PM] jl777c#5810
+I have seen that occasionally. seems some low probability crash
+
+[24-Jul-18 08:51 PM] Alright#0419
+have a node consistently doing it
+
+[24-Jul-18 08:51 PM] jl777c#5810
+ok, if it is consistent that is great
+
+[24-Jul-18 08:52 PM] jl777c#5810
+i will have to remote into it, so DM me the login and I can trouble shoot it later
+
+[24-Jul-18 08:56 PM] Alright#0419
+@siu - Chainmakers do you have the p2p port open?
+
+[24-Jul-18 08:56 PM] Alright#0419
+I see a peer on a longer chain that my nodes don't want to sync to
+
+[24-Jul-18 08:56 PM] siu - Chainmakers#3920
+yes, p2p port is open
+
+[24-Jul-18 08:57 PM] siu - Chainmakers#3920
+"blocks": 1579,
+  "longestchain": 0,
+
+[24-Jul-18 08:57 PM] Alright#0419
+what block are you on?
+
+[24-Jul-18 08:57 PM] siu - Chainmakers#3920
+but seems like i forked
+
+[24-Jul-18 08:57 PM] Alright#0419
+do `./komodo-cli -ac_name=ATEST setgenerate true`
+
+[24-Jul-18 08:57 PM] Alright#0419
+does it crash?
+
+[24-Jul-18 08:57 PM] siu - Chainmakers#3920
+./komodo-cli -ac_name=ATEST getblockhash 1579
+001acfb03527e443f04e86fa6b4e1ff66c4733f148301dd50fab1406407ad62f
+
+[24-Jul-18 08:57 PM] Alright#0419
+setting the thread count works
+
+[24-Jul-18 08:58 PM] Alright#0419
+but without a number after true it crashes on each node
+
+[24-Jul-18 08:58 PM] jl777c#5810
+without a number it does maxthreads
+
+[24-Jul-18 08:58 PM] siu - Chainmakers#3920
+setgenerate true
+
+[24-Jul-18 08:58 PM] siu - Chainmakers#3920
+still stuck
+

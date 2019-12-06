@@ -1,0 +1,257 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"455741312273219595";"jl777c#5810";"23-Feb-19 07:26 AM";"just change all occurance of ""rogue"" to ""sudoku""";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 07:27 AM";"and remove all  -DBUILD_ROGUE";"";"";
+"423176312354635779";"gcharang#6833";"23-Feb-19 07:27 AM";"Will try";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 07:34 AM";"I had to revert boost to 1.66 to make it build";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 07:34 AM";"I tried fresh clone and a few other things, but it refused to build with 1.69";"";"";
+"423176312354635779";"gcharang#6833";"23-Feb-19 07:46 AM";"@blackjok3r 
+```
+gcharang@qa-gcharang1:~/komodo/src/cc$ dpkg -s libboost-dev | grep 'Version'
+Version: 1.58.0.1ubuntu1
+```
+mine was 1.58, will update";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 07:47 AM";"no its a dep in the packages ...";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 07:47 AM";"https://github.com/blackjok3rtt/komodo/commit/fb462bf7de0248b4c4ce6b17f7faba60891b8a14";"";"👍 (1)";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 07:47 AM";"I reverted that change";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 07:47 AM";"now we have it working with 2 pubkeys, the next step is to get a way to test large numbers and hopefully if we do this via scripts to be able to have others use the scripts. The idea is to make musig a chain that devs use to experiment with cutting edge tech";"";"";
+"423176312354635779";"gcharang#6833";"23-Feb-19 08:05 AM";"thanks @blackjok3r  its building after reverting this change: https://github.com/blackjok3rtt/komodo/commit/fb462bf7de0248b4c4ce6b17f7faba60891b8a14";"";"";
+"423176312354635779";"gcharang#6833";"23-Feb-19 08:46 AM";"@jl777c I understand right now, the daemon can be built with only one of the dynamic modules: rogue or musig, but if in the future daemon is built with both modules present, can `-ac_cclib` take both the modules rogue,musig as parameters and start a chain?";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 08:50 AM";"@josephnicholas GMT+8 look at this!
+cclib keypair 19
+{
+  ""pubkey"": ""0afb65560088f40b4deda47bb7ab18c8a4d5f8e66fbc8bbba465e0d517e756ef058cee3fd95a9d18f9be86f56a8b865a3517deb5c713ef9d4dc04c0eba85eeb4c19e9f3ccae0225cdd18456c38ff82ffe25dd2463258049b01fa8da62be209c7ff3ce37a7b6100f886eaba7edde140d55f45ef8552ce92b36d5a9d6a7be291334be1fa8956f1252dbca2a819fa...5bec6e12ff907d5"",
+  ""privkey"": ""0afb65560088f40b4deda47bb...be5ca23dee075bc586c23aecc3a9926e587cb5448bd0e122316f89918a012356b55f6f92f5d93eb089da7e252e99e3e490c05207de41daf27e80eeab9"",
+  ""result"": ""success""
+}";"";"yassinkomodo (1)";
+"455741312273219595";"jl777c#5810";"23-Feb-19 08:50 AM";"evalcode 19 is EVAL_DILITHIUM";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 08:51 AM";"@gcharang the idea is that there is a libcc dynamic lib that has all the CC you want in it. there needs to be a sane build process to make this. unfortunately i dont really do build process, i just write code so someone else will need to make it a sane process. the important thing is that N different CC can be bundled into a single libcc";"";"";
+"423176312354635779";"gcharang#6833";"23-Feb-19 08:53 AM";"Got it, can `-ac_cclib` take multiple modules as parameters and the chain have all the specifies modules enabled?";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 08:56 AM";"the idea is that there is a libcc dynamic lib that has all the CC you want in it";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 08:56 AM";"did you understand that part?";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 08:56 AM";"so make a single libcc with all the CC you want in it. why would you need to specify multiple modules?";"";"";
+"423176312354635779";"gcharang#6833";"23-Feb-19 09:00 AM";"oh , these modules in the libcc will be available along with faucet,dice, rewards just through `-ac_cc`?";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 09:00 AM";"all the build in CC and the ones in the libcc are available";"";"";
+"423176312354635779";"gcharang#6833";"23-Feb-19 09:01 AM";"Got it";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 09:01 AM";"you can even limit which of the built in ones are available with -ac_ccenable=evalcode0,evalcode1,...";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 09:02 AM";"in which case only the specified evalcodes are available";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 09:02 AM";"plus whatever ones are in libcc if ac_cclib was there";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 09:02 AM";"there is not much ""smarts"" to what is available or not";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 09:02 AM";"if it is there and not disabled, it is there";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 09:02 AM";"if it isnt there or is disabled, it cant be used";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 09:03 AM";"chain creation needs to make sure the specific CC available are the ones they want";"";"👍 (1)";
+"371114647052615681";"Mylo#8306";"23-Feb-19 09:59 AM";"So cool";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 10:16 AM";"Almost finished with modified daemon to sign unlimited keys on a single daemon. My cclib compiles. Time add to to my python script to loop X pubkeys. Was actually quite simple, that is provided I can manage to chanmge the -pubkey in runtime without crashing it...";"";"";
+"423176312354635779";"gcharang#6833";"23-Feb-19 11:04 AM";"@jl777c 
+Response for `cclibinfo`
+```
+    {
+      ""evalcode"": 18,
+      ""funcid"": ""P"",
+      ""name"": ""musig"",
+      ""method"": ""combine"",
+      ""help"": ""pubkeys ..."",
+      ""params_required"": 2,
+      ""params_max"": 999999999
+    },
+```
+- whats the description of ` ""funcid""`? 
+- is it always going to be a character? 
+- How is it useful for a RPC user?";"";"";
+"423176312354635779";"gcharang#6833";"23-Feb-19 12:08 PM";"@jl777c 
+
+Command:
+
+```bash
+./komodo-cli -ac_name=MUSIG cclibaddress 18 0225f1cbbda1a0c406bb8f6dc7a589d88b2f9e28cd4fdb3f59139f8aff1f5d270a
+```
+
+Response:
+
+```json
+{
+  ""result"": ""success"",
+  ""CClibCCAddress"": ""RKWS7jxyjPX9iaJttk8iMKf1AumanKypez"",
+  ""CCbalance"": 2.0977,
+  ""CClibNormalAddress"": ""RQHYfxb21ow4Xppt2H9x7k5XMhk7PMbKCc"",
+  ""CClibCCTokensAddress"": ""RVjvG3or8b8asoYBJua9p97pf3RSpaEhRG"",
+  ""myAddress"": ""RUfCUd3UryKJ49baQvSuAs42wakNunvvfT"",
+  ""myCCAddress(CClib)"": ""RPYCYEtS7GAt1W9LvJWXHsndozaA8yy4H9"",
+  ""PubkeyCCaddress(CClib)"": ""RPYCYEtS7GAt1W9LvJWXHsndozaA8yy4H9"",
+  ""myCCaddress"": ""RPYCYEtS7GAt1W9LvJWXHsndozaA8yy4H9"",
+  ""myCCbalance"": 0.0,
+  ""myaddress"": ""RUfCUd3UryKJ49baQvSuAs42wakNunvvfT"",
+  ""mybalance"": 94.60081561
+}
+```
+What are: `PubkeyCCaddress(CClib)`, `CClibCCTokensAddress`
+What is the difference between `myCCAddress(CClib)` and `myCCAddress`";"";"";
+"347922216429813760";"grewalsatinder#9653";"23-Feb-19 01:31 PM";"Pinned a message.";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"23-Feb-19 01:37 PM";"```./komodo-cli -ac_name=MUSIG cclib combine 18 '[""03733107e080036b5c1149dfd5b021f0298f99ece570af0b26c658fe4e1b91886f"",""021d8a1f5d574b0d878bee392347549728a23facb1178eb5e4c86abe70a9a859e9""]'
+error code: -1
+error message:
+no -ac_cclib= specified
+```";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"23-Feb-19 01:38 PM";"is there some work being done or something?";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"23-Feb-19 01:38 PM";"```{
+  ""result"": ""success"",
+  ""CClib"": ""sudoku"",
+```";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"23-Feb-19 01:38 PM";"afaik im in the correct setup";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"23-Feb-19 01:38 PM";"This is the chain im running: ```./komodod -ac_name=MUSIG -ac_supply=100000 -ac_reward=10000000 -pubkey=023ef3d3bf277dcf3c363e41d7a3adfa72b8659c148e108079a268e22717fa9a88 -ac_cclib=sudoku -ac_cc=2 -addnode=5.9.102.210 &
+```";"";"";
+"272003866906722306";"TonyL#3577";"23-Feb-19 01:39 PM";"""Sudoku"" cclib is what you need for musig";"";"";
+"272003866906722306";"TonyL#3577";"23-Feb-19 01:40 PM";"Just ensure that you have musig calls in cclibinfo";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"23-Feb-19 01:40 PM";"```   {
+      ""evalcode"": 18,
+      ""funcid"": ""C"",
+      ""name"": ""musig"",
+      ""method"": ""calcmsg"",
+      ""help"": ""sendtxid scriptPubKey"",
+      ""params_required"": 2,
+      ""params_max"": 2
+    },
+    {
+      ""evalcode"": 18,
+      ""funcid"": ""P"",
+      ""name"": ""musig"",
+      ""method"": ""combine"",
+      ""help"": ""pubkeys ..."",
+      ""params_required"": 2,
+      ""params_max"": 999999999
+    },
+    {
+      ""evalcode"": 18,
+      ""funcid"": ""R"",
+      ""name"": ""musig"",
+      ""method"": ""session"",
+      ""help"": ""myindex,numsigners,combined_pk,pkhash,msg32"",
+      ""params_required"": 5,
+      ""params_max"": 5
+    },
+    {
+      ""evalcode"": 18,
+      ""funcid"": ""H"",
+      ""name"": ""musig"",
+      ""method"": ""commit"",
+      ""help"": ""pkhash,ind,commitment"",
+      ""params_required"": 3,
+      ""params_max"": 3
+    },
+    {
+      ""evalcode"": 18,
+      ""funcid"": ""N"",
+      ""name"": ""musig"",
+      ""method"": ""nonce"",
+      ""help"": ""pkhash,ind,nonce"",
+      ""params_required"": 3,
+      ""params_max"": 3
+    },
+    {
+      ""evalcode"": 18,
+      ""funcid"": ""S"",
+      ""name"": ""musig"",
+      ""method"": ""partialsig"",
+      ""help"": ""pkhash,ind,partialsig"",
+      ""params_required"": 3,
+      ""params_max"": 3
+    },
+    {
+      ""evalcode"": 18,
+      ""funcid"": ""V"",
+      ""name"": ""musig"",
+      ""method"": ""verify"",
+      ""help"": ""msg sig pubkey"",
+      ""params_required"": 3,
+      ""params_max"": 3
+    },
+    {
+      ""evalcode"": 18,
+      ""funcid"": ""x"",
+      ""name"": ""musig"",
+      ""method"": ""send"",
+      ""help"": ""combined_pk amount"",
+      ""params_required"": 2,
+      ""params_max"": 2
+    },```";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"23-Feb-19 01:40 PM";"all there";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"23-Feb-19 01:41 PM";"i did notice format chainged in the guide";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"23-Feb-19 01:41 PM";"now there is no %22";"";"";
+"347922216429813760";"grewalsatinder#9653";"23-Feb-19 01:44 PM";">What are: PubkeyCCaddress(CClib), CClibCCTokensAddress
+
+Not sure of this question.
+
+>What is the difference between myCCAddress(CClib) and myCCAddress
+
+CCAddress is the address calculated from the EVAL code from the specific CC";"";"";
+"347922216429813760";"grewalsatinder#9653";"23-Feb-19 01:45 PM";"CC address of yours would be different to normal KMD/Assetchain Address, but it'd be specific to your own `pubkey`'s";"";"";
+"347922216429813760";"grewalsatinder#9653";"23-Feb-19 01:45 PM";"You need to start your CC enabled chain with a `pubkey` on daemon start.";"";"";
+"347922216429813760";"grewalsatinder#9653";"23-Feb-19 01:45 PM";"Or at least setpubkey for that CC chain if it's already started";"";"";
+"347922216429813760";"grewalsatinder#9653";"23-Feb-19 01:46 PM";"So, you get the CCAddress for that same pubkey,";"";"";
+"347922216429813760";"grewalsatinder#9653";"23-Feb-19 01:46 PM";"I guess that's the description, unless it needs correction.";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 01:47 PM";"CCaddress calls are always the same as all the other CC";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 01:50 PM";"Very close to unlimited signers working here. 😄 taken a while longer than I thaught it would.";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 01:51 PM";"multi sig signing, but with almsot unlimited signers. Very cool .... but very difficult to use";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 01:51 PM";"at least right now";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 01:51 PM";"https://cointelegraph.com/news/blockstream-publishes-schnorr-based-test-code-for-bitcoin-blockchain-upgrade";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 01:52 PM";"right now it does NofN multisig, as long as N is less than 4 billion";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"23-Feb-19 01:53 PM";"one of my nodes was able to do combine, the other could not 🤦";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"23-Feb-19 01:54 PM";"4billion signers??? 😮";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 01:56 PM";"I cant see that being realyl possible to do... unless im not doing this properly...";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 01:56 PM";"would need a lot of RAM and a lot of time";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 01:57 PM";"yes lol... Question, what I am doing here is using 4 keys, each uses its own MUSIG struct, each of the steps commit, nonce, partialsig, I am sending the return from each struct to all the otehr structs. I assume this is what its supposed to do, so that all structs are filled of the same data?";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 01:58 PM";"yes";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 01:58 PM";"for all but the combine sig step, all nodes need to get all data";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 01:58 PM";"good its crashing on combined sig step. retrying with gdb";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:07 PM";"Having a lot of trouble getting past the combining of nonce's";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 03:13 PM";"you made the combined pubkey?";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 03:13 PM";"the session is the tricky one. maybe the idea of spawning a bunch of nodes is the way to go?";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:15 PM";"Im not sure its the way I am doing it that is the problem";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:15 PM";"It seems to work just fine";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:16 PM";"Its crashing when tryiing to combine nonce here:
+`if ( secp256k1_musig_set_nonce(ctx,&MUSIG[myind]->signer_data[i],&MUSIG[myind]->nonces[i]) == 0 )`";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:17 PM";"Seems to be that it doesnt have all of them, so I made it only proceed to this step on the last index, but that causes this to happen:
+`error combining nonces`";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 03:18 PM";"MUSIG[] is an array of pointers? all allocated?";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 03:18 PM";"and all filled out with session";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:19 PM";"yes. It creates the commitments, and the nonce fine... Once thing I did find a bit strange on the nonce creation that the first call is the only return of nonce.";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:19 PM";"I used a vectror of pointers, and just push_back them in order...";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:20 PM";"then restart daemon to try again";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:20 PM";"Its rotating through the structs fine...";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:20 PM";"```COMMIT: number of MUSIG structs.4 using struct.0 addedindex.1
+COMMIT: number of MUSIG structs.4 using struct.0 addedindex.2
+COMMIT: number of MUSIG structs.4 using struct.0 addedindex.3
+COMMIT: number of MUSIG structs.4 using struct.1 addedindex.0
+COMMIT: number of MUSIG structs.4 using struct.1 addedindex.2
+COMMIT: number of MUSIG structs.4 using struct.1 addedindex.3
+COMMIT: number of MUSIG structs.4 using struct.2 addedindex.0
+COMMIT: number of MUSIG structs.4 using struct.2 addedindex.1
+COMMIT: number of MUSIG structs.4 using struct.2 addedindex.3
+COMMIT: number of MUSIG structs.4 using struct.3 addedindex.0
+COMMIT: number of MUSIG structs.4 using struct.3 addedindex.1
+COMMIT: number of MUSIG structs.4 using struct.3 addedindex.2
+```";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 03:21 PM";"if all the commitments are made, then a node will be able to reveal the nonce";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:22 PM";"nonce is revealed once so I saved those in the python script";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:22 PM";"its breaking when I try to use the nonces";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 03:22 PM";"you cant start a new session once you start the process";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:22 PM";"Im not";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:23 PM";"it starts a session.. I think... I assume the session is confined to the musig_struct";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 03:23 PM";"the way I had it there was only one MUSIG dataset, you need to make it allow multiple";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:24 PM";"https://github.com/blackjok3rtt/komodo/commit/1b5d9b5032f41422113868eca35d182c07529f7e";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:26 PM";"What happens is the nonce is returned on the first commitment... so like 
+the first node MUSIG[0] you add the commitment from MUSIG[1] adn the nonce is returned immediatly";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:26 PM";"then when adding MUSIG[2] and MUSIG[3] it does not return a nonce.";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:26 PM";"then when I try top use that nonce its fails";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 03:27 PM";"sprintf(&str[i<<1],""%02x"",MUSIG[myind]->nonce_commitments[MUSIG[myind]->myind*32 + i]);
+there is no need to do MUSIG[myind]->myind to get myind";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 03:28 PM";"it seems you are not setting the nonces for most of the MUSIG ptrs";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 03:28 PM";"each MUSIG ptr needs to get all the other nonces";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 03:28 PM";"for (i=0; i<MUSIG->num; i++)
+->         if ( ind != MUSIG[myind]->num-1 )
+?";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:29 PM";"stopped it crashing, but didnt work";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:29 PM";"idea was to only combine once they were all there";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:29 PM";"but that doesnt work. I think the problem is the step before";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:29 PM";"because it return nonce as soon as it has just a single commitment";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Feb-19 03:30 PM";"I thaught it needed all of them?";"";"";
+"455741312273219595";"jl777c#5810";"23-Feb-19 03:30 PM";"yes";"";"";

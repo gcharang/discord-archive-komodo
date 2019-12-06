@@ -1,0 +1,401 @@
+==============================================================
+Guild: Komodo
+Channel: cc-rogue
+Topic: use FSM branch AND then build as normal
+ 
+./komodod -ac_name=ROGUE -ac_supply=1000000 -pubkey=<yourpubkey> -addnode=5.9.102.210  -ac_cclib=rogue -ac_perc=10000000 -ac_reward=100000000 -ac_cc=60001 -ac_script=2ea22c80203d1579313abe7d8ea85f48c65ea66fc512c878c0d0e6f6d54036669de940febf8103120c008203000401cc -daemon
+Guide here: https://github.com/KomodoPlatform/komodo/wiki/Get-Started-with-Rogue-Game
+Explorer: http://rogue.explorer.dexstats.info/
+Player's Handbook: https://github.com/jl777/komodo/blob/jl777/src/cc/rogue/rogue.doc
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[26-Feb-19 05:14 PM] Cryptofist#7504
+😂
+
+[26-Feb-19 05:15 PM] Cryptofist#7504
+All good ill keep checking
+
+[26-Feb-19 05:15 PM] TonyL#3577
+```>> 1
+Transactions in mempool: 
+
+Total: 0 transactions
+
+R + Enter to refresh list. E + Enter to exit menu.
+```
+
+[26-Feb-19 05:15 PM] TonyL#3577
+Are you sure he is not in your players list?
+
+[26-Feb-19 05:15 PM] Cryptofist#7504
+same for me
+
+[26-Feb-19 05:15 PM] Cryptofist#7504
+Ill check again
+
+[26-Feb-19 05:16 PM] Cryptofist#7504
+I had 5 with a level 2 tonyl
+
+[26-Feb-19 05:16 PM] Cryptofist#7504
+still have 5 no tonyl level1
+
+[26-Feb-19 05:21 PM] Cryptofist#7504
+Maybe I have it and the TUI isnt pulling it up?
+
+[26-Feb-19 05:22 PM] jl777c#5810
+seems there is refresh issue
+
+[26-Feb-19 05:23 PM] TonyL#3577
+When you updated TUI last time? I broke warriors scanner very hard ~1 hour ago
+
+[26-Feb-19 05:24 PM] Cryptofist#7504
+Lemme update again.
+
+[26-Feb-19 05:24 PM] TonyL#3577
+No need please 😃
+
+[26-Feb-19 05:24 PM] TonyL#3577
+It's still broken
+
+[26-Feb-19 05:24 PM] Cryptofist#7504
+oh
+
+[26-Feb-19 05:24 PM] Cryptofist#7504
+lol
+
+[26-Feb-19 05:24 PM] TonyL#3577
+I'll rollback it now
+
+[26-Feb-19 05:25 PM] Cryptofist#7504
+Man, after these two things with refresh are fixed... does tha mean the dex side is good to go?
+
+[26-Feb-19 05:25 PM] Cryptofist#7504
+Any other things to check?
+
+[26-Feb-19 05:26 PM] TonyL#3577
+In general I think DEX is good - possible to buy/sell, check incoming orders and etc.
+
+[26-Feb-19 05:26 PM] Cryptofist#7504
+excellent
+
+[26-Feb-19 05:27 PM] Cryptofist#7504
+Only other issues i saw were crashing the tui or getting booted when I entered the wrong info. 
+ideally, id like a second chance with out having to start over. 😉  But thats nitpicking for now.
+
+[26-Feb-19 05:27 PM] TonyL#3577
+With scanner I'm really confused - I'm scanning batons recursive, but all these copies batons are in tokenlist as well so I have to drop em from token list to avoid copies
+
+[26-Feb-19 05:27 PM] TonyL#3577
+Will rollback everything now and return to it in better times 😃
+
+[26-Feb-19 05:27 PM] jl777c#5810
+it needs to be unspent to be valid
+
+[26-Feb-19 05:28 PM] TonyL#3577
+Yes I have check for it
+
+[26-Feb-19 05:28 PM] TonyL#3577
+```def is_warrior_alive(rpc_connection, warrior_txid):
+    warrior_alive = False
+    # checking if it dead or not
+    raw_transaction = rpc_connection.getrawtransaction(warrior_txid, 1)
+    for vout in raw_transaction["vout"]:
+        if vout["value"] == 0.00000001 and rpc_connection.gettxout(raw_transaction["txid"], vout["n"]):
+            warrior_alive = True
+    return warrior_alive
+```
+
+[26-Feb-19 05:28 PM] jl777c#5810
+you should be able to do tokenlist to get a list of all tokenids
+
+[26-Feb-19 05:28 PM] jl777c#5810
+then playerinfo to get the batontxid
+
+[26-Feb-19 05:28 PM] TonyL#3577
+```    token_list = rpc_connection.tokenlist()
+    my_warriors_list = rogue_players_list(rpc_connection)
+    warriors_list = {}
+    for token in token_list:
+        player_info = rogue_player_info(rpc_connection, token)
+        if "status" in player_info and player_info["status"] == "error":
+            pass
+        # if yes - finding most actual playertxid first
+        else:
+            while True:
+                if "batontxid" in player_info["player"].keys():
+                    player_info = rogue_player_info(rpc_connection, player_info["player"]["batontxid"])
+                else:
+                    warrior_txid = player_info["player"]["playertxid"]
+                    # not including if warrior is dead
+                    if not is_warrior_alive(rpc_connection, warrior_txid):
+                        pass
+                    else:
+                        # not including if warrior is dead
+                        player_info = rogue_player_info(rpc_connection, warrior_txid)
+                        warriors_list[token] = player_info["player"]
+                    break
+    return warriors_list
+```
+
+[26-Feb-19 05:29 PM] TonyL#3577
+I have mistake somewhere but can't understand
+
+[26-Feb-19 05:29 PM] jl777c#5810
+isnt that all you need?
+
+[26-Feb-19 05:29 PM] TonyL#3577
+Mistake in my code 😃
+
+[26-Feb-19 05:29 PM] jl777c#5810
+ok, so you figured it out?
+
+[26-Feb-19 05:30 PM] TonyL#3577
+Separate all parts are working - but in complex I'm getting copies by some reason. Just need to debug propertly
+
+[26-Feb-19 05:52 PM] TonyL#3577
+Ah, I think I was confused on some point because many of warriors with "Ronyi" name were in TOP20
+
+[26-Feb-19 05:54 PM] TonyL#3577
+12 `Ronyi` in top20 😃
+
+[26-Feb-19 05:55 PM] TonyL#3577
+```Name: Ronyi
+
+Player txid: 28f0dcda2d21270d49f70d8f34ba921dd38dd7234fd417e4d5bcb0ca9001965a
+Token txid: 81e9cb77a7be66bdd62b1e41cf67c0742f744e99f94f3be066d747d355212db9
+Hitpoints: 61
+Strength: 17
+Level: 9
+Experience: 1589
+Dungeon Level: 2
+Chain: ROGUE
+
+20 place.
+
+================================
+
+Name: Ronyi
+
+Player txid: 29c0fd8489f741b7daa9789f58fb553935c2784fc656f2ea1d6df76333189d46
+Token txid: 6ec0d95ea08b487eaaeb3036b72655a81295373dffd792324d8f01b6add0dd7f
+Hitpoints: 61
+Strength: 16
+Level: 9
+Experience: 1539
+Dungeon Level: 1
+Chain: ROGUE
+```
+
+And some have quite similar level/experience
+
+[26-Feb-19 05:56 PM] Cryptofist#7504
+Yeah. There's many. Lol
+
+[26-Feb-19 05:56 PM] TonyL#3577
+So initially I've messed with `Player txid: ` `Token txid: ` prints and thought that there are copies of same warrior
+
+[26-Feb-19 05:56 PM] TonyL#3577
+Now I fixed prints and can see that they have different tokeinds
+
+[26-Feb-19 05:59 PM] Cryptofist#7504
+**side note** can we use an address to get a list of warriors from that specific address only?  I think it would be awesome if we were able to share wallets to have others look through one person's warriors specfically.
+
+[26-Feb-19 06:00 PM] Cryptofist#7504
+@TonyL I'm going to work on some other things. Let me know when you need me to come back and check.
+
+{Reactions}
+👍 
+
+[26-Feb-19 06:00 PM] TonyL#3577
+At the moment way (which I know at least) to check somebody list is to start the daemon with his pubkey in -pubkey= param
+
+[26-Feb-19 06:02 PM] Cryptofist#7504
+Cool. Just thinking from a player community perspective , I thought that would be neat. Anyway we can showcase the Dex too.
+
+[26-Feb-19 06:03 PM] TonyL#3577
+[12] printing all-all warriors on chain
+
+[26-Feb-19 06:04 PM] Cryptofist#7504
+It's overwhelming is why I thought of single address.
+
+[26-Feb-19 06:04 PM] Cryptofist#7504
+Interactive for players to look through each other's lists
+
+[26-Feb-19 06:04 PM] Cryptofist#7504
+Like trade binders in magic.
+
+[26-Feb-19 06:06 PM] TonyL#3577
+I'm very unlikely will make any filters and etc. in TUI since it will not help to testing
+Imo it's possible to implement on DEX GUI side
+
+[26-Feb-19 06:06 PM] Cryptofist#7504
+Just an idea for later if possible.
+
+[26-Feb-19 06:06 PM] Cryptofist#7504
+Good point.
+
+[26-Feb-19 06:06 PM] TonyL#3577
+Possible to display only warriors with needed levels lets say
+
+[26-Feb-19 06:06 PM] TonyL#3577
+Or even with specific item - GUI backend can sort it
+
+[26-Feb-19 06:07 PM] TonyL#3577
+Display warriors for specific pubkey (maybe new RPC call is needed)
+
+[26-Feb-19 06:08 PM] Cryptofist#7504
+That would be neat. The digestion ring can fetch a good price on any level Warrior.
+
+[26-Feb-19 06:09 PM] Cryptofist#7504
+I guess what I was originally thinking was something like [14]. Search address for warrior tokens
+
+[26-Feb-19 06:09 PM] TonyL#3577
+When you have a list with all players and all inventories - you may do whatever you like with em
+
+[26-Feb-19 06:13 PM] TonyL#3577
+Version with fixed top20 rating is in master.
+It forming rating in --- 4.7629921436309814 seconds ---,  scanning through batons added some time - but with caching on application side it shouldn't be problem + my scanning algo can be improved I bet
+
+{Reactions}
+💪 
+
+[26-Feb-19 06:14 PM] TonyL#3577
+To place your warrior on 20 place of rating  you need some with `Experience: 1539`+
+Ronyi set high mark 😃
+
+{Reactions}
+3040_kingpeepo 
+
+[26-Feb-19 06:41 PM] TonyL#3577
+@Cryptofist If you're available now we may try some multiplayer on latest TUI from master branch - I've changed some suspicious moments
+
+[26-Feb-19 06:45 PM] TonyL#3577
+Played short game against myself - on one node was executed highlander, on other one bailout - so I wonder it's playable
+
+[26-Feb-19 06:46 PM] TonyL#3577
+Maybe somebody else around to clash? 😃
+
+[26-Feb-19 07:12 PM] Cryptofist#7504
+Ok!
+
+[26-Feb-19 07:13 PM] Cryptofist#7504
+for a few minutes for sure
+
+[26-Feb-19 07:21 PM] ronyi#5719
+My warrior inventory in warrior list: https://imgur.com/a/LPcAKJl and my warrior inventory in game: https://imgur.com/a/aVi6aru
+
+{Embed}
+https://imgur.com/a/LPcAKJl
+https://i.imgur.com/lluevQth.jpg
+
+{Embed}
+https://imgur.com/a/aVi6aru
+https://i.imgur.com/pcyqggsh.jpg
+
+[26-Feb-19 07:21 PM] ronyi#5719
+Missing a few stuff.
+
+[26-Feb-19 07:23 PM] TonyL#3577
+It's possible to carry `strength * 2` items
+
+[26-Feb-19 07:24 PM] jl777c#5810
+you should be able to do an addressutxos rpc call with the address for a pubkeys CC asset address
+
+[26-Feb-19 07:24 PM] jl777c#5810
+you can get that address with tokensaddress pubkey
+
+[26-Feb-19 07:24 PM] jl777c#5810
+then filter the 1 satoshi outputs
+
+[26-Feb-19 07:25 PM] jl777c#5810
+i guess going into DEX will change the address though...
+
+[26-Feb-19 07:25 PM] ronyi#5719
+I restored strenght, but nothing.
+
+[26-Feb-19 07:26 PM] ronyi#5719
+If i bailout my stuff is gone i think.
+
+[26-Feb-19 07:27 PM] TonyL#3577
+Hmm I think so
+
+[26-Feb-19 07:28 PM] jl777c#5810
+proper pack strategy requires dumping excess items before bailing out
+
+[26-Feb-19 07:29 PM] jl777c#5810
+its like trying to take too much with you in a parachute. stuff just falls into the abyss
+
+[26-Feb-19 07:30 PM] jl777c#5810 (pinned)
+we should document this and any other gameplay changes that have been made
+
+[26-Feb-19 07:30 PM] TonyL#3577
+Oh a lot of good ronyi's rings are in abyss now
+
+[26-Feb-19 07:31 PM] jl777c#5810
+rings especially, they will fall out of pockets
+
+{Reactions}
+😃 
+
+[26-Feb-19 07:32 PM] TonyL#3577
+Pinned a message.
+
+[26-Feb-19 07:32 PM] ronyi#5719
+but that's exactly what should be 😄
+
+[26-Feb-19 07:32 PM] TonyL#3577
+I pin so we not miss this important step
+
+[26-Feb-19 07:35 PM] TonyL#3577
+Regards rogue rings - I can't imagine how huge these rings should be so you can wear only one per hand 😂
+
+[26-Feb-19 07:35 PM] TonyL#3577
+Hmm or maybe warrior lost 8 fingers in warriors academy
+
+[26-Feb-19 07:35 PM] TonyL#3577
+🤔
+
+[26-Feb-19 07:36 PM] jl777c#5810
+its not the size
+
+[26-Feb-19 07:36 PM] jl777c#5810
+the rings magics would intefere with each other if they are too close
+
+[26-Feb-19 07:37 PM] TonyL#3577
+Aha!
+
+[26-Feb-19 07:39 PM] jl777c#5810
+they start buzzing and get really hot
+
+[26-Feb-19 07:39 PM] jl777c#5810
+good thing they are not activated until you wear them!
+
+[26-Feb-19 07:39 PM] TonyL#3577
+Like in lord of the rings
+
+[26-Feb-19 07:41 PM] ronyi#5719
+I'm a little sad now. 😄 it is difficult to collect two identical rings, but thanks. Before i bailout, must pay attention on strenght and pocket size.
+
+[26-Feb-19 07:41 PM] TonyL#3577
+There should be some notification in new rogue GUIs I wonder
+
+[26-Feb-19 07:42 PM] TonyL#3577
+Like a "you have X items but in next game will be able to take Y, please drop X-Y"
+
+[26-Feb-19 07:42 PM] Cryptofist#7504
+Strategy guide specific to Crypto Rogue:
+
+[26-Feb-19 07:42 PM] ronyi#5719
+I support it. 😄
+
+[26-Feb-19 07:42 PM] Cryptofist#7504
+```Dump excess items before bailout. Strength X2 = your pack size. This means if you lose strength, you lose items automatically with no decision by you.```
+
+[26-Feb-19 07:43 PM] jl777c#5810
+yes a page of the rules changes and some specific warnings. on Q,'y' i will need to add a pause to get the keystrokes file sent out, though at that point it is too late to change things
+
+[26-Feb-19 07:43 PM] Cryptofist#7504
+Going to have to write a few things a few times to be clear.
+

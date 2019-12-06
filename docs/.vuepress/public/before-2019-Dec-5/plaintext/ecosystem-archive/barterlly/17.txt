@@ -1,0 +1,314 @@
+==============================================================
+Guild: Komodo
+Channel: barterlly
+Topic: 
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[28-Nov-18 02:30 PM] Deleted User#0000
+and I believe as we ll handle it in the coming weeks very differently that the checksum part will even be invisible
+
+[28-Nov-18 02:30 PM] Deleted User#0000
+only the validity "boolean" is needed on GUI
+
+[28-Nov-18 02:31 PM] Deleted User#0000
+James solution about giving specific timestamp instead of block is cool, because it won't rely on any query
+
+[28-Nov-18 02:31 PM] Deleted User#0000
+as timestamp can be generated on js with no harm
+
+[28-Nov-18 02:32 PM] Deleted User#0000
+the only thing we ll need is some sort of data for integrated coins with activation timestamps
+
+[28-Nov-18 02:33 PM] Deleted User#0000
+---------------------------------------------------------------------------------------------
+Little bit of spacing after my recent flood
+
+[28-Nov-18 02:35 PM] Deleted User#0000
+so, I decided last night to change how I handle sending, cause it currently requires some calls that are very slow, like executing a script on the coinserver to get status + executing remotely scripts that will generate every single bit of needed info to put the params in files to get it automatically processed independently by the coinserver
+
+[28-Nov-18 02:36 PM] Deleted User#0000
+the limitation about this is pretty simple : 
+
+Imagine we got a version very fast of the backend that runs, let s say we re on status 6 : All green, trade will happen,  On status 6 it will basically send the raw info to the specified and chosen coinserver to just give him the info about the TX we need to send
+
+[28-Nov-18 02:36 PM] Deleted User#0000
+Works for SRC -> status 7, and do the same for DST
+
+[28-Nov-18 02:36 PM] Deleted User#0000
+and if sending the raw info for dst is ok : status 10 : begin sending
+
+[28-Nov-18 02:36 PM] Deleted User#0000
+BUT
+
+[28-Nov-18 02:37 PM] Deleted User#0000
+the thing is with this strategy, if we achieve to run scripts concurrently with minimal sleeptime... Things can get delayed, or a server / coin can crash
+
+[28-Nov-18 02:38 PM] Deleted User#0000
+that mean we would for example stay stuck on status 7 : src has been sent to the server that will process it, but dst failed.
+
+[28-Nov-18 02:38 PM] Deleted User#0000
+in that specific case, it s a problem
+
+[28-Nov-18 02:38 PM] Deleted User#0000
+cause the coinserver won t care about the specific status of the trade, it will only process what we give and feed him
+
+[28-Nov-18 02:38 PM] Deleted User#0000
+so I decided to replace the calls that create the files on Coinserver by a DB version
+
+[28-Nov-18 02:39 PM] Deleted User#0000
+it will basically have the same information
+
+[28-Nov-18 02:39 PM] Deleted User#0000
+but just with a minimal change of the query we can add requirements like : go if status=10
+
+[28-Nov-18 02:39 PM] Deleted User#0000
+and make sure both side are completed at same time
+
+[28-Nov-18 02:39 PM] Deleted User#0000
+cause it also could have broken things with current implementation
+
+[28-Nov-18 02:40 PM] Deleted User#0000
+we could call this an edge case... but it can happen :
+
+[28-Nov-18 02:40 PM] Deleted User#0000
+imagine a trade went good and only the DST raw sending fails
+
+[28-Nov-18 02:40 PM] Deleted User#0000
+we re stuck at status 7, infos are already sent to coinserver, and he will process the TX
+
+[28-Nov-18 02:41 PM] Deleted User#0000
+but what if any user seeing there is downtime asks for a cancellation
+
+[28-Nov-18 02:41 PM] Deleted User#0000
+1st user will have received his share
+
+[28-Nov-18 02:41 PM] Deleted User#0000
+and other not, still on buffered address of opposite side
+
+[28-Nov-18 02:41 PM] Deleted User#0000
+so a refund would just act as : One user got both funds
+
+[28-Nov-18 02:41 PM] Deleted User#0000
+Obviously, that is not possible atm, already protected
+
+[28-Nov-18 02:45 PM] dukeleto#7326
+Pinned a message.
+
+[28-Nov-18 02:46 PM] Deleted User#0000
+seems I talk too much, messages refused 😄
+
+[28-Nov-18 02:46 PM] dukeleto#7326
+@Deleted User understood about checksum, makes my life much easier 😃
+
+[28-Nov-18 02:46 PM] Deleted User#0000
+we want to be able to have a simple life on any aspect of the app
+
+[28-Nov-18 02:47 PM] Deleted User#0000
+and the most important side of grandmaness will definetly need to be on the UI
+
+[28-Nov-18 02:47 PM] Deleted User#0000
+that s why I don t think blocking users for this is a good idea
+
+[28-Nov-18 02:47 PM] Deleted User#0000
+so... after all this speech about optimizing and migrating to db
+
+[28-Nov-18 02:48 PM] Deleted User#0000
+every send call has been changed to use that db, and it s working
+
+[28-Nov-18 02:48 PM] Deleted User#0000
+Now I have to change every single base script that based itself on file, and just point out the db fields
+
+[28-Nov-18 02:48 PM] Deleted User#0000
+"just" 😄
+
+[28-Nov-18 02:49 PM] dukeleto#7326
+where is all the code for barterlly? private github repos?
+
+[28-Nov-18 02:49 PM] Deleted User#0000
+3 days ago it was mainly on my servers with splitted versions
+
+[28-Nov-18 02:49 PM] Deleted User#0000
+I wrapped everything changed all the vars and put everything on a clean private repo
+
+[28-Nov-18 02:50 PM] dukeleto#7326
+what if your server is run over by a bus? 👼
+
+[28-Nov-18 02:50 PM] Deleted User#0000
+so on any server just a git pull will be enough to start playing
+
+[28-Nov-18 02:50 PM] dukeleto#7326
+ok, good to hear
+
+[28-Nov-18 02:50 PM] Deleted User#0000
+private repo working
+
+[28-Nov-18 02:50 PM] Deleted User#0000
+it was really a pain
+
+[28-Nov-18 02:50 PM] Deleted User#0000
+cause each type of coin was installed on diff servers
+
+[28-Nov-18 02:50 PM] Deleted User#0000
+so every single call / link had to be changed
+
+[28-Nov-18 02:50 PM] dukeleto#7326
+bech32 addresses are even weirder than ETH addresses
+
+[28-Nov-18 02:51 PM] Deleted User#0000
+I don t know em
+
+[28-Nov-18 02:51 PM] Deleted User#0000
+which coin uses it ?
+
+[28-Nov-18 02:51 PM] dukeleto#7326
+segwit BTC addresses
+
+[28-Nov-18 02:51 PM] dukeleto#7326
+lulz
+
+[28-Nov-18 02:51 PM] Deleted User#0000
+hahaha
+
+[28-Nov-18 02:51 PM] dukeleto#7326
+`bc1....`
+
+[28-Nov-18 02:51 PM] dukeleto#7326
+variable length, various rules about valid lengths and other ETH-like checksumming
+
+[28-Nov-18 02:52 PM] Deleted User#0000
+on my side this is transparent
+
+[28-Nov-18 02:52 PM] Deleted User#0000
+cause after all, I ll generate basing myself on cli
+
+[28-Nov-18 02:52 PM] Deleted User#0000
+but on GUI side
+
+[28-Nov-18 02:52 PM] Deleted User#0000
+for input checks
+
+[28-Nov-18 02:52 PM] Deleted User#0000
+it is indeed... a pain
+
+[28-Nov-18 02:52 PM] Deleted User#0000
+oh
+
+[28-Nov-18 02:52 PM] dukeleto#7326
+it's still interesting code, and it's self-contained, so that is nice
+
+[28-Nov-18 02:53 PM] dukeleto#7326
+i thought i knew about BTC addresses, but bech32 is a very different thing, i read the BIP last night
+
+[28-Nov-18 02:53 PM] Deleted User#0000
+thank you for dedicating time on this, really appreciated... And I don't know yet how I'll manage it, but I will make sure contributors will get rewarded for their work
+
+[28-Nov-18 02:53 PM] dukeleto#7326
+does anybody use multi-sig KMD addresses? do we want to consider multisig valid? I assumed yes
+
+[28-Nov-18 02:54 PM] dukeleto#7326
+i need to get the multisig prefix for a few coins still
+
+[28-Nov-18 02:54 PM] dukeleto#7326
+i have it for btc/zec/hush, because i know it by ❤ 😃
+
+[28-Nov-18 02:55 PM] dukeleto#7326
+@Deleted User it's nice to be part of a new project, is barterlly planned to be an actual incorporated business/etc ? or non-profit?
+
+[28-Nov-18 02:55 PM] dukeleto#7326
+i might have missed some details
+
+[28-Nov-18 02:55 PM] Deleted User#0000
+it will have to be ran by a business
+
+[28-Nov-18 02:55 PM] dukeleto#7326
+also, i really want Hush to be on Barterlly, we have no liquidity right now
+
+[28-Nov-18 02:55 PM] Deleted User#0000
+you already are
+
+[28-Nov-18 02:55 PM] dukeleto#7326
+oh, I mean "working in production" 😃
+
+[28-Nov-18 02:55 PM] Deleted User#0000
+😃
+
+[28-Nov-18 02:55 PM] dukeleto#7326
+all our exchanges are down
+
+[28-Nov-18 02:56 PM] dukeleto#7326
+so I would use the Barterlly service myself, for various coins
+
+[28-Nov-18 02:56 PM] Deleted User#0000
+I mean, as soo as barterlly wil be in prod, Hush will be too ^^
+
+{Reactions}
+🎉 
+
+[28-Nov-18 02:56 PM] Deleted User#0000
+tbh
+
+[28-Nov-18 02:56 PM] Deleted User#0000
+I really don t know how to estimate volumes
+
+[28-Nov-18 02:56 PM] Deleted User#0000
+cause we ll have unlimited pairs
+
+[28-Nov-18 02:57 PM] Deleted User#0000
+but if each coins community try it
+
+[28-Nov-18 02:57 PM] Deleted User#0000
+and are happy with it
+
+[28-Nov-18 02:57 PM] Deleted User#0000
+it can bring volume to all KMD ecosystem chains
+
+[28-Nov-18 02:58 PM] dukeleto#7326
+i think it has real promise as a business, it's a really useful service
+
+[28-Nov-18 02:58 PM] Deleted User#0000
+there will be a huge work adding as many coin as possible, cause every coin added, in my process, is added to lazycoin and is handled on autopilot mode
+
+[28-Nov-18 02:58 PM] Deleted User#0000
+I revamped my NN scripts
+
+[28-Nov-18 02:58 PM] Deleted User#0000
+to work with eth
+
+[28-Nov-18 02:59 PM] Deleted User#0000
+LTC dash pivx vericoin zcash
+
+[28-Nov-18 02:59 PM] dukeleto#7326
+is there a goal for when to launch with the "first set of supported coins" ?
+
+[28-Nov-18 02:59 PM] Deleted User#0000
+about the schedule
+
+[28-Nov-18 02:59 PM] dukeleto#7326
+@Deleted User i have all those address formats supported except vericoin, because I wasn't sure if you meant Vertcoin 😃
+
+[28-Nov-18 02:59 PM] Deleted User#0000
+we plan to connect the GUI this week
+
+[28-Nov-18 02:59 PM] Deleted User#0000
+and start beta next week if possible
+
+[28-Nov-18 02:59 PM] dukeleto#7326
+wow!
+
+[28-Nov-18 02:59 PM] Deleted User#0000
+BUT
+
+[28-Nov-18 02:59 PM] Deleted User#0000
+I mean
+
+[28-Nov-18 03:00 PM] Deleted User#0000
+I just broke everything to have a better handled solution
+
+[28-Nov-18 03:00 PM] Deleted User#0000
+so maximum pressure to be ready on thurday / friday eve
+
+[28-Nov-18 03:00 PM] Deleted User#0000
+I think next steps will be to shape the API
+

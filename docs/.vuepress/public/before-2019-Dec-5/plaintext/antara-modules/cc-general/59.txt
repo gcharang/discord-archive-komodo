@@ -1,0 +1,471 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[15-Aug-18 09:42 PM] SHossain#0007
+ok. got it. the order was for 10,000. you filled 100. it was supposed to show `s` with the remaining required balance 9900
+
+[15-Aug-18 09:43 PM] SHossain#0007
+but it was changed to `S`
+
+[15-Aug-18 09:43 PM] jl777c#5810
+yes an initial sell is 's', a partial fill changes it is 'S' as that came as change from a fillask
+
+[15-Aug-18 09:43 PM] jl777c#5810
+that is the way it works
+
+[15-Aug-18 09:43 PM] jl777c#5810
+same for 'b'
+
+[15-Aug-18 09:44 PM] Alright#0419
+How can we tell if it's a tokenfillask or tokenask?
+
+[15-Aug-18 09:45 PM] Alright#0419
+`s` means someone is offering tokens for native coins, `S` means the opposite no?
+
+[15-Aug-18 09:46 PM] Alright#0419
+`S` would be an overfilled `tokenfillask`, right?
+
+[15-Aug-18 09:46 PM] SHossain#0007
+yes, that was my understanding too
+
+[15-Aug-18 09:46 PM] SHossain#0007
+overfill would make the change
+
+[15-Aug-18 09:47 PM] SHossain#0007
+i fulfilled this order
+```
+        {
+            "funcid": "S",
+            "txid": "36da1dd6a7eec6b8c4de3621b982fa146dc5bd111992a73fd34fedb317c09ff2",
+            "vout": 0,
+            "amount": "9800",
+            "askamount": "9800",
+            "origaddress": "RLSgpvHqCYpkuHmSESZHqoDD2ssZrVtu1m",
+            "tokenid": "94b5dd0c386916b8e09c1f66bdf7a66f9fe43561c0876578bceaa9b5bb106cba",
+            "totalrequired": "41160.00000000",
+            "price": "4.20000000"
+        }
+```
+
+[15-Aug-18 09:47 PM] SHossain#0007
+using tokenfillask
+
+[15-Aug-18 09:48 PM] SHossain#0007
+this entry now disappeared from orderbook
+
+[15-Aug-18 09:49 PM] jl777c#5810
+overfill would leave no sell left
+
+[15-Aug-18 09:49 PM] jl777c#5810
+partial fill leaves some left and so 's' -> 'S" or 'S' -> 'S;
+
+[15-Aug-18 09:50 PM] jl777c#5810
+once it is overfilled or exactly filled, it disappears
+
+[15-Aug-18 09:50 PM] jl777c#5810
+if there is any left, it needs to stay on the orderbook
+
+[15-Aug-18 09:50 PM] jl777c#5810
+and I made both 's' and 'S' tx be mostly alike
+
+[15-Aug-18 09:51 PM] jl777c#5810
+so the same logic to fill an 's' can be used for 'S'
+
+[15-Aug-18 09:51 PM] Alright#0419
+Ah the way I was looking at it, if I saw `s` I needed to do `tokenfillask` and if I saw `S`, I needed to do `tokenask`
+
+[15-Aug-18 09:54 PM] SHossain#0007
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/479407570486951940/Screenshot_from_2018-08-15_22-54-13.png
+
+[15-Aug-18 09:59 PM] SHossain#0007
+fillbid worked fine
+
+[15-Aug-18 09:59 PM] SHossain#0007
+putting more bid orders
+
+[15-Aug-18 10:05 PM] SHossain#0007
+@Alright there are some bid orders now
+
+[15-Aug-18 10:06 PM] SHossain#0007
+please test partial fill, full fill, over fill
+
+[15-Aug-18 10:06 PM] SHossain#0007
+full fill worked for me
+
+[15-Aug-18 10:07 PM] SHossain#0007
+did a partial fill of 50 on this one
+```
+        {
+            "funcid": "b",
+            "txid": "2b0bed2aea7cb895fa95b7aa7828c5d5a347206ea33a0976ba8d9a6e1dd9f452",
+            "vout": 0,
+            "amount": "1000000.00000000",
+            "bidamount": "1000000.00000000",
+            "origaddress": "RRPpWbVdxcxmhx4xnWnVZFDfGc9p1177ti",
+            "tokenid": "6d53bcf2c18438368abb1467bc2f8fb7e0a66bd08efaa903705d2b44392c719e",
+            "totalrequired": 100000,
+            "price": "10.00000000"
+        },
+```
+
+[15-Aug-18 10:09 PM] SHossain#0007
+this popped out in my console
+```
+total.100000 - paid.50, remaining 99999990676440 <- 99999990676440 (100000000000000 - 9323560)
+error recvunitprice 0.0018647120000000 < 0.0018647120494230 unitprice, new unitprice 0.0018647120494477
+remaining 99950 -> origpubkey
+```
+
+[15-Aug-18 10:13 PM] SHossain#0007
+order now changed to 
+```
+        {
+            "funcid": "B",
+            "txid": "19c703e973844819f35fdb7de3bf0d54251a0dd5de6753aec141516c3f07ccf8",
+            "vout": 0,
+            "amount": "999999.90676440",
+            "bidamount": "999999.90676440",
+            "origaddress": "RRPpWbVdxcxmhx4xnWnVZFDfGc9p1177ti",
+            "tokenid": "6d53bcf2c18438368abb1467bc2f8fb7e0a66bd08efaa903705d2b44392c719e",
+            "totalrequired": 99950,
+            "price": "10.00500157"
+        }
+```
+
+[15-Aug-18 10:14 PM] SHossain#0007
+don't know how there is fraction in the price. i placed round figured price on my order
+
+[15-Aug-18 10:18 PM] Alright#0419
+`./komodo-cli -ac_name=AT5 tokenfillbid 6d53bcf2c18438368abb1467bc2f8fb7e0a66bd08efaa903705d2b44392c719e 9f761556931adee75c2db8dcf545f628eea1cf7dfa5216dbadae900a05bdd2fd 12000000`
+
+[15-Aug-18 10:18 PM] Alright#0419
+was what I did
+
+[15-Aug-18 10:19 PM] Alright#0419
+Is that the same order )O.o
+
+[15-Aug-18 10:19 PM] SHossain#0007
+did a new fillbid order on the above `B` order for 50
+the following showed up in console after/while displaying the HEX
+```
+total.99950 - paid.50, remaining 99999981352880 <- 99999981352880 (99999990676440 - 9323560)
+error recvunitprice 0.0018647120000000 < 0.0018647120494477 unitprice, new unitprice 0.0018647120494724
+remaining 99900 -> origpubkey
+```
+these were after the HEX was broadcaster
+```
+AssetValidate (B)
+vin2 100, vout2 50, vout3 50, Got 999999.90676440 to origaddr.(RANyPgfZZLhSjQB9jrzztSw66zMMYDZuxQ)
+fillbuy validated
+AssetValidate (B)
+vin2 100, vout2 50, vout3 50, Got 999999.90676440 to origaddr.(RANyPgfZZLhSjQB9jrzztSw66zMMYDZuxQ)
+fillbuy validated
+AssetValidate (B)
+vin2 100, vout2 50, vout3 50, Got 999999.90676440 to origaddr.(RANyPgfZZLhSjQB9jrzztSw66zMMYDZuxQ)
+fillbuy validated
+AssetValidate (B)
+vin2 100, vout2 50, vout3 50, Got 999999.90676440 to origaddr.(RANyPgfZZLhSjQB9jrzztSw66zMMYDZuxQ)
+fillbuy validated
+AssetValidate (B)
+vin2 100, vout2 50, vout3 50, Got 999999.90676440 to origaddr.(RANyPgfZZLhSjQB9jrzztSw66zMMYDZuxQ)
+fillbuy validated
+AssetValidate (B)
+vin2 100, vout2 50, vout3 50, Got 999999.90676440 to origaddr.(RANyPgfZZLhSjQB9jrzztSw66zMMYDZuxQ)
+fillbuy validated
+```
+
+[15-Aug-18 10:21 PM] SHossain#0007
+this is the new order now from the remaining
+```
+        {
+            "funcid": "B",
+            "txid": "fd77ca6ca796554ea0a76537a9219e5981663577784adae2a1c29de756dfed9c",
+            "vout": 0,
+            "amount": "999999.81352880",
+            "bidamount": "999999.81352880",
+            "origaddress": "RRPpWbVdxcxmhx4xnWnVZFDfGc9p1177ti",
+            "tokenid": "6d53bcf2c18438368abb1467bc2f8fb7e0a66bd08efaa903705d2b44392c719e",
+            "totalrequired": 99900,
+            "price": "10.01000814"
+        },
+```
+
+[15-Aug-18 10:21 PM] Alright#0419
+was:
+```
+  {
+    "funcid": "b",
+    "txid": "9f761556931adee75c2db8dcf545f628eea1cf7dfa5216dbadae900a05bdd2fd",
+    "vout": 0,
+    "amount": "1000000.00000000",
+    "bidamount": "1000000.00000000",
+    "origaddress": "REmii1C2bWCkDU4EA21rz7M4T3uG7MG3me",
+    "tokenid": "6d53bcf2c18438368abb1467bc2f8fb7e0a66bd08efaa903705d2b44392c719e",
+    "totalrequired": 10000,
+    "price": "100.00000000"
+  }
+```
+
+[15-Aug-18 10:27 PM] SHossain#0007
+what was the result?
+
+[15-Aug-18 10:28 PM] Alright#0419
+Not even sure lol
+
+[15-Aug-18 10:28 PM] Alright#0419
+txid of the tokenfillbid was ecf94c0bf0b7e86ddcfbfabc9f279498247c5696b02f60638e4e2bf6abd1dff7
+
+[15-Aug-18 10:28 PM] SHossain#0007
+did you get the tokens in your balance?
+
+[15-Aug-18 10:29 PM] Alright#0419
+I'm not sure if it's gone from the orderbook or what
+
+[15-Aug-18 10:29 PM] SHossain#0007
+http://cctest.explorer.dexstats.info/tx/ecf94c0bf0b7e86ddcfbfabc9f279498247c5696b02f60638e4e2bf6abd1dff7
+
+[15-Aug-18 10:29 PM] SHossain#0007
+i don't see the order in orderbook
+
+[15-Aug-18 10:29 PM] Alright#0419
+```
+./komodo-cli -ac_name=AT5 tokenbalance 6d53bcf2c18438368abb1467bc2f8fb7e0a66bd08efaa903705d2b4
+{
+  "result": "success",
+  "CCaddress": "RPbmcj1sJqh3K1RXSx6ftbvAMAiEoxNG1R",
+  "tokenid": "6d53bcf2c18438368abb1467bc2f8fb7e0a66bd08efaa903705d2b4",
+  "balance": 0
+}
+
+```
+
+[15-Aug-18 10:30 PM] Alright#0419
+Oh wait I didn't have any of that token previously >.<
+
+[15-Aug-18 10:30 PM] SHossain#0007
+use `tokenbalance pubkey` perhaps?
+
+[15-Aug-18 10:30 PM] SHossain#0007
+you are checking different tokenid
+
+[15-Aug-18 10:30 PM] Alright#0419
+tokenfillbid gives tokens for native coins, yes?
+
+[15-Aug-18 10:31 PM] Alright#0419
+Ah copying from discord cut it short
+
+[15-Aug-18 10:31 PM] Alright#0419
+```
+ ./komodo-cli -ac_name=AT5 tokenbalance 6d53bcf2c18438368abb1467bc2f8fb7e0a66bd08efaa903705d2b44392c719e
+{
+  "result": "success",
+  "CCaddress": "RPbmcj1sJqh3K1RXSx6ftbvAMAiEoxNG1R",
+  "tokenid": "6d53bcf2c18438368abb1467bc2f8fb7e0a66bd08efaa903705d2b44392c719e",
+  "balance": 990000
+}
+```
+
+[15-Aug-18 10:33 PM] SHossain#0007
+```        {
+            "funcid": "b",
+            "txid": "9a7702c40080a2825e8a587c25e8ecfbab2148c59dad8c13c8c5f8f0d9b22115",
+            "vout": 0,
+            "amount": "100000.00000000",
+            "bidamount": "100000.00000000",
+            "origaddress": "REmii1C2bWCkDU4EA21rz7M4T3uG7MG3me",
+            "tokenid": "6d53bcf2c18438368abb1467bc2f8fb7e0a66bd08efaa903705d2b44392c719e",
+            "totalrequired": 10000,
+            "price": "10.00000000"
+        },
+        {
+            "funcid": "b",
+            "txid": "aa15532f0c963ad627805ed603eeda8c007e622351cd3a4f7f1b1ab94b31354e",
+            "vout": 0,
+            "amount": "100000.00000000",
+            "bidamount": "100000.00000000",
+            "origaddress": "REmii1C2bWCkDU4EA21rz7M4T3uG7MG3me",
+            "tokenid": "6d53bcf2c18438368abb1467bc2f8fb7e0a66bd08efaa903705d2b44392c719e",
+            "totalrequired": 1000,
+            "price": "100.00000000"
+        },```
+
+[15-Aug-18 10:33 PM] SHossain#0007
+you may have filled the order fully and it is now gone. from the same account there are 2 more bids
+
+[15-Aug-18 10:34 PM] SHossain#0007
+in the orderbook
+
+[15-Aug-18 10:35 PM] SHossain#0007
+try again. now we know there are only 2 orders from this origaddress. we can track
+
+[15-Aug-18 10:39 PM] Alright#0419
+just did `./komodo-cli -ac_name=AT5 tokenfillbid 6d53bcf2c18438368abb1467bc2f8fb7e0a66bd08efaa903705d2b44392c719e 9a7702c40080a2825e8a587c25e8ecfbab2148c59dad8c13c8c5f8f0d9b22115 100001`
+
+[15-Aug-18 10:39 PM] Alright#0419
+Will be back in ~30 minutes, need some food
+
+[15-Aug-18 10:39 PM] SHossain#0007
+let the mempool get cleared, and will see result
+
+[15-Aug-18 10:39 PM] SHossain#0007
+sure
+
+[15-Aug-18 10:39 PM] SHossain#0007
+go ahead
+
+[15-Aug-18 10:40 PM] SHossain#0007
+i'll take off as well. almost 13 hours here. need some sleep
+
+[15-Aug-18 10:42 PM] SHossain#0007
+you filled the order and now it is gone from orderbook
+
+[15-Aug-18 10:43 PM] SHossain#0007
+Thanks to all testers who participated today 😃
+
+[15-Aug-18 10:43 PM] SHossain#0007
+A lot of progress and testing done in a day 👏🏽
+
+[15-Aug-18 10:51 PM] SHossain#0007
+i have created plenty orders to play with, if anyone is feeling like playing with them
+
+[15-Aug-18 11:10 PM] Alright#0419
+@SHossain orderbook is pretty cluttered, could you cancel anything possible
+
+[15-Aug-18 11:10 PM] Alright#0419
+Oh forgot I can do tokenorders <txid>
+
+[15-Aug-18 11:20 PM] Alright#0419
+just going to play around with my own tokens and bids/asks for now
+
+[15-Aug-18 11:27 PM] siu - Chainmakers#3920
+Token orders should add token name if possible
+
+[15-Aug-18 11:27 PM] siu - Chainmakers#3920
+i know token id is the real name, but for eyes sake it should also have the token name
+
+[15-Aug-18 11:33 PM] SHossain#0007
+> Token orders should add token name if possible
+i guess GUI will have to do that based on `tokenid`
+
+[15-Aug-18 11:41 PM] Alright#0419
+Please no one test `rewardsunlock` on the first plan on AT5
+
+[15-Aug-18 11:41 PM] Alright#0419
+if you have to test it, test it on your own plan please
+
+[15-Aug-18 11:42 PM] siu - Chainmakers#3920
+@SHossain but that would make a once call process a 2 call process.... wont it?
+
+[15-Aug-18 11:43 PM] Alright#0419
+I think it would help to add the name of the coin after each amount that is denominated in native coins for assets
+
+[15-Aug-18 11:44 PM] Alright#0419
+still confusing coins and assetoshis sometimes
+
+[15-Aug-18 11:46 PM] siu - Chainmakers#3920
+me too
+
+[16-Aug-18 12:29 AM] siu - Chainmakers#3920
+did this fillask: ```{
+    "method":"tokenfillask",
+"params": ["6d53bcf2c18438368abb1467bc2f8fb7e0a66bd08efaa903705d2b44392c719e","3fc9b68f77986b56cfcd050430455b470eee47219bab58262a286af072c8086a","1234"]
+}
+```
+
+[16-Aug-18 12:30 AM] siu - Chainmakers#3920
+all worked
+
+[16-Aug-18 12:30 AM] siu - Chainmakers#3920
+balances are as expected
+
+[16-Aug-18 12:37 AM] siu - Chainmakers#3920
+```
+```{
+    "result": {
+        "result": "success",
+        "hex": "0100000003147f3927ef4ac3cf2414ba820d1debadd7ba9d5393d8ebc9dac19776374ea86f0200000049483045022100b7044cd0d35686ecf32a8a8ba85d44b5a84e91388b8e149616d4585d408d38050220419e127bb3b4ffb9d16e69b992015c2398f9a1ff23e71428e6570410183b84cb01ffffffff9dd614f37433a89137b2719f0b4e0912c27a2c25be33203d43425a824174ba76000000007b4c79a276a072a26ba067a565802102adf84e0e075cf90868bd4e3d34a03420e034719649c41f371fc70d8e33aa27028140e68e3fc7802e57af8fa25ebedb744f88f69252ae8e4d0453d1c66e90a44ce713242473c15d0d99c4edc53e1047b5c5293a77c1d754fb89ca7e6173b8daeee244a100af038001e3a10001ffffffff9dd614f37433a89137b2719f0b4e0912c27a2c25be33203d43425a824174ba7603000000484730440220557f5d16520316a5585c45e22f04dcd5e7cf9e222a9134b504efec646921a75102202f2845bf9b4fb2bd90371768ba72bf32fa906004a19c32f49beeb6bde46d90f201ffffffff05fc7c010000000000302ea22c80201ab400e039122028345520ba041ac3e6ec81ad28d8415e78d760d55f41097dd58103120c008203000401ccd204000000000000302ea22c8020a6d6b6e4597fcd444d6a28c4dbcfc7ec344b6cd33a7c371c09fd7c44899749658103120c008203000401cc0084a8909c05000023210304b1f0ba82cb8e064a32e093e2319ff6f886523d4c910204169353529c7669a6acd77ebfaf6b06000023210225583e18a48116c4c9571f530240f22affe00f95804f1947d59fbc7b825763f6ac00000000000000004f6a4c4ce3536d53bcf2c18438368abb1467bc2f8fb7e0a66bd08efaa903705d2b44392c719e0038123186bb0100210304b1f0ba82cb8e064a32e093e2319ff6f886523d4c910204169353529c7669a600000000"
+    },
+    "error": null,
+    "id": null
+}```
+
+[16-Aug-18 12:38 AM] siu - Chainmakers#3920
+```
+AssetValidate (S)
+vin1 98766, vout0 97532, vout1 1234, AssetValidateSellvin
+Got 0.00098766 to origaddr.(RRFHykmhREKvJi6gRdccNbKt7572QaDgjZ)
+got recvunitprice 50.00000000 >= 50.00000000 unitprice, new unitprice 50.00000000
+fill validated
+
+```
+
+[16-Aug-18 03:42 AM] Alright#0419
+One thing I found is that if you try to do `tokenaskfill` on a `tokenbid` you get a `dust` error
+
+[16-Aug-18 03:42 AM] Alright#0419
+@dukeleto could you add an error message for that?
+
+[16-Aug-18 05:47 AM] dukeleto#7326
+@Alright sure, what would you prefer is returned?
+
+[16-Aug-18 05:47 AM] dukeleto#7326
+@Alright is that where you are using the wrong txid for the RPC function?
+
+[16-Aug-18 06:40 AM] jl777c#5810
+the GUI will have to remember tokenid ->name
+
+[16-Aug-18 06:59 AM] jl777c#5810
+i didnt see any bugs posted, formal or anecdotal. I guess I will start working on the next round of CC contracts. have some pretty crazy ideas, not sure all of them will work
+
+{Reactions}
+👌 (6) 
+
+[16-Aug-18 07:36 AM] blackjok3r#3181
+Crazy ideas are the best ones 😄
+
+[16-Aug-18 08:56 AM] grewalsatinder#9653
+let the wild family or lizards grow! 🎉 
+🦎
+
+[16-Aug-18 08:58 AM] jl777c#5810
+ok, I figured out how to do micropayments, well actually mempool based payments that is secure
+
+[16-Aug-18 08:58 AM] jl777c#5810
+I think that will be the next one to do
+
+[16-Aug-18 08:59 AM] jl777c#5810
+and really, it isnt limited to small payments, it can work with any size
+
+[16-Aug-18 09:00 AM] jl777c#5810
+but I think I will limit it to 32-bits of 0.0001 denomination -> 4 billion  / 10000 -> 400,000 would be the max payment
+
+[16-Aug-18 09:07 AM] grewalsatinder#9653
+😱 I want micropayments!!!!
+
+[16-Aug-18 09:49 AM] jl777c#5810
+seems in Sept timeframe I can get it ready, barring bug barrage from existing codes
+
+[16-Aug-18 10:00 AM] grewalsatinder#9653
+can you explain a bit on difference between your idea of micropayments and lightening network ?
+
+[16-Aug-18 10:00 AM] grewalsatinder#9653
+from your point of view ?
+
+[16-Aug-18 10:04 AM] jl777c#5810
+mine is a simple approach that most people should be able to understand. no crazy complicated bidirectional channel scripts. it is also a direct p2p approach, so you need to specifically reserve funds for specific payee
+
+[16-Aug-18 10:04 AM] jl777c#5810
+seems a good tradeoff as I dont have 3 years to get a micropayments system working, I want to be done in 3 weeks
+
+[16-Aug-18 10:05 AM] jl777c#5810
+The way it will work is you lock funds into a payments address. this can be added to whenever, using similar concepts to the faucetfunding/rewardsfunding
+

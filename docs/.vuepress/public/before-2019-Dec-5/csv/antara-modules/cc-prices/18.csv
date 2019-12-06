@@ -1,0 +1,416 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"507209916449292303";"dimxy#2587";"15-May-19 10:01 AM";"we would need to wait for 2*PRICES_DAYWINDOW to begin to receive smoothed prices";"";"";
+"507209916449292303";"dimxy#2587";"15-May-19 10:01 AM";"so it seems better to set it to a lower value to test";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 10:03 AM";"Yes, that was a plan";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 10:03 AM";"Now I'm started chain with such window: `#define PRICES_DAYWINDOW ((3600*1/ASSETCHAINS_BLOCKTIME) + 1)`";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 10:04 AM";"If it's `2*PIRCES_DAYWINDOW` it will take ~2 hours with default blocktime for smoothed prices";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 10:14 AM";"Started chain with such daywindow and earlytxid,  lets check if 3 prices propagate in 2 hours 😃";"";"👍 (1)";
+"272003866906722306";"TonyL#3577";"15-May-19 11:52 AM";"```  ""result"": ""success"",
+  ""seed"": -1177246481141807744,
+  ""height"": 155,
+  ""maxsamples"": 1,
+  ""width"": 124,
+  ""daywindow"": 61,
+  ""numpricefeeds"": 55
+```
+
+Have 3 prices now
+
+```
+./komodo-cli -ac_name=PRICEST1 pricesbet 1 1 ""BTC_USD, 1""
+parsed synthetic: BTC_USD 1 
+assetchains_contract.237 vs eval_prices.237
+prices_isacceptableamount() amount=100000000 leverage=1 fundTotals.totalFund=0 fundTotals.totalEquity=0
+{
+  ""result"": ""error"",
+  ""error"": ""too big amount and leverage""
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 11:55 AM";"Aha, so now cant place any bet because of 0 CC balance";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 11:55 AM";"```./komodo-cli -ac_name=PRICEST1 pricesaddress
+{
+  ""result"": ""success"",
+  ""PricesCCAddress"": ""RAL5Vh8NXmFqEKJRKrk1KjKaUckK7mM1iS"",
+  ""PricesCCBalance"": 0.00000000,
+  ""PricesNormalAddress"": ""RBunXCsMHk5NPd6q8SQfmpgre3x133rSwZ"",
+  ""PricesNormalBalance"": 0.00000000,
+  ""PricesCCTokensAddress"": ""RTSAiZc1b5H8WKPjqydsNfG11bLjbXZAY5"",
+  ""myCCAddress(Prices)"": ""RG8gAg24y8q87jxGQbjLpWM3fYGxxvCpd8"",
+  ""myCCbalance(Prices)"": 0.00000000,
+  ""myaddress"": ""RT3ShiVNAnCoAQw7UoNQBMZhUbQyvXsnQJ"",
+  ""mybalance"": 100001459.10064752,
+  ""myaddr"": ""RG8gAg24y8q87jxGQbjLpWM3fYGxxvCpd8"",
+  ""houseaddr"": ""RQc5neVkUcy44CqV9hj7ZukiiT9vNipqZT"",
+  ""exposureaddr"": ""RJuhhPF7s8bR1532NWLnYZeCSs5BY9ZZBC""
+}
+```
+Should I fund manually `PricesCCAddress` or `PricesNormalAddress`, oh or  `houseaddr` I think ?";"";"";
+"507209916449292303";"dimxy#2587";"15-May-19 11:58 AM";"I just added a method pricesrefillfund";"";"";
+"507209916449292303";"dimxy#2587";"15-May-19 11:58 AM";"in the repo";"";"👍 (1)";
+"272003866906722306";"TonyL#3577";"15-May-19 12:02 PM";"I can see you changed define to `#define PRICES_DAYWINDOW (7)` in komodo_defs.h, we should keep in mind to change it back later 😃";"";"";
+"507209916449292303";"dimxy#2587";"15-May-19 12:03 PM";"ah yes";"";"";
+"507209916449292303";"dimxy#2587";"15-May-19 12:03 PM";"i ll return it to the original";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 12:10 PM";"`pricesrefillfund` refilled my fund 👍 
+```./komodo-cli -ac_name=PRICEST1 pricesgetorderbook
+{
+  ""TotalFund"": 1000000.00000000,
+  ""TotalEquity"": 0.00000000,
+  ""TotalRekt"": 0.00000000,
+  ""TotalBets"": 0.00000000,
+  ""TotalCashoutBets"": 0.00000000
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 12:15 PM";"Placed one bet:
+```./komodo-cli -ac_name=PRICEST1 pricesbet 10000 1 ""BTC_USD, 1""
+{
+  ""hex"": ""0400008085202f89015f19423bb3ad2daa1750fe4b40a8e3377c2c0f1026dfa5c80f9c54d626ecbdf1010000004847304402205551b1d9a244d2f39880bc612a8421b55dd91bfb8c7f519ddfc5a6b4ca7ef958022032d56f64ad2fda8149f31fbd12e4852aac99fc5543af7d1ae33a92bf248c51ee01ffffffff071027000000000000302ea22c8020bd07328de731fec74670ef9f1f51843a5ff6a37b9d65efc92d5e52924ab4cbe98103120c008203000401cc1027000000000000302ea22c80203ee64ec5f134da404710d306dcd9ca54a0139b3c4827b43a988fc6316e6c2a688103120c008203000401cc001e9faae7000000302ea22c80203ee64ec5f134da404710d306dcd9ca54a0139b3c4827b43a988fc6316e6c2a688103120c008203000401cc10270000000000002321039894cb054c0032e99e65e715b03799607aa91212a16648d391b6fa2cc52ed0cfac00f2052a01000000302ea22c8020dea998f43423439942836e05d57ec8f553f419887861cd2f28044bc881eb297781031210008203000401cc209c2e37142b23002321038d6ad45605f9378227af37415603c93184a92425897006da6446b76652510ab9ac0000000000000000626a4c5fed4221038d6ad45605f9378227af37415603c93184a92425897006da6446b76652510ab9a40000000010a5d4e800000001002389849abb00000002010001080000000000000000000000000000000000000000000000000000000000000000000000006d0100000000000000000000000000"",
+  ""txid"": ""61f7f260979422c48c65913671c5dcaf4d0c487e33ceb07da04b87222b62613d"",
+  ""result"": ""success""
+}
+```
+```./komodo-cli -ac_name=PRICEST1 sendrawtransaction hex^^
+61f7f260979422c48c65913671c5dcaf4d0c487e33ceb07da04b87222b62613d```";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 12:15 PM";"```./komodo-cli -ac_name=PRICEST1 mypriceslist
+[
+]
+```
+```./komodo-cli -ac_name=PRICEST1 pricesinfo 61f7f260979422c48c65913671c5dcaf4d0c487e33ceb07da04b87222b62613d
+{
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 12:16 PM";"```./komodo-cli -ac_name=PRICEST1 getrawtransaction 61f7f260979422c48c65913671c5dcaf4d0c487e33ceb07da04b87222b62613d
+0400008085202f89015f19423bb3ad2daa1750fe4b40a8e3377c2c0f1026dfa5c80f9c54d626ecbdf1010000004847304402205551b1d9a244d2f39880bc612a8421b55dd91bfb8c7f519ddfc5a6b4ca7ef958022032d56f64ad2fda8149f31fbd12e4852aac99fc5543af7d1ae33a92bf248c51ee01ffffffff071027000000000000302ea22c8020bd07328de731fec74670ef9f1f51843a5ff6a37b9d65efc92d5e52924ab4cbe98103120c008203000401cc1027000000000000302ea22c80203ee64ec5f134da404710d306dcd9ca54a0139b3c4827b43a988fc6316e6c2a688103120c008203000401cc001e9faae7000000302ea22c80203ee64ec5f134da404710d306dcd9ca54a0139b3c4827b43a988fc6316e6c2a688103120c008203000401cc10270000000000002321039894cb054c0032e99e65e715b03799607aa91212a16648d391b6fa2cc52ed0cfac00f2052a01000000302ea22c8020dea998f43423439942836e05d57ec8f553f419887861cd2f28044bc881eb297781031210008203000401cc209c2e37142b23002321038d6ad45605f9378227af37415603c93184a92425897006da6446b76652510ab9ac0000000000000000626a4c5fed4221038d6ad45605f9378227af37415603c93184a92425897006da6446b76652510ab9a40000000010a5d4e800000001002389849abb00000002010001080000000000000000000000000000000000000000000000000000000000000000000000006d0100000000000000000000000000
+```";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 12:17 PM";"Bet is not tracking as bet @dimxy but betamount funds added to ""TotalFund"" :
+```./komodo-cli -ac_name=PRICEST1 pricesgetorderbook
+{
+  ""TotalFund"": 1009950.00010000,
+  ""TotalEquity"": 0.00000000,
+  ""TotalRekt"": 0.00000000,
+  ""TotalBets"": 0.00000000,
+  ""TotalCashoutBets"": 0.00000000
+}
+```";"";"";
+"507209916449292303";"dimxy#2587";"15-May-19 12:17 PM";"yes something's broken";"";"👌 (1)";
+"507209916449292303";"dimxy#2587";"15-May-19 12:27 PM";"updated (just forgot to remove height checking for the old chain)";"";"";
+"455741312273219595";"jl777c#5810";"15-May-19 12:49 PM";"@TonyL for -ac_stocks, dont put spaces after ,";"";"";
+"455741312273219595";"jl777c#5810";"15-May-19 12:49 PM";"-ac_stocks=""AAPL,IBM,EA""";"";"";
+"455741312273219595";"jl777c#5810";"15-May-19 12:49 PM";"above works";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 12:58 PM";"Ah, ok";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:13 PM";"Can see betslist / my bet info on latest";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:14 PM";"I have only one bet on chain at the moment:
+```./komodo-cli -ac_name=PRICEST1 pricesinfo 61f7f260979422c48c65913671c5dcaf4d0c487e33ceb07da04b87222b62613d
+prices_syntheticprice errcode in switch=-1
+prices_syntheticprice error getting price (could be end of chain)
+error getting synthetic price at height.170
+prices_scanchain() prices_syntheticprofits returned -1, finishing...
+{
+  ""rekt"": 0,
+  ""open"": 1,
+  ""expression"": ""BTC_USD, 1"",
+  ""reduced"": ""BTC_USD, 1"",
+  ""costbasis"": 8056.07195901,
+  ""bets"": [
+    {
+      ""positionsize"": 10000.00000000,
+      ""profits"": -5.99670000,
+      ""costbasis"": 8056.07195901,
+      ""firstheight"": 164
+    }
+  ],
+  ""leverage"": 1,
+  ""TotalPositionSize"": 10000.00000000,
+  ""TotalProfits"": -5.99670000,
+  ""equity"": 9994.00330000,
+  ""LastPrice"": 8051.24100491,
+  ""LastHeight"": 169,
+  ""LiquidationPrice"": 0.00000000
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:14 PM";"``` ./komodo-cli -ac_name=PRICEST1 pricesgetorderbook
+prices_syntheticprice errcode in switch=-1
+prices_syntheticprice error getting price (could be end of chain)
+error getting synthetic price at height.170
+prices_scanchain() prices_syntheticprofits returned -1, finishing...
+prices_ispositionup returns true for BTC for expr=BTC_USD, 1
+{
+  ""BTC_USD"": {
+    ""positions"": [
+      {
+        ""isOpen"": 1,
+        ""expression"": ""BTC_USD, 1"",
+        ""positionsize"": 1000000000000,
+        ""costbasis"": 805607195901,
+        ""leverage"": 1,
+        ""equity"": 999400330000,
+        ""isUpPosition"": 1
+      }
+    ],
+    ""DiffLeveragedPosition"": 1000000000000
+  },
+  ""TotalFund"": 1009950.00010000,
+  ""TotalEquity"": 9994.00330000,
+  ""TotalRekt"": 0.00000000,
+  ""TotalBets"": 10000.00000000,
+  ""TotalCashoutBets"": 0.00000000
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:15 PM";"Initially I filled fund for `1000000.00010000`";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:15 PM";"Player is now ` ""TotalProfits"": -5.99670000` so current Fund equity in this bet should be `+5.99670000`";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:16 PM";"Not sure why equity of players summed up with Fund funds";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:18 PM";"Ah, from other side player equity is the sum which fund needs to payout if player wants to cashout right now";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:18 PM";"But anyway I wonder if real funds summarising with equity it might be quite confusing";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:20 PM";"```./komodo-cli -ac_name=PRICEST1 paymentsinfo '[""0deaa8d69fbea7cbaf85fbd1ace7e26c173b52e761cdf6edc3eecf04e1879e7f""]'
+{
+  ""plan_type"": ""snapshot"",
+  ""lockedblocks"": 10,
+  ""minrelease"": 10,
+  ""minimum"": 10000,
+  ""bottom"": 0,
+  ""top"": 3999,
+  ""fixedFlag"": 0,
+  ""excludeAddresses"": [
+  ],
+  ""RTkpZPTDPBUhY1miULTjVf8dcsHxz8G1KQ"": 100.00000000,
+  ""REpyKi7avsVduqZ3eimncK4uKqSArLTGGK"": 0.00000000,
+  ""totalfunds"": 100.00000000,
+  ""elegiblefunds"": 100.00000000,
+  ""min_release_height"": 169,
+  ""result"": ""success""
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:20 PM";"Only initial funding amount in my payment plan (betfee not summarised)";"";"";
+"507209916449292303";"dimxy#2587";"15-May-19 01:20 PM";"yes I calculate TotalEquity like what the house owes
+TotalFund - all amount total on prices globalpk";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:21 PM";"Ah, there is a 0.5% fee, so it's real money in `TotalFund`";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:21 PM";"Was my confusion";"";"";
+"507209916449292303";"dimxy#2587";"15-May-19 01:21 PM";"so TotalEqity is in TotalFund";"";"";
+"507209916449292303";"dimxy#2587";"15-May-19 01:22 PM";"we may change it of course";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:23 PM";"It's not a problem I think: if needed current fund equity can be calculated as `totalbets - players_equity (TotalEqutiy in this output)`";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:23 PM";"I can see that fee was sent to needed address:
+```    {
+      ""value"": 50.00000000,
+      ""valueSat"": 5000000000,
+      ""n"": 4,
+      ""scriptPubKey"": {
+        ""asm"": ""a22c8020dea998f43423439942836e05d57ec8f553f419887861cd2f28044bc881eb297781031210008203000401 OP_CHECKCRYPTOCONDITION"",
+        ""hex"": ""2ea22c8020dea998f43423439942836e05d57ec8f553f419887861cd2f28044bc881eb297781031210008203000401cc"",
+        ""reqSigs"": 1,
+        ""type"": ""cryptocondition"",
+        ""addresses"": [
+          ""RTkpZPTDPBUhY1miULTjVf8dcsHxz8G1KQ""
+        ]
+      }
+    },
+```";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:24 PM";"Same address as in paymentsinfo print";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:24 PM";"Just sum in paymentsinfo remained the same";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:45 PM";"@blackjok3r Fees sending now on this `RTkpZPTDPBUhY1miULTjVf8dcsHxz8G1KQ` address:
+```    {
+      ""value"": 5.00000000,
+      ""valueSat"": 500000000,
+      ""n"": 4,
+      ""scriptPubKey"": {
+        ""asm"": ""a22c8020dea998f43423439942836e05d57ec8f553f419887861cd2f28044bc881eb297781031210008203000401 OP_CHECKCRYPTOCONDITION"",
+        ""hex"": ""2ea22c8020dea998f43423439942836e05d57ec8f553f419887861cd2f28044bc881eb297781031210008203000401cc"",
+        ""reqSigs"": 1,
+        ""type"": ""cryptocondition"",
+        ""addresses"": [
+          ""RTkpZPTDPBUhY1miULTjVf8dcsHxz8G1KQ""
+        ]
+      }
+``` 
+
+but in `paymentsinfo` I can see only the sum of initial `paymentsfund` 
+
+```
+./komodo-cli -ac_name=PRICEST1 paymentsinfo '[""0deaa8d69fbea7cbaf85fbd1ace7e26c173b52e761cdf6edc3eecf04e1879e7f""]'
+{
+  ""plan_type"": ""snapshot"",
+  ""lockedblocks"": 10,
+  ""minrelease"": 10,
+  ""minimum"": 10000,
+  ""bottom"": 0,
+  ""top"": 3999,
+  ""fixedFlag"": 0,
+  ""excludeAddresses"": [
+  ],
+  ""RTkpZPTDPBUhY1miULTjVf8dcsHxz8G1KQ"": 100.00000000,
+  ""REpyKi7avsVduqZ3eimncK4uKqSArLTGGK"": 0.00000000,
+  ""totalfunds"": 100.00000000,
+  ""elegiblefunds"": 100.00000000,
+  ""min_release_height"": 172,
+  ""result"": ""success""
+}
+```";"";"";
+"232679450301431808";"blackjok3r#3181";"15-May-19 01:46 PM";"can I have chain params and repo please, it will be faster for me to check it that way";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:47 PM";"Sure:
+```./komodod -ac_name=PRICEST1 -ac_cc=2 -ac_supply=100000000 -ac_reward=1000000000 -ac_cbopret=7 -ac_prices=""LTC, BCHABC, XMR, IOTA, ZEC, WAVES, LSK, DCR, RVN, DASH, XEM, BTS, ICX, HOT, STEEM, ENJ, STRAT"" -ac_snapshot=50 -ac_sapling=1 -ac_earlytxidcontract=237 -addnode=159.69.45.70 -earlytxid=02c20fb0af23090076b800fe9ae6546af986983618957f296bd6f56ca27ea065 -daemon```
+
+https://github.com/dimxy/komodo/tree/prices-rpc";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:48 PM";"@blackjok3r Ah and I have custom daywindow ```#define PRICES_DAYWINDOW ((3600*1/ASSETCHAINS_BLOCKTIME) + 1)``` in src/komodo_defs.h (just need to change 24 to 1 before compilation)";"";"";
+"232679450301431808";"blackjok3r#3181";"15-May-19 01:48 PM";"cool thanks. will check.";"";"👍 (1)";
+"232679450301431808";"blackjok3r#3181";"15-May-19 01:49 PM";"has the tx confirmed btw? its shows 0 balance for unconfirmed utxos";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:49 PM";"Yes, sure";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 01:50 PM";"```  ""confirmations"": 11,
+  ""rawconfirmations"": 11,
+```";"";"👍 (1)";
+"272003866906722306";"TonyL#3577";"15-May-19 01:51 PM";"txs with bet fees sent to `RTkpZPTDPBUhY1miULTjVf8dcsHxz8G1KQ` :
+```./komodo-cli -ac_name=PRICEST1 priceslist
+[
+  ""61f7f260979422c48c65913671c5dcaf4d0c487e33ceb07da04b87222b62613d"",
+  ""5a1b91986fbb1236df9a501a859acf35077976ea4a6aa9615f5d40d1e0c20894""
+]
+```";"";"";
+"232679450301431808";"blackjok3r#3181";"15-May-19 01:51 PM";"thanks.";"";"";
+"507209916449292303";"dimxy#2587";"15-May-19 02:59 PM";"```if real funds summarising with equity...```
+I did not find yet any methodology how real houses manage their funds. Very interesting to know about them.
+I think we are similar to forex. So we could accept bets as long as there are balance with opposite positions (as we discussed). 
+Sure real funds use more sophisticated technics than just funding ""BTC_USD"" vs ""BTC_USD,!""
+
+Just have read: some pairs might move in similar directions, in that case they are 'correlated pairs' like EUR/USD and GBP/USD. Correlation is measured with a coefficient.";"";"";
+"232679450301431808";"blackjok3r#3181";"15-May-19 03:17 PM";"@TonyL  the funds are sending there correctly.. but they are in the wrong vout, so I need to fix this. Will have a look... It seems to me that I can loop each vout of the tx and check which ones are paymentscc vouts so it doesnt need vout 1 or 0 limitation.";"";"";
+"232679450301431808";"blackjok3r#3181";"15-May-19 03:18 PM";"Pretty sure this is only RPC limitaiton";"";"";
+"232679450301431808";"blackjok3r#3181";"15-May-19 03:24 PM";"Actually this is very easy fix.";"";"👍 (1)";
+"232679450301431808";"blackjok3r#3181";"15-May-19 04:08 PM";"https://github.com/jl777/komodo/pull/1481";"";"";
+"232679450301431808";"blackjok3r#3181";"15-May-19 04:08 PM";"I tried to make PR to dimxy repo but I had too many changes";"";"";
+"507209916449292303";"dimxy#2587";"15-May-19 04:16 PM";"I believe I have those changes in my repo as I merged yesterday FSM, and before that JL merged the latest JL777 branch into FSM";"";"";
+"232679450301431808";"blackjok3r#3181";"15-May-19 04:21 PM";"I can make PR to your repo then.. if you like";"";"";
+"232679450301431808";"blackjok3r#3181";"15-May-19 04:22 PM";"prices-rpc branch of your repo does not lave the latest payments changes";"";"";
+"232679450301431808";"blackjok3r#3181";"15-May-19 04:23 PM";"I think its ok. It just means any funding in the plan cant be spent after we update";"";"";
+"232679450301431808";"blackjok3r#3181";"15-May-19 04:25 PM";"https://github.com/dimxy/komodo/pull/6";"";"";
+"507209916449292303";"dimxy#2587";"15-May-19 04:25 PM";"ok lets try it";"";"";
+"232679450301431808";"blackjok3r#3181";"15-May-19 04:26 PM";"as long as we all update the daemon once you merge that it will be ok.";"";"";
+"232679450301431808";"blackjok3r#3181";"15-May-19 04:26 PM";"not easy to remake chain so hopefully it works ok. So far only payments fund happened so nothing has touched validation yet.";"";"";
+"507209916449292303";"dimxy#2587";"15-May-19 04:48 PM";"merged";"";"";
+"232679450301431808";"blackjok3r#3181";"15-May-19 04:49 PM";"cool Im updating my node";"";"";
+"232679450301431808";"blackjok3r#3181";"15-May-19 04:49 PM";"will check the payments  still works in a min";"";"";
+"232679450301431808";"blackjok3r#3181";"15-May-19 05:14 PM";"It seems no merge or release happened. merge is broken, pushed fix to jl777 branch, you guys dont need that though so it does nt matter. Did paymetns release and it worked 😃";"";"";
+"507209916449292303";"dimxy#2587";"15-May-19 05:35 PM";"no merge in my repo?";"";"";
+"507209916449292303";"dimxy#2587";"15-May-19 05:38 PM";"i squashed commits btw";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 06:05 PM";"So is it better to test on prices-rpc or jl777 now? 😃";"";"";
+"507209916449292303";"dimxy#2587";"15-May-19 06:32 PM";"I'll pull once more the FSM (I saw last jl777 merge into it) and think we may use my repo";"";"👍 (1)";
+"507209916449292303";"dimxy#2587";"15-May-19 06:53 PM";"updated";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 07:02 PM";"https://github.com/dimxy/komodo/blob/prices-rpc/src/komodo_defs.h#L45 is it expected state? 😃";"";"";
+"507209916449292303";"dimxy#2587";"15-May-19 07:15 PM";"well, no,
+as I change it for my test chain, I forget to set it to original, sorry.
+as 2 days  have passed it wont be problem any more - be set to original permanent
+updated";"";"👍 (1)";
+"272003866906722306";"TonyL#3577";"15-May-19 07:22 PM";"Oh yes, I have other on my test chain as well. Just might be a problem when we will forget about this change";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 07:24 PM";"```./komodo-cli -ac_name=PRICEST1 paymentsinfo ""['0deaa8d69fbea7cbaf85fbd1ace7e26c173b52e761cdf6edc3eecf04e1879e7f']""
+{
+  ""plan_type"": ""snapshot"",
+  ""lockedblocks"": 10,
+  ""minrelease"": 10,
+  ""minimum"": 10000,
+  ""bottom"": 0,
+  ""top"": 3999,
+  ""fixedFlag"": 0,
+  ""excludeAddresses"": [
+  ],
+  ""RTkpZPTDPBUhY1miULTjVf8dcsHxz8G1KQ"": 156.00000000,
+  ""utxos"": 4,
+  ""REpyKi7avsVduqZ3eimncK4uKqSArLTGGK"": 0.00000000,
+  ""utxos"": 0,
+  ""totalfunds"": 156.00000000,
+  ""elegiblefunds"": 156.00000000,
+  ""min_release_height"": 500,
+  ""result"": ""success""
+}
+``` have more funds in payments plan now 😃";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 07:26 PM";"After 1000 bet placed, 5 expected added:
+```./komodo-cli -ac_name=PRICEST1 paymentsinfo ""['0deaa8d69fbea7cbaf85fbd1ace7e26c173b52e761cdf6edc3eecf04e1879e7f']""
+not elegible to be spent yet height.501 vs elegible_ht.511 blocksleft.10
+{
+  ""plan_type"": ""snapshot"",
+  ""lockedblocks"": 10,
+  ""minrelease"": 10,
+  ""minimum"": 10000,
+  ""bottom"": 0,
+  ""top"": 3999,
+  ""fixedFlag"": 0,
+  ""excludeAddresses"": [
+  ],
+  ""RTkpZPTDPBUhY1miULTjVf8dcsHxz8G1KQ"": 161.00000000,
+  ""utxos"": 5,
+  ""REpyKi7avsVduqZ3eimncK4uKqSArLTGGK"": 0.00000000,
+  ""utxos"": 0,
+  ""totalfunds"": 161.00000000,
+  ""elegiblefunds"": 156.00000000,
+  ""min_release_height"": 501,
+  ""result"": ""success""
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 07:26 PM";"So looks like fees accumulating on paymentsplan working fine now, next have to check distribution";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 07:38 PM";"@blackjok3r a little bit confused with `paymentsrelease` call
+
+Have 156 egible funds in payments plan:
+``` ./komodo-cli -ac_name=PRICEST1 paymentsinfo '[""0deaa8d69fbea7cbaf85fbd1ace7e26c173b52e761cdf6edc3eecf04e1879e7f""]'
+{
+  ""plan_type"": ""snapshot"",
+  ""lockedblocks"": 10,
+  ""minrelease"": 10,
+  ""minimum"": 10000,
+  ""bottom"": 0,
+  ""top"": 3999,
+  ""fixedFlag"": 0,
+  ""excludeAddresses"": [
+  ],
+  ""RTkpZPTDPBUhY1miULTjVf8dcsHxz8G1KQ"": 161.00000000,
+  ""utxos"": 5,
+  ""REpyKi7avsVduqZ3eimncK4uKqSArLTGGK"": 0.00000000,
+  ""utxos"": 0,
+  ""totalfunds"": 161.00000000,
+  ""elegiblefunds"": 156.00000000,
+  ""min_release_height"": 510,
+  ""result"": ""success""
+}
+```
+
+Trying to release 100:
+```./komodo-cli -ac_name=PRICEST1 paymentsrelease ""[%220deaa8d69fbea7cbaf85fbd1ace7e26c173b52e761cdf6edc3eecf04e1879e7f%22,100]""
+{
+  ""result"": ""error"",
+  ""error"": ""value too small, try releasing a larger amount, or use skipminimum flag""
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 07:39 PM";"But it looks like ""amount to small"" limitation determining by ""minrelease"" :
+```./komodo-cli -ac_name=PRICEST1 paymentsrelease ""
+[%220deaa8d69fbea7cbaf85fbd1ace7e26c173b52e761cdf6edc3eecf04e1879e7f%22,1]""
+{
+  ""result"": ""error"",
+  ""error"": ""amount too smal"",
+  ""amount"": 1.00000000,
+  ""minrelease"": 10.00000000
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 07:40 PM";"I thought that `""minimum"": 10000` is some dust filter with default 10k satoshi - is it minimum funds amount on plan to execute release? (I'm on latest dimxy/prices-rpc and same chain as b4)";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 07:51 PM";"https://github.com/dimxy/komodo/blob/prices-rpc/src/cc/payments.cpp#L876 it this check, I wonder it casued by vouts order 😃";"";"";
+"507209916449292303";"dimxy#2587";"15-May-19 07:54 PM";"So that check in pricebet for min fee is still needed? (I removed it as I understand blackjok he could work with any fee)";"";"";
+"272003866906722306";"TonyL#3577";"15-May-19 07:55 PM";"Not sure if it needed but looks like this place in code not working now 😃";"";"";
+"232679450301431808";"blackjok3r#3181";"16-May-19 06:32 AM";"@TonyL  
+https://docs.google.com/document/d/1WCQb3ZAPTHS_mYxm70P3F-D9Y7QGT6JcXxhyWZuPS80/edit?usp=sharing";"";"";
+"232679450301431808";"blackjok3r#3181";"16-May-19 07:41 AM";"I guess I should just make skip minimum the default to avoid future confusion... but I dont really like it as if not enough is released it basically means only the largest whales get anything.";"";"";
+"272003866906722306";"TonyL#3577";"16-May-19 07:50 AM";"@blackjok3r So should it be: ```paymentsrelease ‘[“createtxid”,amount,true]’ ``` ?";"";"";
+"272003866906722306";"TonyL#3577";"16-May-19 07:52 AM";"```Skipminimum is a flag, if there are address with such low balance minimumtoaddress cannot be paid, this will truncate the rich list off at the first address that is being paid the wrong amount. 
+``` from description it looks like it's better to use this flag all the time";"";"";
+"272003866906722306";"TonyL#3577";"16-May-19 07:53 AM";"```./komodo-cli -ac_name=PRICEST1 paymentsrelease ""[%220deaa8d69fbea7cbaf85fbd1ace7e26c173b52e761cdf6edc3eecf04e1879e7f%22,100,true]""
+{
+  ""result"": ""error"",
+  ""error"": ""value too small, try releasing a larger amount, or use skipminimum flag""
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"16-May-19 08:09 AM";"Or should `paymentsairdrop` call distribute tokens?";"";"";
+"232679450301431808";"blackjok3r#3181";"16-May-19 08:12 AM";"Thwe problem is with it... if the minrelease has been set too small... Then it will simply always fail, as the amount paid si just dust. If you force skipminimum all the time, then it will alwyas work, but mostly it will only pay a copuple of the top address. I tested ths skipminimum thing and it works quite well, wasnt able to find a way to cheat it. I guess we can enforce it all the time, but that then forces the plan creator to make sane values.";"";"";
+"232679450301431808";"blackjok3r#3181";"16-May-19 08:13 AM";"`./komodo-cli -ac_name=PRICEST1 paymentsrelease ""[%220deaa8d69fbea7cbaf85fbd1ace7e26c173b52e761cdf6edc3eecf04e1879e7f%22,100,1]""`";"";"";
+"232679450301431808";"blackjok3r#3181";"16-May-19 08:14 AM";"that will work.";"";"";
+"272003866906722306";"TonyL#3577";"16-May-19 08:17 AM";"```./komodo-cli -ac_name=PRICEST1 paymentsrelease ""[%220deaa8d69fbea7cbaf85fbd1ace7e26c173b52e761cdf6edc3eecf04e1879e7f%22,100,1]""
+{
+  ""amount"": 100.00000000,
+  ""newamount"": 99.99996060,
+  ""hex"": ""0400008085202f89023d61622b22874ba07db0ce337e480c4dafdcc5713691658cc422949760f2f76104000000a74ca5a281a1a0819ca28194a067a56580210358f1764f82c63abc7c7455555fd1d3184905e30e819e97667e247e5792b468568140ae70da77dbf483781eedcc2c4040ba0fdbeee8d2ed5ea4f27ba74083be72366640c51626ad0638bb2da43563db809d38f96c8c8ed0c290c45d85a815816fb623a129a52780202be7dc4ff083edb6b3a86574105c765a7065684f9e5aa1b1b555726b6c918a3e8103020000af038001f0a10001ffffffff6aaabcfb15c596aebcdd7cfd4b60b36bb5dd8688eb349b807b9729535d02267200000000a74ca5a281a1a0819ca28194a067a56580210358f1764f82c63abc7c7455555fd1d3184905e30e819e97667e247e5792b46856814069773bdfc9664c3d13c8ccbef118e60ac3f1a0dd52f9904d0fd6cb4f55b0720f099f0129b201ef4d01111564f9db7ecb93e4e4ae13eaf4c18219c85c2d03d5a3a129a52780202be7dc4ff083edb6b3a86574105c765a7065684f9e5aa1b1b555726b6c918a3e8103020000af038001f0a10001ffffffff0254da052a01000000642ea22c8020dea998f43423439942836e05d57ec8f553f419887861cd2f28044bc881eb297781031210008203000401cc320401f001022c6a2af0527f9e87e104cfeec3edf6cd61e7523b176ce2e7acd1fb85afcba7be9fd6a8ea0d00e40b5402000000759cd40b54020000001976a914c2d8a5f4593d5e19a3b75056a85ed5cc6fbe6f6888ac00000000da0500000000000000000000000000"",
+  ""txid"": ""d3e0915ed1b09e02f70561315831327a6450f9ed9ffb55188135a5d2b1b8f699"",
+  ""result"": ""success""
+}
+``` aha";"";"";
+"272003866906722306";"TonyL#3577";"16-May-19 08:21 AM";"So if assume that in general paymentsCC distribute funds correctly - pricesCC fees distribution works";"";"";

@@ -1,0 +1,403 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[06-Dec-18 03:34 PM] jl777c#5810
+if so, then sendrawtransaction is modifying the hex?
+
+[06-Dec-18 03:34 PM] jl777c#5810
+so I hope the hex you are broadcasting is changed
+
+[06-Dec-18 03:35 PM] Mihailo#5902
+Me too
+
+[06-Dec-18 03:35 PM] Mihailo#5902
+Maybe EnocdeHex has some problem
+
+[06-Dec-18 03:35 PM] jl777c#5810
+and somehow the mtx from FinalizeCCtx to where it generates the JSON is where things go bad. at least that is all inside the oracles.cpp code
+
+[06-Dec-18 03:35 PM] jl777c#5810
+crazy bug!
+
+[06-Dec-18 03:37 PM] Mihailo#5902
+Also this could be wrong PrecomputedTransactionData txdata(tx);
+
+[06-Dec-18 03:37 PM] Mihailo#5902
+But I haven't yet got to it to see how it is getting data from tx
+
+[06-Dec-18 03:37 PM] jl777c#5810
+well at least it feels like you have caught the bug in action and it happens all the time, so you will be able to solve it
+
+[06-Dec-18 03:38 PM] Mihailo#5902
+👍
+
+[06-Dec-18 03:47 PM] Mihailo#5902
+It must be something with memory managment wrong as after calling SignatureHash in CCTx it gets modified then:
+```cpp
+printf("txdata: %s %s %s %s\n",txdata.hashOutputs.GetHex().data(),txdata.hashPrevouts.GetHex().data(),txdata.hashSequence.GetHex().data(),txdata.hashJoinSplits.GetHex().data());                
+uint256 sighash = SignatureHash(CCPubKey(cond), mtx, i, SIGHASH_ALL, utxovalues[i],consensusBranchId, &txdata);
+{
+         PrecomputedTransactionData txdata1(mtx);
+         printf("txdata2: %s %s %s %s\n",txdata1.hashOutputs.GetHex().data(),txdata1.hashPrevouts.GetHex().data(),txdata1.hashSequence.GetHex().data(),txdata1.hashJoinSplits.GetHex().data());
+}    
+```           
+```
+txdata: 93a6e371082be9f172b5803f44ec6ae08d5a7d4dbddd1732b6b46667e83e4a6c 47cce7339ce18a01f0a92b5581c2e8fb83c4d3751af525a760802286952cd210 5c4cf0d63b1e79c0cb592656fdc1873d22c6f594f34924a4c7fa32fdb8b15d89 950ffd3ef48936edb04059e67bf7c45aca8450e020243754e9c80e7965b1f33b
+txdata2: 93a6e371082be9f172b5803f44ec6ae08d5a7d4dbddd1732b6b46667e83e4a6c 1751fa8a98662f7e09f8dee3d8bc748bfdbf95687a810ad5f4771240529d7650 5c4cf0d63b1e79c0cb592656fdc1873d22c6f594f34924a4c7fa32fdb8b15d89 950ffd3ef48936edb04059e67bf7c45aca8450e020243754e9c80e7965b1f33b
+```
+
+[06-Dec-18 03:50 PM] Mihailo#5902
+Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+It is bug made by me!!!!! 😩 😩 😩 
+Remember those moving of multiple normal vins to the end after CC vins. So take a look at the code:
+```cpp
+PrecomputedTransactionData txdata(mtx);
+    n = mtx.vin.size(); 
+    //Reorder vins so that for multiple normal vins all other except vin0 goes to the end
+    //This is a must to avoid hardfork change of validation in every CC, because there could be maximum one normal vin at the begining with current validation.   
+    if (normalvins>1)
+    {        
+        for(i=1;i<normalvins;i++)
+        {   
+            mtx.vin.push_back(mtx.vin[1]);
+            mtx.vin.erase(mtx.vin.begin() + 1);            
+        }
+    }      
+```
+
+[06-Dec-18 03:51 PM] Mihailo#5902
+PrecomputedTransactionData must be after
+
+[06-Dec-18 03:51 PM] Mihailo#5902
+And that is why it sometimes work and sometimes not, until it happens to be that it has mor normal vins at the beggining
+
+[06-Dec-18 03:52 PM] jl777c#5810
+I wont tell anybody if you dont
+
+{Reactions}
+😂 (4) 
+
+[06-Dec-18 03:52 PM] Mihailo#5902
+😆 🤦 :yassinheartbroken:
+
+[06-Dec-18 03:53 PM] jl777c#5810
+pushed fix
+
+[06-Dec-18 03:54 PM] Mihailo#5902
+Wait, I'm checking it still makes some problems. Now vin2 seems to fail
+
+[06-Dec-18 03:55 PM] jl777c#5810
+maybe create a new tmpmtx
+
+[06-Dec-18 03:55 PM] jl777c#5810
+copy mtx: tmpmtx = mtx; tmpmtx.vin.clear()
+
+[06-Dec-18 03:56 PM] jl777c#5810
+and then set the vins from mtx to tmpmtx
+
+[06-Dec-18 03:56 PM] jl777c#5810
+at the end mtx = tmpmtx
+
+[06-Dec-18 03:56 PM] jl777c#5810
+doing vin[] fiddling in place seems confusing and error prone
+
+[06-Dec-18 03:56 PM] Mihailo#5902
+Let me check this better
+
+[06-Dec-18 04:17 PM] Mihailo#5902
+Ok, figured out the problem
+
+[06-Dec-18 04:44 PM] Mihailo#5902
+I'm having strange problem when issuing RPC. Seems like daemon or RPC is stuck.
+
+[06-Dec-18 04:45 PM] Mihailo#5902
+Don't know if it is because of fix, or it happens anyway.
+
+[06-Dec-18 04:48 PM] TonyL#3577
+gdb backtrace might be useful if this stuck is possible to reproduce
+
+[06-Dec-18 05:09 PM] Mihailo#5902
+I think fix is ok now...
+https://github.com/jl777/komodo/pull/1039
+
+{Embed}
+https://github.com/jl777/komodo/pull/1039
+Fix reorder of vins in FinalizeCCTx by Mixa84 · Pull Request #103...
+https://avatars3.githubusercontent.com/u/39563265?s=400&v=4
+
+[06-Dec-18 05:09 PM] Mihailo#5902
+So this just the fix for cc_verify issue.
+
+[06-Dec-18 05:09 PM] Mihailo#5902
+I'm not sure now if the illegal datafee issue still stands?
+
+[06-Dec-18 05:10 PM] Mihailo#5902
+@TonyL Do we know how to reproduce it exactly?
+
+[06-Dec-18 05:11 PM] Mihailo#5902
+Also, it is very strange how I could only eproduce cc_verify error on sapling chain 🤔
+
+[06-Dec-18 05:18 PM] TonyL#3577
+@Mihailo  I'll re-test oracles functionality tomorrow and check if this illegal datafee issue is actual (in general reproducing  flow was like a: create oracle S datatype on sapling activated chain, 2 register 10000 sat, 2 subscribe 1 coin and on any data publishing attempt get this datafee error - and it was actual only on PirateNetwork/FSM repo while on jl777/FSM worked fine) + stress/spam test is needed I think
+
+[06-Dec-18 07:40 PM] jl777c#5810
+merged. it seems possible the datafee issue could be related, but only way to find out for sure is to test it
+
+[06-Dec-18 07:47 PM] Mihailo#5902
+Yes. Maybe datafee issue couod be something because of two registers and finding the baton, but it could also be fixed with this.
+
+[07-Dec-18 11:05 AM] TonyL#3577
+On latest FSM possible to create same two publishers:
+```komodo-cli -ac_name=SPLTEST oraclesinfo 8636a373ebe01af956ed320742e29d0060c47f33c6238801cca80004d220068d
+{
+  "result": "success",
+  "txid": "8636a373ebe01af956ed320742e29d0060c47f33c6238801cca80004d220068d",
+  "name": "Testing",
+  "description": "Testing",
+  "format": "S",
+  "marker": "RX1WWF8B5mN1Qz2MjDLvwuefdiVrYRBbyS",
+  "registered": [
+    {
+      "publisher": "02a3cf299910078222c5f6c3a4f45261c2c900af54dd090e955865c41fd7060047",
+      "baton": "RRRZENDykruSdVSJno8WgZyvpRbLh9ixxb",
+      "batontxid": "0e64a60bfb64df60b3af1edf44851f6187205484e1025e5baf30900dafdca69f",
+      "lifetime": "108.00000000",
+      "funds": "108.00000000",
+      "datafee": "0.00010000"
+    },
+    {
+      "publisher": "02a3cf299910078222c5f6c3a4f45261c2c900af54dd090e955865c41fd7060047",
+      "baton": "RRRZENDykruSdVSJno8WgZyvpRbLh9ixxb",
+      "batontxid": "0e64a60bfb64df60b3af1edf44851f6187205484e1025e5baf30900dafdca69f",
+      "lifetime": "108.00000000",
+      "funds": "108.00000000",
+      "datafee": "0.00010000"
+    }
+  ]
+}
+```
+
+[07-Dec-18 11:05 AM] TonyL#3577
+@Mihailo I've started to mass data publishing and komodod hanged on my side
+
+[07-Dec-18 11:06 AM] TonyL#3577
+Maybe it's same situation as you had yesterday
+
+[07-Dec-18 11:08 AM] TonyL#3577
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/520557118571413504/unknown.png
+
+[07-Dec-18 11:09 AM] TonyL#3577
+Hmm it should be different process (on screenshot), sry
+
+[07-Dec-18 11:14 AM] Mihailo#5902
+Hmmm, that hanging is strange. Not sure it has to do with fix as I think I had strange behaviour before the fix.
+
+[07-Dec-18 11:17 AM] Mihailo#5902
+I did not try datafee issue on Pirate repo as they are not on latest FSM but could check it over there also with the fix.
+
+[07-Dec-18 11:18 AM] TonyL#3577
+I'm testing everything on jl777/FSM at the moment
+
+[07-Dec-18 11:19 AM] Mihailo#5902
+Good
+
+[07-Dec-18 11:39 AM] TonyL#3577
+Hmm I'm broadcast 1 oraclesdata and komodod hangs with 100% loading on CPU
+
+[07-Dec-18 11:39 AM] TonyL#3577
+```(gdb) backtrace
+#0  0x00007ffff7740c60 in nanosleep () from /lib/x86_64-linux-gnu/libpthread.so.0
+#1  0x0000555555bf4e28 in boost::this_thread::hidden::sleep_for(timespec const&) ()
+#2  0x000055555597d6a9 in boost::this_thread::sleep_for (ns=<synthetic pointer>...)
+    at /root/latest_FSM/komodo/depends/x86_64-unknown-linux-gnu/share/../include/boost/thread/pthread/thread_data.hpp:258
+#3  boost::this_thread::sleep_for<long, boost::ratio<1l, 1000l> > (d=...)
+    at /root/latest_FSM/komodo/depends/x86_64-unknown-linux-gnu/share/../include/boost/thread/v2/thread.hpp:124
+#4  MilliSleep (n=20000) at utiltime.cpp:46
+#5  0x00005555555e48f0 in WaitForShutdown (threadGroup=0x7fffffffe0e0) at bitcoind.cpp:67
+#6  0x00005555555e5b1e in AppInit (argc=<optimized out>, argv=<optimized out>) at bitcoind.cpp:225
+#7  0x00005555555e632d in main (argc=10, argv=0x7fffffffe388) at bitcoind.cpp:239```
+
+[07-Dec-18 11:39 AM] TonyL#3577
+Not sure if this backtrace is useful
+
+[07-Dec-18 11:39 AM] Mihailo#5902
+Hmmm, this is I suppose when you shutdown the daemon so it waits for all threads to finish so it can exit.
+
+[07-Dec-18 11:40 AM] jl777c#5810
+waitforshutdown is the loop the main thread ends up it, waiting for shutdown
+
+[07-Dec-18 11:41 AM] jl777c#5810
+100% CPU indicates maybe some issue with locking/unlocking?
+
+[07-Dec-18 11:41 AM] Mihailo#5902
+I now that when I had hanging happen when I issue another RPC it is stuck. Could be that some RPC thread is stuck?
+
+[07-Dec-18 11:41 AM] jl777c#5810
+or could just be an infinite loop
+
+[07-Dec-18 11:41 AM] jl777c#5810
+rpc calls are serialized
+
+[07-Dec-18 11:42 AM] jl777c#5810
+if one doesnt finish, the next is just waiting forever
+
+[07-Dec-18 11:42 AM] TonyL#3577
+@Mihailo I can call now RPC without args let's say:
+```/komodo-cli -ac_name=SPLTEST oraclesdata
+error code: -1
+error message:
+oraclesdata oracletxid hexstr
+```
+But call with args just hangs ```./komodo-cli -ac_name=SPLTEST oraclesdata 8636a373ebe01af956ed320742e29d0060c47f33c6238801cca80004d220068d 1```
+
+[07-Dec-18 11:43 AM] jl777c#5810
+oh, hexstr of "1" ?
+
+[07-Dec-18 11:43 AM] jl777c#5810
+what about hexstr of 01
+
+[07-Dec-18 11:43 AM] jl777c#5810
+might be a bug handling string len 1
+
+[07-Dec-18 11:43 AM] jl777c#5810
+hex is minimum 2 bytes
+
+[07-Dec-18 11:44 AM] TonyL#3577
+https://paste.ubuntu.com/p/B8nm72vt6d/
+
+[07-Dec-18 11:44 AM] Mihailo#5902
+I don't think that's the problem as I was calling oraclesdata correctly and still got hangs
+
+[07-Dec-18 11:44 AM] TonyL#3577
+I'm hanging everything with this script
+
+[07-Dec-18 11:44 AM] TonyL#3577
+Broadcast once
+
+[07-Dec-18 11:44 AM] jl777c#5810
+problem with the fix for the CC validate error?
+
+[07-Dec-18 11:45 AM] Mihailo#5902
+Let see if it is just oracles related.
+
+[07-Dec-18 11:45 AM] TonyL#3577
+And then komodod hangs with 100% CPU loading
+
+[07-Dec-18 11:45 AM] Mihailo#5902
+Try something else, if it hangs than it is something else.
+
+[07-Dec-18 11:45 AM] TonyL#3577
+Sure, let me try
+
+[07-Dec-18 11:47 AM] Mihailo#5902
+I just had hang on first oraclesdata I issued
+
+[07-Dec-18 11:47 AM] Mihailo#5902
+But thing is that I get the hex from previous and then I broadcast and try another oraclesdata and it hangs.
+
+[07-Dec-18 11:48 AM] Mihailo#5902
+Also I noticed that tx are not relayed all the time
+
+[07-Dec-18 11:48 AM] jl777c#5810
+when did this behavior start? very few changes recently to CC, only the fix for the validation
+
+[07-Dec-18 11:49 AM] Mihailo#5902
+Not quite sure, as I was trying to figure out the problem yesterday and itm ay happen before my fix but not sure.
+
+[07-Dec-18 11:49 AM] TonyL#3577
+Seems I can reproduce only on oracles
+
+[07-Dec-18 11:49 AM] TonyL#3577
+First oracles data  is broadcasting fine
+
+[07-Dec-18 11:49 AM] TonyL#3577
+And then komodod became unresponsible
+
+[07-Dec-18 11:49 AM] TonyL#3577
+If I broadcast 2 bets let say - everything is ok
+
+[07-Dec-18 11:50 AM] TonyL#3577
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/520567712045596672/unknown.png
+
+[07-Dec-18 11:50 AM] TonyL#3577
+Bets are ok
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/520567833898254351/unknown.png
+
+[07-Dec-18 11:51 AM] Mihailo#5902
+That's good. It may be then something either with my fix or oracles rpc
+
+[07-Dec-18 11:51 AM] TonyL#3577
+It's definitely might be since yesterday komodod not hanged after oraclesdata
+
+[07-Dec-18 11:52 AM] TonyL#3577
+🤞 Hope it's local thing only for oracles
+
+[07-Dec-18 11:52 AM] Mihailo#5902
+Then I screwed somthing for sure 😉 You cannot became good blockchain dev until you f*ck up something good 😛
+
+[07-Dec-18 11:53 AM] TonyL#3577
+A person who never made a mistake never tried anything new. - Albert Einstein 😃
+
+[07-Dec-18 11:53 AM] Mihailo#5902
+I can issue multiple oraclesdata without broadcasting it. So I think it is not RPC thing
+
+[07-Dec-18 11:54 AM] Mihailo#5902
+And after I broadcast it and try another oraclesdata then it hangs
+
+[07-Dec-18 11:54 AM] TonyL#3577
+It hangs even without try
+
+[07-Dec-18 11:55 AM] TonyL#3577
+Right after broadcast you shouldn't be able to call anything
+
+[07-Dec-18 11:55 AM] TonyL#3577
+Like a `getinfo` let's say
+
+[07-Dec-18 11:55 AM] Mihailo#5902
+Probably, I just noticed when I tried another oraclesdata
+
+[07-Dec-18 11:57 AM] Mihailo#5902
+It can be something in validation that locks, but why it happens now. I'll trace it, but I'm thinking if you could test this without fix, but then you will have cc_verify error.
+
+[07-Dec-18 12:01 PM] TonyL#3577
+Yep if I'll rollback - there is another issue like a stack element error after 3+ oraclesdata brodcast
+
+[07-Dec-18 12:01 PM] Mihailo#5902
+Validation has passed, and getinfo and other prc works, but I see tx are not relayed. Tried sendtoaddress after that and see nothing is reaching mining node.
+
+[07-Dec-18 12:02 PM] Mihailo#5902
+Hmmm, I cannot make it hang now
+
+[07-Dec-18 12:03 PM] Mihailo#5902
+It seems I need to call another oraclesdata to make it hang, before the block is mined
+
+[07-Dec-18 12:04 PM] TonyL#3577
+Hmm, yes you're right I think
+
+[07-Dec-18 12:06 PM] Mihailo#5902
+Ok, located where it is. Trying to find the baton. Let me analyze this.
+
+[07-Dec-18 12:10 PM] Mihailo#5902
+@jl777c The problem seems to be here:
+```cpp
+while ( myIsutxo_spentinmempool(batontxid,1) != 0 )
+        batontxid = myIs_baton_spentinmempool(batontxid,1);
+```
+I remeber we talked about this when I was fixing oracles before, but can't remeber what we said.
+
+[07-Dec-18 12:12 PM] jl777c#5810
+probably need to check if it is a null batontxid and break with error
+

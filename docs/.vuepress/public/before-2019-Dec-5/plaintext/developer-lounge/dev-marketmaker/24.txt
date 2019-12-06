@@ -1,0 +1,441 @@
+==============================================================
+Guild: Komodo
+Channel: dev-marketmaker
+Topic: Discussion about AtomiAPI and its market making tech.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[10-Oct-19 02:16 PM] Oszy#5734
+default is 9999
+
+[10-Oct-19 04:35 PM] allbits#5898
+@artem.pikulin command and output are here https://pastebin.com/N7subVsz
+
+{Embed}
+https://pastebin.com/N7subVsz
+curl --url "http://127.0.0.1:7783" --data "{\"userpass\":\"$userpa...
+https://pastebin.com/i/facebook.png
+
+[10-Oct-19 04:36 PM] allbits#5898
+@ComputerGenie 👴🏼📢 thanks for response - I'm so noobie I don't really know how to answer that - I just do the recommended curl and pipe to jq - worked before, but not after mm2 update
+
+[10-Oct-19 04:38 PM] allbits#5898
+only the method:orderbook call is messy - things like my_balance, setprice, etc work fine
+
+[10-Oct-19 04:38 PM] ComputerGenie 👴🏼📢#7004
+@allbits add `-s` to your curl and try `jq -c`
+
+[10-Oct-19 04:38 PM] allbits#5898
+ok
+
+[10-Oct-19 04:41 PM] allbits#5898
+Different kind of mess: https://pastebin.com/L0H3Gftq
+
+{Embed}
+https://pastebin.com/L0H3Gftq
+curl -s --url "http://127.0.0.1:7783" --data "{\"userpass\":\"$use...
+https://pastebin.com/i/facebook.png
+
+[10-Oct-19 04:45 PM] ComputerGenie 👴🏼📢#7004
+I'm assuming that the
+```json
+"price_rat":[
+[1,[43576923]],
+[1,[50000000]]
+]```
+bit is the bit that you're not liking the format of
+you can always use jq to further parse those bits however you want
+
+[10-Oct-19 04:45 PM] allbits#5898
+yes, that's the part that's splashing all over the screen
+
+[10-Oct-19 04:46 PM] allbits#5898
+but I can't figure out how to further parse those to keep them on one line
+
+[10-Oct-19 04:50 PM] ComputerGenie 👴🏼📢#7004
+2624 characters takes up screen real-estate no matter what you do
+I'd suggest familiarizing yourself with <https://stedolan.github.io/jq/manual/> and making it display only the bits you want and how you want to work with them
+
+[10-Oct-19 04:50 PM] allbits#5898
+ok - I'll give that a try.  Thank you
+
+[10-Oct-19 11:20 PM] allbits#5898
+Unfortunately I've gotten nowhere in terms of being able to understand jq sufficiently to take out all the line breaks that started appearing once I updated mm2. Any help or ideas appreciated.
+
+[11-Oct-19 05:36 AM] artem.pikulin#0794
+@allbits You may remove the rational representations from output by 
+```
+ORDERBOOK | jq -M 'del(.. | .price_rat?)' | jq -M 'del(.. | .max_volume_rat?)'
+```
+Maybe there's more elegant solution using jq only once, but this snippet just works.
+
+[11-Oct-19 06:41 AM] jorian#4555
+or use jq select to only select the ones you want
+
+[11-Oct-19 08:07 AM] Mylo#8306
+```
+   --> mm2src/common/custom_futures.rs:196:5                                                                                                                                               
+    |                                                                                                                                                                                      
+196 | /     pub async fn lock<F> (&self, mut tick: F) -> Result<TimedMutexGuard<'_, T>, String>                                                                                            
+197 | |     where F: FnMut (f64, f64) -> Result<f64, String> {                                                                                                                             
+198 | |         let start = now_float();                                                                                                                                                   
+199 | |         let mut now = start;                                                                                                                                                       
+...   |
+211 | |         Ok (TimedMutexGuard (l))
+212 | |     }
+    | |_____^
+    |
+    = note: for more information, see https://github.com/rust-lang/rust/issues/50547
+    = help: add `#![feature(async_await)]` to the crate attributes to enable
+
+error[E0658]: async/await is unstable
+   --> mm2src/common/custom_futures.rs:204:22
+    |
+204 |             let rc = select (l, t) .await;
+    |                      ^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: for more information, see https://github.com/rust-lang/rust/issues/50547
+    = help: add `#![feature(async_await)]` to the crate attributes to enable
+
+error[E0658]: async fn is unstable
+   --> mm2src/common/mm_ctx.rs:396:1
+
+```
+mm2 failed to build just now fyi @artem.pikulin 
+usually just builds
+
+[11-Oct-19 08:08 AM] artem.pikulin#0794
+Required Rust toolchain version was updated to `2019-10-06`: https://github.com/KomodoPlatform/atomicDEX-API#how-to-build
+Please update and retry
+@Mylo
+
+{Embed}
+https://github.com/KomodoPlatform/atomicDEX-API
+KomodoPlatform/atomicDEX-API
+This is the official AtomicAPI (atomicDEX API) repository - KomodoPlatform/atomicDEX-API
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[11-Oct-19 08:08 AM] Mylo#8306
+cool - thanks
+
+[11-Oct-19 08:13 AM] Mylo#8306
+very fresh.   thanks for quick response
+
+{Reactions}
+🤝 
+
+[11-Oct-19 01:59 PM] allbits#5898
+Thank you
+
+[11-Oct-19 04:03 PM] allbits#5898
+That worked beautifully
+
+[11-Oct-19 06:55 PM] Ian#3705
+Building from source (first time) : 
+
+cargo build --features native -vv
+....
+[common 0.1.0] thread 'main' panicked at '
+[common 0.1.0]
+[common 0.1.0] !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+[common 0.1.0] !   unwrap! called on Result::Err                                              !
+[common 0.1.0] !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+[common 0.1.0] mm2src/common/build.rs:883,5 in build_script_build
+[common 0.1.0]
+[common 0.1.0] Err(Os { code: 2, kind: NotFound, message: "No such file or directory" })
+
+
+Any clues ?
+
+[11-Oct-19 06:55 PM] Ian#3705
+Linux 18.04
+
+[11-Oct-19 07:13 PM] Ian#3705
+I tried 2019-10-06 per above - doesn't help
+
+[11-Oct-19 09:03 PM] Ian#3705
+Whoops - i had missed the installation of cmake .. my bad !
+
+[11-Oct-19 11:22 PM] Ian#3705
+Is it possible to enable an RPC connect to the MArket Maker from another host (yes i know the security implications - this is just for developing stuff)
+
+[12-Oct-19 12:09 AM] smk762 -  dracocanis ominator#7640
+yes, it is possible.
+
+[12-Oct-19 12:09 AM] smk762 -  dracocanis ominator#7640
+instead of using 127.0.0.1 as the IP, set it to the external IP address.
+
+[13-Oct-19 02:54 AM] Ian#3705
+The problem is that the Market Maker process rejects connection attempts from other hosts - if it was, for example, a Bitcoin derived node you could specify a parameter to allow specific IP and/or subnets in - i was hoping for an equivalent Market Maker parameter - i can do it by tunnelling but i don't really want to resort to that
+
+[13-Oct-19 06:53 AM] smk762 -  dracocanis ominator#7640
+are you trying to run a native daemon remotely and link it to mm2, or issue RPC commands to a remote mm2 instance?
+
+[13-Oct-19 06:54 AM] smk762 -  dracocanis ominator#7640
+I know the second one works, because I've done it. First one, havent tested, but probably just simpler to use electrum.
+
+[13-Oct-19 08:55 AM] Patrick Crypto#1546
+Orders I place on the mm2 cli don't seem to appear on oracle or on my mobile app. Usually only 1 does. Is that normal?
+
+[13-Oct-19 08:57 AM] Oszy#5734
+`only 1 does` no either all should show or none 🙂 oracle is not realtime i takes time to update, on mobile app i can see my setprice orders within 15-20 seconds usually
+
+[13-Oct-19 09:47 AM] Patrick Crypto#1546
+It seems like only my last order appears. I can see them all when I do ./myorders.sh on my cli, but only 1 on the app and oracle. 1 per pair it looks like. I have cancel previous or whatever it is set to false
+
+[13-Oct-19 09:55 AM] smk762 -  dracocanis ominator#7640
+if order is for same pair, I think it replaces previous
+
+[13-Oct-19 10:14 AM] Patrick Crypto#1546
+How can the book ever get filled then?
+
+[13-Oct-19 10:21 AM] cipi#4502
+https://github.com/artemii235/developer-docs/blob/mm/docs/basic-docs/atomicdex/atomicdex-api.md#setprice
+you need to set `cancel_previous` to `false` (default is true)
+
+{Embed}
+https://github.com/artemii235/developer-docs/blob/mm/docs/basic-docs/atomicdex/atomicdex-api.md
+artemii235/developer-docs
+Contribute to artemii235/developer-docs development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/15745003?s=400&v=4
+
+[13-Oct-19 10:22 AM] Patrick Crypto#1546
+I have that set to false
+
+[13-Oct-19 10:24 AM] Patrick Crypto#1546
+@smk762 -  dracocanis ominator if that is actually the case, then I wouldn't expect the order book to have many orders ever.
+
+[13-Oct-19 10:24 AM] Patrick Crypto#1546
+This is already drastically more complicated than most users will ever want to deal with
+
+[13-Oct-19 10:27 AM] smk762 -  dracocanis ominator#7640
+mobile is simple. most users are likely to be looking for single trades. Traders may want to have 202 different price points across the spread, and guis may be created for them to do so. Its pretty new tech, CLI is slightly complicated but if you want to live on the edge its how it is.
+
+[13-Oct-19 10:28 AM] smk762 -  dracocanis ominator#7640
+compare it to something like shapeshift - I dont think traders were setting up 202 price spreads there.
+
+[13-Oct-19 10:30 AM] Patrick Crypto#1546
+But why call it marketmaker2 if you can't actually market make with it?
+
+[13-Oct-19 10:30 AM] smk762 -  dracocanis ominator#7640
+I could be wrong. `cancel_previous` implies more than one can coexist
+
+[13-Oct-19 10:31 AM] Patrick Crypto#1546
+That is what I assumed as well
+
+[13-Oct-19 10:32 AM] smk762 -  dracocanis ominator#7640
+I dont think I have that flag set in my TUI, will check
+
+[13-Oct-19 10:35 AM] smk762 -  dracocanis ominator#7640
+yah, I got it set to `true`, so when global market prices update, my prices update without leaving old orders sitting there with old prices/.
+
+[13-Oct-19 12:39 PM] Ian#3705
+@smk762 -  dracocanis ominator I was planning to run MM2 remotely - connecting to native nodes is not a problem and yes i know electrum is an option.  I was just wondering if there was config in MM2 allowing connections FROM other hosts similar to the way you can allow remote connections to a node
+
+[13-Oct-19 12:42 PM] smk762 -  dracocanis ominator#7640
+are you using an MM2.json file?
+
+[13-Oct-19 01:14 PM] cipher#6886
+Hi All, I'd love to MM on Komodo and have the resources to quote any market with a thin spread up to $1,000 worth.  Are there any dev programs which can help finance the costs to keep my engines running as I don't see enough flow on the dex itself to make it worthwhile - thoughts?
+
+[13-Oct-19 02:41 PM] Oszy#5734
+#talk-entrepreneurship maybe
+
+[13-Oct-19 06:49 PM] Patrick Crypto#1546
+So my question remains, if I have cancel previous set to false, should my multiple orders appear on the books and if so why aren't they?
+
+[14-Oct-19 01:06 AM] Ian#3705
+@smk762 -  dracocanis ominator Yeah am using MM2.json but i can't find any docs for the options available
+
+[14-Oct-19 01:50 AM] smk762 -  dracocanis ominator#7640
+add the `"rpcip":"0.0.0.0"` key value to MM2.json (replace 0.0.0.0 with external IP) and `"rpc_local_only":false`
+
+[14-Oct-19 02:06 AM] smk762 -  dracocanis ominator#7640
+@Patrick Crypto I'll check this later today. try different capitalisation for false/False
+
+[14-Oct-19 02:07 AM] smk762 -  dracocanis ominator#7640
+are they showing up https://developers.atomicdex.io/basic-docs/atomicdex/atomicdex-api.html#my-orders ?
+
+{Embed}
+https://developers.atomicdex.io/basic-docs/atomicdex/atomicdex-api.html
+Komodo Developer Documentation
+Documentation for developers building on the Komodo Platform
+https://developers.komodoplatform.com/start-here-pics/Dev_Docs_Introduction_small.png
+
+[14-Oct-19 12:05 PM] Patrick Crypto#1546
+Yes, everything shows up with my orders, on my cli, but only 1 appears on the app and order books
+
+[14-Oct-19 12:07 PM] artem.pikulin#0794
+@Patrick Crypto Hello, what MM2 version do you use?
+
+[14-Oct-19 12:17 PM] Patrick Crypto#1546
+How do I check that?
+
+[14-Oct-19 12:19 PM] Patrick Crypto#1546
+nevermind found it
+
+[14-Oct-19 12:20 PM] Patrick Crypto#1546
+2.0.1009_mm2_b08da3aa9_Linux
+
+[14-Oct-19 12:33 PM] artem.pikulin#0794
+Did you download it from releases page? https://github.com/KomodoPlatform/atomicDEX-API/releases. It hasn't been updated for a while, this version is pretty old. It doesn't support multiple orders per 1 pair that's why your orders are not shown up on other nodes.
+
+[14-Oct-19 12:38 PM] Oszy#5734
+do a git checkout and a cargo clean then build again
+
+[14-Oct-19 12:38 PM] Patrick Crypto#1546
+I followed these instructions: https://developers.atomicdex.io/basic-docs/atomicdex/atomicdex-setup/get-started-atomicdex.html
+
+{Embed}
+https://developers.atomicdex.io/basic-docs/atomicdex/atomicdex-setup/get-started-atomicdex.html
+Komodo Developer Documentation
+Documentation for developers building on the Komodo Platform
+https://developers.komodoplatform.com/start-here-pics/Dev_Docs_Introduction_small.png
+
+[14-Oct-19 12:39 PM] Patrick Crypto#1546
+Maybe 1-2 weeks ago
+
+[14-Oct-19 12:41 PM] artem.pikulin#0794
+I've published new release from the most recent MM2 commit: https://github.com/KomodoPlatform/atomicDEX-API/releases/tag/2.0.1417.
+@Patrick Crypto Please try to download the new binary and recheck that all of your orders will be shown on the orderbooks.
+
+[14-Oct-19 12:47 PM] Patrick Crypto#1546
+So download the zip and unpack it in the target/debug folder?
+
+[14-Oct-19 12:49 PM] Oszy#5734
+yep that's the quickest way to do it
+
+[14-Oct-19 01:04 PM] Patrick Crypto#1546
+Updated, waiting for orders to propagate. Now I have the same display/jq display issue that allbits was having. Nothing crucial but just mentioning it
+
+[14-Oct-19 01:06 PM] allbits#5898
+ORDERBOOK | jq -M 'del(.. | .price_rat?)' | jq -M 'del(.. | .max_volume_rat?)'
+
+{Reactions}
+📌 
+
+[14-Oct-19 01:12 PM] Patrick Crypto#1546
+Ok, orders looks like they are all appearing now
+
+[14-Oct-19 01:12 PM] Patrick Crypto#1546
+Thank you
+
+{Reactions}
+🤝 
+
+[15-Oct-19 02:49 AM] allbits#5898
+I made a cli buy seven hours ago. I bought dex with kmd. My taker payment was made into the b address and then sent from b address to the maker. The maker payment was made into the b address. This all happened within five minutes after the swap initiated. However, the dex remains in the b address and has not been paid to me - seven hours have expired. Seems a serious issue?
+
+[15-Oct-19 05:19 AM] artem.pikulin#0794
+@allbits Hi, could you DM your failed swap uuid to me please?
+
+[15-Oct-19 05:36 AM] Oszy#5734
+Maybe https://developers.atomicdex.io/basic-docs/atomicdex/atomicdex-api.html#recover-funds-of-swap can help?
+
+{Embed}
+https://developers.atomicdex.io/basic-docs/atomicdex/atomicdex-api.html
+Komodo Developer Documentation
+Documentation for developers building on the Komodo Platform
+https://developers.komodoplatform.com/start-here-pics/Dev_Docs_Introduction_small.png
+
+[15-Oct-19 06:16 AM] artem.pikulin#0794
+@Oszy Yes, it should help, but I'd also like to know also why the swap failed initially so I need uuid to check it's status.
+
+[15-Oct-19 06:56 AM] Oszy#5734
+Yes of course 🙇
+
+[15-Oct-19 07:19 AM] jorian#4555
+@allbits did you try and buy the very cheap DEX at 11.something KMD?
+
+[15-Oct-19 01:37 PM] artem.pikulin#0794
+@allbits MM2 attempted to spend maker payment, but failed with: `the transaction was rejected by network rules.\\n\\n16: tx-overwinter-active`. Coins config file should be also updated with latest MM2 to work properly, please use it from https://github.com/jl777/coins. Restart MM2 after coins file update and then use `recover_funds_of_swap` with uuid you provided: https://developers.atomicdex.io/basic-docs/atomicdex/atomicdex-api.html#recover-funds-of-swap
+
+{Embed}
+https://developers.atomicdex.io/basic-docs/atomicdex/atomicdex-api.html
+Komodo Developer Documentation
+Documentation for developers building on the Komodo Platform
+https://developers.komodoplatform.com/start-here-pics/Dev_Docs_Introduction_small.png
+
+[15-Oct-19 01:45 PM] allbits#5898
+ok thank you
+
+[15-Oct-19 01:51 PM] allbits#5898
+this is a terribly noob question but what's the quickest way to get that coins file by cli - I did it in a very round about way when I first installed this
+
+[15-Oct-19 01:55 PM] Oszy#5734
+wget it
+
+[15-Oct-19 01:56 PM] Oszy#5734
+`wget https://raw.githubusercontent.com/jl777/coins/master/coins`
+
+[15-Oct-19 01:57 PM] Oszy#5734
+into target/debug
+
+[15-Oct-19 01:57 PM] ComputerGenie 👴🏼📢#7004
+in mm1 we used `source coins` in the init script and added `\"coins\":$coins` to the mm run params (I'd assume that bit is still the same, no?)
+
+[15-Oct-19 02:00 PM] Oszy#5734
+you can definitely script the coin activation over the electrums (if not using native wallets) after mm2 started but mm2 has no coin launch param afaik, it activates natives from `coins`
+
+[15-Oct-19 02:00 PM] Oszy#5734
+https://developers.atomicdex.io/basic-docs/atomicdex/atomicdex-tutorials/atomicdex-walkthrough.html#initiate-marketmaker-2-0
+
+{Embed}
+https://developers.atomicdex.io/basic-docs/atomicdex/atomicdex-tutorials/atomicdex-walkthrough.html
+Komodo Developer Documentation
+Documentation for developers building on the Komodo Platform
+https://developers.komodoplatform.com/start-here-pics/Dev_Docs_Introduction_small.png
+
+[15-Oct-19 02:09 PM] ComputerGenie 👴🏼📢#7004
+ahhhh, it looks for it, no need to import it anymore 😎
+
+[15-Oct-19 02:29 PM] allbits#5898
+And that worked for me. Thanks all!
+
+[16-Oct-19 09:59 AM] smk762 -  dracocanis ominator#7640
+anyone else having trouble with activating BCH via electrum?
+
+[16-Oct-19 09:59 AM] smk762 -  dracocanis ominator#7640
+```16 09:58:21, rpc:306] RPC error response: rpc:275] lp_commands:74] lp_coins:463] utxo:1863] Failed to connect to at least 1 of [ElectrumRpcRequest { url: "electroncash.dk:50001", protocol: TCP, disable_cert_verification: false }, ElectrumRpcRequest { url: "electron-cash.dragon.zone:50001", protocol: TCP, disable_cert_verification: false }, ElectrumRpcRequest { url: "bch.imaginary.cash:50001", protocol: TCP, disable_cert_verification: false }] in 5 seconds.
+```
+
+[16-Oct-19 10:02 AM] Oszy#5734
+yes
+
+[16-Oct-19 10:02 AM] Oszy#5734
+since yesterday
+
+[16-Oct-19 10:10 AM] bartwr#6773
+@smk762 -  dracocanis ominator @Oszy All known electrum servers for BCH are down. The last working one was `bch.imaginary.cash:50001`. This last one of the BCH electrums listed here https://github.com/pbca26/agama-wallet-lib/blob/master/src/electrum-servers.js#L220 worked untill yesterday.
+
+{Embed}
+https://github.com/pbca26/agama-wallet-lib/blob/master/src/electrum-servers.js
+pbca26/agama-wallet-lib
+Common library for cryptocurrencies. Contribute to pbca26/agama-wallet-lib development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/7769879?s=400&v=4
+
+[16-Oct-19 10:10 AM] bartwr#6773
+Now there are no working BCH electrums anymore. Does anyone maybe know a BCH electrum that's still working?
+
+[16-Oct-19 10:10 AM] smk762 -  dracocanis ominator#7640
+thanks for confirmation
+
+[16-Oct-19 10:11 AM] smk762 -  dracocanis ominator#7640
+I had 5 in my coinslib, but non seem to be responding
+
+[16-Oct-19 10:11 AM] bartwr#6773
+Yes, these 5: https://github.com/pbca26/agama-wallet-lib/blob/master/src/electrum-servers.js#L220 - Non of these working anymore.
+
+{Embed}
+https://github.com/pbca26/agama-wallet-lib/blob/master/src/electrum-servers.js
+pbca26/agama-wallet-lib
+Common library for cryptocurrencies. Contribute to pbca26/agama-wallet-lib development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/7769879?s=400&v=4
+
+[16-Oct-19 10:11 AM] jorian#4555
+there is a long list somewhere
+
+[16-Oct-19 10:12 AM] jorian#4555
+<https://1209k.com/bitcoin-eye/ele.php?chain=bch>
+

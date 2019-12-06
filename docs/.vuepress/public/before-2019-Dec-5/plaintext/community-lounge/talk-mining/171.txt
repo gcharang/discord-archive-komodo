@@ -1,0 +1,315 @@
+==============================================================
+Guild: Komodo
+Channel: talk-mining
+Topic: ./komodod -ac_name=ZAWY24 -ac_adaptivepow=1 -ac_supply=1000000 -ac_reward=10000000000 -ac_cc=2 -addnode=5.9.102.210 &
+
+A channel to discuss mining. For useful links and more info click the pinned messages to the right.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[10-Aug-19 04:44 PM] jl777c#5810
+why cant it be >= solvetime more than past block
+
+[10-Aug-19 04:45 PM] jl777c#5810
+if only the hash is made a bit smaller based on tipdiff, it doesnt allow grinding
+
+[10-Aug-19 04:45 PM] jl777c#5810
+as solvetime is not affected
+
+[10-Aug-19 04:46 PM] zawy#5864
+Hash affects ST which affects VDFout
+
+[10-Aug-19 04:46 PM] zawy#5864
+```hash = RandValue / (UTXO qty)```
+
+[10-Aug-19 04:47 PM] jl777c#5810
+how?
+
+[10-Aug-19 04:47 PM] jl777c#5810
+maybe the next solvetime
+
+[10-Aug-19 04:47 PM] zawy#5864
+Yes, that's the grinding attack...increases chances for next block
+
+[10-Aug-19 04:48 PM] jl777c#5810
+```hash = RandValue /( (UTXO qty)*f(tipdiff))```
+
+[10-Aug-19 04:48 PM] jl777c#5810
+how can changing tipdiff allow grinding, the hash just gets smaller and smaller. it either wins or doesnt
+
+[10-Aug-19 04:49 PM] jl777c#5810
+if it wins, getting smaller wont make it win anymore. and you would submit the first timestamp that wins
+
+[10-Aug-19 04:49 PM] jl777c#5810
+within FTL
+
+[10-Aug-19 04:49 PM] jl777c#5810
+Randvalue = function(UTXO, pubkey, previous VDFout)
+
+[10-Aug-19 04:49 PM] jl777c#5810
+entropy source is not affected by the timestamp directly
+
+[10-Aug-19 04:49 PM] jl777c#5810
+VDFout is unchanged
+
+[10-Aug-19 04:50 PM] zawy#5864
+It seems if he wins by 10 seconds, then he can choose 10 different solvetimes
+
+[10-Aug-19 04:50 PM] jl777c#5810
+but the timestamp goes into the block and doesnt change the txid
+
+[10-Aug-19 04:50 PM] jl777c#5810
+using the utxo txid allows grinding
+
+[10-Aug-19 04:50 PM] zawy#5864
+Changes VDFout
+
+[10-Aug-19 04:50 PM] jl777c#5810
+no, i am saying that the calculated solvetime is not changed
+
+[10-Aug-19 04:51 PM] jl777c#5810
+just the hash calculation of whether it is lower than bnTarget
+
+[10-Aug-19 04:51 PM] jl777c#5810
+nothing else changes
+
+[10-Aug-19 04:51 PM] jl777c#5810
+indirectly if the DAA is using timestamps, maybe you can affect things, but make the DAA use the solvetime that is calculated
+
+[10-Aug-19 04:52 PM] jl777c#5810
+that avoids the grinding via indirect timestamp changing to change the next solvetime
+
+[10-Aug-19 04:52 PM] jl777c#5810
+but there is risk to delaying the timestamp
+
+[10-Aug-19 04:52 PM] jl777c#5810
+as you need to wait longer due to small FTL and can easily lose the block
+
+[10-Aug-19 04:52 PM] jl777c#5810
+this does also spread out the timing of submissions
+
+[10-Aug-19 04:53 PM] jl777c#5810
+it also allows nodes that cant calculate VDF within solvetime to still have a chance
+
+[10-Aug-19 04:53 PM] jl777c#5810
+maybe its not a big deal
+
+[10-Aug-19 04:54 PM] zawy#5864
+if he gets an improbaby fast solve with tipdiff then he can run 10 different VDFs for 10 different tipdiffs going into future by 1 second each, risking no one else with a solve in next 10 seconds.  He gets 10x more opportunity in next block
+
+[10-Aug-19 04:54 PM] jl777c#5810
+but i am saying that there is only a SINGLE valid VDF solvetime
+
+[10-Aug-19 04:54 PM] jl777c#5810
+only a single valid VDF that is not based on tipdiff
+
+[10-Aug-19 04:55 PM] zawy#5864
+OK, then what is the tipdiff-affected hash being used for if not to reduce the solvetime?
+
+[10-Aug-19 04:56 PM] jl777c#5810
+changes an otherwise losing hash to a winning one
+
+[10-Aug-19 04:56 PM] jl777c#5810
+this also allows to adapt to large changes in amount staking
+
+[10-Aug-19 04:56 PM] jl777c#5810
+at least large drops
+
+[10-Aug-19 04:56 PM] jl777c#5810
+the VDF Solvetime is not changed
+
+[10-Aug-19 04:57 PM] jl777c#5810
+only whether a hash wins or not is changed by tipdiff
+
+[10-Aug-19 04:57 PM] jl777c#5810
+i guess this will affect the next solvetime if you use timestamps to calculate that, but i am saying ignore the timestamp, only use the "VDF Solvetime" for the DAA
+
+[10-Aug-19 04:57 PM] jl777c#5810
+make the tipdiff not affect the next Solvetime, nor the current VDF
+
+[10-Aug-19 05:03 PM] zawy#5864
+```solvetime = 2*RandValue * T / avg(N prev STs) / avg(N prev Targets)  / QTY   /   f(tipdiff) ```  What is the f() ?
+
+[10-Aug-19 05:04 PM] jl777c#5810
+no, dont change the solvetime
+
+[10-Aug-19 05:04 PM] jl777c#5810
+just the hash evaluation
+
+[10-Aug-19 05:04 PM] jl777c#5810
+f() is a "soft" function, maybe a very weak exp()
+
+[10-Aug-19 05:05 PM] zawy#5864
+Make the hash harder than ST requires?  Validator is checking both VDF and tipdiff?
+
+[10-Aug-19 05:06 PM] jl777c#5810
+make the hash solve gradually harder and harder bnTarget, so over time the hash used becomes smaller and smaller
+
+[10-Aug-19 05:06 PM] jl777c#5810
+yes all nodes would need to verify the VDF has the right solvetime and that the modified hash did indeed solve the bnTarget
+
+[10-Aug-19 05:07 PM] zawy#5864
+There would be a DA for the VDF and a DA for the tipdiff hash?
+
+[10-Aug-19 05:09 PM] jl777c#5810
+no, just DA for VDF
+
+[10-Aug-19 05:09 PM] jl777c#5810
+well maybe that wont work quite right
+
+[10-Aug-19 05:09 PM] jl777c#5810
+i guess torn between preventing grinding and precise DA
+
+[10-Aug-19 05:10 PM] zawy#5864
+I thought my idea here to let block-winner set a conversion between VDF and realtime is probably ideal...we sort of need to know that value directly and it prevents the grinding.
+
+[10-Aug-19 05:10 PM] zawy#5864
+slowly set with 0.01% change per block
+
+[10-Aug-19 05:11 PM] zawy#5864
+More generally, I want the stakers to have more control of coin parameters than devs
+
+[10-Aug-19 05:11 PM] jl777c#5810
+that gets into powers not available for using VDF-PoS in an existing blockchain
+
+[10-Aug-19 05:11 PM] jl777c#5810
+which is the first step that makes sense to do
+
+[10-Aug-19 05:11 PM] zawy#5864
+they can react to market and real world conditions
+
+[10-Aug-19 05:12 PM] jl777c#5810
+with tipdiff making otherwise losing hashes win, pretty sure we can get pretty immediate very close to realtime timestamps
+
+[10-Aug-19 05:12 PM] zawy#5864
+I don't understand this ```not available for using VDF-PoS in an existing blockchain```
+
+[10-Aug-19 05:13 PM] jl777c#5810
+existing chains are not setup to change chainparams with every block
+
+[10-Aug-19 05:13 PM] jl777c#5810
+i guess i can add that as anything can eventually be done, but it would be more work to do just that, than everything else combined
+
+[10-Aug-19 05:17 PM] zawy#5864
+To get the all-important constant value without fiat, stakers need to set difficulty for the POW to mine coins in self-hashing txns.  Being able to surive 51% without BTC like my scheme is supposed to do is good, but the real power is if it can be made stable value without fiat.....a big experiment to see if stakers will act to get constant value as I hope.    Speculation greatly reduced, merchants not needing to worry about price fluctuations.
+
+[10-Aug-19 05:18 PM] jl777c#5810
+i solved stable coins using a different method
+
+[10-Aug-19 05:18 PM] zawy#5864
+Everyone can join now, or later, and rent mining equipement to get any amount of coin.
+
+[10-Aug-19 05:19 PM] zawy#5864
+Ok, tell me your method
+
+[10-Aug-19 05:19 PM] jl777c#5810
+decentralized so users decide when to issue more coins, or when to take coins out of circulation
+
+[10-Aug-19 05:19 PM] jl777c#5810
+it is in #cc-pegs channel, a page up from current is a decent description of it
+
+[10-Aug-19 05:20 PM] jl777c#5810
+i dont think the VDF-PoS needs to be conflated with stable coin, that seems an independent thing that can be done regardless of mining algo
+
+[10-Aug-19 05:20 PM] jl777c#5810
+of course, even if they are independent, they can always be combined
+
+[10-Aug-19 05:21 PM] jl777c#5810
+i also have a way to get DTO (decentralized trustless oracle) so we can force the chain to adjust to actual fiat values
+
+[10-Aug-19 05:21 PM] jl777c#5810
+https://medium.com/@jameslee777/decentralized-trustless-oracles-dto-by-piggybacking-on-timestamp-consensus-rules-2adce34d67b6
+
+{Embed}
+https://medium.com/@jameslee777/decentralized-trustless-oracles-dto-by-piggybacking-on-timestamp-consensus-rules-2adce34d67b6
+Decentralized trustless oracles (DTO) by piggybacking on timestamp...
+Trustless oracles are quite a difficult problem, at least it was until I came up with a simple method that implements them.
+
+[10-Aug-19 05:26 PM] zawy#5864
+a  peg.....I'm talking about not having a peg to anything other than constant real-world cost to mine... not in dollars but in whatever buyers and sellers think constant value means, assuming stakers act in the best interest of stable value.    If moore's law were constant or predictable, I would not need the stakers to act as an oracle of current mining costs.
+
+[10-Aug-19 05:27 PM] jl777c#5810
+not sure, interesting idea, but it seems small holders would vote to increase, but large ones to decrease to protect their existing stake
+
+[10-Aug-19 05:27 PM] jl777c#5810
+VEO is a coin that had the miners vote on blockreward
+
+[10-Aug-19 05:28 PM] jl777c#5810
+it rapidly went to the smallest amount and it only has 60,000 supply
+
+[10-Aug-19 05:31 PM] zawy#5864
+Does its price on an exchange keep a more stable value?
+
+[10-Aug-19 05:32 PM] jl777c#5810
+no, as volatile as any other crypto
+
+[10-Aug-19 05:33 PM] jl777c#5810
+but they werent instructed to peg to a fiat, their self interest made them shrink the reward
+
+[10-Aug-19 05:38 PM] zawy#5864
+There can be many coins using this  scheme, but only ones with constant value should gain in popularity.   So current miners in VEO must also be large stakers.  I need to take a good look at VEO.  Even if it is not a perdictor of how my scheme would go, it's a valuable data point in understanding feedback
+
+[10-Aug-19 05:38 PM] jl777c#5810
+it is a PoW coin, but has the concept of miners voting on rewards
+
+[10-Aug-19 05:39 PM] jl777c#5810
+but this is why i think it makes sense to separate out the various parts of your proposed DAG
+
+[10-Aug-19 05:39 PM] zawy#5864
+Yes but it's not clear to me that my idea would work out any different.
+
+[10-Aug-19 05:39 PM] jl777c#5810
+each can be tested and tuned in isolation
+
+[10-Aug-19 05:39 PM] jl777c#5810
+this is why i suggested using DTO to force it to match some sort of fiat value
+
+[10-Aug-19 05:41 PM] zawy#5864
+Yeah, for sure, if it's hard (or pointless as in the VEO case) to do staker-directed emission, then I can have a normal emission schedule and two difficulties...1 for VDF-POS and 1 for POW.  Can you do self-hashing transactions?
+
+[10-Aug-19 05:41 PM] zawy#5864
+Self-hashing txns and a simple DAG seem like thay would have enormous interest.
+
+[10-Aug-19 05:42 PM] zawy#5864
+Automatically no pool
+
+[10-Aug-19 05:42 PM] jl777c#5810
+i already have a -ac_txpow mode where each tx needs to have a txid that starts and ends with 0x00
+
+[10-Aug-19 05:42 PM] jl777c#5810
+so that needs average of 65536 signatures
+
+[10-Aug-19 05:43 PM] jl777c#5810
+takes about 20 seconds to a minute depending on system
+
+[10-Aug-19 05:46 PM] zawy#5864
+I think self-hashing txn is the best idea even if it's not as important.  It just seems way cool that anyone could turn on a machine, any machine , and have a  little coin they can trade. in a ittle while......except there needs to be a min limit the due to too many txns..... that would be automatic if there is a  fee per byte in txns that exponentially increases as blocks get near a limit.
+
+[10-Aug-19 05:47 PM] jl777c#5810
+what i have is just an additional constraint on spending, you still need to get the coins in the first place
+
+[10-Aug-19 05:48 PM] jl777c#5810
+if you are talking about each selfhashed tx getting some new coins issued, that would be new code.
+
+[10-Aug-19 05:49 PM] zawy#5864
+The difficulty for POW in the header would be in units of  "coin  per hash" instead of  1/hashes required.
+
+[10-Aug-19 05:51 PM] zawy#5864
+The miner needs to know about what block he'll be finished in and he sets a target and then finds the nonce.  The actual hash isn't needed as there's no chain for coin distribution.
+
+[10-Aug-19 05:51 PM] jl777c#5810
+crypto signatures are a good CPU algo as i am not aware of any ASIC for it, actually not even sure if GPU can speed it up that much, but not sure
+
+[10-Aug-19 05:52 PM] jl777c#5810
+this can be simulated in an existing coin with a special CC that awards coins from the premine to each tx
+
+[10-Aug-19 05:52 PM] jl777c#5810
+that would be the only way the premine could be spent
+
+[10-Aug-19 05:52 PM] zawy#5864
+The POW for coin creation should be the opposite of POW for consensus:  it must waste electricity as much as possible.  Consensus nedes all the expense in the value of the equipment.
+
+[10-Aug-19 05:53 PM] zawy#5864
+Ideally it will be rentable in an open market.....available to everyone at the same rate.....all the better if this also happens to be what a CPU can do
+

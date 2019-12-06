@@ -1,0 +1,325 @@
+==============================================================
+Guild: Komodo
+Channel: talk-mining
+Topic: ./komodod -ac_name=ZAWY24 -ac_adaptivepow=1 -ac_supply=1000000 -ac_reward=10000000000 -ac_cc=2 -addnode=5.9.102.210 &
+
+A channel to discuss mining. For useful links and more info click the pinned messages to the right.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[05-Aug-19 03:34 PM] zawy#5864
+64 new
+
+[05-Aug-19 03:34 PM] zawy#5864
+```if ( ts[1]-ts[W] < T*numerator/denominator ) { ```
+
+[05-Aug-19 03:34 PM] jl777c#5810
+so all j-W to j+W
+
+[05-Aug-19 03:34 PM] jl777c#5810
+fixing
+
+[05-Aug-19 03:34 PM] zawy#5864
+yes
+
+[05-Aug-19 03:35 PM] zawy#5864
+93:
+
+[05-Aug-19 03:35 PM] zawy#5864
+```if ( ts[i-1]-ts[j+W] > (ii+W)*T ) { break; } ```
+
+[05-Aug-19 03:36 PM] jl777c#5810
+so i+1 goes to i-1
+
+[05-Aug-19 03:36 PM] zawy#5864
+yes
+
+[05-Aug-19 03:37 PM] jl777c#5810
+98 has a missing (
+
+[05-Aug-19 03:37 PM] jl777c#5810
+i can probably guess where to put it, but best to avoid such guessing
+
+[05-Aug-19 03:38 PM] jl777c#5810
+maybe after (ts[0]-ts[W])) there is an extra ), which would make this error too
+
+[05-Aug-19 03:38 PM] zawy#5864
+delete last )
+
+[05-Aug-19 03:39 PM] jl777c#5810
+good i asked, that would have changed things
+
+[05-Aug-19 03:39 PM] zawy#5864
+I beleive I have it where there's no chance of overflow
+
+[05-Aug-19 03:41 PM] jl777c#5810
+i see line 77 changed, but it is ```    for ( int j=past-1; j>= 1; j--) {``` instead of ```    for ( int j=past+W-1; j>=W; j--) {```
+
+[05-Aug-19 03:43 PM] zawy#5864
+I changed that?  It is supposed to be 1
+
+[05-Aug-19 03:43 PM] jl777c#5810
+oh sorry, we got rid of the -W, my bad fixing my side
+
+[05-Aug-19 03:45 PM] jl777c#5810
+i will need to change the code for the actual bnTarget calcs, but i will make it isomorphic to your code and it should be easy to see they are equivalent
+
+[05-Aug-19 03:47 PM] zawy#5864
+79 and 83 need fixing
+
+[05-Aug-19 03:47 PM] zawy#5864
+```    for ( int i = j-1; i >= 0; i-- ) {
+                ...
+                if ( ts[i]-ts[j+W] > (ii+W)*T ) { break; } 
+```
+
+[05-Aug-19 03:48 PM] zawy#5864
+crap, ii needs reseting to zero somewhere
+
+[05-Aug-19 03:49 PM] zawy#5864
+```
+        if ( ts[j]-ts[j+W] < T*numerator/denominator ) {
+            ii=0;
+            for ( int i = j-1; i >= 0; i-- ) {
+                ii++;
+```
+
+[05-Aug-19 03:49 PM] jl777c#5810
+right before the for i=j-1 loop
+
+[05-Aug-19 03:49 PM] jl777c#5810
+yes, thought so
+
+[05-Aug-19 03:49 PM] zawy#5864
+maybe move declaration to there
+
+[05-Aug-19 03:50 PM] zawy#5864
+and i double-declared i and j
+
+[05-Aug-19 03:50 PM] jl777c#5810
+fixed it
+
+[05-Aug-19 03:50 PM] jl777c#5810
+dont worry about such details
+
+[05-Aug-19 03:51 PM] zawy#5864
+i need to put fixes back in my "repository"
+
+[05-Aug-19 03:51 PM] jl777c#5810
+can you check https://github.com/jl777/komodo/blob/nSPV/src/pow.cpp##L97
+make sure i got all the fixes
+
+{Embed}
+https://github.com/jl777/komodo/blob/nSPV/src/pow.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[05-Aug-19 03:52 PM] jl777c#5810
+i had to change integers back to int32_t as you cant use arith_uint256 as array index, but the code should still be something you can read?
+
+[05-Aug-19 03:54 PM] zawy#5864
+125, remove the -1
+
+[05-Aug-19 03:55 PM] zawy#5864
+that's all i see
+
+[05-Aug-19 03:56 PM] zawy#5864
+I need to generalize the comments away from N=3
+
+[05-Aug-19 03:58 PM] jl777c#5810
+great! i will start converting the bnTarget changing so it compiles
+
+[05-Aug-19 04:08 PM] jl777c#5810
+@zawy updated RT_CST_RST with the bnTarget calcs so it compiles. assuming it is as you want, i can next integrated it into the nBits calculation function
+
+[05-Aug-19 04:29 PM] jl777c#5810
+testing ZAWY16 with 15x attack first. it will need 64 blocks before it kicks in
+
+[05-Aug-19 04:30 PM] jl777c#5810
+i avoided the less than full dataset issues by not starting it until there is full data
+
+[05-Aug-19 04:30 PM] zawy#5864
+It seems like converting K all the time is a lot more inefficient than simply delcaring it as arith256
+
+[05-Aug-19 04:31 PM] zawy#5864
+Is there a problem with using max()?
+
+[05-Aug-19 04:31 PM] zawy#5864
+I assume it is just an if statement to the compiler
+
+[05-Aug-19 04:33 PM] jl777c#5810
+yes, i've been burned before by a MAX that was a macro which ended up behaving differently, since it boils down to an if, simpler to use and if and be 100% sure what the code is doing
+
+[05-Aug-19 04:33 PM] jl777c#5810
+only one usage of K could have been saved, the other time it is scalar multiplied and actually at compile time as K is a fixed value
+
+[05-Aug-19 04:34 PM] jl777c#5810
+maybe i should #define K to 1000000, then the compiler can optimize the arith_uint256 conversion
+
+[05-Aug-19 04:35 PM] zawy#5864
+I see BTG code does not worry about multiplying things like arith256 and int64.  It seems like there should not be an issue with mixing int types
+
+[05-Aug-19 04:35 PM] jl777c#5810
+ooops. it crashed. debugging
+
+[05-Aug-19 04:37 PM] zawy#5864
+if ( altK < K )  should be >
+
+[05-Aug-19 04:38 PM] jl777c#5810
+but you wanted max,so if altK ends up less than 1 million, it should be set to 1 million?
+
+[05-Aug-19 04:38 PM] zawy#5864
+i messed up
+
+[05-Aug-19 04:39 PM] zawy#5864
+wait
+
+[05-Aug-19 04:39 PM] zawy#5864
+right, i should have said min.  if alt k makes it harder, (lower) use altk,   else use k
+
+[05-Aug-19 04:42 PM] jl777c#5810
+fixed
+
+[05-Aug-19 04:46 PM] jl777c#5810
+found and fixed the crash
+
+[05-Aug-19 04:50 PM] jl777c#5810
+will mine with 1 core till there is 64 blocks and then ramp to 15x, i assume this logic will handle that case too?
+
+[05-Aug-19 04:54 PM] zawy#5864
+yes, it should start trigging on 6x or less, but 15x is needed to kind of start see flex more.  the 1x, 10x, 100x, and 1000x cases shoudl be tested, and that will show pretty much how the 1e6 case will go
+
+[05-Aug-19 04:54 PM] SHossain#0007
+i can start pool and a Z9 Mini whenever needed
+
+[05-Aug-19 04:54 PM] SHossain#0007
+just waiting for a GO signal
+
+[05-Aug-19 04:55 PM] zawy#5864
+let it go at 1x for awhile to cofirm it's not jumping aruond much.   Then 3x to see if it's too whacky for mild cases
+
+[05-Aug-19 04:55 PM] zawy#5864
+I'm more worried about 2x to 10x cases than anything
+
+[05-Aug-19 04:57 PM] zawy#5864
+or 1x to 5x
+
+[05-Aug-19 04:57 PM] jl777c#5810
+ok, i will test the <15x cases to make sure it is working as expected, did that 20 times yesterday so i know what a good test run should be like
+
+[05-Aug-19 05:00 PM] jl777c#5810
+single core blazed through the blocks, already past 64. seeing altK, but diff is not really changing much at 1 core, though it is stuck on 68 for a 2 minutes now
+
+[05-Aug-19 05:01 PM] jl777c#5810
+since it has 64 fast timestamps, i would imagine it is boosting the diff quite high. altK of around 100k
+
+[05-Aug-19 05:01 PM] jl777c#5810
+j is 33 and ii is 33, i also see 36 and 26
+
+[05-Aug-19 05:02 PM] jl777c#5810
+this seems like it stopped the "attack" 3 blocks after it "started" as the DAA only kicked in at height 64
+
+[05-Aug-19 05:03 PM] zawy#5864
+exactly
+
+[05-Aug-19 05:03 PM] zawy#5864
+4th block is when it kicks in
+
+[05-Aug-19 05:03 PM] jl777c#5810
+with altK values of about 100k, that is a 10x increase in diff?
+
+[05-Aug-19 05:03 PM] jl777c#5810
+now 200k altK
+
+[05-Aug-19 05:04 PM] zawy#5864
+that's the bnTarget multiplier isn't it?  should be 100x decrease in diff
+
+[05-Aug-19 05:05 PM] jl777c#5810
+the single core will need the exponential to kick in to save it
+
+[05-Aug-19 05:05 PM] zawy#5864
+oh, right 1e6 divisor
+
+[05-Aug-19 05:05 PM] zawy#5864
+yes, 10x difficulty
+
+[05-Aug-19 05:05 PM] jl777c#5810
+and then the average block time will be much closer to what it should be
+
+[05-Aug-19 05:05 PM] jl777c#5810
+and that is exactly what happened
+
+[05-Aug-19 05:06 PM] jl777c#5810
+diff even went up very slightly 2.44 to 2.47
+
+[05-Aug-19 05:06 PM] jl777c#5810
+will the altK kick in for 50 more blocks?
+
+[05-Aug-19 05:07 PM] zawy#5864
+No, the triggers can stop and you'll have difficulty driopping immediately back down to digi as before
+
+[05-Aug-19 05:08 PM] jl777c#5810
+yes, i see, only W deep
+
+[05-Aug-19 05:09 PM] jl777c#5810
+it finding blocks
+
+[05-Aug-19 05:09 PM] zawy#5864
+No, it's active for as long as too many blocks have been issued....the triggers stop when emission rate is corrected
+
+[05-Aug-19 05:10 PM] jl777c#5810
+yes, that is what it is doing. so far working good. boost to 5x?
+
+[05-Aug-19 05:10 PM] zawy#5864
+yes
+
+[05-Aug-19 05:10 PM] zawy#5864
+no
+
+[05-Aug-19 05:10 PM] zawy#5864
+try 2x for 30 minutes
+
+[05-Aug-19 05:10 PM] jl777c#5810
+it got 9 blocks in 11 minutes
+
+[05-Aug-19 05:11 PM] zawy#5864
+oh, heck,  do 5x for 30 minuite
+
+[05-Aug-19 05:11 PM] jl777c#5810
+diff stable at 2.4 with 1 core.
+
+[05-Aug-19 05:12 PM] jl777c#5810
+ok boosting to 5x
+
+[05-Aug-19 05:12 PM] jl777c#5810
+ht 73 at 11 past
+
+[05-Aug-19 05:12 PM] jl777c#5810
+found 3 blocks pretty quickly
+
+[05-Aug-19 05:12 PM] zawy#5864
+yeah, the triggers stopped and it's back to digi
+
+[05-Aug-19 05:13 PM] zawy#5864
+oh, no, the 5x boost
+
+[05-Aug-19 05:13 PM] jl777c#5810
+triggers still going
+
+[05-Aug-19 05:13 PM] zawy#5864
+triggers are still active when i = 0
+
+[05-Aug-19 05:14 PM] jl777c#5810
+i put a printout when it changes bnTarget
+
+[05-Aug-19 05:14 PM] jl777c#5810
+making diff 3x harder
+
+[05-Aug-19 05:14 PM] jl777c#5810
+which is pretty accurate
+
+[05-Aug-19 05:14 PM] zawy#5864
+I feel great that it looks like it will act like a precision machine
+

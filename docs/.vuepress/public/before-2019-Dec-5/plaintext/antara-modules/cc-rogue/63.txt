@@ -1,0 +1,426 @@
+==============================================================
+Guild: Komodo
+Channel: cc-rogue
+Topic: use FSM branch AND then build as normal
+ 
+./komodod -ac_name=ROGUE -ac_supply=1000000 -pubkey=<yourpubkey> -addnode=5.9.102.210  -ac_cclib=rogue -ac_perc=10000000 -ac_reward=100000000 -ac_cc=60001 -ac_script=2ea22c80203d1579313abe7d8ea85f48c65ea66fc512c878c0d0e6f6d54036669de940febf8103120c008203000401cc -daemon
+Guide here: https://github.com/KomodoPlatform/komodo/wiki/Get-Started-with-Rogue-Game
+Explorer: http://rogue.explorer.dexstats.info/
+Player's Handbook: https://github.com/jl777/komodo/blob/jl777/src/cc/rogue/rogue.doc
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[23-Feb-19 02:19 PM] TonyL#3577
+It's declared in build.sh atm, makecclib build "sudoku" cclib
+
+[23-Feb-19 02:19 PM] jl777c#5810
+make -f Makefile_rogue
+
+[23-Feb-19 02:19 PM] jl777c#5810
+from cc
+
+[23-Feb-19 02:20 PM] CrisF#3405
+Oh, thanks 😃
+
+[23-Feb-19 02:20 PM] jl777c#5810
+or ./makerogue
+
+[23-Feb-19 02:29 PM] CrisF#3405
+`ROGUE BUILD SUCCESSFUL` but still sticking on 196.
+Started ROGUE after successful build but 196.
+Then tried ./makerogue again followed by `make` in komodo.
+Still 196.
+
+[23-Feb-19 02:31 PM] TonyL#3577
+Did you try to `make clean` from komodo folder and then just execute `./zcutil/build.sh` ?
+
+[23-Feb-19 02:31 PM] CrisF#3405
+Ahh, no.  Will do that, thanks!
+
+[23-Feb-19 02:34 PM] TonyL#3577
+Regards build on MacOS -  I wonder it should try to build libcc.dylib on Mac, not libcc.so
+```Making all in src
+/Library/Developer/CommandLineTools/usr/bin/make  -C secp256k1 libsecp256k1.la OPTFLAGS="-O2 -march=x86-64 -g "
+/Library/Developer/CommandLineTools/usr/bin/make  -C cryptoconditions libcryptoconditions_core.la OPTFLAGS="-O2 -march=x86-64 -g "
+make[2]: *** No rule to make target `libcc.so', needed by `komodod'.  Stop.
+make[2]: *** Waiting for unfinished jobs....
+make[3]: `libcryptoconditions_core.la' is up to date.
+make[1]: *** [all-recursive] Error 1
+make: *** [all-recursive] Error 1```
+
+manual `./makerogue` built it: libcc.dylib but makefile in `src`
+
+[23-Feb-19 02:42 PM] TonyL#3577
+Trying straight way - just changed libcc.so to libcc.dylib in `src` Makefile - seems build is started. It not helped much 😃
+
+[23-Feb-19 02:43 PM] jl777c#5810
+pushed fix
+
+[23-Feb-19 02:59 PM] ronyi#5719
+703fe2bcad588f502a312baa416b8b6596294591c81a5e7396ad68bb9b460bec good.73 bad.0
+extractgame: couldnt find baton
+
+[23-Feb-19 03:00 PM] jl777c#5810
+yes, it seems that happens sometimes, but it shouldnt be crashing anymore
+
+[23-Feb-19 03:00 PM] TonyL#3577
+It crashed again, now syncing with gdb to collect backtrace
+
+[23-Feb-19 03:01 PM] ronyi#5719
+@TonyL yes me too
+
+[23-Feb-19 03:02 PM] TonyL#3577
+```703fe2bcad588f502a312baa416b8b6596294591c81a5e7396ad68bb9b460bec good.496 bad.35
+extractgame: couldnt find baton
+backtrace
+No stack.```
+
+[23-Feb-19 03:02 PM] TonyL#3577
+```./komodo-cli -ac_name=ROGUE getinfo
+error: couldn't connect to server: unknown (code -1)
+(make sure server is running and you are connecting to the correct RPC port)
+```
+
+[23-Feb-19 03:02 PM] TonyL#3577
+It's even not printed one line of crash now @jl777c
+
+[23-Feb-19 03:03 PM] TonyL#3577
+Oh no, my fault
+
+[23-Feb-19 03:03 PM] TonyL#3577
+I've started gdb with daemon param
+
+[23-Feb-19 03:03 PM] TonyL#3577
+If start gdb daemon with daemon param gdb not receiving any output from daemon
+
+[23-Feb-19 03:09 PM] TonyL#3577
+@jl777c https://paste.ubuntu.com/p/ZSvSRQxQhg/ backtrace
+
+[23-Feb-19 03:11 PM] jl777c#5810
+that is the identical crash. i synced three times in a row
+
+[23-Feb-19 03:11 PM] jl777c#5810
+are you sure you rebuilt rogue libcc.so?
+
+[23-Feb-19 03:11 PM] jl777c#5810
+from cc dir
+
+[23-Feb-19 03:12 PM] jl777c#5810
+make -f Makefile_rogue
+
+[23-Feb-19 03:12 PM] jl777c#5810
+cd ..
+
+[23-Feb-19 03:12 PM] jl777c#5810
+make
+
+[23-Feb-19 03:12 PM] ca333#0118
+which OS @TonyL ? i can try to reproduce on linux or OSX
+
+[23-Feb-19 03:13 PM] TonyL#3577
+@ca333 Problem with build is on OSX
+
+[23-Feb-19 03:13 PM] ca333#0118
+ok - i am testing on osx 10.14.x
+
+[23-Feb-19 03:13 PM] ca333#0118
+branch?
+
+[23-Feb-19 03:13 PM] TonyL#3577
+Latest jl777
+
+[23-Feb-19 03:13 PM] CrisF#3405
+I had that same error on Ubuntu 18.04.
+
+[23-Feb-19 03:13 PM] ca333#0118
+give me 20 - 30 min for rebuild - weak travel macbook
+
+{Reactions}
+🙌 
+
+[23-Feb-19 03:14 PM] CrisF#3405
+Not tried `rebuilt rogue libcc.so` on that node yet.
+
+[23-Feb-19 03:14 PM] jl777c#5810
+if you dont rebuild the rogue libcc.so, it wont have any new bugfixes
+
+[23-Feb-19 03:14 PM] CrisF#3405
+Syncing on 18.04 Desktop atm so worked so far.
+
+[23-Feb-19 03:15 PM] CrisF#3405
+Yes, will do that on the server next.
+
+[23-Feb-19 03:15 PM] CrisF#3405
+Desktop synced 😃
+
+[23-Feb-19 03:15 PM] CrisF#3405
+Next server.
+
+[23-Feb-19 03:15 PM] TonyL#3577
+Hmm usual `make clean` from komodo folder not cleaning libcc.so at the moment
+
+[23-Feb-19 03:16 PM] jl777c#5810
+the make process isnt 100% right, you need to manually make sure
+
+[23-Feb-19 03:16 PM] jl777c#5810
+I have a one line script file:
+./c stop; git pull;rm komodod;cd cc;rm *.so; make -f Makefile_rogue; cp librogue.so ../libcc.so;cd rogue;make; cd ..;cd ..;make;sleep 5;./a2 &
+
+[23-Feb-19 03:16 PM] CrisF#3405
+(I wiped komodo an then it worked)
+
+{Reactions}
+😂 
+
+[23-Feb-19 03:16 PM] jl777c#5810
+I dont make any assumptions about build.sh magically working and noticing exactly whatneeds to be done
+
+[23-Feb-19 03:17 PM] jl777c#5810
+stop the daemon
+pull the latest
+remove komodod and all .so files
+run the Makefile_rogue
+copy it to the right place
+make komodod again
+
+{Reactions}
+👌 (3) 
+
+[23-Feb-19 03:24 PM] Alright#0419
+@blackjok3r just saw that remote IP thing was merged into jl777 branch
+
+[23-Feb-19 03:24 PM] Alright#0419
+will test later today, focused on staker atm
+
+[23-Feb-19 03:24 PM] blackjok3r#3181
+I told you that before.
+
+[23-Feb-19 03:24 PM] Alright#0419
+I knew you had pushed it, didn't realize it was already PR'd
+
+[23-Feb-19 03:24 PM] TonyL#3577
+synced fine now @jl777c
+
+{Reactions}
+👍 
+
+[23-Feb-19 03:31 PM] jl777c#5810
+it helps to use the right SIM card
+
+{Reactions}
+😀 (2) 
+
+[23-Feb-19 03:33 PM] TonyL#3577
+Pubkey = passport, cclib = flight ticket and visa 😂
+
+{Reactions}
+🛫 
+
+[23-Feb-19 03:33 PM] jl777c#5810
+yes, if you end up in the wrong country, it is not good
+
+[23-Feb-19 03:34 PM] jl777c#5810
+ok, so the bug is fixed?
+
+[23-Feb-19 03:35 PM] TonyL#3577
+Yes, with fix chain syncing fine
+
+[23-Feb-19 04:03 PM] CrisF#3405
+All synced on server now too 😃   Thanks for the help!
+Sim card.  That's good.
+
+[23-Feb-19 04:45 PM] _PureHate_#9411
+_Darwin Vhater-2 16.7.0 Darwin Kernel Version 16.7.0: Sun Feb 10 20:03:16 PST 2019; root:xnu-3789.73.36~1/RELEASE_X86_64 x86_64_  ``` ~/komodo/src$ ./rogue_tui   
+[15926] Error loading Python lib '/Users/root1/komodo/src/Python': dlopen: dlopen(/Users/root1/komodo/src/Python, 10): Symbol not found: _futimens
+  Referenced from: /Users/root1/komodo/src/Python
+  Expected in: /usr/lib/libSystem.B.dylib
+ in /Users/root1/komodo/src/Python ````
+
+[23-Feb-19 05:01 PM] TonyL#3577
+@_PureHate_ Are you trying TUI from this archive https://github.com/tonymorony/komodo_cryptoconditions_tui/releases/tag/0.0.3a ?
+
+{Embed}
+https://github.com/tonymorony/komodo_cryptoconditions_tui/releases/tag/0.0.3a
+tonymorony/komodo_cryptoconditions_tui
+Terminal user interfaces for Komodo CryptoConditions smart-contracts - tonymorony/komodo_cryptoconditions_tui
+https://avatars1.githubusercontent.com/u/24797699?s=400&v=4
+
+[23-Feb-19 05:08 PM] TonyL#3577
+Oh, I've packaged on 10.14
+https://github.com/pyinstaller/pyinstaller/issues/3418 
+```you need to compile and build your app using PyInstaller on an old Mac running an old versions of OSX if you want your app to run on older versions of OSX/MacOS. Sad but true.``` 🤕
+And seems there is no other clean resolution atm. I'll try to install some old OSX and build it on it to make TUI more compatible
+
+{Embed}
+https://github.com/pyinstaller/pyinstaller/issues/3418
+Symbol not found: _futimens · Issue #3418 · pyinstaller/pyinstaller
+Creating a pyinstaller one file app based on the simplest possible hello world app, and running the resulting onefile app on a brand new virgin install of high sierra results in [589] Error loading...
+https://avatars2.githubusercontent.com/u/11467530?s=400&v=4
+
+{Reactions}
+😉 
+
+[23-Feb-19 06:06 PM] _PureHate_#9411
+google say same ^^
+
+[23-Feb-19 06:09 PM] _PureHate_#9411
+i download and unzip on Komodo/src  0.0.3 yes
+
+[23-Feb-19 06:09 PM] ca333#0118
+@TonyL there is a faulty if cond in the makefile which lead to osx problem. pushing fix in a moment.
+
+{Reactions}
+🙌 (2) 🙏 
+
+[23-Feb-19 09:27 PM] Petrus#8039
+hey guys, i keep getting the 703fe2bcad588f502a312baa416b8b6596294591c81a5e7396ad68bb9b460bec good.371 bad.139
+extractgame: couldnt find baton. Scrolling trough the comments above i guess i need to rebuilt rogue libcc.so ? Anyone got some pointers on how to do that on windows?
+
+[23-Feb-19 09:35 PM] Gordon Komodo#7477
+Let's wait a bit. I think they are fixing it. Mine also doesn't work on windows. And also it is weekend. 😄
+
+{Reactions}
+👍🏿 (2) 
+
+[24-Feb-19 12:46 AM] Regnar#6164
+@Gilagathor ^ here's the channel 😄
+
+[24-Feb-19 01:22 AM] Cryptofist#7504
+Please add  this to the getting started guide for linux. 
+```
+cp  ~/.komodo/ROGUE/ROGUE.conf ~/komodo/src ```
+
+[24-Feb-19 03:22 AM] Strob#3417
+If anyone have time to, is there any step by step instruction on how to update Rogue to get the latest changes (on linux in my case)? tx. I'm not sure to understand what to do from what discussed above...
+
+[24-Feb-19 03:26 AM] CrisF#3405
+Hi @Strob, the immediate above was related to a problem.  If you aren't experiencing the same this update guide should be enough https://github.com/KomodoPlatform/komodo/wiki/Get-Started-with-Rogue-Game#update-komodod
+
+{Embed}
+https://github.com/KomodoPlatform/komodo/wiki/Get-Started-with-Rogue-Game
+KomodoPlatform/komodo
+Komodo. Contribute to KomodoPlatform/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[24-Feb-19 03:31 AM] Strob#3417
+ok thanks"!
+
+{Reactions}
+👍 
+
+[24-Feb-19 03:37 AM] Cryptofist#7504
+pinned in #rogue  @Strob
+
+[24-Feb-19 03:37 AM] Cryptofist#7504
+Ill be around for a bit if you need help!
+
+[24-Feb-19 09:27 AM] ronyi#5719
+I just quit in lvl 9 with full hp, my warrior is lost and my 2500gold. https://pastebin.com/B1JMQzEC I don't know why.
+
+{Embed}
+https://pastebin.com/B1JMQzEC
+Rogue - Pastebin.com
+https://pastebin.com/i/facebook.png
+
+[24-Feb-19 10:04 AM] jl777c#5810
+yes it is strange, i will need to investigate this specifically later today
+
+[24-Feb-19 10:07 AM] jl777c#5810
+are other times working ok?
+
+[24-Feb-19 10:08 AM] ronyi#5719
+I have noticed many times. I think is a high warrior and/or level bug/issue (above rouge lvl7).  Unfortunately, I don't know more.
+
+[24-Feb-19 03:58 PM] joe2x4#5987
+Couple days ago, I had a high level warrior, was at dungeon lvl 10 , had around 2500 gold, two handed sword. Did a bailout, lost the guy. Haven't been back that deep since then.
+
+[24-Feb-19 04:00 PM] jl777c#5810
+bug monster worse than hobgoblin
+
+{Reactions}
+😂 
+
+[24-Feb-19 04:03 PM] joe2x4#5987
+I also have a warrior, got killed,screen showed the tombstone, however, for some reason I'm still able to play with him. And you can also find him listed for sale. The name is 'Captain Kirk is Dead' and he's a dashing zombie character that might not be killable, all for the low price of 1 rogue
+
+[24-Feb-19 05:17 PM] joe2x4#5987
+Can someone please provide the cli command to list the current address that I'm using, the TUI doesn't seem to list current address. I'm trying to verify that the Rogue I'm collecting( per the getbalance cli) is listed on the explorer.
+
+[24-Feb-19 05:19 PM] joe2x4#5987
+I installed/reinstalled so many times am unsure as to the address I used
+
+[24-Feb-19 05:27 PM] jl777c#5810
+./komodo-cli -ac_name=ROGUE cclibaddress 17
+
+[24-Feb-19 05:57 PM] joe2x4#5987
+Hmm interesting. I'm still trying to understand the bailout mechanics. I started a new game with warrior the gingerninja, spawned lv1 next to an H. Got hit before equipping armour taking hp to 6. Bailedout. No tombstone death screen. Warrior is gone, not selectable. On another note, my zombie warrior Captain Kirk has disappeared (that I expected)
+
+[24-Feb-19 05:58 PM] joe2x4#5987
+Of note, gingerninja was at least lvl7
+
+[24-Feb-19 06:04 PM] jl777c#5810
+death tx needs to confirm
+
+[24-Feb-19 06:08 PM] joe2x4#5987
+So it seems that a bailout in middle of battle still allows monster to hit and is no guarantee of safe exit
+
+[24-Feb-19 06:10 PM] TonyL#3577
+I guess "0 monster kills, 0 gold" (in such cases warrior counting as dead) validation is still here and thats why this one (gingerninja) died
+
+[24-Feb-19 07:04 PM] joe2x4#5987
+Just bailedout on dungeon lv 7. Had around 1200 gold, lvl 6 character, no monsters around. Character name 'elephant butt' has disappeared. No option to restart with this warrior, and not on warrior list.
+
+[24-Feb-19 07:05 PM] TonyL#3577
+Can you provide gametxid and bailout txid - would be very helpful?
+
+[24-Feb-19 07:05 PM] joe2x4#5987
+Where can I find this. Am using the tui, and it is not on screen anymore
+
+[24-Feb-19 07:06 PM] _PureHate_#9411
+```root1@vhater-3:~/komodo/src$ ./komodo-cli -ac_name=ROGUE cclib gameinfo 17 \"[%228be5ca6376d38dac6399720172332021d05ed7e670bcd218d86c087b9377911d%22]\"
+{
+  "name": "rogue",
+  "method": "gameinfo",
+  "gametxid": "8be5ca6376d38dac6399720172332021d05ed7e670bcd218d86c087b9377911d",
+  "status": "error",
+  "error": "couldnt find valid game"
+} 
+```
+
+[24-Feb-19 07:06 PM] _PureHate_#9411
+how to stop start restart ...
+
+[24-Feb-19 07:06 PM] _PureHate_#9411
+^^
+
+[24-Feb-19 07:06 PM] _PureHate_#9411
+thanks
+
+[24-Feb-19 07:07 PM] joe2x4#5987
+I did have 2 transactions in mempool that I recorded. Would one of those numbers work?
+
+[24-Feb-19 07:09 PM] TonyL#3577
+@joe2x4 TUI printing gametxid at start and bailouttxid in the end
+Actually if you not started any new game after this - gametxid should be last one in `./komodo-cli -ac_name=ROGUE cclib games 17` completed list
+
+[24-Feb-19 07:10 PM] TonyL#3577
+@_PureHate_ `  "error": "couldnt find valid game"` it means there is no game with such txid - you may check your both completed and in-progress gametxids by `./komodo-cli -ac_name=ROGUE cclib games 17`
+
+[24-Feb-19 07:10 PM] _PureHate_#9411
+thanks
+
+[24-Feb-19 07:11 PM] joe2x4#5987
+```(Elephant Butt) found baton acaaee7b908e7e41812f54559e3f6853d6ae5f972de979dbf0ee70f7fdaa397d numkeys.1448 seed.214689688718676703 playerdata.0
+gold.270 hp.20 strength.16/16 level.3 exp.36 dungeon.3 data[760]
+
+extracted $$$gold.270 hp.20 strength.16/16 level.3 exp.36 dl.3 n.1 amulet.0
+gold.270 hp.20 strength.16/16 level.3 exp.36 dungeon.3 data[760]
+extracted $$$gold.270 hp.20 strength.16/16 level.3 exp.36 dl.3
+
+586d5c625fb4307c43b4705d2c538b848276cc56a6f41f6407bae5c19a86a051 good.403 bad.247
+gold.156 hp.15 strength.16/16 level.2 exp.16 dungeon.2 data[604]
+extracted $$$gold.156 hp.15 strength.16/16 level.2 exp.16 dl.2
+
+b7e71999584bffc81f3183aab4fb1e664d805e678f02e5228e1c272d94b6d51f good.404 bad.247```
+

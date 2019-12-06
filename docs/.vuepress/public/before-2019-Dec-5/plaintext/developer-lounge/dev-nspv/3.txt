@@ -1,0 +1,345 @@
+==============================================================
+Guild: Komodo
+Channel: dev-nspv
+Topic: ./komodod -nSPV=1 -ac_reward=100000000  -ac_name=NSPV -ac_supply=10000000000 -ac_cc=2 -addressindex=1 -spentindex=1 -connect=5.9.102.210 &
+./komodod -nSPV=1 -addnode=5.9.253.195 &
+https://drive.google.com/drive/folders/1ZvzrhNBQgroejTKPl0kCOTJ8h7XMnO2M?usp=sharing
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[02-Jul-19 07:14 PM] jl777c#5810
+std::vector is the only thing that seems very useful
+
+[02-Jul-19 07:14 PM] Slyris#2880
+Yes but we can remplace it with full C code easyli if you target C
+
+[02-Jul-19 07:14 PM] jl777c#5810
+i got the hooks into the main protocol flow and all the nSPV specific things will be in komodo_nSPV.h
+
+[02-Jul-19 07:14 PM] Slyris#2880
+We can totally drop the C++ part
+
+[02-Jul-19 07:15 PM] jl777c#5810
+yes, I can just port the std::vector to C ptrs, for now, just trying to get things put together and working as a reference implementation
+
+[02-Jul-19 07:15 PM] Slyris#2880
+If we want we can do that: https://github.com/doom/ceeds/blob/master/include/ceeds/vector.h
+
+{Embed}
+https://github.com/doom/ceeds/blob/master/include/ceeds/vector.h
+doom/ceeds
+C boilerplate code, to be used as seeds for my C projects - doom/ceeds
+https://avatars3.githubusercontent.com/u/19640245?s=400&v=4
+
+[02-Jul-19 07:15 PM] jl777c#5810
+the daemon side will be there in all the nodes
+
+[02-Jul-19 07:16 PM] jl777c#5810
+thanks, ceeds seems handy
+
+[02-Jul-19 07:16 PM] Slyris#2880
+It's my best friend C library
+
+[02-Jul-19 07:16 PM] Slyris#2880
+is an expert
+
+[02-Jul-19 07:16 PM] Slyris#2880
+He write this library to have some usefull container in C
+
+[02-Jul-19 07:16 PM] Slyris#2880
+and dropping C++
+
+[02-Jul-19 07:17 PM] Slyris#2880
+so you have basis : string, vector, map, set etc
+
+[02-Jul-19 07:17 PM] Slyris#2880
+binary_heap, bitmanip
+
+[02-Jul-19 07:18 PM] jl777c#5810
+i will just write the reference and get it working. after that we can worry about making it pure C, porting to java, etc.
+
+[02-Jul-19 07:19 PM] Slyris#2880
+Yes, great
+
+[02-Jul-19 07:19 PM] jl777c#5810
+i think with the NSPV_INFO, UTXOS, NTZS, NTZPROOF, TXPROOF query messages, that will allow a client to have all the data needed to create and sign rawtransactions
+
+[02-Jul-19 07:19 PM] jl777c#5810
+but pretty sure some of the structures will need tweaking, at least they should be reasonably close
+
+[02-Jul-19 07:20 PM] jl777c#5810
+there is a rate limit per peer built in, so the nSPV client needs to make sure it doesnt go too fast or it just wastes query
+
+[02-Jul-19 07:20 PM] Slyris#2880
+Yes i just link you this code to have an idea
+
+[02-Jul-19 07:21 PM] Slyris#2880
+We need to make a measurement for the performance of `nSPV` no ?
+
+[02-Jul-19 07:21 PM] jl777c#5810
+so, get basic chain info, get a list of all your utxo. for each utxo, find the before/after notarizations. then aggregate the data and make requests for the notarization proofs, along with txproofs
+
+[02-Jul-19 07:22 PM] jl777c#5810
+that gets all the data needed to validate the rawtx, blockheaders and you can create transactions ready to spend. though it doesnt deal with mempool, it is a good practical first iteration
+
+[02-Jul-19 07:22 PM] jl777c#5810
+i think the limit for nSPV will be the number of peer connections per full node. it isnt bandwidth intensive
+
+[02-Jul-19 07:23 PM] jl777c#5810
+we can definitely stress test things to see what sort of multiplier each full node can get, i estimate at least 1000x, if not 10000x
+
+[02-Jul-19 07:23 PM] Slyris#2880
+Yes stress test will be usefull here
+
+[02-Jul-19 07:24 PM] jl777c#5810
+aha! i can just add any txid in the mempool to the UTXOS query
+
+[02-Jul-19 07:24 PM] Slyris#2880
+How much number peer of connections did you expect
+
+[02-Jul-19 07:24 PM] jl777c#5810
+the default caps to 155 or something like that.
+
+[02-Jul-19 07:24 PM] jl777c#5810
+so we will need to tweak the networking limits a bit
+
+[02-Jul-19 07:25 PM] Slyris#2880
+hmm, seem's fair
+
+[02-Jul-19 07:26 PM] jl777c#5810
+currently, i think all peers are counted the same. we need to allow much higher numbers of nSPV peers
+
+[02-Jul-19 07:27 PM] Slyris#2880
+what the mean of the `n` in `nSPV` ?
+
+[02-Jul-19 07:27 PM] jl777c#5810
+notarized SPV
+
+[02-Jul-19 07:27 PM] Slyris#2880
+Of course
+
+[02-Jul-19 07:27 PM] Slyris#2880
+Since is all based on notarization
+
+[02-Jul-19 07:27 PM] Slyris#2880
+dpow is an incredible consensus man
+
+[02-Jul-19 07:28 PM] Slyris#2880
+i'm impressed.
+
+[02-Jul-19 07:30 PM] jl777c#5810
+now that the p2p networking is basically working, (i have a testnet doing request/response with stub messages) i just need to connect it to the actual rpc functionality and then the cli nSPV client would be able to return notarized balance, list of utxo and their values. Given that using normal createrawtransaction and signrawtransaction, sendrawtransaction, you can construct sends. since all the actual nSPV clients will be doing their own local signing, probably no need to do much fancy operations, maybe a nSPVsend rpc call to just simplify the rawtx stuff
+
+[02-Jul-19 07:30 PM] jl777c#5810
+then with a working reference nSPV client and a working set of full nodes deployed, validating other nSPV implementations becomes much much easier
+
+[02-Jul-19 07:31 PM] Slyris#2880
+You will add an optional parameters in those rpc call ?
+
+[02-Jul-19 07:31 PM] Slyris#2880
+Specifying nSPV ?
+
+[02-Jul-19 07:31 PM] jl777c#5810
+i will make a special nSPVsend that will work similar to sendtoaddress
+
+[02-Jul-19 07:31 PM] jl777c#5810
+but it will only work in nSPV=1 nodes
+
+[02-Jul-19 07:31 PM] Slyris#2880
+so a new rpc call
+
+[02-Jul-19 07:31 PM] Slyris#2880
+ok i get it
+
+[02-Jul-19 07:31 PM] jl777c#5810
+yes, much better to keep things separated
+
+[02-Jul-19 07:32 PM] Slyris#2880
+Yeah, it's better actually
+
+[02-Jul-19 07:33 PM] jl777c#5810
+i think there will only be a few rpc calls, will know more when i put it all together, but something like nSPVlogin and nSPVbalance,maybe nSPVhistory, nSPVsend, nSPVtxinfo
+
+[02-Jul-19 07:35 PM] jl777c#5810
+nothing will be saved to disk
+
+[02-Jul-19 07:35 PM] Slyris#2880
+you will push in the same branch ?
+
+[02-Jul-19 07:35 PM] jl777c#5810
+yes, it will all go into nSPV branch
+
+[02-Jul-19 07:35 PM] Slyris#2880
+Ok
+
+[02-Jul-19 07:36 PM] Slyris#2880
+i will follow the code update
+
+[02-Jul-19 07:36 PM] jl777c#5810
+i am aiming for a working cli nSPV wallet by this weekend
+
+{Reactions}
+👀 
+
+[02-Jul-19 07:37 PM] Slyris#2880
+nSPV will distrupt the blockchain industry, lot of people don't know yet
+
+[02-Jul-19 07:37 PM] Slyris#2880
+But it's a huge improvement...
+
+[02-Jul-19 07:37 PM] jl777c#5810
+3 to 5 seconds from start to being able to send a valid tx
+
+[02-Jul-19 07:38 PM] jl777c#5810
+basically a stateless wallet tech as it is fast enough to reinitialize everything with each login
+
+[02-Jul-19 07:39 PM] jl777c#5810
+if you have 10,000 utxo, that will take a long time with just one full node, but once there are 100+ fullnodes, it would initialize in a couple minutes
+
+[02-Jul-19 07:39 PM] jl777c#5810
+and 10,000 utxo is just too many, most wallets will just have a few utxo
+
+[02-Jul-19 07:40 PM] Slyris#2880
+you are right
+
+[02-Jul-19 09:05 PM] jl777c#5810
+i verified that nSPV capable full nodes and normal can coexist. nSPV client nodes will just reject any full node or other client node
+
+[02-Jul-19 09:06 PM] jl777c#5810
+this means we can test with existing coin p2p networks, without any hardfork
+
+{Reactions}
+👍 
+
+[03-Jul-19 02:32 PM] jl777c#5810
+@TonyL latest version is working, at least the nSPV client requests blockchain info and addressutxos info. inadvertently i had an address with 12,000+ utxo, but it seemed to work nearly instantly
+
+[03-Jul-19 02:32 PM] jl777c#5810
+i have serialization/deserialization done for all the initial structs, which i think will get us 90%+ of the way to a working cli nSPV wallet
+
+[03-Jul-19 02:33 PM] jl777c#5810
+which is the next step, to add rpc calls for basic wallet functions
+
+[03-Jul-19 02:33 PM] jl777c#5810
+at first it will work as api wallet and not bother with merkle validations, but with all the data available, it would just be a matter of adding the checks to make it secure
+
+[03-Jul-19 03:23 PM] allbits#5898
+When you get the working nSPV cli wallet, is that something a noob like me could test?
+
+[03-Jul-19 03:31 PM] jl777c#5810
+yes
+
+[03-Jul-19 03:31 PM] jl777c#5810
+the commands will be very limited
+
+[03-Jul-19 03:32 PM] jl777c#5810
+login, getbalance, send
+
+[03-Jul-19 03:46 PM] allbits#5898
+Cool :)
+
+SPV wallets are far more secure than API lite wallets, right?
+
+[03-Jul-19 03:53 PM] jl777c#5810
+yes
+
+[03-Jul-19 03:54 PM] jl777c#5810
+nSPV wallet is basically the same security level as a full node
+
+[03-Jul-19 03:54 PM] jl777c#5810
+the only issue is that it needs to poll random nodes to find out what utxo it has, but if you track that locally, there is no need to rely on external nodes
+
+[03-Jul-19 04:03 PM] allbits#5898
+Thanks
+
+[03-Jul-19 05:19 PM] Mylo#8306
+how will nodes allow nSPV clients to connect?  is it a different RPC interface?
+
+[03-Jul-19 05:20 PM] Mylo#8306
+or is it http?  sorry for noob q
+
+[03-Jul-19 05:38 PM] jl777c#5810
+new p2p messages
+
+[03-Jul-19 05:38 PM] jl777c#5810
+it is already coded to allow the nSPV capable nodes to be mixed with older nodes. no hardfork needed
+
+[03-Jul-19 05:41 PM] jl777c#5810
+existing coin network will support the nSPV nodes
+
+[03-Jul-19 05:42 PM] jl777c#5810
+look into normal headers sync SPV clients
+
+[03-Jul-19 05:54 PM] jl777c#5810
+@Slyris the p2p networking is testing out well, i got all the (de)serialization coded for all the structures and the fullnode side is 99% done with setting them, even validated two of the messages is going from client -> fullnode -> client and the data seems reasonable. next will be to properly request all the messages from the client side and writing a simple wallet rpc -> client side code.
+ on track for simple reference cli wallet by the weekend, probably wont get all the merkle validation done as that is tricky, but at least the data will be flowing from fullnode to superlite, so we can get bandwidth loading tests
+
+[03-Jul-19 05:55 PM] jl777c#5810
+its up to 1000 lines of code though... probably a few bugs crept in, but when i validate the data client side i should find most all of those issues. i did remove the internal usage of std::vector and just made it allocated/freed
+
+[03-Jul-19 06:27 PM] Slyris#2880
+i will look at it thank's @jl777c
+
+[03-Jul-19 06:36 PM] Slyris#2880
+@jl777c You have to much verification that a pointer is not null for free
+
+[03-Jul-19 06:36 PM] Slyris#2880
+Is not needed in c : https://stackoverflow.com/questions/6084218/is-it-good-practice-to-free-a-null-pointer-in-c
+
+{Embed}
+https://stackoverflow.com/questions/6084218/is-it-good-practice-to-free-a-null-pointer-in-c
+Is it good practice to free a NULL pointer in C?
+Possible Duplicate:
+  Does free(ptr) where ptr is NULL corrupt memory?  
+I'm writing a C function that frees a pointer if it was malloc()ed. The pointer can either be NULL (in the case that an error
+https://cdn.sstatic.net/Sites/stackoverflow/img/apple-touch-icon@2.png?v=73d79a89bded
+
+[03-Jul-19 06:37 PM] Slyris#2880
+according to: http://www.open-std.org/JTC1/SC22/wg14/www/docs/n1124.pdf
+
+[03-Jul-19 06:37 PM] Slyris#2880
+https://github.com/jl777/komodo/blob/nSPV/src/komodo_nSPV.h#L308 you can safely remove the verification here inside the first if statement
+
+{Embed}
+https://github.com/jl777/komodo/blob/nSPV/src/komodo_nSPV.h
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[03-Jul-19 06:39 PM] jl777c#5810
+i am not 100% convinced it holds true for all C compilers on all OS
+
+[03-Jul-19 06:39 PM] Slyris#2880
+It is since it's the standard
+
+[03-Jul-19 06:39 PM] jl777c#5810
+it is a defensive check, doesnt harm the logic
+
+[03-Jul-19 06:40 PM] Slyris#2880
+Yeah
+
+[03-Jul-19 06:40 PM] Slyris#2880
+no problem
+
+[03-Jul-19 06:40 PM] Slyris#2880
+and also i have a question about here: https://github.com/jl777/komodo/blob/nSPV/src/komodo_nSPV.h#L356
+
+{Embed}
+https://github.com/jl777/komodo/blob/nSPV/src/komodo_nSPV.h
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[03-Jul-19 06:40 PM] Slyris#2880
+Is it something like if the pointer is null you dereference it ?
+
+[03-Jul-19 06:40 PM] jl777c#5810
+fprintf(stderr,"implement NSPV_getnotarization_txid\n");
+
+[03-Jul-19 06:40 PM] jl777c#5810
+that is the one function not implemented yet
+
+[03-Jul-19 06:40 PM] Slyris#2880
+Ah ok , was afraid
+

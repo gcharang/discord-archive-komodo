@@ -1,0 +1,393 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[06-Aug-18 07:22 AM] dukeleto#7326
+every cc rpc i try gives this same error. and i tried my NN pubkey, still no bueno
+
+[06-Aug-18 07:23 AM] dukeleto#7326
+the code doesn't even check that the pubkey is valid really, just if it exists
+
+[06-Aug-18 07:23 AM] dukeleto#7326
+or that addressindex has been enabled. But perhaps -regtest disables addressindex. just a guess
+
+[06-Aug-18 07:26 AM] Mylo#8306
+my docker image with pubkey=033aceKMDPIONEERS -regtest -cc=1 could return faucetinfo last week.
+not sure if it does what you're after though, but it did return "success" from cli
+
+[06-Aug-18 07:26 AM] Mylo#8306
+as in real NN pubkey
+
+[06-Aug-18 07:27 AM] dukeleto#7326
+where is that repo again?
+
+[06-Aug-18 07:28 AM] Mylo#8306
+https://github.com/imylomylo/docker-komodo-smartcontracts
+
+{Embed}
+https://github.com/imylomylo/docker-komodo-smartcontracts
+imylomylo/docker-komodo-smartcontracts
+Contribute to docker-komodo-smartcontracts development by creating an account on GitHub.
+https://avatars3.githubusercontent.com/u/19399102?s=400&v=4
+
+[06-Aug-18 07:28 AM] dukeleto#7326
+👍
+
+[06-Aug-18 07:30 AM] Mylo#8306
+```/komodo/src/komodod  -ac_cc=1 -ac_name=ATEST -addressindex=1 -spentindex=1 -ac_supply=1000 -ac_reward=10000000000000 -pubkey=033ace50aedf8df70035b962a805431363a61cc4e69d99d90726a2d48fb195f68c -regtest &
+
+komodo-cli -ac_name=ATEST -regtest faucetinfo```
+👆 is what i used last friday
+
+[06-Aug-18 07:30 AM] Mylo#8306
+bunch of jibber in #dev-general
+
+[06-Aug-18 07:30 AM] dukeleto#7326
+i just copy+pasted your exact command from docker
+
+[06-Aug-18 07:30 AM] dukeleto#7326
+and I still get that damn error
+
+[06-Aug-18 07:31 AM] Mylo#8306
+in docker or on your build?
+
+[06-Aug-18 07:31 AM] dukeleto#7326
+on my build, it's a branch forked from the latest `jl777` branch as of a few hours ago
+
+[06-Aug-18 07:32 AM] Mylo#8306
+i'll rebuild the docker now-ish but it'll take 20mins 8 core atom cpu in paris.  let you know
+
+[06-Aug-18 07:35 AM] dukeleto#7326
+cool, that will at least give us another data point
+
+[06-Aug-18 07:37 AM] dukeleto#7326
+i have this branch going with various fixes to the test suite: https://github.com/letolabs/komodo/tree/cctests
+
+{Embed}
+https://github.com/letolabs/komodo/tree/cctests
+letolabs/komodo
+komodo - Komodo
+https://avatars0.githubusercontent.com/u/648647?s=400&v=4
+
+[06-Aug-18 07:39 AM] dukeleto#7326
+the new test file needs to learn how to create an asset chain in the test suite, where the python tests can interact with it. then we can start to add various unit tests and more complex tests to make sure all the RPCs work as expected. Just a bit more plumbing is needed
+
+[06-Aug-18 07:39 AM] dukeleto#7326
+and then we can hook this up to travis CI too
+
+[06-Aug-18 07:41 AM] Mylo#8306
+yeah that's 'very efficient' testing - not just rpc calls in a bash script 😃
+
+[06-Aug-18 07:43 AM] dukeleto#7326
+we can test very complex stuff with the Python test framework. There is also C++ unit tests, but those are kind of annoying to write and annoying to run and therefore less pragmatic for us. We will get more ROI from Python tests
+
+[06-Aug-18 07:44 AM] dukeleto#7326
+for instance, in the framework, there is already functions to call so you can spin up N nodes and mine certain amounts of blocks on each and have them be in a very particular state, just before your test runs, things like that
+
+[06-Aug-18 07:46 AM] Mylo#8306
+that's handy.  probably easier for someone to pick up python tests than cpp tests just because of language selection as well (hence why ppl have bothered to do handier stuff with py perhaps?)
+
+[06-Aug-18 07:47 AM] dukeleto#7326
+C++ are "unit tests" where Python are called "QA" tests which some people would call "integration" tests
+
+[06-Aug-18 07:48 AM] dukeleto#7326
+because they test multiple things at once, not just individual functions. the line is blurry
+
+[06-Aug-18 07:49 AM] Mylo#8306
+blurry yes but makes sense if higher level stuff has been done in python i guess
+
+[06-Aug-18 07:49 AM] dukeleto#7326
+it's easy to describe complex stuff in Python, it's flexible, and easy to write + maintain tests in it. It's considered an additional layer on the c++ unit tests. The c++ unit tests would be like "let's test the foo RPC function with 99 different kinds of function arguments to do the right thing every time"
+
+[06-Aug-18 07:49 AM] dukeleto#7326
+where Python is like "make sure this bug doesn't happen when this complex situation arises"
+
+[06-Aug-18 07:49 AM] Mylo#8306
+yep gotcha
+
+[06-Aug-18 07:50 AM] dukeleto#7326
+we inherited the Zec test suite but many things never got changed that should have been, so now they are 😃
+
+{Reactions}
+🚀 
+
+[06-Aug-18 07:51 AM] dukeleto#7326
+holy crap i actually just made the test suite happy
+
+[06-Aug-18 07:51 AM] dukeleto#7326
+in the "it actually ran" kind of way
+
+[06-Aug-18 07:51 AM] Mylo#8306
+🍻
+
+[06-Aug-18 07:52 AM] dukeleto#7326
+it's noisy but i have a test file starting up 4 nodes (that is the default): https://gist.github.com/leto/fbe91e6d95ba0a8c35941115a3d65c96
+
+{Embed}
+https://gist.github.com/leto/fbe91e6d95ba0a8c35941115a3d65c96
+gist:fbe91e6d95ba0a8c35941115a3d65c96
+https://avatars1.githubusercontent.com/u/30298?s=400&v=4
+
+[06-Aug-18 07:52 AM] dukeleto#7326
+i still need to modify it to add kmd specific arguments to the regtest kmd
+
+[06-Aug-18 07:52 AM] jl777c#5810
+CC test suite is bounty worthy
+
+[06-Aug-18 07:53 AM] dukeleto#7326
+@jl777c good to know 😃
+
+[06-Aug-18 07:53 AM] jl777c#5810
+a complete test suite for all 4 of the reference CC would be 5000 KMD
+
+{Reactions}
+🔥 (3) 
+
+[06-Aug-18 07:54 AM] jl777c#5810
+assets especially will be hard to do
+
+[06-Aug-18 07:55 AM] jl777c#5810
+but if it can spin up nodes, issue asset, etc. it would be possible
+
+[06-Aug-18 07:55 AM] dukeleto#7326
+yes, i have the test suite spinning up nodes already, which is nice
+
+[06-Aug-18 07:56 AM] dukeleto#7326
+i am willing to try to do the complete test suite and/or share the bounty. i strangely enjoy writing tests
+
+[06-Aug-18 07:56 AM] Mylo#8306
+yeah - how does it 'spin up 4 nodes'?
+
+[06-Aug-18 07:57 AM] Mylo#8306
+haha ya weirdo 😛
+
+[06-Aug-18 07:57 AM] dukeleto#7326
+the Python test suite does stuff by default, or you can override
+
+[06-Aug-18 07:58 AM] dukeleto#7326
+this is the stub test file i am using: https://github.com/letolabs/komodo/commit/752791ae3dc1c0b1c9f6d6c5179acda189d4d5cb
+
+{Embed}
+https://github.com/letolabs/komodo/commit/752791ae3dc1c0b1c9f6d6c5179acda189d4d5cb
+Add stub test file for cc tests · letolabs/komodo@752791a
+https://avatars3.githubusercontent.com/u/30298?s=200&v=4
+
+[06-Aug-18 07:58 AM] dukeleto#7326
+self.nodes[0,1,2,3] are regtest komodo nodes running under the test suite
+
+[06-Aug-18 07:58 AM] dukeleto#7326
+and you can run RPC functions on them like `self.nodes[0].getnewaddress()`
+
+[06-Aug-18 07:59 AM] dukeleto#7326
+you can override `setup_network` to create your own kinds/numbers of nodes, like the wallet.py test : https://github.com/letolabs/komodo/blob/752791ae3dc1c0b1c9f6d6c5179acda189d4d5cb/qa/rpc-tests/wallet.py#L22
+
+{Embed}
+https://github.com/letolabs/komodo/blob/752791ae3dc1c0b1c9f6d6c5179acda189d4d5cb/qa/rpc-tests/wallet.py
+letolabs/komodo
+komodo - Komodo
+https://avatars0.githubusercontent.com/u/648647?s=400&v=4
+
+[06-Aug-18 08:02 AM] dukeleto#7326
+what i still need to do in my `cctests` branch is teach the test framework about kmd-specific things, like -ac_* params, and a way to control them easily so you can easily create AC's for tests. Right now the test suite only knows how to create regtest `komodod` nodes
+
+[06-Aug-18 08:04 AM] dukeleto#7326
+i am going to sleep soon, hopefully tomorrow I can sort out why I get the annoying `to use CC contracts, you need to launch daemon with valid -pubkey= for an address in your wallet` error and get some actual cc tests running
+
+[06-Aug-18 08:05 AM] dukeleto#7326
+`./qa/pull-tester/rpc-tests.sh cryptoconditions` is how to run the test in my branch if anybody wants to play with it
+
+[06-Aug-18 08:06 AM] Mylo#8306
+validateaddress and stuff works as expected.  regtest mining 150+ blocks to test sending to faucet and stuff.
+
+[06-Aug-18 08:06 AM] Mylo#8306
+"to test" <--- like a neanderthal, not an integration test 😃
+
+[06-Aug-18 08:07 AM] dukeleto#7326
+@Mylo something is weird with my setup, and/or OS X hates me (i had to fix 3 os x bugs in my branch just to compile)
+
+[06-Aug-18 08:08 AM] Mylo#8306
+well.... that's why i'm gunning for docker first.  I can't stand installing brew.  and Xcode is unnecessary for my type of deving
+
+[06-Aug-18 08:08 AM] Mylo#8306
+komodo doesn't compile on bsd does it?
+
+[06-Aug-18 08:08 AM] dukeleto#7326
+zcash doesn't
+
+[06-Aug-18 08:08 AM] dukeleto#7326
+and dependencies of it don't
+
+[06-Aug-18 08:08 AM] dukeleto#7326
+perhaps grand-dependencies too
+
+[06-Aug-18 08:08 AM] dukeleto#7326
+it's a scary world
+
+[06-Aug-18 08:10 AM] Mylo#8306
+yeah, i never stuck with anything bsd related 10 years ago.
+
+[06-Aug-18 08:10 AM] Mylo#8306
+doesn't surprise me.  back in telephony, bsd was last to get anything
+
+[06-Aug-18 08:13 AM] Mylo#8306
+maybe i have to regtest with proper kmd params like 100m supply.  my ATEST chain didn't generate any mining rewards
+
+[06-Aug-18 10:49 AM] jl777c#5810
+I added smart utxo selection to the CC tx creation for normal utxos. the CC utxos are usually limited in what they can be so not sure it is worth adding to all the CC specific CCutxo selection
+
+[06-Aug-18 10:50 AM] jl777c#5810
+this change should result in smaller rawtx,but there is a chance maybe I broke some things
+
+[06-Aug-18 10:50 AM] jl777c#5810
+hopefully not as I want to restrict changes to bug fixes for the 1 million hardfork
+
+[06-Aug-18 11:07 AM] Mylo#8306
+```komodod -regtest -ac_supply=100000000 -ac_cc=1 -pubkey=033ace50aedf8df70035b962a805431363a61cc4e69d99d90726a2d48fb195f68c``` seems to break getting a balance after 101 blocks and mining rewards after that.
+```
+komodod -regtest -ac_supply=100000000
+```
+has mature 100m coins at block 100+ and mining rewards from 101 onwards no probs.
+
+So i can't fund a faucet on kmd-regtest, nor any other regtest-ACs
+
+[06-Aug-18 11:12 AM] Mylo#8306
+addressindex=1 & spentindex=1 when included in that first `komodod` command also have same result.
+
+[06-Aug-18 11:19 AM] jl777c#5810
+-regtest mode is needed?
+
+[06-Aug-18 11:19 AM] jl777c#5810
+and what does " seems to break " mean?
+
+[06-Aug-18 12:32 PM] Mylo#8306
+-regtest is very much needed.  it uses the ~/.komodo/regtest data.  without `-regtest` it doesn't know it's in regtest mode.  regtest mode is handy for app developers because app/front-end developers are not sys.admins or backend architect-types.
+
+yes regtest mode is needed for the python integration testing duke is working on and also for enabling app developers & students to "start kmd and call rpc from their apps in less than 10 minutes without needing to install a full blockchain node on their workstation AND most importantly being able to generate blocks at their own devleopment pace"
+
+`s/seems to break/breaks`.  it breaks the generation of coins in regtest mode - so being broken cannot test AC smart contracts like CCfaucet because no coins to transfer to faucet.
+
+to quote @dukeleto  from about 5 hours earlier
+```
+we can test very complex stuff with the Python test framework. There is also C++ unit tests, but those are kind of annoying to write and annoying to run and therefore less pragmatic for us. We will get more ROI from Python tests
+for instance, in the framework, there is already functions to call so you can spin up N nodes and mine certain amounts of blocks on each and have them be in a very particular state, just before your test runs, things like that
+```
+and
+```
+C++ are "unit tests" where Python are called "QA" tests which some people would call "integration" tests
+because they test multiple things at once, not just individual functions. the line is blurry
+
+it's easy to describe complex stuff in Python, it's flexible, and easy to write + maintain tests in it. It's considered an additional layer on the c++ unit tests. The c++ unit tests would be like "let's test the foo RPC function with 99 different kinds of function arguments to do the right thing every time"
+where Python is like "make sure this bug doesn't happen when this complex situation arises"
+```
+hope that helps a bit why regtest mode is needed for other type of dev
+
+[06-Aug-18 12:33 PM] Mylo#8306
+hopefully duke can clear up any gaps or misinterpretations i may have
+
+[06-Aug-18 02:12 PM] dukeleto#7326
+that will require some ☕ first but I will be around soon to chat
+
+[06-Aug-18 02:44 PM] dukeleto#7326
+i am reading the new reddit AMA: ```
+ETH has the truffle framework for building contracts, komodo has in built contracts for common use cases. ETH has the ganache tool for test mode so a developer can run their own node in isolation on their computer running at their own pace (e.g. generate a block every second if they want to emulate)
+
+I’m testing an equivalent for komodo. Further, I’m testing packaging it up so a new dev at any skill level can be up and running in <10 minutes in their own self contained environment. — Mylo Mylo```
+
+[06-Aug-18 02:44 PM] dukeleto#7326
+from https://www.reddit.com/r/komodoplatform/comments/93yyqc/ama_on_monday_6th_august_with_our_quality/
+
+{Embed}
+https://www.reddit.com/r/komodoplatform/comments/93yyqc/ama_on_monday_6th_august_with_our_quality/
+AMA on Monday, 6th August with our Quality Assurance (QA) and Supp...
+# ![img](8ctpwbqykod11 " Image used with permission from Daniel McClendon Art http://danielmcclendon.com/ ") # Add this AMA Monday to your...
+https://i.redditmedia.com/AVFu-p7pZI9g7Gt3Y6CS-gwujlgwtO1bicvY0TJtMh0.jpg?w=320&s=5163c15e71870c2083a45618ad9390da
+
+[06-Aug-18 02:45 PM] dukeleto#7326
+that helps me understand what Mylo is trying to do, you want a way to start up a "personal blockchain" on one computer, for development/QA/testing
+
+[06-Aug-18 03:01 PM] Mylo#8306
+Yes.  For app developers to not have to muck around with systems ✅
+
+[06-Aug-18 03:01 PM] Mylo#8306
+When they have most of their app working in private, they can move to a live blockchain.
+
+[06-Aug-18 03:02 PM] Mylo#8306
+Give a webdev linux and some install scripts, see you later won't see them again.
+
+[06-Aug-18 03:02 PM] dukeleto#7326
+lol
+
+[06-Aug-18 03:03 PM] dukeleto#7326
+@Mylo i think we can get some stuff done, where I focus on low level test suite/infrastructure/plumbing and you focus more on the "porcelain"
+
+[06-Aug-18 03:04 PM] Mylo#8306
+Yep, sounds good.  All i want is RPC regtest for https://github.com/imylomylo/komodo-cakeshop
+
+{Embed}
+https://github.com/imylomylo/komodo-cakeshop
+imylomylo/komodo-cakeshop
+Contribute to komodo-cakeshop development by creating an account on GitHub.
+https://avatars3.githubusercontent.com/u/19399102?s=400&v=4
+
+[06-Aug-18 03:04 PM] Mylo#8306
+Should be able to fund a faucet quick enough 😬
+
+[06-Aug-18 03:04 PM] dukeleto#7326
+@mylo tell me your current issue/problem
+
+[06-Aug-18 03:05 PM] Mylo#8306
+```komodod -regtest -ac_supply=100000000```
+works great past block 150, coins available for spending.
+```komodod -regtest -ac_supply=100000000 -ac_cc=1 -pubkey=033ace50aedf8df70035b962a805431363a61cc4e69d99d90726a2d48fb195f68c``` no coins
+
+[06-Aug-18 03:06 PM] Mylo#8306
+after you generate 100+ blocks.
+
+[06-Aug-18 03:07 PM] Mylo#8306
+`addressindex=1   spentindex=1` makes no difference either.
+
+[06-Aug-18 03:07 PM] dukeleto#7326
+ok, good description
+
+{Reactions}
+👌 
+
+[06-Aug-18 03:07 PM] dukeleto#7326
+so when you enable CC, you can't get coins to mature
+
+[06-Aug-18 03:07 PM] dukeleto#7326
+can you show me outputs of `getwalletinfo` ?
+
+[06-Aug-18 03:09 PM] Mylo#8306
+all zeros.  hold on. give you real output
+
+[06-Aug-18 03:10 PM] dukeleto#7326
+in theory you should only need to mine 101 blocks to get 1 mature block (100 block maturity rule)
+
+[06-Aug-18 03:11 PM] Mylo#8306
+yep, but put a few extra in (120) this time cos it only costs me 10 seconds and i'm just hoping to hit a mining reward /s
+
+[06-Aug-18 03:12 PM] dukeleto#7326
+every block you get the mining reward, you are the only miner on your regtest chain 😃
+
+[06-Aug-18 03:12 PM] Mylo#8306
+yeah i'm being facetious and peculiar.  it's 1am and i've been awake since 6am, waiting for a 2am meeting
+
+[06-Aug-18 03:13 PM] dukeleto#7326
+oh gosh. I just got up and having lots of ☕ 😃
+
+[06-Aug-18 03:13 PM] dukeleto#7326
+SO
+
+[06-Aug-18 03:13 PM] dukeleto#7326
+here are some idea
+
+[06-Aug-18 03:13 PM] dukeleto#7326
+are you using -ac_name=FOO ?
+

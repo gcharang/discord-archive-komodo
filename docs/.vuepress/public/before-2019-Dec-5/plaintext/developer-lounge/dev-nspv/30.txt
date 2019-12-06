@@ -1,0 +1,321 @@
+==============================================================
+Guild: Komodo
+Channel: dev-nspv
+Topic: ./komodod -nSPV=1 -ac_reward=100000000  -ac_name=NSPV -ac_supply=10000000000 -ac_cc=2 -addressindex=1 -spentindex=1 -connect=5.9.102.210 &
+./komodod -nSPV=1 -addnode=5.9.253.195 &
+https://drive.google.com/drive/folders/1ZvzrhNBQgroejTKPl0kCOTJ8h7XMnO2M?usp=sharing
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[27-Jul-19 05:42 AM] blackjok3r#3181
+getinfo stuff isnt validating the notarizations though right? just assumign the getinfo call has the right data?
+
+[27-Jul-19 05:43 AM] jl777c#5810
+getinfo just returns the raw data
+
+[27-Jul-19 05:43 AM] blackjok3r#3181
+yes so  how do wer know that the notarization we are trusting to tell us the chain is real?
+
+[27-Jul-19 05:43 AM] jl777c#5810
+for each notarization, you would want to do the notarization validation code
+
+[27-Jul-19 05:43 AM] jl777c#5810
+that likely needs to be a new api call
+
+[27-Jul-19 05:44 AM] jl777c#5810
+gettransaction does prevntz and nextntz
+
+[27-Jul-19 05:44 AM] blackjok3r#3181
+yea, in this case it can only do prev so that code doesnt work as is
+
+[27-Jul-19 05:44 AM] jl777c#5810
+it needs to be setup so you can validate just a single notarization
+
+[27-Jul-19 05:44 AM] jl777c#5810
+make a more surgical function that just validates a single notarization
+
+[27-Jul-19 05:44 AM] blackjok3r#3181
+understood
+
+[27-Jul-19 05:44 AM] jl777c#5810
+then the gettransaction can call it twice
+
+[27-Jul-19 05:45 AM] jl777c#5810
+the headers tracking just calls it once when it sees a new notarization
+
+[27-Jul-19 05:45 AM] jl777c#5810
+so the new api for validating a notarization, is just using the similar code to what is in gettransaction, then changing gettransaction to use that twice. that will not increase code
+
+[27-Jul-19 05:45 AM] jl777c#5810
+now there will be a function that validates a notarization in isolation
+
+[27-Jul-19 05:46 AM] jl777c#5810
+hdrheight is updated to get +1, +2, +3, ...
+
+[27-Jul-19 05:46 AM] jl777c#5810
+getinfo processing just updates the non-notarized blockhashes array
+
+[27-Jul-19 05:47 AM] jl777c#5810
+anything wonky, and reset to last notarization. that will deal with reorgs, but end in a meta (un)stable state when there is a competing fork, but in such cases best to not do tx anyway
+
+[27-Jul-19 05:47 AM] jl777c#5810
+at some point a new notarization comes in and it all starts over
+
+[27-Jul-19 05:47 AM] jl777c#5810
+so it is really a matter to process the chaintip for 10 to 20 blocks
+
+[27-Jul-19 05:49 AM] blackjok3r#3181
+it could be more than that at times, anyway I understand what to do now.
+
+[27-Jul-19 05:49 AM] silence#0289
+https://tenor.com/view/tyrone-biggums-crackhead-drug-thirsty-itchy-gif-13961806
+
+{Embed}
+https://tenor.com/view/tyrone-biggums-crackhead-drug-thirsty-itchy-gif-13961806
+https://media.tenor.co/images/6257bd674f0c5929e4a5bb4d4da71b81/tenor.png
+
+[27-Jul-19 05:53 AM] jl777c#5810
+@blackjok3r i think if getinfo returned the number of times the non-notarized blockhashes array has been reset, it will give an indication if there is an active fork/attacker
+
+[27-Jul-19 05:53 AM] jl777c#5810
+you cant just make up an invalid blockheader, so that eliminates trusting the fullnode
+
+[27-Jul-19 05:54 AM] jl777c#5810
+there is an edgecase of notary mined blocks, which if needed we can validate did not mine more than once in the last 65 blocks
+
+[27-Jul-19 06:01 AM] jl777c#5810
+in any case, dont go too crazy with lots of code for this. we just need something simple to track the non-notarized chain. anybody doing large amounts should wait for everything to be notarized anyway, so it is more a detector for current chain conditions
+
+[27-Jul-19 09:00 AM] blackjok3r#3181
+I've got most of it working already, but the main limitation is that it currently requests the blocks in order, and as such pulls all of them from all nodes.
+I had it so that it just pulled them all, but then they arrive out of order, and its much harder to sort them out.
+
+[27-Jul-19 09:00 AM] blackjok3r#3181
+Also doing them all at once, some nodes return bad data or nothing and u end up with gaps.
+
+[27-Jul-19 09:02 AM] blackjok3r#3181
+The main problem I see is on start up if there is no notarizations for like the last 20-30 blocks it takes quite a while to fill the array.
+
+[27-Jul-19 09:45 AM] jl777c#5810
+just let it trickle in
+
+[27-Jul-19 09:45 AM] jl777c#5810
+one request per height
+
+[27-Jul-19 09:45 AM] jl777c#5810
+in a few minutes you will have all. i guess you need to cache the entire header, not just the hash, so you can hande things out of order
+
+[27-Jul-19 09:46 AM] jl777c#5810
+as long as each getinfo hdrheight is for a height you dont have, then you are getting numpeers*2 headers per minute
+
+[27-Jul-19 09:47 AM] jl777c#5810
+for getting a backlinked non-notarized chain a few minutes is fine. unless your utxo are notarized, it isnt notarized anyway, regardless of the state of the non-notarized chain
+
+[27-Jul-19 09:47 AM] jl777c#5810
+so only if you are doing non-notarized tx, then you would need the non-notarized blocks
+
+[27-Jul-19 09:48 AM] jl777c#5810
+nSPV is designed to scale to millions of users. having nodes blasting away to get optional data in a few seconds is not worth increasing the maxload
+
+[27-Jul-19 09:53 AM] jl777c#5810
+i dont understand this part "as such pulls all of them from all nodes"
+
+[27-Jul-19 09:54 AM] jl777c#5810
+there is no need to get duplicates as long as the headers end up linking back to the notarization. so in NSPV_periodic, increment to the next height for each request, that will get a different one from each peer
+
+[27-Jul-19 09:54 AM] jl777c#5810
+once you get to the chaintip-1, set a flag that you made all the requests
+
+[27-Jul-19 09:55 AM] jl777c#5810
+if this flag is set, then on each NSPV_periodic, scan from the notarization to the first header that doesnt exist
+
+[27-Jul-19 09:56 AM] jl777c#5810
+separately, have a function that validates the backlinks, maybe when displaying the local getinfo result, you can just display the status of the headers array
+
+[27-Jul-19 09:56 AM] jl777c#5810
+before doing a non-notarized spend, then also use this to determine if we have all headers and it is reasonably safe
+
+[27-Jul-19 11:21 AM] blackjok3r#3181
+The problem is that it calls the same height from every node at the same time,  if you place the counter in the function that does the calls it will request them all , and then they arrive out of order, with headers missing.
+
+[27-Jul-19 11:22 AM] blackjok3r#3181
+We can fetch them like this, but then we need to sort them and try and request missing ones, gets complicated.
+
+[27-Jul-19 11:24 AM] blackjok3r#3181
+My understanding from your description was to just fetch them one at a time and store them in order, but is very slow and only uses the first response it gets, as all peers send the same thing
+
+[27-Jul-19 02:10 PM] blackjok3r#3181
+I think I have it pretty close now.
+
+[27-Jul-19 03:40 PM] jl777c#5810
+they will return the value of hdrheight
+
+[27-Jul-19 03:41 PM] jl777c#5810
+just change the value you request for each peer, ie. have some shared global variable that increments each time a hdrheight is requested
+
+[27-Jul-19 03:41 PM] jl777c#5810
+then each peer will return a different height
+
+[27-Jul-19 03:41 PM] jl777c#5810
+you should be able to get it after the first batch
+
+[27-Jul-19 03:41 PM] jl777c#5810
+just on request, increment. dont wait for it to arrive
+
+[27-Jul-19 03:42 PM] jl777c#5810
+handle out of order by just copying the entire header to a headers[] array
+
+[27-Jul-19 03:42 PM] jl777c#5810
+separate out functions that validate the headers array
+
+[27-Jul-19 03:43 PM] jl777c#5810
+allocate the buffer where [0] is the most recent notarization, [1] is the next height, etc.
+
+[27-Jul-19 03:43 PM] jl777c#5810
+dont worry about processing it on the fly, but if you do get a conflicting one, then maybe ignore it for now. most peers will send the correct value
+
+[27-Jul-19 04:59 PM] blackjok3r#3181
+I already have it working
+
+[27-Jul-19 05:00 PM] blackjok3r#3181
+https://github.com/blackjok3rtt/libnspv/commit/b05c0f6be504ade433da45fcffbd785225ac432c
+
+{Embed}
+https://github.com/blackjok3rtt/libnspv/commit/b05c0f6be504ade433da45fcffbd785225ac432c
+working chain tip validation · blackjok3rtt/libnspv@b05c0f6
+https://avatars1.githubusercontent.com/u/30971146?s=200&v=4
+
+[27-Jul-19 05:00 PM] blackjok3r#3181
+shoul;d also handle reorgs just fine I think
+
+[27-Jul-19 05:01 PM] blackjok3r#3181
+almost impossible to validate the notarization without any data so I just made it count peers that agree before updating
+
+[27-Jul-19 05:01 PM] blackjok3r#3181
+seems very fast and appears to work fine so far
+
+[27-Jul-19 05:01 PM] jl777c#5810
+cant you validate the notarization with txproof and using how it is done in gettransaction?
+
+[27-Jul-19 05:02 PM] jl777c#5810
+being very fast is good
+
+[27-Jul-19 05:02 PM] blackjok3r#3181
+I gave to get the tx first lol, that data doestn exist
+
+[27-Jul-19 05:02 PM] jl777c#5810
+i guess we need to test reorg handling
+
+[27-Jul-19 05:02 PM] blackjok3r#3181
+I think it will work, but im not sure
+Basically it just hashes hte blopck header, saves that along with the hashprevblock and height
+
+[27-Jul-19 05:04 PM] blackjok3r#3181
+I think I can optimize it a bit more stil, because on KMD it takes liek 10 blocks for a nota to be seen as valid, so all those blocks are lost and have to be fetched again when one comes in.
+
+[27-Jul-19 05:04 PM] jl777c#5810
+what do you mean by "I gave to get the tx first lol, that data doestn exist" ?
+
+[27-Jul-19 05:04 PM] jl777c#5810
+dont you know the notarization txid
+
+[27-Jul-19 05:05 PM] blackjok3r#3181
+yes but I need to get the tx, which node to I get it from?
+
+[27-Jul-19 05:05 PM] blackjok3r#3181
+all of them?
+
+[27-Jul-19 05:05 PM] jl777c#5810
+just one is enough
+
+[27-Jul-19 05:05 PM] jl777c#5810
+you hash the raw tx data and if it matches the txid and it also has notarization opereturn data, it is a valid notarization
+
+[27-Jul-19 05:05 PM] blackjok3r#3181
+If all nodes agree the notariztion is valid what does it matter?
+
+[27-Jul-19 05:06 PM] jl777c#5810
+because by actually validating you can protect against an eclipse attack where all your peers are evil
+
+[27-Jul-19 05:06 PM] jl777c#5810
+you can validate a notarization 100% locally once you get the rawtxbytes
+
+[27-Jul-19 05:06 PM] blackjok3r#3181
+yes, but you can only fertch the tx from one of those peers 😄
+
+[27-Jul-19 05:06 PM] blackjok3r#3181
+so they can fke it
+
+[27-Jul-19 05:07 PM] jl777c#5810
+if they send an invalid raw hex, then it is rejected
+
+[27-Jul-19 05:07 PM] blackjok3r#3181
+what if they make one?
+
+[27-Jul-19 05:07 PM] jl777c#5810
+make one that is signed by all the notarize
+
+[27-Jul-19 05:07 PM] jl777c#5810
+notaries
+
+[27-Jul-19 05:07 PM] blackjok3r#3181
+🤔
+
+[27-Jul-19 05:07 PM] jl777c#5810
+did you look at the notarization valiation code?
+
+[27-Jul-19 05:07 PM] blackjok3r#3181
+yes, but its deep inside many functions
+
+[27-Jul-19 05:08 PM] jl777c#5810
+given the rawtx for a notarization, it validates it locally that it is a valid notarization
+
+[27-Jul-19 05:08 PM] blackjok3r#3181
+I need an easy way to fetch just the tx, but doesnt seem to be one
+
+[27-Jul-19 05:08 PM] jl777c#5810
+txproof
+
+[27-Jul-19 05:08 PM] jl777c#5810
+that gets the tx
+
+[27-Jul-19 05:08 PM] jl777c#5810
+txproof without height, gets only the rawtx
+
+[27-Jul-19 05:08 PM] blackjok3r#3181
+I looked at that... Guess I look again
+
+[27-Jul-19 05:08 PM] jl777c#5810
+with the height, it gets the rawtx and the txproof
+
+[27-Jul-19 05:08 PM] jl777c#5810
+but for notarization, we dont need the txproof
+
+[27-Jul-19 05:09 PM] jl777c#5810
+just the rawtx
+
+[27-Jul-19 05:09 PM] jl777c#5810
+it is selfcontained and validatable
+
+[27-Jul-19 05:09 PM] blackjok3r#3181
+ahah, I read the output of that RPC wrong.. .I thaught it was all 000 with no height, but it does have a txid
+
+[27-Jul-19 05:09 PM] blackjok3r#3181
+cool
+
+[27-Jul-19 05:10 PM] jl777c#5810
+NSPV_notarizationextract that calls the opretextract and fastnotaries count
+
+[27-Jul-19 05:10 PM] blackjok3r#3181
+yes I found all that easy enough. just needed the tx
+
+[27-Jul-19 05:10 PM] jl777c#5810
+you should just be able to setup to call NSPV_notarizationextract given the txproof ntztxid ht 0 returned valie
+
+[27-Jul-19 05:11 PM] jl777c#5810
+lets make nspv as streamlined and efficient as possible
+
+[27-Jul-19 05:11 PM] jl777c#5810
+it is so close to perfection
+

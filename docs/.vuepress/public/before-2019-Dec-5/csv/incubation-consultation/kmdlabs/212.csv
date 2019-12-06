@@ -1,0 +1,126 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 09:32 AM";"I have an idea for a migrateion blaster... but tbh ... with 2-3 nodes it will fill blocks.";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 09:32 AM";"I got a very early hacky version working last night";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"09-Jan-19 09:32 AM";"keen to look at it once ready for an eyeball";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 09:32 AM";"I thaught about it... and I think I can just make `fundrawtransaction` use the oldest utxos in the wallet first ...";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 09:33 AM";"What you do is sendmany yourself 2000 utxo on each chain, then send from one chain -> another and back ... running `cleanwallettranscations` perioodically.";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 09:34 AM";"pings the utxos between chains ....";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"09-Jan-19 09:34 AM";"how do we defend against migration spam? during bounty comp, I'm sure there'll be enough going on to defend against.";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"09-Jan-19 09:34 AM";"is there a point to doing that beyond brute testing?";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"09-Jan-19 09:35 AM";"just wandering if its worth documenting really";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"09-Jan-19 09:35 AM";"starting on another blog post for migrations, but dont want to TMI";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 09:35 AM";"Migrates take ages ... so spamming them isnt reall an issue I think... It takes a lot of effort and shit load of coins to spam them.";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 09:43 AM";"The change I made to let tiny migrate txs though yesterday (to fix tonys problem) should be reverted.... So you can only use more than like 1-2 coins for a migrate again.";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 09:44 AM";"No whale is going to spam the chain to death... They have finanical intrest not to do so.";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 09:55 AM";"it seems the fix that prevented blacklisting of clients: https://github.com/jl777/komodo/commit/fe32a3be6c8950266d759103d2fb2beda635967e";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 09:55 AM";"is what allowed tx v1 to sneak past. @blackjok3r can you help isolate the reason?";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 09:56 AM";"I told al;right about 2 H it was that";"";"😫 (1),trollface (1)";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 09:56 AM";"no idea why... but I can look ...";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 09:56 AM";"my logic was that process block is a pre-filter and that to be accepted a block will be fully validated again when connecting the tip";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 09:56 AM";"it must be setting a flag that it was validated and skipping a checkblock?";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 09:56 AM";"it shouldnt do that unless its a CC chain";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 09:57 AM";"this code is for all chains";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 09:57 AM";"I realise this... Will help... kind of stuck on what I am trying to fix here again anyway";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 09:58 AM";"thanks";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 09:58 AM";"accept block is very early in the process, all sorts of blocks are accepted";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 09:58 AM";"i am thinking it is a two part bug";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 09:58 AM";"agreed";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 09:58 AM";"by accepting the block, it was around to trigger another bug";"";"👍 (1)";
+"455741312273219595";"jl777c#5810";"09-Jan-19 09:59 AM";"i just cant see if all tx in a block are checked how a tx v1 can sneak past";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 09:59 AM";"neither do I...";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 09:59 AM";"which means, the checking is skipped in some cases";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 09:59 AM";"that was the only place I seen where it was skipped";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 10:00 AM";"so how is there a block with tx v1 in the mainchain?";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:00 AM";"Its definatly skipped in mempool, for CC chains... but should not be for blocks... unless this bug came from Verus merge or sapling itself";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:03 AM";"ContextualCheckBlock(";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:03 AM";"is not called anywhere else";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:03 AM";"so maybe we need to call it";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 10:04 AM";"yes, just noticed that too";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 10:04 AM";"in connecttip";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 10:04 AM";"it isnt called";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 10:06 AM";"connectblock";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 10:06 AM";"ok I will make a test version";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:10 AM";"Also CFEKY is deaded guys... Sorry.... Miner fix didnt work either 😦";"";"😢 (1)";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:11 AM";"Its possible if everyone updates it will be ok... tehre is a block larger then 2MB and some nodes wont accept it";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:11 AM";"or most... there is 3 nodes that accepted it 😄";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 10:12 AM";"pushed potential fix";"";"👍 (1)";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:16 AM";"hmm maybe Y isn't dead";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:17 AM";"might just be my node again";"";"";
+"412482228359266328";"CrisF#3405";"09-Jan-19 10:18 AM";"`""blocks"": 7938,
+  ""longestchain"": 7938`";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:18 AM";"https://cfeky.kmdlabs.io/block/00153d787bc91efcb5c3298eb59ddae6f402b00be816185490fab7703a17450b";"";"";
+"272003866906722306";"TonyL#3577";"09-Jan-19 10:19 AM";"Got a question for a little bit other matter: want to add python UTXO checker/splitter to python migration script.
+Why you count only 0.001 amount transactions here https://github.com/StakedChain/StakedNotary/blob/master/utxosplitter.sh#L49 ?";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:20 AM";"those are utxos for iguana";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:20 AM";"it can only use those ""special"" type";"";"";
+"272003866906722306";"TonyL#3577";"09-Jan-19 10:21 AM";"Is it the algo for such special type UTXOs creating: https://github.com/StakedChain/StakedNotary/blob/master/splitfunds.sh ?";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:22 AM";"yes that is a method written in bash..,.. iguana actually has RPC to split...  for a while it was broken... So webworker and genie set that script up, as it works well I left it in.";"";"";
+"272003866906722306";"TonyL#3577";"09-Jan-19 10:24 AM";"Oh but for migrations I can create just usual ones I guess - these ones for notarisations, brains deadlocked 😂";"";"😂 (1)";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:25 AM";"I wishj I could find this dead lock....";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:25 AM";"STarted both chains in debugger... going to just use n9ormal txns now....";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:25 AM";"migrates may not be working not sure...";"";"";
+"412482228359266328";"CrisF#3405";"09-Jan-19 10:36 AM";"CFEKY is notarizing";"";"";
+"412482228359266328";"CrisF#3405";"09-Jan-19 10:36 AM";"X too";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"09-Jan-19 10:42 AM";"I'm getting further than I was tryna migrate the other night too.";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"09-Jan-19 10:43 AM";"`broadcasting import tx... (726 sec)`";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:43 AM";"sorry I keep stalling the chains whioch isnt helping";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:43 AM";"if you look on explorers there is a run of blocks with lots of txns and then it just stops";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:44 AM";"no blocks for a long long time";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:44 AM";"miner deadlocks....Wish I could figure this one out";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:44 AM";"🤕";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:47 AM";"looks like Im going to have to migrate blast again 😄";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:47 AM";"cant get it to lock up";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:47 AM";"found out afterwards you can attach gdb to it after it locks.,...";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:47 AM";"but I already had killed it 😦";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"09-Jan-19 10:52 AM";"`Waiting for confirmations (951 sec)
+[CFEKY] : Confirmed import 0884f1f350a7310c0bd3018cf8ed6b36209da94955c5dcf81e0816068aeb1550 at Wed Jan  9 10:46:03 UTC 2019 (966 sec)`";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:52 AM";"cool";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 10:53 AM";"will blast her up soon. if anyoneelse wants to help updater to latest and send as many as you can";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"09-Jan-19 12:13 PM";"`
+How many migrations?: 762
+Amount of funds to send per migration (max: 4094.8326321672967): 7
+`";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 12:17 PM";"Ive done heaops... aswell but miner jsut keeps lockingf... finally got a back trace of it... but no idea how to work out whats actaully locked there ie 25 threads 😂";"";"abusedsmily (1)";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"09-Jan-19 12:20 PM";"`All export transactions confirmed!`";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"09-Jan-19 12:37 PM";"running through manually, I got 
+```
+komodo-cli -ac_name=CFEKX sendrawtransaction <SIGNED_HEX> 
+error code: -26
+error message:
+16: tx-overwinter-expired
+```";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"09-Jan-19 12:37 PM";"might be cos I""m bulk migrating on same node?";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"09-Jan-19 12:38 PM";"bbl, dog walk time.";"";"👍 (1)";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"09-Jan-19 01:08 PM";"all good now, guess I just took too long to go through the steps";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 01:12 PM";"The chains are constatnyl stalled";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 01:12 PM";"not much is going to wrok reliably";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 01:13 PM";"I foudn the probelm.. no idea hwo to fix it though";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 01:13 PM";"```(gdb) backtrace
+#0  __lll_lock_wait () at ../sysdeps/unix/sysv/linux/x86_64/lowlevellock.S:135
+#1  0x00007f8a67694dbd in __GI___pthread_mutex_lock (mutex=0x55fb0e57cdc0 <KOMODO_CC_mutex>) at ../nptl/pthread_mutex_lock.c:80
+#2  0x000055fb0d859ab5 in RunCCEval (cond=0x7f8a146040e0, tx=..., nIn=0) at cc/eval.cpp:38
+#3  0x000055fb0d7ffdda in ServerTransactionSignatureChecker::CheckEvalCondition (this=<optimised out>, cond=<optimised out>) at script/serverchecker.cpp:122
+#4  0x000055fb0d93b484 in <lambda()>::operator() (__closure=<synthetic pointer>) at importcoin.cpp:115
+#5  VerifyCoinImport (scriptSig=..., checker=..., state=...) at importcoin.cpp:120
+#6  0x000055fb0d6b65a6 in ContextualCheckInputs (tx=..., state=..., inputs=..., fScriptChecks=fScriptChecks@entry=true, flags=flags@entry=987,
+    cacheStore=cacheStore@entry=true, txdata=..., consensusParams=..., consensusBranchId=1991772603, pvChecks=0x0) at main.cpp:2713
+#7  0x000055fb0d6c179f in AcceptToMemoryPool (pool=..., state=..., tx=..., fLimitFree=fLimitFree@entry=true, pfMissingInputs=pfMissingInputs@entry=0x7f8a2d3ce576,
+    fRejectAbsurdFee=fRejectAbsurdFee@entry=false, dosLevel=-1, fSkipExpiry=false) at main.cpp:1896
+#8  0x000055fb0d6d1b3f in ProcessMessage (pfrom=pfrom@entry=0x7f8a0c000df0, strCommand=""tx"", vRecv=..., nTimeReceived=nTimeReceived@entry=1547033655030737)
+    at main.cpp:7038
+#9  0x000055fb0d6d5953 in ProcessMessages (pfrom=0x7f8a0c000df0) at main.cpp:7583```";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 01:13 PM";"this is the problem... reproduced on multiple chains and nodes now. Definatly this CC-EVAL is locking it up";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 01:28 PM";"maybe there needs to be some new lock for mining and CC eval?";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 01:28 PM";"maybe yes.. lol I was litterally just thinking that";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 01:28 PM";"could the mutex and the LOCK conflict ?";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 01:29 PM";"like if we made the mutex a LOCK";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 01:30 PM";"what seems to be the problem is the miner (more threads there are the worse it gets ) locks cs_main and somehow when an import tx is received to the mempool it takes this path and ends up dead locking when it gets to the mutex";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 01:35 PM";"another approach is to make sure the import isnt using anything with a lock main";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 01:36 PM";"i made a myGetTransaction that doesnt lock";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 01:36 PM";"if you can find what in the import validation is locking, that would be a cleaner way to solve it";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 01:36 PM";"wat does not make sends ois that the mempool is locked in the miner also, so I dont understand how its able to process the import at all.";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 01:36 PM";"any CC validation is already locked";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 01:39 PM";"Its strange, as there was a similar lock, that would do much the same thing (never backtraced it) that was for all tx not just CC's, that required locking cs_main and mempool.cs more often, now thats fixed I guess its exposed this problem. ONly happens when daemon PoW mining, dont think we ever saw it with PoS, but that could just have been luck.";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 01:40 PM";"some function called by the CC validation is doing a lock";"";"";
+"455741312273219595";"jl777c#5810";"09-Jan-19 01:40 PM";"it shouldnt be doing";"";"";
+"232679450301431808";"blackjok3r#3181";"09-Jan-19 01:40 PM";"` <KOMODO_CC_mutex>` It stops here... so its inside this mutex another lock is called?";"";"";

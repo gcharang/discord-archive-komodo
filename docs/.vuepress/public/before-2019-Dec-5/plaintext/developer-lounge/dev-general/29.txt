@@ -1,0 +1,438 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[28-Sep-18 12:23 AM] blackjok3r#3181
+or the chains magic value and ports will be diffrent
+
+[28-Sep-18 12:23 AM] blackjok3r#3181
+sorry I cant find the MGNX height activation, it must have been removed.
+
+[28-Sep-18 12:26 AM] Bryan_Beus#6442
+ok.
+
+One sec and I'll c/p what I have here, so we can see if it's accurate
+
+[28-Sep-18 12:34 AM] Bryan_Beus#6442
+```
+The Komodo platform offers various default customizations that you use to determine the underlying nature of your asset chain. The desired combination of parameters should be included with the ``komodod`` execution whenever a coin is launched.
+
+Changing these customizations at a later time is possible, but in some circumstances it can require customizing your code. In general, it is best to have your asset chain's parameters finalized before decentralizing the ownership of your coin. Should you discover a need to change these parameters after the fact, please reach out to our development team for assistance.
+```
+
+[28-Sep-18 12:40 AM] Bryan_Beus#6442
+Does that look accurate?
+
+[28-Sep-18 12:42 AM] xRobeSx#5136
+I would maybe say `but in some circumstances it would require a hard fork` instead of `it can require customizing your code.`
+
+Code customization could be done too, but i think it would be important to point out, even a parameter change would result in a different chain.
+
+[28-Sep-18 12:44 AM] Bryan_Beus#6442
+ok
+
+[28-Sep-18 12:44 AM] xRobeSx#5136
+just a suggestion 😃 but I suck at writing ha
+
+[28-Sep-18 12:45 AM] Bryan_Beus#6442
+ok, I made that change. Thank you.
+
+[28-Sep-18 12:48 AM] xRobeSx#5136
+no problem, good work! just out of curiosity, where are you putting all of the info discussed in here?
+
+[28-Sep-18 03:58 AM] Bryan_Beus#6442
+At the moment, on my own Github repo. Mylo is traveling, so we haven't had a chance to get my contribs synced with the komodoplatform repo for this, but that is where it will all go, eventually.
+
+[28-Sep-18 04:06 AM] Bryan_Beus#6442
+Maybe my math is funky (quite possible), but I'm wondering if this formula in the documentation is correct?
+
+```
+    numhalvings = (height / -ac_halving);
+    for (i=0; i<numhalvings; i++)
+    reward = (reward * ac_decay) / 100000000;
+
+For example, if this is set to ``750000000``, the block reward will drop 25% from the previous block reward each halving.
+```
+
+I think the first two lines are making things overly complicated, for one?
+
+The last line, `reward = (reward * ac_decay)/100000000` is where I'm wondering if we should do something different...
+
+If the idea is that `750000000` is leads to a 25% decrease, shouldn't we put:
+
+```
+reward_after_halving = reward_before_halving * ac_decay/100000000
+```
+
+Maybe I'm missing something. There might be an assumption in there about where the `100000000` comes from?
+
+[28-Sep-18 04:13 AM] Bryan_Beus#6442
+Also, @jl777c, I had an idea...
+
+with CC smart contracts and z txs and addrs, it seems like you could make a smart contract template that, for it to be initiated, required a viewing key of a z address.
+
+Is that at all possible? So, you'd be able to do smart contracts with z addresses, assuming that the controller of the z address effectively spoiled the privacy of the address, if that makes sense.
+
+It sounds like a waste, since the point of z addresses is to be private.
+
+But we've had a few customers express interest in a privacy-only blockchain, and we've also seen some excitement around the PIRATE project, so maybe having this feature would be useful in those circumstances?
+
+[28-Sep-18 04:14 AM] Bryan_Beus#6442
+Of course, with the way `z` to `z` txs are unlinked, it maybe still have limited use cases.
+
+[28-Sep-18 04:17 AM] Bryan_Beus#6442
+To whoever wrote the current CC parameter documentation, good job. Overall, it needs very little work. Makes my life easier. 😃
+
+[28-Sep-18 05:52 AM] Bryan_Beus#6442
+There are some clarifications needed in the ``-ac_pubkey`` parameter, and I've attempted to rewrite here. 
+
+Can anyone please confirm if this is accurate? Thanks.
+
+```
+-ac_pubkey
+==========
+
+The ``pubkey`` parameter designates a public address for receiving payments from the network. These payments can come in the genesis block, in all blocks mined thereafter, and from every transaction on the network.
+
+If ``-ac_pubkey`` is set, but ===link=== ``-ac_perc`` is not, this simply means the genesis block will be mined to the set ``pubkey``'s address, and no blocks or transactions thereafter will mine payments into the ``pubkey``.
+
+``pubkey`` must be set to a 33 byte hex string. You can get the pubkey of an address by using the ===link=== ``validateaddress`` command in ``komodod``, and searching for the returned ``pubkey`` property. The address must be imported to the wallet before using ``validateaddress``.
+```
+
+[28-Sep-18 05:56 AM] blackjok3r#3181
+it is specifically ac_pubkey parameter ... pubkey is something else entirly.
+
+[28-Sep-18 05:56 AM] blackjok3r#3181
+other than that it looks ok
+
+[28-Sep-18 06:10 AM] Bryan_Beus#6442
+Thank you.
+
+[28-Sep-18 06:21 AM] Bryan_Beus#6442
+I'm working on the ``ac_cc`` parameter, and I see that `0` is for no smart contracts, `1`, is for non-cross-chain smart contracts, and then for all values `>=2`, the asset chains need to choose a network that has the peers they desire.
+
+Is there anywhere that developers can go to collaborate or at least understand the networks of `cc` clusters?
+
+[28-Sep-18 06:27 AM] blackjok3r#3181
+ahh that is wrong
+
+[28-Sep-18 06:28 AM] blackjok3r#3181
+STAKED uses clusters
+
+[28-Sep-18 06:28 AM] blackjok3r#3181
+so i can help you here
+
+[28-Sep-18 06:28 AM] blackjok3r#3181
+ac_cc=1 is simply crypto conditions activated. 0 is disabled, so those are right.
+
+[28-Sep-18 06:29 AM] blackjok3r#3181
+the above 100 (so minimum 101) the chains are fungible.
+
+[28-Sep-18 06:29 AM] blackjok3r#3181
+With the correct infrustucture ( you need notary nodes for this) the chains can send coins from one chain to the other.
+
+[28-Sep-18 06:29 AM] blackjok3r#3181
+This is the MoMoM tech.
+
+[28-Sep-18 06:30 AM] blackjok3r#3181
+What we did with STAKED was make it so that our chains called "STKD*..."  and "STAKED*....."
+
+[28-Sep-18 06:31 AM] blackjok3r#3181
+have their own set of notary nodes, in this way an AC cluster can control who notarizes these chains, as if anyone can notarise them, anyone could splin up a noary network and create a chain with as much pre-mine as they like then transfer those coins to another chain.
+
+[28-Sep-18 06:32 AM] blackjok3r#3181
+I dont see official notaies ever being able to run large clusters, so this was a needed upgrade.
+
+[28-Sep-18 06:32 AM] Bryan_Beus#6442
+Hmm, there's a lot to unpack here.
+
+[28-Sep-18 06:33 AM] Bryan_Beus#6442
+Let's go back to a value of `2`, but less than `100`.
+
+[28-Sep-18 06:33 AM] blackjok3r#3181
+yes, if you have any questions about this im your guy, im not the best at explaining so dont be afraid to ask anything even if it sounds stupid
+
+[28-Sep-18 06:33 AM] Bryan_Beus#6442
+Thank you, you're doikng great.
+
+[28-Sep-18 06:34 AM] Bryan_Beus#6442
+So, in general, you're not going to do MoMoM with an asset chain that you didn't create, is that the idea?
+
+[28-Sep-18 06:34 AM] Bryan_Beus#6442
+That is, you don't want to create an asset chain with `ac_cc=2`, and then have someone else do the same with a new coin supply, and shove those over to your chain.
+
+[28-Sep-18 06:34 AM] blackjok3r#3181
+yes, MoMoM clusters need a trusted entity to control who notarises them, or else the supply can be infinate.
+
+[28-Sep-18 06:34 AM] Bryan_Beus#6442
+Right, that part makes sense.
+
+[28-Sep-18 06:34 AM] blackjok3r#3181
+they are not fungible unless cc=101+
+
+[28-Sep-18 06:35 AM] Bryan_Beus#6442
+Hang on, this is where I need more info.
+
+[28-Sep-18 06:35 AM] blackjok3r#3181
+not sure what values between 2 and 100 are for,
+
+[28-Sep-18 06:35 AM] Bryan_Beus#6442
+Ok,
+
+[28-Sep-18 06:35 AM] Bryan_Beus#6442
+that's what I was wondering.
+
+[28-Sep-18 06:35 AM] blackjok3r#3181
+my guess is they are reserved for future funtions that may be added
+
+[28-Sep-18 06:35 AM] Bryan_Beus#6442
+So, in general, you don't want to make values that are between 2 and 99, inclusive, for the time being.
+
+[28-Sep-18 06:35 AM] Bryan_Beus#6442
+Hmm, okay, I'll make a note of that.
+
+[28-Sep-18 06:36 AM] blackjok3r#3181
+maybe some CC's can be acivated and others not, depending on what nuber, although its not that way at the moment.
+
+[28-Sep-18 06:36 AM] Bryan_Beus#6442
+Now, let's say I have a coin that's going to have `ac=100`. 
+
+I don't want just anybody to be able to spin up a new chain, set `ac=100`, and inflate my coin supply.
+
+How does the KMD software preven that?
+
+[28-Sep-18 06:36 AM] blackjok3r#3181
+the coins need notarization for the MoMoM to work. Without notarization with a valid set of pubkey in the source code, you cannot send coins
+
+[28-Sep-18 06:37 AM] blackjok3r#3181
+so those chains whilse being the saem CCid would not be fungible.
+
+[28-Sep-18 06:37 AM] blackjok3r#3181
+also to be noted, the same set of pubkeys needs to notarize all chains.
+
+[28-Sep-18 06:37 AM] Bryan_Beus#6442
+Oooh, that's important to know.
+
+[28-Sep-18 06:37 AM] blackjok3r#3181
+if there are 2 sets of pubkeys doing diffrent chains, they would not be fungible
+
+[28-Sep-18 06:38 AM] Bryan_Beus#6442
+Yes, that is what we're looking for in the documentation. Excellent.
+
+[28-Sep-18 06:38 AM] blackjok3r#3181
+so 2 clusters could use the same number, as long as they have diffrent notary nodes, but I htink to avoid confusion it should just be, use a diffrent number.
+
+[28-Sep-18 06:39 AM] blackjok3r#3181
+or reccomended to use a diffrent number, but it might not be possible to know all the clusters out there that have been used.
+
+[28-Sep-18 06:39 AM] blackjok3r#3181
+I hope for STAKED code to be pushed to KMD at some point, so anyone can just fork KMD and change the notaries_staked.ccp and .h files for thier own profects needs. its all backwards comaptiable.
+
+[28-Sep-18 06:41 AM] Bryan_Beus#6442
+What happens if you start an asset chain with `ac_cc=X` and you're working with one set of notary nodes, but then you want to switch to another community of notary nodes and there's already a coin there with `ac_cc=X`?
+
+Is there a limit to how high you can set X, assuming you want to make it high so that you can decrease the probability of a collision?
+
+[28-Sep-18 06:42 AM] blackjok3r#3181
+you can change the set of otary pubkeys defined by ERAS, which is a range of timestamps, that those notary pubkeys are valid, I think X can go as high as 9999 if not higher.
+
+[28-Sep-18 06:42 AM] Bryan_Beus#6442
+It sounds like this will be relevant, whenever we get secondary notarization layers going.
+
+[28-Sep-18 06:42 AM] blackjok3r#3181
+a set of notaries could notarise more than one cluster too.
+
+[28-Sep-18 06:43 AM] blackjok3r#3181
+but those clusters would not be fungible with each other
+
+[28-Sep-18 06:43 AM] blackjok3r#3181
+to be noted this is still very much in develoment, and it still has some bugs to be sorted so things could change slightly
+
+[28-Sep-18 06:44 AM] Bryan_Beus#6442
+Ok, seems like there's a lot of details here. We may not need them all right now, since our community is just getting started, so I think I have enough info to make a basic pass, and then encourage the developer to reach out to you with more questions.
+
+Until secondary layers of notarization and networks of competiting notary nodes becomes a thing, it's probably not necessary to go too deep.
+
+[28-Sep-18 06:44 AM] Bryan_Beus#6442
+Will send you a copy of what I write, for approval.
+
+[28-Sep-18 06:45 AM] blackjok3r#3181
+no worries that sounds like a good plan
+
+[28-Sep-18 06:45 AM] blackjok3r#3181
+none of this has been used for anything, we are the first project and are basically flying blind here, there was no docs at all.
+
+[28-Sep-18 06:46 AM] blackjok3r#3181
+taken me maybe a hundred hours maybe even more to get it semi-working lol
+
+[28-Sep-18 06:46 AM] Bryan_Beus#6442
+nice
+
+[28-Sep-18 06:46 AM] Bryan_Beus#6442
+yes, it's fun
+
+[28-Sep-18 07:50 AM] Bryan_Beus#6442
+@blackjok3r 
+
+Here's what I wound up with:
+
+```
+-ac_cc
+======
+
+ * **NOTE:** This parameter is still in testing.
+
+The ``-ac_cc`` parameter sets the network cluster on which the chain can interact with other chains via ===link=== cross-chain smart contracts and ===link=== MoMoM technology.
+
+Under most circumstances, this parameter requires the Komodo notarization service to achieve functionality, as it relies on the ``pubkey`` of the trusted notary nodes to ensure coin-supply stability.
+
+Once activated, the ``ac_cc`` parameter allows features such as cross-chain fungibility -- meaning that coins on one asset chain can be directly transferred to another asset chain that has the same ``ac_cc`` setting and notary nodes with the same ``pubkey``.
+
+-ac_cc=0
+--------
+
+Setting ``-ac_cc=0`` will disable smart contracts on the asset chain entirely.
+
+-ac_cc=1
+--------
+
+Setting ``-ac_cc=1`` will permit smart contracts on the asset chain, but will not allow the asset chain to interaction in cross-chain smart contracts with other asset chains.
+
+-ac_cc=2 to 100
+---------------
+
+The values of `2` through `100` are reserved for ongoing development. Please do not set your asset chain to any of those values.
+
+-ac_cc=101 to 9999
+------------------
+
+Setting the value of ``ac_cc`` to any value greater than or equal to ``101`` will permit cross-chain interaction with any asset chain that has the same ``ac_cc`` value and is secured by notary nodes with the same ``pubkey``. For example, an asset chain set to ``ac_cc=2`` in its parameters can interact with other asset chains with ``ac_cc=2``, on the same notary-node network, but cannot interact with an asset chain set to ``ac_cc=3``.
+```
+
+[28-Sep-18 07:52 AM] blackjok3r#3181
+```-ac_cc=1
+--------
+
+Setting ``-ac_cc=1`` will permit smart contracts on the asset chain, but will not allow the asset chain to interaction in cross-chain smart contracts with other asset chains.```
+
+[28-Sep-18 07:52 AM] blackjok3r#3181
+get james to confirm that part, I think posibly cross chain can still be done, but the chains are just not fungible.
+
+[28-Sep-18 07:52 AM] blackjok3r#3181
+if that makes sense
+
+[28-Sep-18 07:53 AM] blackjok3r#3181
+cross chain has a few features, a simple one being that one chain cna query KMD if a TX happened on another chain.
+
+[28-Sep-18 07:53 AM] blackjok3r#3181
+but I am only familiar with fungible chain functions, as I am not sure anything else has been made that uses the other parts.
+
+[28-Sep-18 07:57 AM] jl777c#5810
+any -ac_cc value over 101 means it is a fungible chain
+
+[28-Sep-18 07:57 AM] jl777c#5810
+2 to 100 means it can do cross chain imports, but not fungible
+
+[28-Sep-18 09:01 AM] Bryan_Beus#6442
+What is the `getbalance64` command in this sentence, regarding the `ac_stake` parameter?
+
+```
+You can use the ``getbalance64`` command to get the balance you currently have in each segid you are staking in.
+```
+
+[28-Sep-18 09:01 AM] Bryan_Beus#6442
+We don't have a `getbalance64` in the API/RPC docs.
+
+[28-Sep-18 09:02 AM] Bryan_Beus#6442
+A google search shows something about it on Github from Verus.
+
+```
+extern UniValue getbalance64(const UniValue& params, bool fHelp);
+```
+
+[28-Sep-18 09:10 AM] jl777c#5810
+it is for ac_staked chains
+
+[28-Sep-18 09:10 AM] jl777c#5810
+all addresses are in one of 64 segments
+
+[28-Sep-18 09:10 AM] jl777c#5810
+balance64 returns the balance in each of the 64 segments
+
+[28-Sep-18 09:22 AM] Bryan_Beus#6442
+Okay... I'll add it to the API/RPC list.
+
+[28-Sep-18 09:30 AM] Bryan_Beus#6442
+I added this, just for now. I won't be able to do more until I get around to testing a staked chain.
+
+Lmk if this isn't accurate.
+
+```
+getbalance64
+------------
+
+  ** EXPERIMENTAL FEATURE **: This method is part of the new ===link=== ``-ac_stake`` functionality.
+
+The ``getbalance64`` method is used only on asset chains that are utilizing the ===link=== ``-ac_stake`` functionality. On KMD-based Proof-of-Stake (PoS) asset chains, all staked coins are placed into one of 64 segments. The ``getbalance64`` method returns information about these coins. For further information, please reach out to our support team.
+```
+
+[28-Sep-18 09:34 AM] blackjok3r#3181
+getbalance64 returns the balance of coins in each segid, and weather or not they are curretly staking
+
+[28-Sep-18 09:49 AM] CMaurice#1685
+so... these pubkeys that are referred to, if a related private key is  leaked/haxed/whatever, is the asset chain compromised
+
+[28-Sep-18 09:49 AM] Bryan_Beus#6442
+That's a good question
+
+[28-Sep-18 09:51 AM] CMaurice#1685
+btw, I've reading around here on and off a few weeks now, and have a server ready, I'm sure I want to commit some time to getting dome practical experience but finding it difficult to dive in, so any direction from devs is welcome
+
+[28-Sep-18 09:51 AM] CMaurice#1685
+I'm more a home-schooled sysadmin type than developer, in his 6th decade
+
+[28-Sep-18 09:51 AM] CMaurice#1685
+though I have writted scripts
+
+[28-Sep-18 09:52 AM] CMaurice#1685
+*written
+
+[28-Sep-18 09:52 AM] jl777c#5810
+testing CC #cc-general is a good place to start
+
+[28-Sep-18 11:20 AM] Alright#0419
+@CMaurice #private-staked too
+
+[28-Sep-18 11:20 AM] Alright#0419
+@Bryan_Beus ac_staked* btw
+
+[28-Sep-18 11:21 AM] Alright#0419
+the asset chain params doc has technical details about how segids work
+
+[28-Sep-18 11:24 AM] Alright#0419
+Also your description of ac_pubkey doesn't really explain how the "payments from the network" work
+
+[28-Sep-18 11:50 PM] Bryan_Beus#6442
+@Alright 
+
+It is explained in ``-ac_perc``, I can link or c/p. Thanks.
+
+[29-Sep-18 12:56 AM] Bryan_Beus#6442
+@jl777c 
+
+Is this a more correct decay formula?
+
+```
+reward_after_halving = reward_before_halving * ac_decay/100000000
+```
+
+Earlier, it was 
+```
+reward = (reward * ac_decay)/100000000
+```
+which wasn't making sense to me, but maybe I'm wrong.
+

@@ -1,0 +1,488 @@
+==============================================================
+Guild: Komodo
+Channel: notarynode
+Topic: Setup Guide: https://docs.komodoplatform.com/notary/setup-Komodo-Notary-Node.html
+Stats: https://komodostats.com
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[06-Apr-19 10:14 AM] ComputerGenie 👴🏼📢#7004
+as long as your daemon doesn't break consensus (and afaik there's no issue with that on these 4 chains), you're fine with whatever repo/branch
+I think there's 3-4 in use
+
+[06-Apr-19 10:14 AM] CrisF#3405
+Ok, thanks 👍
+
+[06-Apr-19 10:28 AM] mrlynch#5735
+```lynch@notaryTest2:~$ nnutils/utxosplitter.sh PIZZA
+[PIZZA] Current UTXO count is 0
+[PIZZA] Splitting 6 extra UTXOs
+[PIZZA] Error: couldnt create duplicates tx``` errm... why?
+
+[06-Apr-19 10:28 AM] ComputerGenie 👴🏼📢#7004
+cuz you broke it :troll:
+
+[06-Apr-19 10:29 AM] ComputerGenie 👴🏼📢#7004
+I'd add a print to it and see what it's trying to do/create
+maybe it's trying 0/6?
+
+[06-Apr-19 10:30 AM] mrlynch#5735
+lol
+
+[06-Apr-19 10:33 AM] mrlynch#5735
+```lynch@notaryTest2:~$ curl http://127.0.0.1:7776 --silent --data "{\"coin\":\"PIZZA\",\"agent\":\"iguana\",\"method\":\"splitfunds\",\"satoshis\":10000,\"sendflag\":1,\"duplicates\":6}"
+
+{"error":"couldnt create duplicates tx","tag":"2535106217373288825"}```
+
+[06-Apr-19 10:33 AM] mrlynch#5735
+it only does this for PIZZA
+
+[06-Apr-19 10:34 AM] mrlynch#5735
+```komodo-cli -ac_name=PIZZA listunspent | jq length
+1```
+
+[06-Apr-19 10:34 AM] ComputerGenie 👴🏼📢#7004
+I dunno, I use the daemons and cli for split, not iguana
+
+[06-Apr-19 10:56 AM] mrlynch#5735
+reindexing to see if it fixes it
+
+[06-Apr-19 11:00 AM] SHossain#0007
+what is your PIZZA balance? were any utxos unconfirmed?
+
+[06-Apr-19 11:01 AM] mrlynch#5735
+4.xxx / nope, confirmed
+
+[06-Apr-19 11:02 AM] mrlynch#5735
+for some reason it couldn't sign rawtx
+
+[06-Apr-19 11:02 AM] mrlynch#5735
+reindexing now to see if it fixes it
+
+[06-Apr-19 11:03 AM] mrlynch#5735
+```komodo-cli -ac_name=PIZZA validateaddress RU2Wi8FGdheQXSfHzgtMANB6JJTLchfHhE | jq '. | {isvalid,ismine}'
+{
+  "isvalid": true,
+  "ismine": true
+}```
+
+[06-Apr-19 11:04 AM] SHossain#0007
+i used this `acsplit` script when i need manual split
+```
+#!/bin/bash
+curl --url "http://127.0.0.1:7776" --data "{\"coin\":\""${1}"\",\"agent\":\"iguana\",\"method\":\"splitfunds\",\"satoshis\":\"10000\",\"sendflag\":1,\"duplicates\":"${2}"}"
+```
+usage: `./acsplit PIZZA 50`
+
+[06-Apr-19 11:04 AM] mrlynch#5735
+the one i use is using iguana as well.. i just get an error: can't create duplicate tx
+
+[06-Apr-19 11:05 AM] mrlynch#5735
+reindex done, same err 🤔
+
+[06-Apr-19 11:05 AM] SHossain#0007
+have you tried restarting iguana?
+
+[06-Apr-19 11:08 AM] mrlynch#5735
+few times
+
+[06-Apr-19 11:09 AM] SHossain#0007
+when nothing works and you have tried everything, i would suggest to reboot server
+
+[06-Apr-19 11:11 AM] mrlynch#5735
+rebuilding iguana, maybe me snooping around borked it, if that doesn't help.. reboot it is
+
+[06-Apr-19 11:11 AM] zatJUM#9924
+Did you try to send the whole balance to yourself?
+
+{Reactions}
+👆🏽 (3) 
+
+[06-Apr-19 11:12 AM] SHossain#0007
+yes, try to send  the full balance to self as well
+
+[06-Apr-19 11:13 AM] mrlynch#5735
+i did.. few times
+
+[06-Apr-19 11:14 AM] mrlynch#5735
+```<<<<<<<< A bitcoind_RPC: PIZZA post_process_bitcoind_RPC.validateaddress
+PIZZA RU2Wi8FGdheQXSfHzgtMANB6JJTLchfHhE didnt return anything```
+
+[06-Apr-19 11:14 AM] mrlynch#5735
+🤔
+
+[06-Apr-19 11:14 AM] SHossain#0007
+never came across this issue of not splitting in any way.
+
+[06-Apr-19 11:14 AM] SHossain#0007
+reboot server
+
+[06-Apr-19 11:15 AM] SHossain#0007
+mostly it just works when all the requirements are met
+
+[06-Apr-19 11:16 AM] ComputerGenie 👴🏼📢#7004
+the problem is that iguana isn't picking up the balance
+
+[06-Apr-19 11:16 AM] mrlynch#5735
+it's not validating the address for PIZZA
+
+[06-Apr-19 11:16 AM] ComputerGenie 👴🏼📢#7004
+`curl --url "http://127.0.0.1:7776" --data "{\"coin\":\""PIZZA"\",\"agent\":\"iguana\",\"method\":\"balance\",\"address\":\"RU2Wi8FGdheQXSfHzgtMANB6JJTLchfHhE\"}"`
+
+[06-Apr-19 11:16 AM] ComputerGenie 👴🏼📢#7004
+is `RTbalance` 0?
+
+[06-Apr-19 11:16 AM] mrlynch#5735
+yes
+
+[06-Apr-19 11:17 AM] mrlynch#5735
+```{"address":"RU2Wi8FGdheQXSfHzgtMANB6JJTLchfHhE","RTbalance":"0","unspents":[],"tag":"14422583150347969427"}```
+
+[06-Apr-19 11:17 AM] ComputerGenie 👴🏼📢#7004
+that's the problem, it sees nothing *to* split
+
+[06-Apr-19 11:17 AM] SHossain#0007
+double check the pubkey and passphrase/WIF you used in iguana maybe?
+
+[06-Apr-19 11:18 AM] ComputerGenie 👴🏼📢#7004
+I get teh same thing
+```$ curl --url "http://127.0.0.1:7776" --data "{\"coin\":\""PIZZA"\",\"agent\":\"iguana\",\"method\":\"balance\",\"address\":\"RGeniexxkjnR34hg7ZnCf36kmfuJusf6rE\"}"
+{"address":"RGeniexxkjnR34hg7ZnCf36kmfuJusf6rE","RTbalance":"0","unspents":[],"tag":"4714226020807752081"}```
+
+{Reactions}
+🤔 
+
+[06-Apr-19 11:18 AM] mrlynch#5735
+pubkey & passphrase correct.. BEER & TXSCLCC work fine, i even got a nota on TXS on the new server
+
+[06-Apr-19 11:18 AM] mrlynch#5735
+```komodo-cli -ac_name=PIZZA getbalance
+4.04598447```
+
+[06-Apr-19 11:19 AM] mrlynch#5735
+```pubkey=02c3f0367df831822a0b21b218bc16d7126c4be1c3184d648b4fa6cfb4366af0f4
+
+lynch@notaryTest2:~$ komodo-cli -ac_name=PIZZA validateaddress RU2Wi8FGdheQXSfHzgtMANB6JJTLchfHhE | grep 02c3f0367df831822a0b21b218bc16d7126c4be1c3184d648b4fa6cfb4366af0f4
+  "pubkey": "02c3f0367df831822a0b21b218bc16d7126c4be1c3184d648b4fa6cfb4366af0f4",```
+
+[06-Apr-19 11:20 AM] SHossain#0007
+post full output of `komodo-cli -ac_name=PIZZA listunspent`
+
+[06-Apr-19 11:21 AM] mrlynch#5735
+```komodo-cli -ac_name=PIZZA listunspent
+[
+  {
+    "txid": "11673afad2cb49ce0081a0b9a05b145e874487aaeb8af4a63f2a381b913b232a",
+    "vout": 0,
+    "generated": false,
+    "address": "RU2Wi8FGdheQXSfHzgtMANB6JJTLchfHhE",
+    "segid": 28,
+    "account": "",
+    "amount": 3.04603447,
+    "interest": 0.00000000,
+    "scriptPubKey": "2102c3f0367df831822a0b21b218bc16d7126c4be1c3184d648b4fa6cfb4366af0f4ac",
+    "rawconfirmations": 36,
+    "confirmations": 36,
+    "spendable": true
+  },
+  {
+    "txid": "11673afad2cb49ce0081a0b9a05b145e874487aaeb8af4a63f2a381b913b232a",
+    "vout": 1,
+    "generated": false,
+    "address": "RU2Wi8FGdheQXSfHzgtMANB6JJTLchfHhE",
+    "segid": 28,
+    "account": "",
+    "amount": 0.99995000,
+    "interest": 0.00000000,
+    "scriptPubKey": "76a914cda3b3f860ffa96d63ca673205a5c836294d652288ac",
+    "rawconfirmations": 36,
+    "confirmations": 36,
+    "spendable": true
+  }
+]```
+
+[06-Apr-19 11:21 AM] mrlynch#5735
+same thing with testnet & blackjok3r iguana
+
+[06-Apr-19 11:22 AM] mrlynch#5735
+```lynch@notaryTest2:~$ curl --url "http://127.0.0.1:7776" --data "{\"coin\":\""BEER"\",\"agent\":\"iguana\",\"method\":\"balance\",\"address\":\"RU2Wi8FGdheQXSfHzgtMANB6JJTLchfHhE\"}"
+{"address":"RU2Wi8FGdheQXSfHzgtMANB6JJTLchfHhE","RTbalance":"0","unspents":[],"tag":"10896383830527377980"}
+
+lynch@notaryTest2:~$ curl --url "http://127.0.0.1:7776" --data "{\"coin\":\""TXSCLCC"\",\"agent\":\"iguana\",\"method\":\"balance\",\"address\":\"RU2Wi8FGdheQXSfHzgtMANB6JJTLchfHhE\"}"
+{"address":"RU2Wi8FGdheQXSfHzgtMANB6JJTLchfHhE","RTbalance":"0","unspents":[],"tag":"4101458875855451826"}```
+
+[06-Apr-19 11:23 AM] mrlynch#5735
+i just split BEER just fine
+
+[06-Apr-19 11:23 AM] mrlynch#5735
+so not sure if RTbalance has an impact 🤔
+
+[06-Apr-19 11:27 AM] SHossain#0007
+post output of `komodo-cli -ac_name=PIZZA getinfo`
+
+[06-Apr-19 11:28 AM] mrlynch#5735
+```{
+  "version": 2001526,
+  "protocolversion": 170007,
+  "KMDversion": "0.3.3b",
+  "notarized": 74172,
+  "prevMoMheight": 74172,
+  "notarizedhash": "00e6c1c6570c695daa61da74a16fd2a276200e501d1240e62da38bd953671f65",
+  "notarizedtxid": "27d6b5338b17dc205e343becc0a888eb6b022e85000baa10efdd1a41bae543ad",
+  "notarizedtxid_height": "mempool",
+  "KMDnotarized_height": 0,
+  "notarized_confirms": 0,
+  "walletversion": 60000,
+  "balance": 4.04598447,
+  "blocks": 74183,
+  "longestchain": 74183,
+  "timeoffset": 0,
+  "tiptime": 1554550021,
+  "connections": 52,
+  "proxy": "",
+  "difficulty": 15.56493967352732,
+  "testnet": false,
+  "keypoololdest": 1554491654,
+  "keypoolsize": 101,
+  "paytxfee": 0.00000000,
+  "relayfee": 0.00000100,
+  "errors": "",
+  "pubkey": "02c3f0367df831822a0b21b218bc16d7126c4be1c3184d648b4fa6cfb4366af0f4",
+  "name": "PIZZA",
+  "sapling": 37849,
+  "p2pport": 11607,
+  "rpcport": 11608,
+  "magic": 1012055725,
+  "premine": 100000000
+}```
+
+[06-Apr-19 11:30 AM] CrisF#3405
+Nothing to do with this```
+komodo-cli listlockunspent | jq -c .
+komodo-cli lockunspent true
+```?
+edit: `komodo-cli -ac_name=PIZZA listlockunspent | jq -c .`
+
+[06-Apr-19 11:31 AM] SHossain#0007
+that is only for Komodo
+
+[06-Apr-19 11:32 AM] CrisF#3405
+Won't -ac_name=PIZZA work?
+
+[06-Apr-19 11:32 AM] SHossain#0007
+should work
+
+[06-Apr-19 11:33 AM] CrisF#3405
+Oh, good, I've been doing it now and then without checking 🤦
+
+[06-Apr-19 11:33 AM] CrisF#3405
+Should have added that.
+
+[06-Apr-19 11:37 AM] mrlynch#5735
+restarting PIZZA with fresh wallet and reimport privkey
+
+{Reactions}
+🤞 
+
+[06-Apr-19 11:40 AM] mrlynch#5735
+nope.. same thing
+
+[06-Apr-19 11:41 AM] ComputerGenie 👴🏼📢#7004
+solution: don't use iguana, use the daemon
+🙂
+
+[06-Apr-19 11:44 AM] SHossain#0007
+external solution https://github.com/DeckerSU/komodo_scripts/blob/master/split_nn_sapling.sh
+you need to edit a lot of lines in there to make this work
+
+{Embed}
+https://github.com/DeckerSU/komodo_scripts/blob/master/split_nn_sapling.sh
+DeckerSU/komodo_scripts
+set of komodo helper scripts. Contribute to DeckerSU/komodo_scripts development by creating an account on GitHub.
+https://avatars3.githubusercontent.com/u/22120003?s=400&v=4
+
+[06-Apr-19 11:45 AM] ComputerGenie 👴🏼📢#7004
+there's only 113 in total, "a lot" would be all of them 😛
+
+[06-Apr-19 11:45 AM] SHossain#0007
+Line: 23-30 your address, pubkey, privkey, hash160
+Line: 43: curl -s https://pizza.kmdexplorer.io/insight-api-komodo/addr/$FROM_ADDRESS/utxo > split_nn.utxos
+Line: 104-106 take info from the PIZZA.conf file
+
+[06-Apr-19 11:47 AM] SHossain#0007
+this will for sure split your utxos that is usable by iguana from any type of utxos you have in your address
+
+[06-Apr-19 11:49 AM] SHossain#0007
+@mrlynch your hash160 value will be `cda3b3f860ffa96d63ca673205a5c836294d6522`
+
+[06-Apr-19 11:49 AM] SHossain#0007
+rest of the info you should have i t
+
+[06-Apr-19 11:50 AM] ComputerGenie 👴🏼📢#7004
+silly question, could it be the lack of userpass like we need for mm?
+
+[06-Apr-19 11:50 AM] mrlynch#5735
+thanks for that.. .but i'm still curious as to why it's happening
+
+[06-Apr-19 11:51 AM] Alright#0419
+LABS utxosplitter requires edit of 3 or 4 lines to get working
+
+[06-Apr-19 11:52 AM] mrlynch#5735
+:troll_rage: :troll_rage: :troll_rage: :troll_rage: 
+as always it's the simplest of things
+
+[06-Apr-19 11:52 AM] mrlynch#5735
+i knew i borked it
+
+[06-Apr-19 11:52 AM] mrlynch#5735
+fyi .. always check .confs
+
+[06-Apr-19 11:52 AM] mrlynch#5735
+my script forgot to add rpcus of rpcuser in pizza .conf
+
+[06-Apr-19 11:53 AM] mrlynch#5735
+thanks @ComputerGenie 👴🏼📢 for the a-ha
+
+{Reactions}
+2561_feelsevilman 
+
+[06-Apr-19 11:53 AM] SHossain#0007
+default PIZZA startup first time creates the necessary info in the conf file
+
+[06-Apr-19 11:54 AM] ComputerGenie 👴🏼📢#7004
+I mean in the curl call to iguana
+
+[06-Apr-19 11:54 AM] mrlynch#5735
+i created the .confs manually.. .well .. through a script
+
+[06-Apr-19 11:54 AM] SHossain#0007
+for AC, let the daemon create the conf
+
+{Reactions}
+👌 
+
+[06-Apr-19 11:54 AM] mrlynch#5735
+surprised how it worked in the daemon tho 🤔
+
+[06-Apr-19 11:55 AM] ComputerGenie 👴🏼📢#7004
+`for AC, let the daemon create the conf`
+\* and then go back and edit it later
+
+{Reactions}
+👍🏽 (2) 
+
+[06-Apr-19 11:57 AM] mrlynch#5735
+i'll amend my checklist 😄
+
+[06-Apr-19 11:58 AM] mrlynch#5735
+great success... 1 hour gone to shit for a stupid mistake
+
+[06-Apr-19 12:05 PM] dukeleto#7326
+I see a lot of dedicated people learning in here, just wanted to say that current NN ops notice and it's nice to 👁  !
+
+{Reactions}
+👍 (10) 🐙 
+
+[06-Apr-19 12:09 PM] gt#2812
+definitely a learning experience
+
+[06-Apr-19 12:10 PM] CrisF#3405
+It's a great place for that @dukeleto 😃  So many people helping each other out.  Figure anyone participating here would benefit the community.
+
+{Reactions}
+👍🏽 (5) 
+
+[06-Apr-19 12:55 PM] mrlynch#5735
+```{"notary":"Alright","bestk":-1,"recvmask":"0","bestmask":"0"}
+{"notary":"blackjok3r","bestk":6,"recvmask":"108195a","bestmask":"8185a"}
+{"notary":"CHMEX","bestk":-1,"recvmask":"0","bestmask":"0"}
+{"notary":"Strob","bestk":6,"recvmask":"108195a","bestmask":"8185a"}
+{"notary":"jorian","bestk":6,"recvmask":"108195a","bestmask":"8185a"}
+{"notary":"SHossain","bestk":-1,"recvmask":"0","bestmask":"0"}
+{"notary":"PHBA2061","bestk":6,"recvmask":"108195a","bestmask":"8185a"}
+{"notary":"CrisF","bestk":-1,"recvmask":"0","bestmask":"0"}
+{"notary":"Lumbi","bestk":6,"recvmask":"108195a","bestmask":"8185a"}
+{"notary":"gt","bestk":-1,"recvmask":"0","bestmask":"0"}
+{"notary":"zatJUM","bestk":-1,"recvmask":"0","bestmask":"0"}
+{"notary":"ComputerGenie","bestk":6,"recvmask":"8195a","bestmask":"8185a"}
+{"notary":"mrlynch","bestk":6,"recvmask":"108195a","bestmask":"8185a"}
+{"notary":"phm87","bestk":-1,"recvmask":"0","bestmask":"0"}
+{"notary":"metaphilibert","bestk":-1,"recvmask":"0","bestmask":"0"}
+{"notary":"smk762","bestk":-1,"recvmask":"0","bestmask":"0"}
+{"notary":"infotech-al","bestk":-1,"recvmask":"0","bestmask":"0"}
+{"notary":"dwy","bestk":-1,"recvmask":"0","bestmask":"0"}
+{"notary":"popcornbag","bestk":-1,"recvmask":"0","bestmask":"0"}
+{"notary":"TonyL","bestk":6,"recvmask":"108195a","bestmask":"8185a"}
+{"notary":"NutellaLicka","bestk":-1,"recvmask":"0","bestmask":"0"}
+{"notary":"almocheCGG","bestk":-1,"recvmask":"0","bestmask":"0"}
+{"notary":"VoskCoin","bestk":-1,"recvmask":"0","bestmask":"0"}
+{"notary":"MadCryptoHead","bestk":-1,"recvmask":"0","bestmask":"0"}
+{"notary":"karasugoi","bestk":6,"recvmask":"108195a","bestmask":"8185a"}```
+
+[06-Apr-19 12:55 PM] mrlynch#5735
+does this mean i have a chance of getting into a nota now?
+
+[06-Apr-19 12:57 PM] gt#2812
+i believe so
+
+[06-Apr-19 12:58 PM] ComputerGenie 👴🏼📢#7004
+`curl -s --url "http://127.0.0.1:7776" --data "{\"agent\":\"dpow\",\"method\":\"active\"}" | jq -cr '.[] | select(.bestk > 0) | .'`
+
+{Reactions}
+👌 👍 (2) 
+
+[06-Apr-19 01:01 PM] PHBA2061#2530
+thanks CG, that's so useful !
+
+[06-Apr-19 01:01 PM] Strob#3417
+By the way, I want to say a big thank to all of those who took time to answer my insisting questions here!!! 👍🏻  👍🏻
+
+{Reactions}
+👍🏽 (2) 
+
+[06-Apr-19 01:02 PM] CrisF#3405
+Thanks for asking them too, @Strob .  I've got a lot from those answers too.
+
+{Reactions}
+👆 (2) 
+
+[06-Apr-19 01:03 PM] mrlynch#5735
+@blackjok3r in your iguana do "MINE" lines go to stdout? can't find that in the logs :PeepoThink:
+
+[06-Apr-19 01:03 PM] mrlynch#5735
+or... what's logged when you successfully nota?
+
+[06-Apr-19 01:04 PM] CrisF#3405
+This data might be cool to see a visualizations of.  Would it be worth recording stats with an oracle?  (I don't have the skills to do that atm, so sorry, can't offer to make)
+
+[06-Apr-19 01:04 PM] PHBA2061#2530
+ok so of I take that ouput for example, `8185a` and convert it to binary value, 
+which gives `1000 0001 1000 0101 1010`
+I suppose the seven `"1"` correspond the seven NN who signed the multisig transaction ? 
+How can we determine which `"1"` correspond to which NN though ?
+
+[06-Apr-19 01:04 PM] SHossain#0007
+```
+new PENDING BESTK (14 66a4) state.0
+bestk.14 66a4 KMD height.74270 mod.2 VINI.1 myind.5 MINE.({"txid":"e9e3929093ee411868e6bf00befb13f7404263e2041add7a94826bb929ea24a8","vout":4,"scriptSig":{"asm":"304402200a6be70687dd9ce440c910ea8183b107a8
+e3e18c76067afda51142211d5681b00220222b5cadc52c922d5f17067042f1adcf80d98916f5983529f309f16e7af960b0[ALL]","hex":"47304402200a6be70687dd9ce440c910ea8183b107a8e3e18c76067afda51142211d5681b00220222b5cadc52c92
+2d5f17067042f1adcf80d98916f5983529f309f16e7af960b001"},"sequence":4294967295}) j.1
+>>>>>>>>>>> KMD dpow_sendrawtransaction (15d2a3c0e470ba7f0b71a35e365a610ca97aec9d9652616839c01b5ea7637d88)
+bestk.14 66a4 PIZZA height.74270 mod.2 VINI.1 myind.5 MINE.({"txid":"feca89d9869dda50d0af228994cef37aacede6d7edd029b8999dd65ab8af787e","vout":17,"scriptSig":{"asm":"3045022100e830ede4e1a54c1349af1aea49890
+4f7388b763317742e4b0bf426440e77391e022062275710de4edcade4f5a87a510f617dbde5193482449696cfbcc4aeef619795[ALL]","hex":"483045022100e830ede4e1a54c1349af1aea498904f7388b763317742e4b0bf426440e77391e02206227571
+0de4edcade4f5a87a510f617dbde5193482449696cfbcc4aeef61979501"},"sequence":4294967295}) j.1
+complete statemachine.KMD ht.74270 state.1000 (9c4a7800 c0a3d215)
+>>>>>>>>>>> PIZZA dpow_sendrawtransaction (92edcd9b23b04762e9c5e09c9a9a924659a6f6139ba43b406c15bef7c88b87a4)
+complete statemachine.PIZZA ht.74270 state.-1 (9c4a7800 9bcded92)
+```
+
+[06-Apr-19 01:05 PM] SHossain#0007
+a successful notarization ^^
+
+[06-Apr-19 01:05 PM] SHossain#0007
+check for the line starts with `bestk`
+
+[06-Apr-19 01:06 PM] mrlynch#5735
+thank you
+

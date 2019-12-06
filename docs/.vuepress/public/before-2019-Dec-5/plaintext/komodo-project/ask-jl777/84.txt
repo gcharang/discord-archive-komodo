@@ -1,0 +1,339 @@
+==============================================================
+Guild: Komodo
+Channel: ask-jl777
+Topic: Ask questions about the core tech here, but not questions about prices or personal questions or GUI and  please don't DM JL777.
+https://dexstats.info/richlistlookup.php?address=RLVzC4tr9cNKvuw2z4m8KuMfZURwCehx55
+https://medium.com/@jameslee777
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[08-Aug-19 08:51 AM] mrlynch#5735
+yes, 2 min
+
+[08-Aug-19 08:51 AM] jl777c#5810
+so if both keys are compromised, it doesnt help
+
+[08-Aug-19 08:51 AM] hyperDEX#6586
+😄
+
+[08-Aug-19 08:51 AM] mrlynch#5735
+that's how i understood from the doc
+
+[08-Aug-19 08:52 AM] jl777c#5810
+then just multisig with physical keys does seem better
+
+[08-Aug-19 08:52 AM] hyperDEX#6586
+I have the yubikey 2fa for my laptop, so convenient. Maybe we just need a good GUI for a way to setup multisig with that
+
+[08-Aug-19 08:53 AM] jl777c#5810
+yes
+
+[08-Aug-19 08:55 AM] mrlynch#5735
+
+{Attachments}
+https://cdn.discordapp.com/attachments/455851625915875338/608946311428833280/MES16.pdf
+
+[08-Aug-19 08:55 AM] mrlynch#5735
+apologies @KomodoWorld still stuck on irl stuff 😦
+
+[08-Aug-19 09:00 AM] jl777c#5810
+that is the original academic paper, looking for whatever bishop proposed as an actual solution
+
+[08-Aug-19 09:01 AM] KomodoWorld#8282
+no prob @mrlynch I got a list of many other CC to work upon if you miss this one 👍
+
+[08-Aug-19 09:03 AM] mrlynch#5735
+let me dig some more.. i have most my stuff disconnected. have to find the right drive
+
+{Reactions}
+👌 
+
+[08-Aug-19 09:18 AM] mrlynch#5735
+found it
+<https://www.mail-archive.com/bitcoin-dev@lists.linuxfoundation.org/msg08267.html>
+
+[08-Aug-19 09:19 AM] mrlynch#5735
+that's the new proposal
+
+[08-Aug-19 09:30 AM] jl777c#5810
+the trick is to pregenerate signed transactions with a onetime use privkey that you never save. since you never save it, it cant be compromised and the only thing that can happen is that you either broadcast this transaction,  or you dont
+
+[08-Aug-19 09:31 AM] mrlynch#5735
+and store the presigned transactions should one ever need it i guess, no?!
+
+[08-Aug-19 09:31 AM] jl777c#5810
+the rest is just standard if/else scripting, but checksequenceverify is needed, which our codebase doesnt have as that came in 0.12
+
+[08-Aug-19 09:31 AM] jl777c#5810
+yes, you hang onto the presigned tx as if it was a privkey
+
+[08-Aug-19 09:32 AM] jl777c#5810
+it is the only way you can bypass the normal spend using the hot-wallet privkey
+
+[08-Aug-19 09:33 AM] jl777c#5810
+with this, i dont think there is need for multisig or the doomsday scenarios, just create the simple vault logic. a bit tricky as the vault reclaim needs to spend back to a new vault
+
+[08-Aug-19 09:33 AM] jl777c#5810
+it seems like a couple weeks of fiddling with bitcoin script
+
+[08-Aug-19 09:35 AM] mrlynch#5735
+can the presigned tx be stored on-chain or even in wallet.dat? even if the attacker has access to that it would be detrimental to use it therefore one can use a compromised private key to retrieve the presigned tx
+
+[08-Aug-19 09:35 AM] mrlynch#5735
+no?!
+
+[08-Aug-19 09:36 AM] jl777c#5810
+yes, store it in wallet.dat, or maybe encrypted on the blockchain
+
+[08-Aug-19 09:37 AM] jl777c#5810
+if using the hot-wallet privkey as the encryption key, then yes it wont do the attacker any good to broadcast it
+
+[08-Aug-19 09:37 AM] mrlynch#5735
+yes that is what i was refering to - the hot wallet key
+
+[08-Aug-19 09:37 AM] mrlynch#5735
+thank you!
+
+[08-Aug-19 09:41 AM] jl777c#5810
+the recursive part is basically iterating from the last one all the way back to the first one, so there would be N different revocation presigned tx, one for each iteration
+
+[08-Aug-19 09:41 AM] jl777c#5810
+the hope i guess is that the thief will stop trying to steal it if it keeps going back into the vault
+
+[08-Aug-19 09:41 AM] jl777c#5810
+a MUCH simpler way is just to make the presigned transaction go directly to a very cold wallet address
+
+[08-Aug-19 09:43 AM] jl777c#5810
+then just need to generate one set, none of this recursion complexity, no need for multisig. just generate the temp keypair, create a tx that spends to that address (as one of the possible spend conditions in an if/elif/else p2sh script), sign the tx, throw away the key
+
+[08-Aug-19 09:43 AM] jl777c#5810
+something like that. not 100% right but close enough i think to be able to debug once its put together
+
+[08-Aug-19 09:45 AM] mrlynch#5735
+i'll start fiddling once i put my gear back together unless this is urgent and someone else can do it
+
+[08-Aug-19 09:45 AM] jl777c#5810
+i dont think the bitcoin guys will get it done this year
+
+[08-Aug-19 09:46 AM] jl777c#5810
+it is a dapp that creates tx
+
+[08-Aug-19 09:51 AM] hyperDEX#6586
+I dont understand, why would it not do the attacker any goodto have the presigned tx info?
+
+[08-Aug-19 09:52 AM] jl777c#5810
+because the presigned info just spends to the new vault (or separate cold storage address)
+
+[08-Aug-19 09:52 AM] mrlynch#5735
+because the presigned tx reverses whatever they do
+
+[08-Aug-19 09:54 AM] jl777c#5810
+constructing the if/else p2sh script is the critical aspect of this. i think if all the paths it can go to are known, it can be done. one detail is how to make sure the hotwallet pubkey cant spend for X number of blocks after the release tx is spent. just too tired to think clear about this, but i am sure there must be a way
+
+[08-Aug-19 09:56 AM] hyperDEX#6586
+Oh so you mean the presigned tx goes back to the vault and it will veto any spend directly from the privatekey?
+
+[08-Aug-19 09:56 AM] jl777c#5810
+yes
+
+[08-Aug-19 09:56 AM] jl777c#5810
+to the vault or to a extremely secure cold address to simplify the never ending chain and avoid the attacker having multiple chances
+
+[08-Aug-19 09:56 AM] jl777c#5810
+but this means the hotwallet is not very hot at all
+
+[08-Aug-19 09:56 AM] hyperDEX#6586
+Ah ok makes sense
+
+[08-Aug-19 09:57 AM] hyperDEX#6586
+But it also requires the user to act
+
+[08-Aug-19 09:57 AM] hyperDEX#6586
+Would it not be better to act to approve it?
+
+[08-Aug-19 09:57 AM] jl777c#5810
+not sure how practical it is to wait a day before you can spend from your hotwallet
+
+[08-Aug-19 09:57 AM] hyperDEX#6586
+But then it is just multisig 😄
+
+[08-Aug-19 09:57 AM] jl777c#5810
+it seems a simple multisig is a better way
+
+[08-Aug-19 09:57 AM] hyperDEX#6586
+yeah LOL
+
+[08-Aug-19 09:59 AM] mrlynch#5735
+i believe the use case is to store large amounts with an added layer of security/peace of mind
+
+[08-Aug-19 09:59 AM] jl777c#5810
+this is more for lukewarm "cold wallets"
+
+[08-Aug-19 10:00 AM] mrlynch#5735
+but yes, multisig using 3 or 4 physical keys does sound more secure
+
+[08-Aug-19 10:00 AM] jl777c#5810
+and without a day delay per each spend
+
+[10-Aug-19 08:15 AM] hyperDEX#6586
+https://twitter.com/binance/status/1160034831599751168
+
+{Embed}
+Binance (@binance)
+https://twitter.com/binance/status/1160034831599751168
+Approximately 5 hours ago there was a large-scale dusting attack on $LTC @Litecoin users. 
+
+One of many transactions: https://t.co/zgk9gPRNcU
+
+Here's what you need to know and how to protect yourself:
+https://t.co/KNVoQLwBUb
+Likes
+196
+Twitter
+
+[10-Aug-19 08:16 AM] hyperDEX#6586
+@jl777c is there anyway to stop things like this?
+
+[10-Aug-19 08:45 AM] jl777c#5810
+PIRATE
+
+{Reactions}
+☝ (4) 
+
+[10-Aug-19 08:46 AM] jl777c#5810
+any chain with taddr can be dust attacked
+
+[10-Aug-19 01:55 PM] Markus#5464
+@jl777c JL when KMD OS? I believe we need a new open source OS with privacy features  and with atomic dex as standard included in the OS
+
+[10-Aug-19 01:55 PM] jl777c#5810
+what is wrong with tails
+
+[10-Aug-19 01:56 PM] Markus#5464
+tails?
+
+[10-Aug-19 01:57 PM] jl777c#5810
+https://tails.boum.org/
+
+[10-Aug-19 01:58 PM] Markus#5464
+Will check it out 👍
+
+[10-Aug-19 02:24 PM] 𝙊𝙞𝙣𝙠#3612
+@Markus This is an installation instruction for Tails with a Verus wallet. Should be easily adaptable for komodo and/or Atomic Dex
+https://github.com/VerusCoin/VerusServicesSetup/blob/master/Tails-Wallet.md
+
+{Embed}
+https://github.com/VerusCoin/VerusServicesSetup/blob/master/Tails-Wallet.md
+VerusCoin/VerusServicesSetup
+VerusCoin Pool and Electrum Setup Instructions. Contribute to VerusCoin/VerusServicesSetup development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/38958958?s=400&v=4
+
+[10-Aug-19 06:09 PM] Slyris#2880
+My idea is to create an easily configurable game framework in modern C++ around `CC`. The idea would be to make modules of various difficulties such as graphic modules, scripting modules but also more advanced modules as an economic model for a game. I would really like to create a small mmorpg in 2d where the economy would be through mining that would bring money into the wallet of players. Assuming I do not want a maximum amount of tokens at the start. But rather an ecological cycle where each month we can mine up to a maximum amount of token. (Knowing that the mining in game would be literally stoned for a given time) the game could renew its resources every month. I think it could make a game rather interesting and fun. @jl777c
+
+[10-Aug-19 06:09 PM] Slyris#2880
+It's just a few ideas, but it could be funny.
+
+[10-Aug-19 06:10 PM] Slyris#2880
+But on the assumption that these tokens are real and have addresses it could also have a real value in the cryptos market.
+
+[10-Aug-19 06:11 PM] Slyris#2880
+I have always found the economic model of video games today not very interesting, I would really like to propose an innovative solution and especially for the players
+
+[10-Aug-19 06:13 PM] Slyris#2880
+With the traceability of the currency, can even imagine a model where the bots would be easily detectable
+
+[10-Aug-19 06:13 PM] Slyris#2880
+Sometimes people are discouraged when they come on a video game and the economic model is to take out their credit card and buy on third party sites
+
+[10-Aug-19 06:14 PM] Slyris#2880
+In this model, players create the game economy themselves at the work of their clicks
+
+[10-Aug-19 06:15 PM] Slyris#2880
+In the same idea I think the possibility of the blockchain to have unique transactions, the very possibility of having items via transactions, all that gives me a lot of ideas
+
+[10-Aug-19 06:16 PM] Slyris#2880
+I think sometimes when I have an hour or two I would look at a project like this, proposed a very customizable module of a real economy (fair) for a video game.
+
+[10-Aug-19 06:21 PM] jl777c#5810
+the rogue CC locked all the premine into a CC address
+
+[10-Aug-19 06:22 PM] jl777c#5810
+then as players found in game gold, when they came out of the game they would get the corresponding coins
+
+[10-Aug-19 06:22 PM] jl777c#5810
+all this is not only possible, it was already done
+
+[10-Aug-19 06:22 PM] jl777c#5810
+we also now have the possibility of making it a DAO
+
+[10-Aug-19 06:22 PM] Slyris#2880
+you mean kind of database
+
+[10-Aug-19 06:22 PM] jl777c#5810
+so some percentage of the coin supply at regular intervals can be sent out to all players in proportion to the coins they have
+
+[10-Aug-19 06:23 PM] jl777c#5810
+each coin becomes like a share
+
+[10-Aug-19 06:23 PM] jl777c#5810
+all the data is onchain
+
+[10-Aug-19 06:23 PM] Slyris#2880
+Yeah
+
+[10-Aug-19 06:23 PM] jl777c#5810
+all verified, so no creation of fake data files
+
+[10-Aug-19 06:23 PM] Slyris#2880
+But imagine we are an external video game
+
+[10-Aug-19 06:23 PM] Slyris#2880
+We want to integrate easyli an economy for our game
+
+[10-Aug-19 06:23 PM] Slyris#2880
+we will look around CC
+
+[10-Aug-19 06:24 PM] Slyris#2880
+to totally place the whole economy on the blockchain
+
+[10-Aug-19 06:24 PM] Slyris#2880
+with a fair system
+
+[10-Aug-19 06:24 PM] Slyris#2880
+It's need to be easy to integrate
+
+[10-Aug-19 06:24 PM] Slyris#2880
+like literally few clicks to define what they want
+
+[10-Aug-19 06:24 PM] jl777c#5810
+i dont have the context to know how to easily integrate,but can help with the onchain side
+
+[10-Aug-19 06:25 PM] Slyris#2880
+Because i know we have everything to achieve this kind of project, but this is not so obvious right now
+
+[10-Aug-19 06:27 PM] Slyris#2880
+What i want is something that we can directly ping `mmorpg company` and say look we have a battle ready module that can interest you
+
+[10-Aug-19 06:27 PM] jl777c#5810
+ok, i like the plan
+
+[10-Aug-19 06:29 PM] Slyris#2880
+Today the big problem of the companies that make mmorpg is that their economy (of the game) is infested with bots and resellers third, they do not have the security of the blockchain sometimes they have duplication of items , they are forced to rollbacks, it's hell.
+
+[10-Aug-19 06:30 PM] Slyris#2880
+Here we come, and literally have a configurable solution that solves all these problems. I even think that many companies would pay for this kind of solution.
+
+[10-Aug-19 06:31 PM] Slyris#2880
+We just have to offer something that integrates as well on mobile, as on pc, on consoles, something very simple and not intruisive
+
+[10-Aug-19 06:33 PM] Slyris#2880
+It's really disruptive, on the one hand a company can very well say why we would go on an economic model that would prevent us from having fiat money, but on the other hand it can seduce a lot of players for the security that it offers and nothing would prevent a company from getting money with fees on every block mined in game.
+
+[10-Aug-19 06:33 PM] Slyris#2880
+On the one hand the security of not having all the problems mentioned above (so finally a more solid game), on the other hand we lose all the security, but we have an economic model based on fiat money.
+
+[10-Aug-19 06:33 PM] jl777c#5810
+the other aspect is that the game company can keep 10% of the premine for themselves and just lock 90%
+

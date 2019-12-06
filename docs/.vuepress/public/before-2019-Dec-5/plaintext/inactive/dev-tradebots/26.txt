@@ -1,0 +1,331 @@
+==============================================================
+Guild: Komodo
+Channel: dev-tradebots
+Topic: Linked with 'KMD-Tradebots' on Matrix
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[17-Aug-18 09:02 AM] jl777c#5810
+it is getting to connect?
+
+[17-Aug-18 09:02 AM] lukechilds#2707
+no
+
+[17-Aug-18 09:02 AM] lukechilds#2707
+sometimes it gets to reserved
+
+[17-Aug-18 09:02 AM] lukechilds#2707
+but then restarts
+
+[17-Aug-18 09:03 AM] lukechilds#2707
+I think if I leave it long enough it will eventually get to connnected
+
+[17-Aug-18 09:03 AM] lukechilds#2707
+that's what happened the other day
+
+[17-Aug-18 09:03 AM] lukechilds#2707
+these are the logs from Bob's end:
+
+[17-Aug-18 09:03 AM] jl777c#5810
+i pushed an experimental 10 minute between gtc, it might increase the chance a lot
+
+[17-Aug-18 09:03 AM] jl777c#5810
+if you can try that one and let me know if it works better, I can propagate it
+
+[17-Aug-18 09:03 AM] lukechilds#2707
+
+{Attachments}
+https://cdn.discordapp.com/attachments/449948412960440352/479938390628761600/boblog
+
+[17-Aug-18 09:04 AM] lukechilds#2707
+does that shed any light on the issue ☝
+
+[17-Aug-18 09:04 AM] lukechilds#2707
+I get those block repeatedly
+
+[17-Aug-18 09:04 AM] lukechilds#2707
+the `alice not eligible` looks suspect
+
+[17-Aug-18 09:04 AM] lukechilds#2707
+or maybe it's just the 5 min timer cancelling from alice's end before bob gets round to connecting
+
+[17-Aug-18 09:04 AM] jl777c#5810
+it seems pretty clear what is wrong:
+alice not eligible 1.01415185 -> dest 0.10510000 0.10363340 (0.21976058 0.00096454) cd467afd9d7eb999bef00ebc019195566ca45a3ed3c3bfa3aee62777badf8ba2/v1 ca2952004522324bef4cdb83f2e2e3d1eb47d968c91b196ba275fd02e5bb1406/v1
+quote MYTH/KMD validate error -3
+
+[17-Aug-18 09:05 AM] lukechilds#2707
+what does that mean?
+
+[17-Aug-18 09:05 AM] jl777c#5810
+bob thinks either: cd467afd9d7eb999bef00ebc019195566ca45a3ed3c3bfa3aee62777badf8ba2/v1 ca2952004522324bef4cdb83f2e2e3d1eb47d968c91b196ba275fd02e5bb1406/v1
+is already spent
+
+[17-Aug-18 09:05 AM] jl777c#5810
+if it is, then it is an alice problem. if not, then a bob problem
+
+[17-Aug-18 09:09 AM] lukechilds#2707
+they definitely exist from alices side
+
+[17-Aug-18 09:10 AM] lukechilds#2707
+```
+_api.debug({method: 'listunspent', coin: 'KMD', address: 'RQm8BNygniNVqVPRYXEosznRZ7uEiooqSm'}).then(utxos => utxos.some(u => u.tx_hash === 'cd467afd9d7eb999bef00ebc019195566ca45a3ed3c3bfa3aee62777badf8ba2' && u.tx_pos === 1)).then(console.log)
+// true
+
+_api.debug({method: 'listunspent', coin: 'KMD', address: 'RQm8BNygniNVqVPRYXEosznRZ7uEiooqSm'}).then(utxos => utxos.some(u => u.tx_hash === 'ca2952004522324bef4cdb83f2e2e3d1eb47d968c91b196ba275fd02e5bb1406' && u.tx_pos === 1)).then(console.log)
+// true
+```
+
+[17-Aug-18 09:10 AM] lukechilds#2707
+will check on a block explorer
+
+[17-Aug-18 09:12 AM] lukechilds#2707
+what's the komod block explorer api slug?
+
+[17-Aug-18 09:12 AM] lukechilds#2707
+it's not the normal `/api` one is it?
+
+[17-Aug-18 09:12 AM] lukechilds#2707
+I think it's custom
+
+[17-Aug-18 09:13 AM] jl777c#5810
+not sure
+
+[17-Aug-18 09:14 AM] lukechilds#2707
+got it
+
+[17-Aug-18 09:14 AM] lukechilds#2707
+it's https://kmdexplorer.io/insight-api-komodo
+
+[17-Aug-18 09:14 AM] lukechilds#2707
+block explorer thinks my UTXOs exist too
+
+[17-Aug-18 09:14 AM] lukechilds#2707
+https://kmdexplorer.io/insight-api-komodo/addr/RQm8BNygniNVqVPRYXEosznRZ7uEiooqSm/utxo
+
+[17-Aug-18 09:14 AM] CHMEX#0686
+insight-api-komodo
+
+[17-Aug-18 09:14 AM] CHMEX#0686
+Yes
+
+[17-Aug-18 09:14 AM] lukechilds#2707
+thanks @CHMEX , a little too slow 😉
+
+[17-Aug-18 09:15 AM] CHMEX#0686
+Hehe
+
+[17-Aug-18 09:15 AM] jl777c#5810
+then it could be the reservation time, the 10 minutes should help
+
+[17-Aug-18 09:15 AM] lukechilds#2707
+ok, will test with that as soon as artems build is published
+
+[17-Aug-18 09:16 AM] lukechilds#2707
+what do you mean by reservation time btw?
+
+[17-Aug-18 09:16 AM] lukechilds#2707
+like that UTXO is broadcast to the network as being in use for that trade?
+
+[17-Aug-18 09:16 AM] lukechilds#2707
+so when the next gtc order fires if it uses the same UTXO it might still be signalled as being in use so nodes won't trust it?
+
+[17-Aug-18 09:23 AM] jl777c#5810
+correct
+
+[17-Aug-18 09:23 AM] jl777c#5810
+i only put the 10 minute delay in jl777, do you want me to propagate it to artems?
+
+[17-Aug-18 09:23 AM] lukechilds#2707
+yes please
+
+[17-Aug-18 09:23 AM] lukechilds#2707
+but before you do that
+
+[17-Aug-18 09:23 AM] lukechilds#2707
+just an idea
+
+[17-Aug-18 09:24 AM] lukechilds#2707
+could you not tie the reservation time UTXO to the order id?
+
+[17-Aug-18 09:24 AM] lukechilds#2707
+so that UTXO is only reserved to that id
+
+[17-Aug-18 09:24 AM] lukechilds#2707
+so if a bob sees a gtc order
+
+[17-Aug-18 09:24 AM] lukechilds#2707
+which shares the same id
+
+[17-Aug-18 09:24 AM] lukechilds#2707
+it will still be able to use the UTXO
+
+[17-Aug-18 09:24 AM] lukechilds#2707
+or is that not how it works?
+
+[17-Aug-18 09:25 AM] lukechilds#2707
+does it select a new UTXO for each gtc re-order?
+
+[17-Aug-18 09:25 AM] lukechilds#2707
+lock the UTXO and re-use it for each gtc re-order?
+
+[17-Aug-18 09:31 AM] jl777c#5810
+that will require entirely new logic.. of course it is a good idea, but I am somewhat distant from that codebase now and likely I will make it worse without diving back into it fully
+
+[17-Aug-18 09:31 AM] jl777c#5810
+build is triggered in artem's repo
+
+[17-Aug-18 09:43 AM] lukechilds#2707
+ok no worries
+
+[17-Aug-18 09:43 AM] lukechilds#2707
+if the 10 min repeat fixes it then that should be fine for now
+
+[17-Aug-18 09:43 AM] lukechilds#2707
+can talk about other options with mmv2 team
+
+[17-Aug-18 09:44 AM] lukechilds#2707
+how long is the reservation time btw?
+
+[17-Aug-18 09:56 AM] jl777c#5810
+it depends on SPV or no SPV, but could be as long as 5 minutes
+
+[17-Aug-18 09:56 AM] jl777c#5810
+new build is there
+
+[17-Aug-18 09:57 AM] lukechilds#2707
+awesome thanks
+
+[17-Aug-18 01:31 PM] lukechilds#2707
+still doesn't seem to be working
+
+[17-Aug-18 01:31 PM] lukechilds#2707
+left it for almost an hour
+
+[17-Aug-18 01:31 PM] lukechilds#2707
+been watching the logs
+
+[17-Aug-18 01:31 PM] lukechilds#2707
+the Bob sees every re-order
+
+[17-Aug-18 01:31 PM] lukechilds#2707
+and does some stuff
+
+[17-Aug-18 01:32 PM] lukechilds#2707
+but never connects
+
+[17-Aug-18 01:32 PM] lukechilds#2707
+here are the iguana logs with timestamps grepped for MYTH (trade is MYTH/KMD) so you can see the different orders
+
+[17-Aug-18 01:34 PM] lukechilds#2707
+```
+[17/08 14:47:30] 2850 uuid.dec32317496f2e66b3536623124cbf5e M.0 g.1 f.0      request  MYTH/KMD     1.00115257 ->   0.10510000 ( 0.10498005) | RT.2 879 n0
+[17/08 14:47:31] MYTH/KMD i.0 j.0 qprice 0.10498005 myprice 0.10000000 price 0.10089641 [0.10089544]
+[17/08 14:47:31] 2851 uuid.dec32317496f2e66b3536623124cbf5e M.0 g.1 f.0     reserved  MYTH/KMD     1.04168243 ->   0.10510000 ( 0.10089544) | RT.2 879 n0
+[17/08 14:57:32] 3452 uuid.dec32317496f2e66b3536623124cbf5e M.0 g.1 f.0      request  MYTH/KMD     1.00115257 ->   0.10510000 ( 0.10498005) | RT.1 880 n0
+```
+
+[17-Aug-18 01:34 PM] lukechilds#2707
+it just repeats that over and over
+
+[17-Aug-18 01:34 PM] lukechilds#2707
+will attach full log
+
+[17-Aug-18 01:38 PM] lukechilds#2707
+
+{Attachments}
+https://cdn.discordapp.com/attachments/449948412960440352/480007610846937090/marketmaker.log
+
+[17-Aug-18 01:40 PM] jl777c#5810
+does alice see the reserved?
+
+[17-Aug-18 01:40 PM] jl777c#5810
+what is MYTH?
+
+[17-Aug-18 01:40 PM] lukechilds#2707
+A test currency I'm using
+
+[17-Aug-18 01:40 PM] lukechilds#2707
+to make sure no one else uses it
+
+[17-Aug-18 01:40 PM] jl777c#5810
+so it is not ERC20
+
+[17-Aug-18 01:41 PM] lukechilds#2707
+it is ERC20
+
+[17-Aug-18 01:41 PM] lukechilds#2707
+we don't get any more `alice not eligible` since you made the latest change
+
+[17-Aug-18 01:41 PM] jl777c#5810
+maybe try a non-ERC20 for this first?
+
+[17-Aug-18 01:42 PM] lukechilds#2707
+And yes, Alice gets all the reserved messages
+
+[17-Aug-18 01:42 PM] lukechilds#2707
+ok, will try non ERC20
+
+[17-Aug-18 01:43 PM] lukechilds#2707
+from alice end in HyperDEX console:
+
+```
+swap._debug.messages.map(m => m.method)
+(16) ["request", "request", "request", "request", "request", "request", "request", "reserved", "request", "request", "reserved", "request", "request", "request", "request", "reserved"]
+```
+
+[17-Aug-18 01:43 PM] lukechilds#2707
+those are all the websocket messages
+
+[17-Aug-18 01:45 PM] lukechilds#2707
+I don't think the issue is related to ERC20 btw
+
+[17-Aug-18 01:45 PM] lukechilds#2707
+the swap works if it gets matched on the first request
+
+[17-Aug-18 01:45 PM] lukechilds#2707
+If a place a gtc order that I know won't be matched instantly
+
+[17-Aug-18 01:46 PM] lukechilds#2707
+THEN create a matchable offer on my Bob
+
+[17-Aug-18 01:46 PM] lukechilds#2707
+it will never match the future re-orders
+
+[17-Aug-18 01:53 PM] jl777c#5810
+I will need to set this up tomorrow and see if I can duplicate this
+
+[17-Aug-18 01:53 PM] lukechilds#2707
+ok
+
+[17-Aug-18 01:54 PM] lukechilds#2707
+just set up a bob without any orders
+
+[17-Aug-18 01:54 PM] lukechilds#2707
+place an order on an alice in an empty order book
+
+[17-Aug-18 01:54 PM] lukechilds#2707
+so you can see the order on your bob
+
+[17-Aug-18 01:55 PM] lukechilds#2707
+THEN set the corresponding order on your Bob
+
+[17-Aug-18 01:55 PM] lukechilds#2707
+alice will see it
+
+[17-Aug-18 01:55 PM] lukechilds#2707
+bob will send reserve messages each time he sees a request
+
+[17-Aug-18 01:55 PM] lukechilds#2707
+but it doesn't seem to match
+
+[17-Aug-18 01:55 PM] lukechilds#2707
+although the other day I left it running for a very long time and seemed to eventually match
+
+[17-Aug-18 01:55 PM] lukechilds#2707
+but it is definitely not working properly
+
+[17-Aug-18 01:56 PM] lukechilds#2707
+because if the Bob order exists before you place the alice order they match almost instantly
+

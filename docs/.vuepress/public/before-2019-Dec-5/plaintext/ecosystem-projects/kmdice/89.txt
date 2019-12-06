@@ -1,0 +1,348 @@
+==============================================================
+Guild: Komodo
+Channel: kmdice
+Topic: ./komodod -ac_name=KMDICE -ac_supply=10500000 -ac_reward=2500000000 -ac_halving=210000 -ac_cc=2 -addressindex=1 -spentindex=1 -addnode=144.76.217.232 &
+https://kmdice.pool-mining.xyz/ <- pool
+https://pool.forkwitch.com/  <- another pool
+https://minerpond.com <- another pool
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[10-Nov-18 05:14 PM] 0x03#8822
+restart done
+
+[10-Nov-18 05:14 PM] 0x03#8822
+can somebody force a situation like before?
+
+[10-Nov-18 05:15 PM] ComputerGenie 👴🏼📢#7004
+pretty much, yes
+
+[10-Nov-18 05:16 PM] jl777c#5810
+there was a fork yesterday
+
+[10-Nov-18 05:17 PM] ComputerGenie 👴🏼📢#7004
+`$ ./komodo-cli -ac_name=KMDICE getrawmempool | jq '.|length'
+146`
+
+[10-Nov-18 05:17 PM] jl777c#5810
+31808 is about 1000 blocks ago
+
+{Reactions}
+👍🏽 
+
+[10-Nov-18 05:18 PM] 0x03#8822
+obviously now the one miner left on the pool seems to have issues
+
+[10-Nov-18 05:18 PM] 0x03#8822
+which makes me believe its related to the change i just did
+
+[10-Nov-18 05:19 PM] 0x03#8822
+well, NH to the rescue
+
+[10-Nov-18 05:19 PM] ComputerGenie 👴🏼📢#7004
+the template manipulation is server-side, so it's not going to impact miner(s)
+
+[10-Nov-18 05:23 PM] Decker#3767
+http://kmdice.explorer.dexstats.info/block/000000321b8e4ded3331c790ebb6982c3b0ad8729d43fd94f1c833bb466477ad
+
+[10-Nov-18 05:23 PM] Decker#3767
+164 tx mined ...
+
+[10-Nov-18 05:23 PM] 0x03#8822
+`000000321b8e4ded3331c790ebb6982c3b0ad8729d43fd94f1c833bb466477ad` - my pools console just spat out that
+
+[10-Nov-18 05:23 PM] 0x03#8822
+thanks for the fix, Decker
+
+[10-Nov-18 05:23 PM] 0x03#8822
+i'm in the background again
+
+[10-Nov-18 05:30 PM] ComputerGenie 👴🏼📢#7004
+seems my `31808` issue was not using FSM branch
+one of these days I'll pull my head out of my ass...
+
+[10-Nov-18 05:31 PM] 0x03#8822
+😄
+
+[10-Nov-18 05:36 PM] jl777c#5810
+good news! The problem I had was that I made 100 payment tx to create a bunch of vouts for the parallel dicefinish
+
+[10-Nov-18 05:37 PM] jl777c#5810
+this made me find the bug that I wrongly assumed the vout for the entropy txid would always be 0, off by one in the vout/vin dereferencing
+
+{Reactions}
+👍🏽 
+
+[10-Nov-18 05:37 PM] jl777c#5810
+so to fix it, I needed to include the vout into the entropy calculation
+
+[10-Nov-18 05:37 PM] jl777c#5810
+but that would be a hardforking change and I didnt want to do it two days in a row
+
+[10-Nov-18 05:38 PM] 0x03#8822
+one hardfork a day keeps the doctor away *scnr*
+
+{Reactions}
+😂 
+
+[10-Nov-18 05:38 PM] 0x03#8822
+i'll show myself out :trollface:
+
+[10-Nov-18 05:38 PM] jl777c#5810
+but, after analysing the code, I realized that only the dealer node actually calculates the entropy for the dealer entropy and that the players are posting their entropy in the opreturn, so they can change how they calculate it at anytime
+
+[10-Nov-18 05:39 PM] jl777c#5810
+but there are 7000+ entropy tx using the old broken way to calculate the entropy
+
+[10-Nov-18 05:39 PM] jl777c#5810
+luckily the validation uses the proof of hash of entropy, ie. the entropy used in the dicefinish tx
+
+[10-Nov-18 05:39 PM] jl777c#5810
+and the entropy tx includes the hash of entropy
+
+[10-Nov-18 05:40 PM] jl777c#5810
+so, the dealer side can compare the entropy using the old way and if the hash of entropy matches, to use that. if not to use the new bug fixed method!
+
+{Reactions}
+shexy 
+
+[10-Nov-18 05:40 PM] jl777c#5810
+and i am seeing this work now that we had a bunch of bets go by
+
+[10-Nov-18 05:40 PM] jl777c#5810
+so after a while the entropy collision will go away and the 51% secret reveal attack will be properly detected
+
+[10-Nov-18 05:41 PM] jl777c#5810
+all this was a pretty good test of the 51% attack detection
+
+[10-Nov-18 05:41 PM] jl777c#5810
+tl:dr spam the bets as much as possible and try to break the chain
+
+[10-Nov-18 05:42 PM] jl777c#5810
+still have the dealer node optimization to make it go faster, but that wont affect any consensus, or actually any behavior as it would be an inplace change. which means we are down to just a few things left before we can consider KMDICE completed at the core level
+
+[10-Nov-18 05:43 PM] siu - Chainmakers#3920
+ok, so we can bet now?
+
+[10-Nov-18 05:43 PM] jl777c#5810
+yes
+
+[10-Nov-18 05:43 PM] jl777c#5810
+spam away
+
+[10-Nov-18 05:44 PM] siu - Chainmakers#3920
+ok, recompiling
+
+[10-Nov-18 05:44 PM] jl777c#5810
+dealer node is using 5% of one core CPU
+
+[10-Nov-18 05:45 PM] jl777c#5810
+let me know of any strange unexpected behavior
+
+[10-Nov-18 05:46 PM] jl777c#5810
+bets should mostly be processed in a second
+
+{Reactions}
+👌 
+
+[10-Nov-18 05:53 PM] ComputerGenie 👴🏼📢#7004
+it looks like the fork I'm stuck on starts here:
+`2018-11-10 17:49:21 InvalidChainFound: invalid block=0000002bb528b608152e65f6b149007e0404a6b46f7f4c0fdd6185013921f1e0  height=31700  log2_work=43.161264  date=2018-11-09 18:43:09
+2018-11-10 17:49:21 InvalidChainFound:  current best=00000033649c1e998b4f49ae97df20a563e181019d7b096e9a6547f8eef06114  height=31699  log2_work=43.161253  date=2018-11-09 18:43:05`
+and dead-ends at `31807`
+suggestions as to how to get on real chain?
+
+[10-Nov-18 05:54 PM] SHossain#0007
+delete current chain data and resync is the ultimate way
+
+[10-Nov-18 05:55 PM] Alright#0419
+pretty sure the IP of node posted in chain params isn't on the correct chain
+
+[10-Nov-18 05:55 PM] Alright#0419
+so if you delete peers.dat and don't add an additional peer to start up params, you won't sync to real chain
+
+[10-Nov-18 05:56 PM] blackjok3r#3181
+I think Ive lost over 500 KMdice 😦
+
+[10-Nov-18 05:56 PM] ComputerGenie 👴🏼📢#7004
+I even tried with one of the peers I have from local node instead of that one, because you said that before
+
+[10-Nov-18 05:57 PM] blackjok3r#3181
+wiat no I didnt  🤣
+
+[10-Nov-18 05:57 PM] blackjok3r#3181
+I have 3 nodes that were spammig at once...
+
+[10-Nov-18 05:58 PM] ComputerGenie 👴🏼📢#7004
+what's a "known good" peer? I'll do the connect=0 thing...
+
+[10-Nov-18 05:58 PM] 0x03#8822
+https://bootstrap.0x03.services/kmdice/
+
+[10-Nov-18 05:58 PM] 0x03#8822
+let me just regenerate it real quick
+
+[10-Nov-18 05:58 PM] ComputerGenie 👴🏼📢#7004
+_is far too lazy to wget via ssh :P_
+
+[10-Nov-18 06:02 PM] siu - Chainmakers#3920
+started a resync unwillingly 🤦
+
+[10-Nov-18 06:02 PM] ComputerGenie 👴🏼📢#7004
+doh
+
+[10-Nov-18 06:02 PM] siu - Chainmakers#3920
+and im using my house internet which is bad
+
+[10-Nov-18 06:03 PM] ComputerGenie 👴🏼📢#7004
+me too, that's why I don't just copy/paste the blocks
+
+[10-Nov-18 06:03 PM] siu - Chainmakers#3920
+a fiber optic cable is being installed to my town though
+
+[10-Nov-18 06:03 PM] siu - Chainmakers#3920
+hope that next year i can get first world internet
+
+[10-Nov-18 06:04 PM] siu - Chainmakers#3920
+good things about the hurricane...
+
+[10-Nov-18 06:04 PM] ComputerGenie 👴🏼📢#7004
+>When can we get fiber in our area?
+>Soon™
+
+[10-Nov-18 06:04 PM] siu - Chainmakers#3920
+lol
+
+[10-Nov-18 06:05 PM] siu - Chainmakers#3920
+at least that is what i assume they are doing
+
+[10-Nov-18 06:05 PM] siu - Chainmakers#3920
+at&t trucks burrying a cable along the road
+
+[10-Nov-18 06:05 PM] siu - Chainmakers#3920
+🙏
+
+[10-Nov-18 06:06 PM] Alright#0419
+just because they're laying fiber doesn't mean you'll be able to use it 😛
+
+{Reactions}
+👆🏽 (2) 
+
+[10-Nov-18 06:06 PM] Alright#0419
+has had fiber in my area for couple years now but no home ISPs offering service for it yet
+
+[10-Nov-18 06:07 PM] siu - Chainmakers#3920
+😦
+
+[10-Nov-18 06:07 PM] siu - Chainmakers#3920
+i could get a business account to my house.
+
+[10-Nov-18 06:08 PM] siu - Chainmakers#3920
+i just hope its not $500 a month
+
+[10-Nov-18 06:08 PM] ComputerGenie 👴🏼📢#7004
+it takes special "knowledge" to split fiber and not destroy the entire network (knowledge that no one at the phone co here has)
+
+[10-Nov-18 06:09 PM] ComputerGenie 👴🏼📢#7004
+I would pay $500 a month, easy
+We pay $100 now for 2x 10MB lines ($50 each)
+
+{Reactions}
+😂 
+
+[10-Nov-18 06:10 PM] siu - Chainmakers#3920
+i would need KMD to go to $25 first... then i can pay up my house, my cars... etc.
+
+[10-Nov-18 06:10 PM] Alright#0419
+I'd be as grumpy as you if I had 10MB internet
+
+{Reactions}
+😝 (2) 
+
+[10-Nov-18 06:10 PM] siu - Chainmakers#3920
+lol
+
+[10-Nov-18 06:10 PM] siu - Chainmakers#3920
+😂
+
+[10-Nov-18 06:10 PM] siu - Chainmakers#3920
+that really made me laugh
+
+[10-Nov-18 06:11 PM] SHossain#0007
+that reminds me to call my provider to up my speed to 200Mbps from 100
+
+[10-Nov-18 06:11 PM] siu - Chainmakers#3920
+i pay $45 for 20mb (which are not really 20mb)
+
+[10-Nov-18 06:11 PM] ComputerGenie 👴🏼📢#7004
+"from 100" meh 🖕🏽 
+:trollface:
+
+[10-Nov-18 06:12 PM] blackjok3r#3181
+just got 50mbit here ... can get 108 max ... thinking about it already 50 isnt very fast already ....
+
+[10-Nov-18 06:12 PM] blackjok3r#3181
+much better than the 15 it was tho
+
+[10-Nov-18 06:12 PM] siu - Chainmakers#3920
+if my 20mb were really 20mb i would be happy
+
+[10-Nov-18 06:13 PM] siu - Chainmakers#3920
+but when you pay for a 20mb that actually tops at 5mb, that is where you get the @ComputerGenie 👴🏼📢 in you
+
+[10-Nov-18 06:13 PM] Alright#0419
+likely is 20, just limited by your hardware
+
+[10-Nov-18 06:13 PM] ComputerGenie 👴🏼📢#7004
+I love when someone says the "just" have 2.5x what I have with **2** connections 😭
+
+[10-Nov-18 06:13 PM] SHossain#0007
+20mb is alright for 4g mobile nets :trollface:
+
+[10-Nov-18 06:13 PM] blackjok3r#3181
+but ... that said my server in perth has 1 gbit and its lucky to get anything over 60-70mbit internationally ... so it seems 50mbit+ is pointless.
+
+[10-Nov-18 06:13 PM] ComputerGenie 👴🏼📢#7004
+`20mb is alright for 4g mobile nets`
+4g? dafuq is that?
+
+[10-Nov-18 06:14 PM] SHossain#0007
+over 3g and under 5g
+
+{Reactions}
+trollface (2) 
+
+[10-Nov-18 06:14 PM] ComputerGenie 👴🏼📢#7004
+best here is still 3g and at our literal location, it's all fem2cell 😭
+
+[10-Nov-18 06:14 PM] siu - Chainmakers#3920
+the number between 3 and 5
+
+[10-Nov-18 06:14 PM] siu - Chainmakers#3920
+wow... i have 4g and i thought i lived in a shithole
+
+[10-Nov-18 06:15 PM] SHossain#0007
+i have seen 4g+ in Austria. didn't look up the spec
+
+[10-Nov-18 06:15 PM] ComputerGenie 👴🏼📢#7004
+but I have acreage 🙂
+
+[10-Nov-18 06:15 PM] siu - Chainmakers#3920
+no idea what that is.
+
+[10-Nov-18 06:16 PM] ComputerGenie 👴🏼📢#7004
+picture the land your 4 neighbors live on and that's my garden 😛
+
+[10-Nov-18 06:16 PM] siu - Chainmakers#3920
+oohh... space
+
+[10-Nov-18 06:16 PM] siu - Chainmakers#3920
+right.
+
+[10-Nov-18 06:16 PM] siu - Chainmakers#3920
+where are you from? idaho?
+
+[10-Nov-18 06:16 PM] siu - Chainmakers#3920
+dakotas?
+

@@ -1,0 +1,201 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:50 AM";"There are phat bugs.... once those are fixed, there wont be any problem with it.";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:52 AM";"I worked out how to make sure notarizations made are all in the chain too btw, in iguana. I much prefer a simpler solution rather than making complex workaround that could introduce more bugs.";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:53 AM";"its as simple as checking for confirms > 2, and if it ever goes to -1 do sendrawrtransaction.";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:53 AM";"Can be added on to the end of the dpowstatemachine start function. and just poll `getrawtransaction <txid> 1 ` until the notarization is notarized, then it can end the statemachine.";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:54 AM";"Should be very easy to implement. Even I can write it.";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:56 AM";"The only required thing we need, is that all notarizations are in the chain and notarized by tghe next notarizatinon, combined with a longer scan range, so that no MoM hash are lost.";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 05:11 AM";"combined with the RPCs/script that do impirt only using notarized data, nothing can fail.";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"06-Mar-19 08:58 AM";"@Mylo I'm using multiple oracles for dragonhound - one per user. Appends (encrypted) gps/time for each ping. user oracle txid stored in pgsql db when created  to reference for read/write ops";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 09:13 AM";"Half way thrrough a fix here guys. 😃";"";"";
+"371114647052615681";"Mylo#8306";"06-Mar-19 09:17 AM";"Cool @smk762 -  dracocanis ominator - what I was more interested in was the data structure of the business level logic.
+You have shopping cart oracle, you have order oracle.  You have inventory oracle.
+The dragon hound is the same data structure, so no need to interface oracle data from one to the other.
+
+Furthering it into different suppliers, they would only want to subscribe to the inventory oracle of their customers (the shop).";"";"";
+"371114647052615681";"Mylo#8306";"06-Mar-19 09:19 AM";"So dragon hound is like the line item oracle.  Many line items, many dogs on the loose!";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"06-Mar-19 09:25 AM";"not sure oracle as efficient as legacy db for everything. I'm using a hybrid approach. Things that change over time (like location) are on oracle. Things that stay the same mostly are in db.
+I've been working on supply chain too in a *secret* project";"";"";
+"371114647052615681";"Mylo#8306";"06-Mar-19 09:25 AM";"Yeah BC doesn’t fit everywhere:)";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"06-Mar-19 09:26 AM";"main issue is query time for huge number of samples which need to be filtered. much faster from traditional db";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"06-Mar-19 09:27 AM";"and if that info isnt essential for provenance, using oracle is pointless except for ""marketing hype""";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"06-Mar-19 09:28 AM";"I am looking into caching oracle samples in db tho, best of both worlds 😉";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 09:53 AM";"OK I have something pretty decent in iguana, only works on KMD side atm, but its just a matter of copy pasting the code to make it work for the source chain aswell. 
+Basically what it does is:
+1) checks confirms, if over 2 (dpowconfs) or 100 (rawconfirms) then it exits the loop
+2) if its not notarized it fetches the raw hex from getrawtransaction and saves it
+3) if the transaction is lost from mempool it rebroadcasts it
+4) if the transaction is reorged and thus goes from a confirm back to none, it rebraoadcasts it. 
+5) once its confirmed it unlocks the KMD utxo, source doesnt need a lock as the utxo is spent, and thus is not in listunspent to be chosen again.";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 09:54 AM";"This wil force all notarizations to be confirmed eventally. No matter what tricks alright plays on the chain.";"";"troll_cool (1)";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 09:56 AM";"I think maybe if import transaction keeps being unable to be sent due to missing MoMoM hash, we will need a way to increase the range of blocks it scans, as if this codein iguana is triggered notarization could be confirmed very very much out of order.";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 09:58 AM";"I already fixed NULL MoMoM this mornign but i reverted it for now, to dev this solution. LABSTH is still working thank god";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 11:02 AM";"@LabsAssistant  Please update and DM! me when updated. Do not post in here as i gets lost. I am pretty sure most of the problems were becasue if the network being cut in half due to some nodes updating and some not. Hoever this conditon is now accounted for. 😃";"";"👍 (7)";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 11:04 AM";"I think it might finally be safe... but maybe not.";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 11:04 AM";"we need to test it as usual. 😃";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"06-Mar-19 11:49 AM";"```-ASSET-          -BALANCE-  -UTXO-  -NOTR-  -BLOX-   -PCT-  -LAST-  -CNCT-        
+KMD                 5.3002      48         1256955              1m      21        
+LABSTH           2646.1325      12    1173   26222    4.5%      1m       9        
+CFEKDIMXY1          8.8631      17    1367   27284    5.0%      4m       7        
+CFEKDIMXY2          9.8678      19    1322   27374    4.8%      1d       8        
+LABSTH0             2.2086      19     529   12567    4.2%      2m       7        
+CFEKORKL      9975329.3545      13     155    5092    3.0%      4m      20   ```";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 11:52 AM";"```>>>>>>>>>>> KMD dpow_sendrawtransaction ({""result"":null,""error"":{""code"":-32700,""message"":""Parse error""},""id"":null}
+)
+[KMD] txid.2a262dc2b8dd0627f697c56c197bee24cb2e4bceac2878c67310c84ba76315b5 is not confirmed rebroadcasting....
+>>>>>>>>>>> KMD dpow_sendrawtransaction (2a262dc2b8dd0627f697c56c197bee24cb2e4bceac2878c67310c84ba76315b5)
+[LABSTH] txid.968f62292203c065ccb56c1242900d63c664663b4795b1900bd9e2eb35a6d77c is not confirmed rebroadcasting....
+>>>>>>>>>>> LABSTH dpow_sendrawtransaction (968f62292203c065ccb56c1242900d63c664663b4795b1900bd9e2eb35a6d77c)```";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 11:53 AM";"@blackjok3r ?";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 11:54 AM";"Is the blitzkrieg intentional?";"";"";
+"242635006516658197";"jorian#4555";"06-Mar-19 12:12 PM";"yeah same here";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 12:15 PM";"I am liking the updated print showing which vout 👍🏽";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 02:27 PM";"```shell
+genie@StakedNotary:~/StakedNotary$ ./migrate.sh                                                                                                                                               
+[LABSTH] : 4925.57887956
+[LABSTH0] : 2.17306320
+Sending 10 from LABSTH to LABSTH0 at Wed Mar  6 14:11:17 UTC 2019
+[LABSTH] : Confirmed export 7ab6f1b9d339e9e75882b174737b3d2fcaa2693e28013a44655b60d6a7e1dce0
+Create import transaction sucessful!
+Sign import transaction on KMD complete!
+[LABSTH0] : Confirmed import de572cf4c571560d262d13f6bff47a40b3c8705728d955b4a1c5f649c7ab46e6 at Wed Mar  6 14:26:18 UTC 2019
+[LABSTH] : 4920.57862956
+[LABSTH0] : 12.17346320```
+👏🏽  I finally did something useful";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 03:50 PM";"@ComputerGenie 👴🏼📢  I take it you updated too?";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 03:50 PM";"yes; sry for not DM, got sidetracked";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 03:51 PM";"I have 13 nodes 
+```blackjok3r
+barfish
+gcharang
+tonyL
+gt
+cmaurice - with thanks
+chrsF
+nabob
+chmex
+web
+smk
+Shossain
+genie```";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 03:51 PM";"I take it, that its working lol";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 03:52 PM";"and yes the blitzkrieg is intentional";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 03:52 PM";"I think Im going to change it though ... so that i uses a random sleep between like 30s and 240s... then all node will be constantly checking but not all at the same time";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 03:52 PM";"`I take it, that its working lol`
+other than a gajillion
+`>>>>>>>>>>> KMD dpow_sendrawtransaction ({""result"":null,""error"":{""code"":-32700,""message"":""Parse error""},""id"":null}`
+yes";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 03:53 PM";"well that shouldnt be happening, but its possible there is bugs";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 03:53 PM";"I think I got it close... but I cant test every situation";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 03:53 PM";"I know why that error happened in testing";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 03:54 PM";"its because the tx hex wasnt copied properly... I think maybe I need to make it check that its not empty before copying 🤣";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 03:54 PM";"` not empty before copying`
+yes, that's usually helpful :troll:";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 03:55 PM";"thats why I used memcpy instead of strcopy ... so that it doesnt crash when its empty 😉";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 03:55 PM";"iguana is pure C ... you cant use any C++ which makes life a lot easier in komodod";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 03:57 PM";"I really didnt want to have to touch it, but after a good rest and sleep the solution just came to me, and coded it in a day while looking after a 2 yearold all day who was just trying to drive me nuts at ever possible moment... lucky she slept for 4H in the afternoon 😂";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 04:00 PM";"`while looking after a 2 yearold all day`
+better you than me; there's a reason we stopped at 2 of them 20+ years ago 😛";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:08 PM";"I wont ahve any more than 2 ... no boys but meh. The first one is very clever and usually pretty good... 2 yr old is devil spawn 🤣";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:08 PM";"too clever ... but refuses to speak english";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:17 PM";"@ComputerGenie 👴🏼📢  
+I just started the other chains on dpow on my node and I dont see any of those errors? do you have any more context of when it does it?";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:18 PM";"`if ( srctx[0] == 0 && rettx[0] != 0 )` its already checking if the return is empty";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 04:19 PM";"not really, because the problem with stdout is it's a jumble unless it's the rare occurrence of sequential";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:20 PM";"yes to test this I limited dpow call to LABSTH so it had context";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 04:24 PM";"bah not sure which is worse, trying to copy in tmux or 2k chr limit on here";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 04:25 PM";"```[CFEKORKL] txid.0e5175d0e166b9b593dde8a7268221b1c0433ae375167df273e4430279e1ebd8 is not confirmed rebroadcasting....
+>>>>>>>>>>> CFEKORKL dpow_sendrawtransaction (0e5175d0e166b9b593dde8a7268221b1c0433ae375167df273e4430279e1ebd8)
+[KMD] txid.30de2984e37b1afcbd9399177e6eb2e79575a08c0299f4d5c60bbd685029aa6e is not confirmed rebroadcasting....
+>>>>>>>>>>> KMD dpow_sendrawtransaction ({""result"":null,""error"":{""code"":-32700,""message"":""Parse error""},""id"":null}
+)
+[KMD] txid.7ccfc92825051f28f8a433db9abddeb45931c0914741e94b5e54373d6f2f38c1 is not confirmed rebroadcasting....
+>>>>>>>>>>> KMD dpow_sendrawtransaction ({""result"":null,""error"":{""code"":-32700,""message"":""Parse error""},""id"":null}
+)
+[CFEKORKL] txid.c48ddedea2eb7d42a57233321206d974d51459792a8b7ba8b52230d28a919726 is notarized or has 100 confirms.11
+[LABSTH0] txid.0550d94da7ddf48335b8f82b14c9eb5db4f020ea8b56bdfd9a3a2c115f2219fc is not confirmed rebroadcasting....
+>>>>>>>>>>> LABSTH0 dpow_sendrawtransaction (0550d94da7ddf48335b8f82b14c9eb5db4f020ea8b56bdfd9a3a2c115f2219fc)
+[KMD] txid.8731b2fa426d1bf9d0816d25831d0e6241ae5ca8df537214dc1b2c6a02adc4cc is not confirmed rebroadcasting....
+>>>>>>>>>>> KMD dpow_sendrawtransaction ({""result"":null,""error"":{""code"":-32700,""message"":""Parse error""},""id"":null}
+)
+[KMD] txid.30de2984e37b1afcbd9399177e6eb2e79575a08c0299f4d5c60bbd685029aa6e is not confirmed rebroadcasting....
+>>>>>>>>>>> KMD dpow_sendrawtransaction ({""result"":null,""error"":{""code"":-32700,""message"":""Parse error""},""id"":null}
+```";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:27 PM";"tmux copy... ctrl+b then ctrl+z them ctrl+m to disable mouse";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:32 PM";"Genie I saw it. checking it out... might be easier to remvoe the p4rint as it doesnmt really hurt lol";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 04:33 PM";"it's stdout, as long as you know if it's relevant or not, that's the real thing";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:35 PM";"I know exactly why it prints that... but it shouldnt be possible... needs to be another sanity check I guess...";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 04:35 PM";"fwiw, another stop/start has it no longer showing";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:36 PM";"I dont think that makes much diff.. the problem is when it flags a resend... and the tx isnt there (or the memory its in/came from was corrupted )";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 04:36 PM";"spoke too soon";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:36 PM";"there was a simpler way to do it...";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:37 PM";"but I figured that if the tx wasnt in the mempool or confirmed and we saw it before, we can resend it";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:37 PM";"so just save it and resend whenever its lost";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 04:38 PM";"as long as it's a non-event, I guess it doesn't really matter; it's not like there's too many people like me that have a monitor dedicated to viewing it 😛";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:39 PM";"true... I think it does matter a little bit... iguana has functions to prevent this that will be easy to leverage";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 04:40 PM";"well, by ""non-event"" I mean that it doesn't negatively impact the whole";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 04:42 PM";"imo, a print that doesn't matter in the scope of overall functionality is just ignorable output";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:44 PM";"its not iognorable it was a clear bug 😂";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:44 PM";"pushed possible fix";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:45 PM";"testing it builds firsl tho";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:45 PM";"it does";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 04:58 PM";"whatever you pushed, still same";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 04:58 PM";"```>>>> LOCKED KMD UTXO.(4fde962c8bbfdff61dcbf6dff20814e68aeb3e86c949e7b7fa9447af9e83fc6b) vout.(72)
+[LABSTH] : chosen = 114  out of 176 loop.(1)
+[LABSTH] : chosen = 50  out of 176 loop.(2)
+PAXWDCRC.4f900b48 myind.15 isratify.0 DPOW.LABSTH statemachine checkpoint.26530 0be4e0b194e2bc03a9f945df3c7ad8d0f554260f273538464bdd7c16e3a09427 start.1551891418+dur.300 vs 1551891418 MoM[5] 99be1291a144ae985a615282562441c0b6444b11ac6b1a92fe7a3b39d5df13eb
+new PENDING BESTK (10 61488) state.0
+>>>>>>>>>>> KMD dpow_sendrawtransaction (4a26a791444c77f3e619449510ceef3cd25d344363075d97c1788e1f905bf783)
+complete statemachine.KMD ht.26530 state.1000 (b1e0e40b 91a7264a)
+>>>>>>>>>>> LABSTH dpow_sendrawtransaction (cf92fe7a3523df82c42e8505305ebfeeb1f9602992845460a5c88d091a9bb51b)
+complete statemachine.LABSTH ht.26530 state.-1 (b1e0e40b 7afe92cf)
+[5] END isratify.0:0 bestk.10 61488 sigs.61488 state.ffffffff machine ht.26530 completed state.ffffffff KMD.4a26a791444c77f3e619449510ceef3cd25d344363075d97c1788e1f905bf783 LABSTH.cf92fe7a3523df82c42e8505305ebfeeb1f9602992845460a5c88d091a9bb51b recvmask.6dedb paxwdcrc.4f900b48 0x7fe21c6d5010 0x7fe21e21c010
+[KMD] txid.4a26a791444c77f3e619449510ceef3cd25d344363075d97c1788e1f905bf783 is not confirmed rebroadcasting....
+>>>>>>>>>>> KMD dpow_sendrawtransaction ({""result"":null,""error"":{""code"":-32700,""message"":""Parse error""},""id"":null}
+```";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:59 PM";"it was a lazy fix...";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 04:59 PM";"lol";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 04:59 PM";"but it could have been the problem, cant hurt";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 05:00 PM";"havent seen it here yet, it only happened on KMD yes?";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 05:00 PM";"yes, the null is only KMD";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 05:01 PM";"cool.... let me know if it still floods it... I think that fix will catch 99% of it";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"06-Mar-19 05:01 PM";"k, going back to work but will check on it from time to time";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 05:02 PM";"`else if ( desttx[0] != 0 ) // we have the tranxation hex saved, and the tx is not in the local mempool or a block, so resend it.` can be way more strict if needed";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 06:25 PM";"pushed update for kmd height to use a 5 block delay...";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 06:26 PM";"if that works fine, MoMoM should be near 100% reliable";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 06:31 PM";"@LabsAssistant please `start.sh` to update iguana";"";"labs (1)";
+"412323938782150658";"SHossain#0007";"06-Mar-19 06:32 PM";"```
+./start.sh
+Already up to date.
+[master] Checking for updates and building if required...
+[master] No update required
+[KMD] : Starting KMD
+Started Assetchains
+[KMD] : Waiting for KMD daemon to start...
+ Starting KMD Failed: help human! 
+```";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 06:33 PM";"seems a bug";"";"";
+"242635006516658197";"jorian#4555";"06-Mar-19 06:33 PM";"mine starts fine";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 06:33 PM";"just rry it again";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 06:33 PM";"it cant pin that down";"";"";
+"412323938782150658";"SHossain#0007";"06-Mar-19 06:33 PM";"ran again";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 06:34 PM";"I think its a bug that will just go away after you have started them enough times";"";"";
+"412323938782150658";"SHossain#0007";"06-Mar-19 06:43 PM";"all good";"";"👍 (1)";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 07:08 PM";"@ComputerGenie 👴🏼📢  pushed fix to iguana that should stop that error";"";"";
+"232679450301431808";"blackjok3r#3181";"06-Mar-19 07:10 PM";"doesnt dont worry lol";"";"";
+"423176312354635779";"gcharang#6833";"06-Mar-19 07:29 PM";"updated
+```
+-ASSET-          -BALANCE-  -UTXO-  -NOTR-  -BLOX-   -PCT-  -LAST-  -CNCT-        
+KMD                19.5157      43         1257396              3m      16        
+LABSTH           3046.3428      13    1072   26684    4.0%      5m       9        
+CFEKDIMXY1          8.8951      20    1048   27750    3.8%     41m       7        
+CFEKDIMXY2          9.9017      20     983   27821    3.5%     42m       9        
+LABSTH0             2.2092      13     528   12931    4.1%      2s       8        
+CFEKORKL            9.9978      11      22    5553    0.4%     38m       9 
+```";"";"";
+"401454267812151298";"zatJUM#9924";"06-Mar-19 07:43 PM";"Updated too";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Mar-19 11:33 AM";"@ComputerGenie 👴🏼📢  
+Pushed update to iguana that fixes all those errors, was a memory coruption issue, not zeroing out the strings the tx was saved in on initialize. 
+Also pushed possible fix for memleak. Dont want to @ staker for this one, but a few people who know what to look for will be able to tell us if the iguana mem use is any better. It will still increase but should now cap ou, rather than just constantly go up.";"";"👍🏽 (1)";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"07-Mar-19 11:38 AM";"trying now";"";"";
+"412482228359266328";"CrisF#3405";"07-Mar-19 11:51 AM";"Is looking at the mem usage in `htop` enough?";"";"";

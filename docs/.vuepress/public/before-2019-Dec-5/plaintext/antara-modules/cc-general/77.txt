@@ -1,0 +1,460 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[23-Aug-18 11:29 AM] siu - Chainmakers#3920
+hello guys
+
+{Reactions}
+☕ (2) 
+
+[23-Aug-18 11:29 AM] siu - Chainmakers#3920
+where are we?
+
+[23-Aug-18 11:30 AM] SHossain#0007
+we are trying to find the remaining bugs (if any) and help polish the code before releasing
+
+[23-Aug-18 11:32 AM] siu - Chainmakers#3920
+ok, from jl777 branch?
+
+[23-Aug-18 11:32 AM] SHossain#0007
+yes
+
+[23-Aug-18 11:33 AM] SHossain#0007
+i updated my nodes this morning
+
+[23-Aug-18 11:33 AM] siu - Chainmakers#3920
+ok
+
+[23-Aug-18 11:34 AM] SHossain#0007
+btw, `dicelist` used to return value within 2ms. now it is over 500ms
+
+[23-Aug-18 11:37 AM] siu - Chainmakers#3920
+what chain is being used?
+
+[23-Aug-18 11:38 AM] blackjok3r#3181
+how do you find a diceplan that has funds if the dicelist is so long?
+
+[23-Aug-18 11:39 AM] siu - Chainmakers#3920
+i guess gui will need to work on that.
+
+{Reactions}
+😆 
+
+[23-Aug-18 11:39 AM] SHossain#0007
+yes. i guess GUI will be able to filter
+
+[23-Aug-18 11:40 AM] SHossain#0007
+also, stdout shows how many entropy tx the plan has when you query diceinfo
+
+[23-Aug-18 11:41 AM] SHossain#0007
+dealer node is not showing winning or lost bet live like it used to do before
+
+[23-Aug-18 11:41 AM] siu - Chainmakers#3920
+hmm
+
+[23-Aug-18 11:43 AM] siu - Chainmakers#3920
+holy crap... how did so many plans got created!
+
+[23-Aug-18 11:44 AM] SHossain#0007
+Alright created them
+
+[23-Aug-18 11:44 AM] CrisF#3405
+Who (or what) am I playing against when I play dice?  (Where did the coins I won come from?)
+
+[23-Aug-18 11:44 AM] siu - Chainmakers#3920
+the person who funded the plan
+
+{Reactions}
+👍 
+
+[23-Aug-18 11:45 AM] blackjok3r#3181
+I dont think you get how long it takes to call `diceinfo` for 20,000 dice plans to check ... no GUI is going to fix that!
+
+[23-Aug-18 11:46 AM] blackjok3r#3181
+the only way around it is to have a 3rd party service that knows what dice plan has what.
+
+[23-Aug-18 11:46 AM] blackjok3r#3181
+which seems counter productive to what your trying to do here.
+
+[23-Aug-18 11:46 AM] blackjok3r#3181
+which is decentralsie and remove poitns of faliure
+
+[23-Aug-18 11:47 AM] siu - Chainmakers#3920
+an option is to add some paramters to dicelist call
+
+[23-Aug-18 11:47 AM] blackjok3r#3181
+I would add 'entropy1 to `diceinfo` for a start
+
+[23-Aug-18 11:47 AM] blackjok3r#3181
+and also make it much more expensive to creat a dice plan
+
+[23-Aug-18 11:47 AM] blackjok3r#3181
+that removes 99% of this issue
+
+[23-Aug-18 11:48 AM] blackjok3r#3181
+quite easily..
+
+[23-Aug-18 11:48 AM] blackjok3r#3181
+entropy is already printed in stdout... add it to the JSON
+
+[23-Aug-18 11:49 AM] siu - Chainmakers#3920
+im with you... we need more info on the plans to filter them
+
+[23-Aug-18 11:50 AM] blackjok3r#3181
+Im not trying to create more work... I am tryign to finds bugs/problems, that is the point of STAKED
+
+[23-Aug-18 11:50 AM] blackjok3r#3181
+you can test it, with an exact specific set of commands, and it will laways work..
+
+[23-Aug-18 11:50 AM] blackjok3r#3181
+but no user ever does that
+
+[23-Aug-18 11:51 AM] blackjok3r#3181
+once the core logic works, make it unbreakable as best as humanly possible.
+
+[23-Aug-18 11:52 AM] siu - Chainmakers#3920
+at least afaik adding more info to the command is not a hard fork change, so its not priority to fix before the fork
+
+[23-Aug-18 11:53 AM] siu - Chainmakers#3920
+what we need to be sure is that no hardforking change needs to be done after the fork.
+
+{Reactions}
+👍 
+
+[23-Aug-18 11:53 AM] blackjok3r#3181
+yes but changing the dicefund cost is a hardforking change... as if its a soft fork, any person can change the code, and remove the fund limit.
+
+[23-Aug-18 11:54 AM] siu - Chainmakers#3920
+yep
+
+[23-Aug-18 11:54 AM] siu - Chainmakers#3920
+true
+
+[23-Aug-18 11:54 AM] blackjok3r#3181
+either way, I will just keep doing what I am supposed to be doing and break STAKED and tell you guys how I did it.
+
+[23-Aug-18 12:04 PM] CrisF#3405
+Is it OK if I keep playing around with dice here?
+
+[23-Aug-18 12:06 PM] SHossain#0007
+you can. it is OK.
+
+[23-Aug-18 12:06 PM] CrisF#3405
+Great, thanks.
+
+[23-Aug-18 12:11 PM] SHossain#0007
+actually live win or loss is being displayed in dealer node
+```
+72d3d7ac0c9517738dc8337c3ce2d4291c3acab35bf98f6aacddc8d96999fff1 winnings 40.00000000 bet 20.00000000 at odds 1:1
+```
+
+[23-Aug-18 12:13 PM] SHossain#0007
+@CrisF use this dice plan `9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6`
+
+[23-Aug-18 12:14 PM] CrisF#3405
+Ok, I'll try there.
+
+[23-Aug-18 12:14 PM] CrisF#3405
+I think I just made a plan myself.
+
+[23-Aug-18 12:15 PM] CrisF#3405
+What is the dealer node?
+
+[23-Aug-18 12:20 PM] SHossain#0007
+the node where you create the diceplan from
+
+[23-Aug-18 12:21 PM] SHossain#0007
+basically associated with the pubkey and privkey you use
+
+{Reactions}
+👆 
+
+[23-Aug-18 12:21 PM] CrisF#3405
+```"fundingtxid": "9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6",
+  "name": "DiceX",
+  "sbits": 379658135876,
+  "minbet": "5.00000000",
+  "maxbet": "10000.00000000",
+  "maxodds": 50,
+  "timeoutblocks": 1,
+  "funding": "0.00000000"```
+Seems no funds in DiceX?
+
+[23-Aug-18 12:22 PM] SHossain#0007
+there are funds
+```
+        "result": "success",
+        "fundingtxid": "9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6",
+        "name": "DiceX",
+        "sbits": 379658135876,
+        "minbet": "5.00000000",
+        "maxbet": "10000.00000000",
+        "maxodds": 50,
+        "timeoutblocks": 1,
+        "funding": "1115345.59217016"
+ ```
+
+[23-Aug-18 12:22 PM] TonyL#3577
+@CrisF Maybe all UTXO used now - in such case funding showing as 0 by my experience
+
+{Reactions}
+👍 
+
+[23-Aug-18 12:22 PM] SHossain#0007
+i have entropy tx (UTXO) `umentropy tx 22: 1115345.59217016`
+this is the reason, i advised you to use this plan
+
+[23-Aug-18 12:23 PM] CrisF#3405
+Yes, that's the one I tried.
+
+[23-Aug-18 12:23 PM] SHossain#0007
+are you using latest source from jl777 branch?
+
+[23-Aug-18 12:23 PM] CrisF#3405
+Yes, just updated.
+
+[23-Aug-18 12:24 PM] CrisF#3405
+```./komodo-cli -ac_name=BRK dicebet DiceX 9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6 777 50
+{
+  "result": "error",
+  "error": "couldnt create dice bet transaction. make sure your address has funds"```
+
+[23-Aug-18 12:24 PM] SHossain#0007
+which block you are synced until?
+
+[23-Aug-18 12:24 PM] CrisF#3405
+```"blocks": 4302,
+  "longestchain": 4302,```
+
+[23-Aug-18 12:25 PM] SHossain#0007
+restart the daemon and try again
+
+[23-Aug-18 12:25 PM] SHossain#0007
+i see fundings in there using a player node
+
+[23-Aug-18 12:25 PM] CrisF#3405
+Ok.
+
+[23-Aug-18 12:26 PM] SHossain#0007
+just did a bet using player node and dealer node showed info as lost bet
+```
+d74cd86fa0ccd60256efa1ca367190f9e016413399f315f3cd61f8f9a45cd4ce winnings 0.00000000 bet 20.00000000 at odds 1:1
+0100000003a2a4613819e21acfdee7b34e9a61bd817cf65478b2ab20565fcba8571863261901000000484730440220289bef1c925109d4078622d5143d8a1f95bf131944f3a0c790a4b525c6686a990220193ee9f4c66b086394172e289c049f109a7ef9701540ba3575ed8b2f79f0935a01ffffffffced45ca4f9f861cdf315f399334116e0f9907136caa1ef5602d6cca06fd84cd7000000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e81406697edc918a5b7035b137028f4a0df90baf7123ef6d9d413b4142c98dab760302865c8cc0ca1ce6202127848b39908a4770fed6f1f5260040d25a2df4afd4746a100af038001e6a10001ffffffffced45ca4f9f861cdf315f399334116e0f9907136caa1ef5602d6cca06fd84cd7010000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e81405b55b3e0b51e44bd94b4321a010ac84555134de97781a586dc12e8df88a464d901587141b03509773f9eb3118e87f575290d154bfc4627a0193bafd4d69d4c51a100af038001e6a10001ffffffff03f0344d1f05000000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc102700000000000023210304b1f0ba82cb8e064a32e093e2319ff6f886523d4c910204169353529c7669a6ac00000000000000006d6a4c6ae64c4469636558000000c6ecc7a864c640988509fe7d836a9ab36a8aeb3e25411f9a9245d934020f9d9ba3f5d3a7ff0707cf256bface611f221a556d3e76b0e730fd8f6009a65f74ebd02c272e85bca12b43229524ba26d6fa1949b79212b767c25a25e2925b71b747c700000000
+74275712c523522152ce6ed7896a786b97957c3077a75c86c3db48240e26fcb6
+KOMODO_CONNECTING.4305 mempool.1
+KOMODO_CONNECTING.4305 mempool.1
+added to mempool and broadcast
+```
+
+[23-Aug-18 12:27 PM] SHossain#0007
+and dicestatus from player node shows lost
+```
+"method":"dicestatus",
+"params": ["DiceX","9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6","d74cd86fa0ccd60256efa1ca367190f9e016413399f315f3cd61f8f9a45cd4ce"]
+```
+```
+        "result": "success",
+        "status": "loss"
+```
+
+[23-Aug-18 12:35 PM] CrisF#3405
+It worked and I placed a bet.
+
+[23-Aug-18 12:36 PM] CrisF#3405
+`dicestatus` shows `"error": "Diceinit error in status"`
+
+[23-Aug-18 12:36 PM] SHossain#0007
+did you send the rawtransaction?
+
+[23-Aug-18 12:36 PM] CrisF#3405
+yes.
+
+[23-Aug-18 12:36 PM] SHossain#0007
+what is the txid?
+
+[23-Aug-18 12:37 PM] SHossain#0007
+```
+cf70ca83d1282f04d06540353d64b1a71b7f0692d4e6a522c74f929d92aa3377 winnings 0.00000000 bet 777.00000000 at odds 50:1
+```
+
+[23-Aug-18 12:37 PM] CrisF#3405
+`cf70ca83d1282f04d06540353d64b1a71b7f0692d4e6a522c74f929d92aa3377`
+
+[23-Aug-18 12:37 PM] CrisF#3405
+Yes.
+
+[23-Aug-18 12:37 PM] SHossain#0007
+you lost
+
+[23-Aug-18 12:37 PM] blackjok3r#3181
+```#!/bin/bash
+#use like --- $ ./dice.sh 0.5
+cecho() {
+  local code="\033["
+  case "$1" in
+    red    |  r) color="${code}1;31m";;
+    green  |  g) color="${code}1;32m";;
+    yellow |  y) color="${code}1;33m";;
+    blue   |  b) color="${code}1;34m";;
+    purple |  p) color="${code}1;35m";;
+    cyan   |  c) color="${code}1;36m";;
+    gray   | gr) color="${code}0;37m";;
+    *) local text="$1"
+  esac
+  [ -z "$text" ] && local text="$color$2${code}0m"
+  echo -n -e "$text"
+}
+
+check () {
+  check=$($checkcmd | jq -r '.')
+  result=$(jq -r ".status" <<<"${check}")
+}
+
+wager=$1
+cecho b "Wager: "
+cecho g $wager
+echo ""
+odds=1
+cecho b "Odds: "
+cecho g $odds
+echo ""
+fundingtxid="e05c2964c1f63890579d5485953d7d70145e691f2120be857f4647981797286a"
+AssetChain="STAKED2"
+bet=$(komodo-cli -ac_name=$AssetChain dicebet DICE $fundingtxid $wager $odds | jq -r '.')
+bethex=$(jq -r ".hex" <<<"${bet}")
+if [[ $bethex = null ]]; then
+        cecho r "ERROR CREATING TX! \n"
+        exit
+fi
+sendbet=$(komodo-cli -ac_name=$AssetChain sendrawtransaction $bethex)
+outcome=$?
+if [[ $outcome != 0 ]]; then
+        exit
+        echo $bethex >> ERRORLOG
+fi
+cecho b "Sent "
+cecho c $sendbet
+echo ""
+echo $sendbet >> txids_dice100
+sleep 5
+checkcmd="komodo-cli -ac_name=$AssetChain dicestatus DICE $fundingtxid $sendbet"
+check
+outcome=0
+while [[ $outcome = 0 ]]; do
+  if [[ $result = *pending* ]]; then
+    sleep 60
+    check
+  else
+    outcome=1
+  fi
+done
+if [[ $result = "win" ]]; then
+  cecho g "YOU WON!"
+  echo win >> wins
+elif [[ $result = "loss" ]]; then
+  cecho r "YOU LOST!"
+  echo loss >> losses
+else
+  cecho c "result: $result"
+fi
+echo ""```
+
+[23-Aug-18 12:37 PM] blackjok3r#3181
+Try that to play dice 😄
+
+{Reactions}
+😃 (2) 
+
+[23-Aug-18 12:37 PM] blackjok3r#3181
+much easier
+
+[23-Aug-18 12:38 PM] CrisF#3405
+stdout```modval 6544 vs 3333
+error decoding opret or sbits mismatch 5865636944 vs 3230663064396239
+Dice plan (9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6) exists.0 vs cmpflag.1
+Diceinit error in status```
+
+[23-Aug-18 12:38 PM] SHossain#0007
+@CrisF did you use dicestatus or diceinfo?
+
+[23-Aug-18 12:38 PM] SHossain#0007
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/482166771432816650/Screenshot_from_2018-08-23_13-38-23.png
+
+[23-Aug-18 12:38 PM] SHossain#0007
+using dicestatus for your txid, i see the result
+
+[23-Aug-18 12:38 PM] CrisF#3405
+`status`
+
+[23-Aug-18 12:40 PM] SHossain#0007
+what is the actual command you used?
+
+[23-Aug-18 12:40 PM] CrisF#3405
+```./komodo-cli -ac_name=BRK dicestatus 9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6 cf70ca83d1282f04d06540353d64b1a71b7f0692d4e6a522c74f929d92aa3377
+{
+  "result": "error",
+  "error": "Diceinit error in status"```
+
+[23-Aug-18 12:41 PM] SHossain#0007
+this was supposed to be fixed yesterday. jl777 pushed fix. i can't reproduce it using 2 ndoes
+
+[23-Aug-18 12:41 PM] SHossain#0007
+```
+./komodo-cli -ac_name=BRK dicestatus DiceX 9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6 cf70ca83d1282f04d06540353d64b1a71b7f0692d4e6a522c74f929d92aa3377
+{
+  "result": "success",
+  "status": "loss"
+}
+```
+
+[23-Aug-18 12:41 PM] SHossain#0007
+ah, i see. you need the diceplan name
+
+[23-Aug-18 12:41 PM] SHossain#0007
+in your command
+
+[23-Aug-18 12:42 PM] SHossain#0007
+`DiceX` is missing
+
+[23-Aug-18 12:43 PM] SHossain#0007
+@CrisF ^^
+
+[23-Aug-18 12:43 PM] CrisF#3405
+Ahhh! TY
+
+[23-Aug-18 12:47 PM] SHossain#0007
+did it work for you now?
+
+[23-Aug-18 12:47 PM] CrisF#3405
+Yes, it's good!
+
+[23-Aug-18 12:48 PM] CrisF#3405
+How do I create `entropy`?
+
+[23-Aug-18 12:49 PM] SHossain#0007
+cool. try more. i'll add entropy.
+
+[23-Aug-18 12:49 PM] SHossain#0007
+dealer has to do that
+
+[23-Aug-18 12:50 PM] CrisF#3405
+OK.
+
+[23-Aug-18 12:53 PM] SHossain#0007
+i can see the lost bets 😃
+
+[23-Aug-18 12:54 PM] SHossain#0007
+adding more entropy tx as well
+
+[23-Aug-18 12:54 PM] CrisF#3405
+Haha
+

@@ -1,0 +1,442 @@
+==============================================================
+Guild: Komodo
+Channel: cc-oracles
+Topic: This channel is for discussion and announcements surrounding the oracles crypto condition contract. Please feel free to answer any questions, technical or non-technical. The oracles contract can be used for converting off-chain data into on-chain data. It has vast set of use cases as dapps and other contracts can trigger actions based on what is written to an oracle. Please see the channel's pinned messages for examples of how it is currently being used. Alright#0419 will be happy to answer any questions you may have when they are available.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[10-May-19 11:27 AM] Alright#0419
+ie maybe when registering, it never used the new baton from new register?
+
+[10-May-19 11:28 AM] Mihailo#5902
+Or it always used new one, but there was never any data before last register...
+
+[10-May-19 11:29 AM] Alright#0419
+there are quite a few chains in production with oracles CC, changing behavior of oraclesregister to make sure there is only ever a single baton is a hard fork. Probably best to fork it with the NN hardfork or shortly after if we have to hard fork it
+
+[10-May-19 11:30 AM] Alright#0419
+maybe it can be fixed rpc side though, ie ignore any new batons, don't show them in oraclesinfo
+
+[10-May-19 11:32 AM] Mihailo#5902
+I would propose we do not make a change, but basically show batons for each register, so you can get all data if oyu want by iterating all registers from oraclesinfo and calling oraclssamples for each baton.
+
+[10-May-19 11:33 AM] Alright#0419
+I think that works, have to make sure oraclesdata will use the correct baton though
+
+[10-May-19 11:33 AM] Mihailo#5902
+It works, but for two registers of the same pubkey it shows latest baton in both
+
+[10-May-19 11:34 AM] Mihailo#5902
+for two different publishers it shows different batons, but for the same pubkey it will show same one in each register
+
+[10-May-19 11:34 AM] Alright#0419
+isn't that the behavior right now?
+
+[10-May-19 11:34 AM] Alright#0419
+not sure I understand
+
+[10-May-19 11:35 AM] Alright#0419
+the problem is that oraclesinfo "forgets" about the other set of batons
+
+[10-May-19 11:35 AM] Mihailo#5902
+```"registered": [
+    {
+      "publisher": "02475d5476bb98181180b457177fae43e41a31388b3708dcaf6a04e4142784cf4f",
+      "baton": "RUbBwtHuc5HCYY5CctrpSJ9MeHJHh1TZXZ",
+      "batontxid": "1443ea8e4e6962ffeecb067004fef9fc0c4bbc06789bb88fad38678f9ced1a09",
+      "lifetime": "2.00000000",
+      "funds": "0.99980000",
+      "datafee": "0.00010000"
+    },
+    {
+      "publisher": "02475d5476bb98181180b457177fae43e41a31388b3708dcaf6a04e4142784cf4f",
+      "baton": "RUbBwtHuc5HCYY5CctrpSJ9MeHJHh1TZXZ",
+      "batontxid": "1443ea8e4e6962ffeecb067004fef9fc0c4bbc06789bb88fad38678f9ced1a09",
+      "lifetime": "2.00000000",
+      "funds": "0.99980000",
+      "datafee": "0.00010000"
+    }
+  ]```
+
+[10-May-19 11:36 AM] Mihailo#5902
+Same publisher, two registers but shows same baton. I propose that we show the baton for first register until that one was used, and then for 2nd....
+
+[10-May-19 11:36 AM] Alright#0419
+now that I think of it, yes this always existed
+
+[10-May-19 11:36 AM] Alright#0419
+Was why I was having so much trouble with chat history 😂
+
+[10-May-19 11:36 AM] Alright#0419
+that just clicked in my head 😂
+
+[10-May-19 11:36 AM] Alright#0419
+yes
+
+[10-May-19 11:36 AM] Alright#0419
+what you're saying makes sense
+
+[10-May-19 11:36 AM] Mihailo#5902
+Or either, show one (the latest) but we need to spend previous baton when making new one and connecti ti in opret so when making oraclessamples to show all data
+
+[10-May-19 11:37 AM] Mihailo#5902
+But this is hardfork change
+
+[10-May-19 11:37 AM] Alright#0419
+well the whole ecosystem is hard forking in about a month
+
+[10-May-19 11:37 AM] Mihailo#5902
+Or maybe not 🤔
+
+[10-May-19 11:37 AM] Alright#0419
+so we could use that to our advantage
+
+[10-May-19 11:37 AM] Alright#0419
+after elections we'll be pushing "update before June ~15th"
+
+[10-May-19 11:38 AM] Alright#0419
+if we need to hard fork oracles, we should get the code included in the repo prior to us pushing that messaging
+
+[10-May-19 11:38 AM] Mihailo#5902
+Lets see what @jl777c thinks....
+
+[10-May-19 11:38 AM] Mihailo#5902
+Maybe he has some insight we are missing
+
+[10-May-19 11:41 AM] Alright#0419
+if hard forking can give us objectively better functionality(not saying it will), I think we should do it. Piggy back on the election hard fork
+
+[10-May-19 11:42 AM] Alright#0419
+but again, I don't think it's necessary. If oraclesinfo can show all sets of batons, the problem goes away(I think)
+
+[10-May-19 11:44 AM] Mihailo#5902
+Or I can change oraclessamples to go deep to the first register, this would'nt be hardfork change
+
+[10-May-19 11:44 AM] Alright#0419
+so only ever show a single set of batons?
+
+[10-May-19 11:44 AM] Alright#0419
+not sure I understand
+
+[10-May-19 11:45 AM] Mihailo#5902
+Yes, just latest baton and go through all. Let me check if it is doable
+
+[10-May-19 11:45 AM] Alright#0419
+requires changes to oraclesdata to make sure that baton is used
+
+[10-May-19 11:46 AM] Alright#0419
+also takes away functionality of being able to change data fee
+
+[10-May-19 11:46 AM] Mihailo#5902
+No, but when oraclessamples reaches oracleregister it requires to know previous tx before register, so probably not....
+
+[10-May-19 11:46 AM] Alright#0419
+I don't think the changing data fee is all that important tbh, could just reference a new pubkey with the very last oraclesdata to change data fee
+
+[10-May-19 11:47 AM] Alright#0419
+"I've increased my price. You can find me at <pubkey> now."
+
+[10-May-19 01:04 PM] jl777c#5810
+i totally forgot all the details of oracles CC
+
+[10-May-19 01:05 PM] jl777c#5810
+plz fix it if it is broken
+
+[10-May-19 01:05 PM] jl777c#5810
+dont hardfork existing chains
+
+[10-May-19 01:05 PM] jl777c#5810
+maybe it can be just non-consensus rpc calls to fix
+
+[10-May-19 01:05 PM] jl777c#5810
+or new variants if it will break installed base
+
+[10-May-19 01:05 PM] jl777c#5810
+i cannot forsee all edge cases ahead of time
+
+[10-May-19 02:03 PM] Alright#0419
+ok so I thought if I got all baton txids from baton addr shown in oraclesinfo, I'd be able to use oraclessamples on each and have it return all valuess
+
+[10-May-19 02:03 PM] Alright#0419
+this doesn't seem to be the case, seems it's more an issue with oraclessamples than anything else
+
+[10-May-19 02:09 PM] Alright#0419
+@TonyL there are two txs you made on the 20vs22 oracle that oraclessamples can't seem to decode
+
+[10-May-19 02:10 PM] Alright#0419
+hold on, can get the txids
+
+[10-May-19 02:10 PM] Alright#0419
+did you do anything wonky for those two?
+
+[10-May-19 02:10 PM] Alright#0419
+Oh maybe the hex length was just messed up on them?
+
+[10-May-19 02:13 PM] Alright#0419
+```
+{'result': 'success', 'samples': []}
+08db4f0bb698f8178e09714034d98633ba462ca500aa10fcfab4fc498b67b2a4
+{'result': 'success', 'samples': []}
+897f267d0bf2804467ebcaf2c884c05120d939a6d72c8e2f701d6eb1060346c1
+
+```
+these two
+
+[10-May-19 02:22 PM] TonyL#3577
+I'm not sure what are these transactions. Maybe I've sent some incorrect data hex in these.
+
+For  "I want 666 nodes" I have baton which no match any of two above: 
+```./komodo-cli -ac_name=CFEKORC oraclessamples 68c78190c91f45d7dacff72281226a075a9a14f0ea60efd4edda15c6edea947a 8c6cdb43722ba32c8928507876f9a5e641957e196c3eee99ee9883e445c65dd0 3
+{
+  "result": "success",
+  "samples": [
+    [
+      "I want 666 nodes",
+      "8c6cdb43722ba32c8928507876f9a5e641957e196c3eee99ee9883e445c65dd0"
+    ]
+  ]
+}```
+
+ Not sure about other "I want 777 nodes" message txid
+
+[10-May-19 02:34 PM] Alright#0419
+I'm working on a work around for NNvote dapp right now, is definitely convoluted as it iterates over all txids from baton addr, but it should work
+
+[10-May-19 02:34 PM] Alright#0419
+proves that it can be fixed via rpc
+
+[11-May-19 12:08 PM] Alright#0419
+https://github.com/KMDLabs/StakedNotary/commit/ffcafc047a6cd5685e46ea069bdc0f23263d50bb
+@Mihailo don't think this is all that helpful in fixing it, but it proves that it can be fixed via RPC I believe. I'm basically just checking oraclessamples on each EVAL_ORACLES 'D' tx to the baton address
+
+{Embed}
+https://github.com/KMDLabs/StakedNotary/commit/ffcafc047a6cd5685e46ea069bdc0f23263d50bb
+work around for oraclessamples bug, proper deadline checks · KMDL...
+https://camo.githubusercontent.com/c995d8eec52c0bef59483512665f6d8088e77a55/68747470733a2f2f322e67726176617461722e636f6d2f6176617461722f61383661636533323063626634346236303464386435633565633435643737373f643d68747470732533412532462532466769746875622e6769746875626173736574732e636f6d253246696d6167657325324667726176617461727325324667726176617461722d757365722d3432302e706e6726723d6726733d323030
+
+[11-May-19 12:08 PM] Alright#0419
+and it works
+
+[11-May-19 12:09 PM] Alright#0419
+not sure how it currently tracks samples, but maybe something similar can be done via rpc.
+
+[11-May-19 12:09 PM] Alright#0419
+ie, check all txids to baton address
+
+[11-May-19 12:11 PM] Alright#0419
+Ah I just realized that's flawed as I could likely hack oraclesdata to use someone else's baton address 🤔
+
+[11-May-19 12:12 PM] Mihailo#5902
+I will show latest baton for each register in oraclesinfo, and then you can issue oraclessamples with correct baton to see all data for that baton.
+
+[11-May-19 12:13 PM] Alright#0419
+sounds good 👍
+
+[11-May-19 12:13 PM] Alright#0419
+just needed something in the mean time for that vote dapp
+
+[11-May-19 12:15 PM] Mihailo#5902
+Hmm, I could maybe even pass all txs that goes to baton address as you said and show data that way...
+
+[11-May-19 12:17 PM] Mihailo#5902
+But still, I'll probably get on it at monday
+
+[13-May-19 01:31 PM] Mihailo#5902
+@Alright @TonyL @jl777c I have made a fix for oracles so that oraclessamples now display all data from one publisher, never mind how many registers he done. The input for oraclesamples is baton address instead of latest baton txid. Also, I changed the display in oraclesinfo to show only one (latest) register per publisher.
+
+{Reactions}
+🔥 
+
+[13-May-19 01:31 PM] Mihailo#5902
+@Alright Can you test my branch?
+https://github.com/Mixa84/komodo/tree/oraclesfix
+
+{Embed}
+https://github.com/Mixa84/komodo/tree/oraclesfix
+Mixa84/komodo
+Komodo. Contribute to Mixa84/komodo development by creating an account on GitHub.
+https://avatars3.githubusercontent.com/u/39563265?s=400&v=4
+
+[13-May-19 01:32 PM] Mihailo#5902
+If it is ok, I'll make PR!
+
+[13-May-19 01:35 PM] TonyL#3577
+Is it possible by such design to get old data samples after second+ registration?
+
+[13-May-19 01:35 PM] Mihailo#5902
+Yes
+
+{Reactions}
+🔥 
+
+[13-May-19 01:36 PM] Mihailo#5902
+As all data posted have baton sent to batonaddress. So with SetCCtxids I can get all txs sent to this address, and that is all data ever sent
+
+[13-May-19 02:50 PM] Alright#0419
+@Mihailo Awesome 😃 I'll try to get to it today, but if I can't, won't be able to play with it until Thursday or so
+
+[13-May-19 02:51 PM] Mihailo#5902
+Ok, just checkout on some oracles the samples to see if you are getting it. We can merge it to FSM later ;)
+
+[13-May-19 05:41 PM] Mihailo#5902
+@Alright It may print double txs for each data, have to check tomorrow.
+
+[14-May-19 07:55 AM] Mihailo#5902
+@Alright made the fix.
+
+[14-May-19 09:05 AM] TonyL#3577
+@Mihailo oraclessamples attempt crashed daemon on my side (backtrace can be found in paste): https://paste.ubuntu.com/p/xmqkC82rQJ/
+
+[14-May-19 09:05 AM] TonyL#3577
+I'm on latest oraclesfix branch
+```git log -1
+commit 268431dd43dbc07c183a4142bf1c3c8cf2562b44 (HEAD -> oraclesfix, origin/oraclesfix)
+Date:   Tue May 14 09:55:43 2019 +0200
+
+    Fix
+```
+
+[14-May-19 09:18 AM] Mihailo#5902
+Aha, ok. My bad
+
+[14-May-19 09:22 AM] Mihailo#5902
+@TonyL BTW, you don't supply baton txid any more but baton address...
+
+[14-May-19 09:22 AM] Mihailo#5902
+Fix pushed.
+
+[14-May-19 09:41 AM] TonyL#3577
+Oh right, ok
+
+[14-May-19 10:08 AM] TonyL#3577
+👍 
+```./komodo-cli -ac_name=TEST123 oraclessamples 11db784ea5e1a18d20d3307adeed2e8427590b63a56b16d08469a2ca334dc409 RVpsmnvRvC5GXj4RsiRDrE7r2eRQud9Tqn 0
+{
+  "result": "success",
+  "samples": [
+    [
+      "Anton",
+      "fe1eff922165ba622a7db808db2becd14f4c6dc79bac61fd6b98fa943c1ce8b3"
+    ]
+  ]
+}
+```
+
+{Reactions}
+👍 
+
+[14-May-19 10:13 AM] TonyL#3577
+On oraclesregister with different datafee publisher data overwrited:
+```./komodo-cli -ac_name=TEST123 oraclesinfo 11db784ea5e1a18d20d3307adeed2e8427590b63a56b16d08469a2ca334dc409
+{
+  "result": "success",
+  "txid": "11db784ea5e1a18d20d3307adeed2e8427590b63a56b16d08469a2ca334dc409",
+  "name": "Test",
+  "description": "Testing",
+  "format": "s",
+  "marker": "REESjBF4Bd4pzX21oYoFWrhbEuPBc4fDgG",
+  "registered": [
+    {
+      "publisher": "0358ac4197709f7a5518592652a7ae9e53058d15f210e3323feb03afb20e9236f2",
+      "baton": "RVpsmnvRvC5GXj4RsiRDrE7r2eRQud9Tqn",
+      "batontxid": "374da54647d7b0a535ec9ab606e7e2fa83e55a6c42732a5e87a3b2a820dc941b",
+      "lifetime": "1.00000000",
+      "funds": "0.99990000",
+      "datafee": "0.00020000"
+    }
+  ]
+}
+```
+
+[14-May-19 10:13 AM] TonyL#3577
+Let's try to send new data now and see how much funds reduce 😃
+
+[14-May-19 10:14 AM] TonyL#3577
+```    {
+      "publisher": "0358ac4197709f7a5518592652a7ae9e53058d15f210e3323feb03afb20e9236f2",
+      "baton": "RVpsmnvRvC5GXj4RsiRDrE7r2eRQud9Tqn",
+      "batontxid": "e2db1a7311baca24c8fe2c214d6877297861268d785e2ccee94ce50e3428a6ee",
+      "lifetime": "1.00000000",
+      "funds": "0.99970000",
+      "datafee": "0.00020000"
+    }
+``` 
+Reduced 0.0002 as expected
+
+[14-May-19 10:15 AM] Mihailo#5902
+👏
+
+[14-May-19 10:15 AM] TonyL#3577
+``` ./komodo-cli -ac_name=TEST123 oraclessamples 11db784ea5e1a18d20d3307adeed2e8427590b63a56b16d08469a2ca334dc409 RVpsmnvRvC5GXj4RsiRDrE7r2eRQud9Tqn 0
+{
+  "result": "success",
+  "samples": [
+    [
+      "Anton",
+      "e2db1a7311baca24c8fe2c214d6877297861268d785e2ccee94ce50e3428a6ee"
+    ],
+    [
+      "Anton",
+      "fe1eff922165ba622a7db808db2becd14f4c6dc79bac61fd6b98fa943c1ce8b3"
+    ]
+  ]
+}
+```
+
+[14-May-19 10:15 AM] TonyL#3577
+And my previous sample remained as well
+
+[14-May-19 10:15 AM] TonyL#3577
+Great job @Mihailo 🎉
+
+[14-May-19 10:17 AM] TonyL#3577
+Help for oraclessamples needs to be corrected a littlebit (batonutxo -> batonaddress), can PR if needed
+```./komodo-cli -ac_name=TEST123 oraclessamples
+error code: -1
+error message:
+oraclessamples oracletxid batonutxo num
+```
+
+[14-May-19 10:17 AM] Mihailo#5902
+Ah yes 😉
+
+[14-May-19 10:17 AM] Mihailo#5902
+Do it 😉
+
+[14-May-19 10:17 AM] Mihailo#5902
+Or no, I will
+
+{Reactions}
+👌 
+
+[14-May-19 10:17 AM] Mihailo#5902
+It is easier for me
+
+[14-May-19 10:18 AM] Mihailo#5902
+Fixed
+
+{Reactions}
+🔥 
+
+[14-May-19 10:20 AM] TonyL#3577
+Case when register with same datafee  as before didn't create publisher duplicate as well
+
+[14-May-19 10:21 AM] Mihailo#5902
+Well, it did create another register, but it is showing just latest register 😉
+
+[14-May-19 10:23 AM] TonyL#3577
+Yep, batontxid changed to latest register txid
+
+[14-May-19 10:23 AM] TonyL#3577
+But samples are in place 😃
+
+[14-May-19 10:24 AM] Mihailo#5902
+Yes, because samples are not get by baton txid, but all samples to that address!
+
+{Reactions}
+💪 
+
+[14-May-19 10:25 AM] TonyL#3577
+How is the order maintained with such connection to address?
+

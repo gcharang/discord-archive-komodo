@@ -1,0 +1,531 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[08-Oct-18 08:55 AM] jl777c#5810
+the amount is too small, hence dust. we might need to make an exception for this
+
+[08-Oct-18 08:55 AM] TonyL#3577
+Yep, amount is < than tx fee
+
+[08-Oct-18 09:02 AM] jl777c#5810
+so maybe we just need an error check on channel creation that the minimum payment is at least txfee
+
+[08-Oct-18 10:54 AM] Mihailo#5902
+@TonyL For payment, you should give the amount you want to pay, and not the number of payments. I have not done all the checks for correctness. This needs to be done.
+
+[08-Oct-18 10:55 AM] Mihailo#5902
+Just for the short time, can you call RPC with correct arguments and I'll do the checking right away.
+
+[08-Oct-18 10:55 AM] TonyL#3577
+@Mihailo Yes, I'm calling amount, not number. Sure - with correct arguments basic test seems passed
+
+[08-Oct-18 10:56 AM] TonyL#3577
+Opened channel, did payment, closed channels, made refund
+
+[08-Oct-18 10:56 AM] TonyL#3577
+All the sums changed correct
+
+[08-Oct-18 10:56 AM] Mihailo#5902
+For the channelinfo, if you do not pass channel open tx id it will give you the list of channels, and if you pass the tx id, then you will see the info for that channel
+
+[08-Oct-18 10:57 AM] TonyL#3577
+Yes, info for particular channel is the same as in list - checked it as well
+
+[08-Oct-18 10:58 AM] Mihailo#5902
+And for particular channel you should see the info how much is left after each payment. But if it is better UX we can add it in the first list.
+
+[08-Oct-18 10:58 AM] TonyL#3577
+Hmm didn't see info about how much is left. Let me re-check please
+
+[08-Oct-18 11:06 AM] CrisF#3405
+I also don't remember seeing how much was left.
+
+[08-Oct-18 11:07 AM] CrisF#3405
+Unable to check at the moment.
+
+[08-Oct-18 11:15 AM] TonyL#3577
+Yup, counter in `channelsinfo` works:
+```./komodo-cli -ac_name=CCNG channelsopen 027166e21e9579307a1ae4f8c223516e70aae3cbfab4bd6ac7cebfa625dcc0a2a4 10 10000000
+```
+```
+ ./komodo-cli -ac_name=CCNG channelsinfo 2f95b0f4e3dbe7f5ebc0f9479800c9ff3f44e76f5378313c9406ab5a92ff4631
+{
+  "result": "success",
+  "name": "Channel RC3VHbSFQioJsu3xb3qPuEr9dSW3VqZhWj",
+  "Open": "10 payments of 10000000 satoshi"
+}
+```
+```./komodo-cli -ac_name=CCNG channelspayment 2f95b0f4e3dbe7f5ebc0f9479800c9ff3f44e76f5378313c9406ab5a92ff4631 10000000```
+```./komodo-cli -ac_name=CCNG channelsinfo 2f95b0f4e3dbe7f5ebc0f9479800c9ff3f44e76f5378313c9406ab5a92ff4631
+{
+  "result": "success",
+  "name": "Channel RC3VHbSFQioJsu3xb3qPuEr9dSW3VqZhWj",
+  "Open": "10 payments of 10000000 satoshi",
+  "Payment": "10000000 satoshi to RUB9qtKwBj4Gt9HY6Vy117AtCdEutVCzCk, 9 payments left"
+}
+```
+
+[08-Oct-18 11:15 AM] CrisF#3405
+👍
+
+[08-Oct-18 11:16 AM] Mihailo#5902
+Maybe it is more intuitive to put it on top, or in the global list so it can be known righ away how much is left...
+
+[08-Oct-18 11:16 AM] TonyL#3577
+@Mihailo Why I have to declare `payment_amount` in `channelspayment` call if I can't choose other than I've set in `channelsopen` ?
+
+[08-Oct-18 11:17 AM] TonyL#3577
+@Mihailo I think it might be useful for dAPP devs if it'll be in separate parameter in JSON:
+Like a: 
+```
+result:
+name:
+amount:
+wallet:
+payments_left:```
+And common list like a array of such arrays
+
+[08-Oct-18 11:17 AM] TonyL#3577
+Now it will be hard to parse
+
+[08-Oct-18 11:19 AM] Mihailo#5902
+Well, that is good question. I remember once talking with JL should we put amount or number of payments and I think we said at that time that amount is better. But as you say, because you cannot use nothing else except the multiply of denomination set in open, maybe we can but the number of denominations...
+
+[08-Oct-18 11:22 AM] TonyL#3577
+I thought first that ` payment_amount ` determine maximum payment amount but now it determine `only` amount which confused me a little bit while testing
+
+[08-Oct-18 11:29 AM] Mihailo#5902
+Basically, what you put in channel open is the denomination you will use for payment. If you want to make exact payments, you open multiple channels with different denominations. For example, one for whole coin, one for 0.1, one for 0.01 and with those thre you can make any X.YZ amount.
+
+{Reactions}
+👍 (2) 
+
+[08-Oct-18 11:29 AM] TonyL#3577
+Oh I see now
+
+[08-Oct-18 11:31 AM] Mihailo#5902
+There is a limit of 1000 payments per channel. So instead of creating one channel with small denomination and using it for any amount, you make few channels with each denomination you need.
+
+{Reactions}
+👌 
+
+[08-Oct-18 11:32 AM] Mihailo#5902
+I need to add those checks now to prevent using RPC with invalid arguments.
+
+{Reactions}
+👌 (2) 
+
+[08-Oct-18 12:02 PM] Mylo#8306
+@TonyL re: multiple channel payments for X.YZ amount https://github.com/jl777/komodo/blob/FSM/src/cc/channels.cpp#L27
+
+{Embed}
+https://github.com/jl777/komodo/blob/FSM/src/cc/channels.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+{Reactions}
+🙌 
+
+[08-Oct-18 12:15 PM] TonyL#3577
+Thanks a lot @Mylo ! A bit different sets of info on channelsCC in MasteringCryptoconditions, channels.cpp and CC Made easy so a little bit lost ☺
+
+[08-Oct-18 12:17 PM] Mylo#8306
+Hey at least you've got a channel working!!   I'm behind on the "actually using the code" part, otherwise may be able to offer some assistance, but I'm nearly caught up - I'm currently working on a flowchart (v0.01) and spin up an AC to test my understanding of reading the notes.  At the same time will be getting the instructions for #cc-gui - so by end of week, hopefully i'm able to be a bit more help instead of just pointing to stuff 👉 👈
+
+[08-Oct-18 01:30 PM] Bryan_Beus#6442
+What do we have by way of an explorer for tokens?
+
+[08-Oct-18 01:31 PM] jl777c#5810
+we are a dozen GUI behind the latest CC rpc
+
+[08-Oct-18 01:32 PM] Bryan_Beus#6442
+I came back to where I was on Saturday to pick up work, and I've lost the pubkey I was working with.
+
+It's a test chain, so it doesn't matter. But it got me wondering what a user would do to trace down those coins?
+
+[08-Oct-18 01:34 PM] jl777c#5810
+ask the chain creator for free coins to compensate them for the loss and mental hardships
+
+[08-Oct-18 01:34 PM] Bryan_Beus#6442
+😃
+
+[08-Oct-18 01:35 PM] Bryan_Beus#6442
+So, just to be clear, we have no transaction history for tokens, is that correct?
+
+[08-Oct-18 01:35 PM] jl777c#5810
+there is addresstxids rpc call
+
+[08-Oct-18 01:35 PM] jl777c#5810
+getaddresstxids
+
+[08-Oct-18 01:35 PM] jl777c#5810
+getaddressbalance, etc
+
+[08-Oct-18 01:36 PM] jl777c#5810
+given your token address, you can get a list of txid
+
+[08-Oct-18 01:36 PM] jl777c#5810
+but if you lost your privkey, you cant do much
+
+[08-Oct-18 01:36 PM] Bryan_Beus#6442
+Right, I haven't lost the privkey, but just the pubkey. I should still have all privkeys in my wallet.dat
+
+[08-Oct-18 01:36 PM] jl777c#5810
+then just get the pubkey again
+
+[08-Oct-18 01:36 PM] Bryan_Beus#6442
+So, I should be able to find the pubkey, by iterating through all addresses in my wallet.
+
+[08-Oct-18 01:37 PM] Bryan_Beus#6442
+Just out of curiosity. Not going to do this.
+
+[08-Oct-18 01:37 PM] jl777c#5810
+no
+
+[08-Oct-18 01:37 PM] jl777c#5810
+for CC it is implemented as using the -pubkey= to derive all the CC addresses
+
+[08-Oct-18 01:38 PM] jl777c#5810
+but fundamentally any pubkey can be used
+
+[08-Oct-18 01:38 PM] jl777c#5810
+and each one generates its own set of related CC addresses
+
+[08-Oct-18 01:39 PM] Bryan_Beus#6442
+Ok, so I found the pubkey I was using last time...
+
+[08-Oct-18 01:40 PM] Bryan_Beus#6442
+So, if I wanted to use `tokentransfer` on these tokens, I assume I have to stop the asset chain, switch out for this correct pubkey, and then relaunch. 
+
+Is that the idea?
+
+[08-Oct-18 01:41 PM] Bryan_Beus#6442
+I don't see anything in `tokentransfer tokenid destpubkey amount` that would otherwise let me choose which pubkey I want to use.
+
+Just trying to understand.
+
+[08-Oct-18 01:41 PM] jl777c#5810
+correct
+
+[08-Oct-18 01:42 PM] Bryan_Beus#6442
+great. thanks.
+
+[08-Oct-18 01:42 PM] jl777c#5810
+this also avoids the need to worry about change addresses
+
+[08-Oct-18 01:42 PM] Bryan_Beus#6442
+Yes, that would make it simpler.
+
+[08-Oct-18 01:42 PM] jl777c#5810
+however nothing about the CC prevents multi-pubkey usage
+
+[08-Oct-18 01:42 PM] jl777c#5810
+but I think people will find having a vector of addresses for each pubkey confusing enough without needing to deal with a matrix of addresses from a vector of pubkeys
+
+[08-Oct-18 01:43 PM] jl777c#5810
+especially since things like channels CC creates a new channel address from each pair of pubkeys, we end up with having a cube of possible addresses from the vector of pubkeys for the sender and another for the receiver
+
+[08-Oct-18 01:44 PM] jl777c#5810
+to make things a bit more confusing, tokens are a special case where multiple different CC will support the same token
+
+[08-Oct-18 01:44 PM] jl777c#5810
+via tokenconvert
+
+[08-Oct-18 01:44 PM] jl777c#5810
+currently it is just a one way assets -> evalcode conversion, but likely we need to be able to handle the other direction too
+
+[08-Oct-18 01:47 PM] Bryan_Beus#6442
+Ok, that's a bit over my head. I'll save it in my notes and come back to it when I work on channels.
+
+Another question:
+
+Let's say I launch with a pubkey of an address for which I don't have the private key.
+
+A few questions. First, I'm guessing that this means that if I ask or bid for a token and it is accepted, the tokens will be sent to the indicated pubkey -- is that correct?
+
+[08-Oct-18 01:49 PM] jl777c#5810
+it should generate an error if you try to masquerade for a pubkey you dont have
+
+[08-Oct-18 01:49 PM] jl777c#5810
+or at best it will transfer things you can sign to an address you cant spend from
+
+[08-Oct-18 01:50 PM] Bryan_Beus#6442
+Ok. 
+
+So, to be clear, on an asset chain where I'm not using a pubkey, it's not uncommon to launch with a pubkey that may not be mine. 
+
+For example, this might be a way to donate mining rewards to the developer or something. Is that correct?
+
+[08-Oct-18 01:51 PM] jl777c#5810
+there is a -donate option for rewards
+
+[08-Oct-18 01:51 PM] jl777c#5810
+i guess if it works, then yes you can do that
+
+[08-Oct-18 01:52 PM] jl777c#5810
+not sure how common this would be
+
+[08-Oct-18 01:52 PM] jl777c#5810
+ALL change goes to the pubkey address
+
+[08-Oct-18 01:52 PM] Bryan_Beus#6442
+I just remember reading something about this while reworking docs. I think it was in the zcash default docs.
+
+[08-Oct-18 01:52 PM] jl777c#5810
+it wont be long before all your funds end up  in the pubkey address
+
+[08-Oct-18 01:52 PM] jl777c#5810
+NOT recommended
+
+[08-Oct-18 01:53 PM] Bryan_Beus#6442
+Ooh, okay. I may be misremembering.
+
+So, could we say instead, that under normal circumstances, a user launching with a `-pubkey` parameter active should make sure that they own the privkey to that pubkey?
+
+[08-Oct-18 01:53 PM] Bryan_Beus#6442
+That's something I will probably go back and add to the notes...
+
+[08-Oct-18 01:54 PM] jl777c#5810
+yes, i probably should just not allow it, but there might be some cases where that is useful
+
+[08-Oct-18 01:54 PM] jl777c#5810
+the burden of not burning your funds is up to the cli user
+
+[08-Oct-18 01:55 PM] Bryan_Beus#6442
+Ok, I was misremembering.
+
+Here's what's in the basic api right now:
+
+```
+pubkey
+------
+
+``pubkey`` sets an address to use as a change address for all transactions. This value must be set to a 33 byte pubkey. All mined coins will also be sent to this address.
+
+Usage:
+
+As a default value in the coin's ``.conf`` file:
+
+::
+
+  pubkey=027dc7b5cfb5efca96674b45e9fda18df069d040b9fd9ff32c35df56005e330392
+
+```
+
+[08-Oct-18 01:57 PM] Bryan_Beus#6442
+Ok, added some notes about ensuring they have ownership.
+
+[08-Oct-18 02:07 PM] Bryan_Beus#6442
+So, I'm trying to piece together what's happening in the transactions when we use tokens, to see how everything is linked together...
+
+I'm looking at the two txids where I sent 100 of my tokens to a pubkey on another node.
+
+On the sending node, I have these two txids:
+
+```
+ {
+    "account": "",
+    "address": "RUYde1UFGHp3frwAYNLordwGq5WZyeVWpc",
+    "category": "send",
+    "amount": -99898.07693952,
+    "vout": 0,
+    "fee": -0.00005000,
+    "confirmations": 1,
+    "blockhash": "0204056d4648fb8dfc4811338139c06be03d074f16b51f9505e666eb04b8298d",
+    "blockindex": 1,
+    "blocktime": 1538837860,
+    "expiryheight": 0,
+    "txid": "e6965b24b649289c3bd736431f42de1f3d3e2ce6a24e7abf433021f451ba727d",
+    "walletconflicts": [
+    ],
+    "time": 1538837802,
+    "timereceived": 1538837802,
+    "vjoinsplit": [
+    ],
+    "size": 202
+  },
+  {
+    "account": "",
+    "address": "RUYde1UFGHp3frwAYNLordwGq5WZyeVWpc",
+    "category": "immature",
+    "amount": 0.00025000,
+    "vout": 0,
+    "confirmations": 1,
+    "generated": true,
+    "blockhash": "0204056d4648fb8dfc4811338139c06be03d074f16b51f9505e666eb04b8298d",
+    "blockindex": 0,
+    "blocktime": 1538837860,
+    "expiryheight": 0,
+    "txid": "0483fb72a4433992f7ff0cd8be2be30dcbb2f147866834504cfccf9d18feb956",
+    "walletconflicts": [
+    ],
+    "time": 1538837860,
+    "timereceived": 1538837874,
+    "vjoinsplit": [
+    ],
+    "size": 100
+  }
+```
+
+[08-Oct-18 02:08 PM] Bryan_Beus#6442
+Hmm, actually, I'm not sure that they two transactions are related.
+
+[08-Oct-18 02:09 PM] Bryan_Beus#6442
+Let me check, hang on.
+
+I have a question, but one sec.
+
+[08-Oct-18 02:09 PM] jl777c#5810
+without looking at the actual transaction, you will have a near impossible time to decipher things
+
+[08-Oct-18 02:09 PM] Bryan_Beus#6442
+Right, but first I had to see what this was about.
+
+[08-Oct-18 02:09 PM] jl777c#5810
+that is because tokens are colored coins and count as normal coins for most things
+
+[08-Oct-18 02:10 PM] jl777c#5810
+and the transactions display has always been making some assumptions and confusing
+
+[08-Oct-18 02:10 PM] jl777c#5810
+just look at the decoded transactions
+
+[08-Oct-18 02:10 PM] jl777c#5810
+it will make things much clearer
+
+[08-Oct-18 02:10 PM] Bryan_Beus#6442
+Yes, I was going to get there.
+
+[08-Oct-18 02:10 PM] Bryan_Beus#6442
+But I need to start at the beginning.
+
+[08-Oct-18 02:11 PM] jl777c#5810
+understanding a highly processed list is not the beginning
+
+[08-Oct-18 02:11 PM] jl777c#5810
+but you are free to ignore my advice
+
+[08-Oct-18 02:11 PM] Bryan_Beus#6442
+😃
+
+[08-Oct-18 02:13 PM] Bryan_Beus#6442
+Here's the decoded transaction.
+
+```
+{
+  "amount": 0.00000000,
+  "confirmations": 1,
+  "generated": true,
+  "blockhash": "0204056d4648fb8dfc4811338139c06be03d074f16b51f9505e666eb04b8298d",
+  "blockindex": 0,
+  "blocktime": 1538837860,
+  "expiryheight": 0,
+  "txid": "0483fb72a4433992f7ff0cd8be2be30dcbb2f147866834504cfccf9d18feb956",
+  "walletconflicts": [
+  ],
+  "time": 1538837860,
+  "timereceived": 1538837874,
+  "vjoinsplit": [
+  ],
+  "details": [
+    {
+      "account": "",
+      "address": "RUYde1UFGHp3frwAYNLordwGq5WZyeVWpc",
+      "category": "immature",
+      "amount": 0.00025000,
+      "vout": 0,
+      "size": 100
+    }
+  ],
+  "hex": "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff050282000101ffffffff01a861000000000000232102bb263ecaf443560787e9cc8bfaa0ebdfdfd87057f2e1f44b649ba8b9c6aa970dac63cdb85b"
+}
+```
+
+[08-Oct-18 02:14 PM] Bryan_Beus#6442
+So, when I look at this, I see there is a main property `amount` that is set to `0`.
+
+This one is normally the value that carries the value for a transaction on the asset chain, but here it is allowed to be zero.
+
+Correct?
+
+[08-Oct-18 02:23 PM] jl777c#5810
+no
+
+[08-Oct-18 02:23 PM] jl777c#5810
+getrawtransaction txid 1
+
+[08-Oct-18 02:24 PM] jl777c#5810
+that gets you the decoded raw transaction the hex, nota summary
+
+[08-Oct-18 02:24 PM] TonyL#3577
+Added ChannelsCC RPC calls with @Mihailo notes and I/O examples to this file: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+
+{Embed}
+https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit
+Smart Contract Test Plan
+faucet
+
+
+ Faucet Contract
+ Availalble RPC calls, What does this Call do?, Example Test Command, Example Expected Output, What to Check, Comments, Testing Result
+ faucetaddress[ pubkey], Will display central faucet address and your faucet contract address for your pubkey.
+ pub...
+https://lh4.googleusercontent.com/jG0EwoRG0GKTwPpnAwZivN2UkcMWt-qr3QUTPsmy2nz8nNGRLIBXezodcKzZoKg9bFwJDQ=w1200-h630-p
+
+{Reactions}
+🙏 
+
+[08-Oct-18 02:28 PM] Bryan_Beus#6442
+Ok, so here's the `getrawtransaction txid 1` return:
+
+```
+{
+  "hex": "01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff050282000101ffffffff01a861000000000000232102bb263ecaf443560787e9cc8bfaa0ebdfdfd87057f2e1f44b649ba8b9c6aa970dac63cdb85b",
+  "txid": "0483fb72a4433992f7ff0cd8be2be30dcbb2f147866834504cfccf9d18feb956",
+  "overwintered": false,
+  "version": 1,
+  "locktime": 1538837859,
+  "vin": [
+    {
+      "coinbase": "0282000101",
+      "sequence": 4294967295
+    }
+  ],
+  "vout": [
+    {
+      "value": 0.00025000,
+      "valueZat": 25000,
+      "valueSat": 25000,
+      "n": 0,
+      "scriptPubKey": {
+        "asm": "02bb263ecaf443560787e9cc8bfaa0ebdfdfd87057f2e1f44b649ba8b9c6aa970d OP_CHECKSIG",
+        "hex": "2102bb263ecaf443560787e9cc8bfaa0ebdfdfd87057f2e1f44b649ba8b9c6aa970dac",
+        "reqSigs": 1,
+        "type": "pubkey",
+        "addresses": [
+          "RUYde1UFGHp3frwAYNLordwGq5WZyeVWpc"
+        ]
+      }
+    }
+  ],
+  "vjoinsplit": [
+  ],
+  "blockhash": "0204056d4648fb8dfc4811338139c06be03d074f16b51f9505e666eb04b8298d",
+  "height": 130,
+  "confirmations": 1,
+  "time": 1538837860,
+  "blocktime": 1538837860
+}
+```
+
+[08-Oct-18 02:30 PM] Bryan_Beus#6442
+I'm searching to find where I placed the pubkey to which I transferred those 100 tokens, and also, where it would say that I transferred 100 tokens specifically. (Is that what `size` is in the txid?)
+

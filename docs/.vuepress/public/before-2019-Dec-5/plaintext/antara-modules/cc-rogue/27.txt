@@ -1,0 +1,383 @@
+==============================================================
+Guild: Komodo
+Channel: cc-rogue
+Topic: use FSM branch AND then build as normal
+ 
+./komodod -ac_name=ROGUE -ac_supply=1000000 -pubkey=<yourpubkey> -addnode=5.9.102.210  -ac_cclib=rogue -ac_perc=10000000 -ac_reward=100000000 -ac_cc=60001 -ac_script=2ea22c80203d1579313abe7d8ea85f48c65ea66fc512c878c0d0e6f6d54036669de940febf8103120c008203000401cc -daemon
+Guide here: https://github.com/KomodoPlatform/komodo/wiki/Get-Started-with-Rogue-Game
+Explorer: http://rogue.explorer.dexstats.info/
+Player's Handbook: https://github.com/jl777/komodo/blob/jl777/src/cc/rogue/rogue.doc
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[16-Feb-19 09:20 AM] TonyL#3577
+@grewalsatinder ^^
+
+{Reactions}
+🔥 👍 
+
+[16-Feb-19 10:03 AM] jl777c#5810
+all ROGUE rpc calls autobroadcast
+
+[16-Feb-19 10:03 AM] TonyL#3577
+And game hanged... 
+Seems like there are some bugs after ncurses removement.
+Also after last update sometimes when quit of inventory double press of Enter needed to get focus back
+
+{Attachments}
+https://cdn.discordapp.com/attachments/542758401516634112/546270327806623755/unknown.png
+
+[16-Feb-19 10:03 AM] jl777c#5810
+investigating
+
+[16-Feb-19 10:06 AM] jl777c#5810
+it locked up with 100% CPU usage?
+
+[16-Feb-19 10:06 AM] jl777c#5810
+you are doing -daemon?
+
+[16-Feb-19 10:07 AM] jl777c#5810
+really, there is no effective code change with latest, or shouldnt be
+
+[16-Feb-19 10:07 AM] TonyL#3577
+Nope, daemon is fine
+
+[16-Feb-19 10:07 AM] TonyL#3577
+Rogue itself hanged after I've picked up item which labeled as `{`
+
+[16-Feb-19 10:07 AM] jl777c#5810
+what is {
+
+[16-Feb-19 10:08 AM] jl777c#5810
+potion should be !
+
+[16-Feb-19 10:08 AM] TonyL#3577
+When you pickup item label assigning (key by which you can use it then) - I've highlited on screenshot
+
+[16-Feb-19 10:08 AM] TonyL#3577
+Usually it's a letter like `a`, `b`, `c` ...
+
+[16-Feb-19 10:08 AM] TonyL#3577
+But by some reason `{` assigned and game immediately hanged
+
+[16-Feb-19 10:10 AM] jl777c#5810
+this might have been there before? how did you assign key?
+
+[16-Feb-19 10:10 AM] TonyL#3577
+It's assigning automatically on pick-up
+
+[16-Feb-19 10:10 AM] jl777c#5810
+cat you play on rogue 777 and duplicate the problem?
+
+[16-Feb-19 10:10 AM] TonyL#3577
+Never faced it before
+
+[16-Feb-19 10:12 AM] TonyL#3577
+I will try
+
+[16-Feb-19 10:15 AM] TonyL#3577
+@jl777c Is my unexpected death of `LeBron James` about which I've reported above means that if let's say no or very little of keystrokes mined before bailout CC think that player died? He had very good loot 😐
+
+[16-Feb-19 10:44 AM] jl777c#5810
+did the keystrokes tx go out?
+
+[16-Feb-19 10:45 AM] jl777c#5810
+it seems you landed in a treasure room
+
+[16-Feb-19 10:45 AM] jl777c#5810
+is the latest consistently behaving wonky, or was it just that one time?
+
+[16-Feb-19 10:46 AM] TonyL#3577
+Both cases I've reported above I faced only once so far
+
+[16-Feb-19 10:47 AM] TonyL#3577
+Trying to reproduce `rogue` hang on jl777 seed now - need to fill inventory I think
+
+[16-Feb-19 10:59 AM] SHossain#0007
+updating
+
+[16-Feb-19 11:01 AM] jl777c#5810
+yes, if inventory is full that would be a new codepath, so this bug is likely there for a while
+
+[16-Feb-19 11:09 AM] TonyL#3577
+@jl777c reproduced with jl777 seed
+
+{Attachments}
+https://cdn.discordapp.com/attachments/542758401516634112/546286923958845462/unknown.png
+
+[16-Feb-19 11:09 AM] TonyL#3577
+As I understand there is no check now on inventory overflow as before
+
+[16-Feb-19 11:10 AM] TonyL#3577
+Before when you step-up on item and there is no place in inventory printed error that "Item X" laying and you have no space
+I think easiest way to reproduce just throw a lot of arrows and pick up
+
+[16-Feb-19 11:10 AM] jl777c#5810
+yes { is after z. i didnt change that
+
+[16-Feb-19 11:11 AM] jl777c#5810
+but I will see if I can fix it
+
+[16-Feb-19 11:11 AM] TonyL#3577
+`rogue` hangs when `{` appears
+
+[16-Feb-19 11:11 AM] TonyL#3577
+It's when inventory full - before there was message that you can't pickup
+
+[16-Feb-19 11:12 AM] TonyL#3577
+But now rogue just hangs
+
+[16-Feb-19 11:12 AM] jl777c#5810
+yes, I will add guards against that.
+
+{Reactions}
+👍 
+
+[16-Feb-19 11:12 AM] jl777c#5810
+do you remember exact cant pickup message? "pickup" is not in source code
+
+[16-Feb-19 11:13 AM] TonyL#3577
+Hmm let me check source code
+
+[16-Feb-19 11:13 AM] TonyL#3577
+I read it whole yesterday 😂
+
+[16-Feb-19 11:15 AM] jl777c#5810
+addmsg(rs,"there's ");
+    addmsg(rs,"no room");
+    if (!terse)
+        addmsg(rs," in your pack");
+
+[16-Feb-19 11:15 AM] jl777c#5810
+pack.c
+
+[16-Feb-19 11:16 AM] TonyL#3577
+Oh yes, this one
+
+[16-Feb-19 11:17 AM] TonyL#3577
+And it printing item which laying so you can decide should you empty some place in inventory or not
+
+[16-Feb-19 11:19 AM] jl777c#5810
+could it be this has been there since restoring player is active?
+
+[16-Feb-19 11:19 AM] jl777c#5810
+could be off by one in numpack, will add prints
+
+[16-Feb-19 11:21 AM] jl777c#5810
+pushed version with print of numpack as you pickup items.
+
+[16-Feb-19 11:22 AM] TonyL#3577
+Isn't `./rogue 777 gui` starting game in "offline" mode without player restoring?
+
+[16-Feb-19 11:22 AM] jl777c#5810
+true... maybe it has been there since the beginning when I ported it
+
+[16-Feb-19 11:23 AM] TonyL#3577
+
+{Attachments}
+https://cdn.discordapp.com/attachments/542758401516634112/546290573837991956/unknown.png
+
+[16-Feb-19 11:24 AM] TonyL#3577
+Updated - pack prints breaking playing field now
+
+[16-Feb-19 11:27 AM] SHossain#0007
+@CHMEX please update daemon and restart ROGUE explorer when you get some time.
+
+[16-Feb-19 11:27 AM] jl777c#5810
+i dont think there were recent changes to daemon that need updating?
+
+[16-Feb-19 11:27 AM] jl777c#5810
+@TonyL does the printout match the number of items in the pack?
+
+[16-Feb-19 11:28 AM] jl777c#5810
+i know it is hard to see but hopefully you can see if it mismatches. I can add a print to the inventory command instead
+
+[16-Feb-19 11:29 AM] jl777c#5810
+ok, updated so only when you do inventory should it print and it will print the inpack (total in pack global) along with a counted value (n_obj)
+
+[16-Feb-19 11:29 AM] CHMEX#0686
+ok it's back was doing some maintenance
+
+{Reactions}
+💯 
+
+[16-Feb-19 11:33 AM] SHossain#0007
+Thanks.
+
+[16-Feb-19 12:01 PM] TonyL#3577
+@jl777c yes seems correct 
+6 vs MAX 23
+```     a) 2 rations of food
+                                   b) +1 ring mail [protection 4] (being worn)
+                           ------- c) A +1,+1 mace (weapon in hand)
+                           |.....n d) A +1,+0 short bow
+                           |...%@. e) 38 +0,+0 arrows```
+
+[16-Feb-19 12:01 PM] jl777c#5810
+i wonder where it gets off by one...
+
+[16-Feb-19 12:01 PM] jl777c#5810
+the inventory should be printing inpack vs n_obj
+
+[16-Feb-19 12:02 PM] TonyL#3577
+```Hello , just a moment while I dig the dungeon... seed.777inpack.2 vs MAX.23
+                                                                           inpack.3 vs MAX.23
+                                                                                             inpack.4 vs MAX.23
+                                                                                                               inpack.5 vs MAX.23
+
+```
+
+[16-Feb-19 12:02 PM] TonyL#3577
+Then when picking up second food it's `inpack.6 vs MAX.23`
+
+[16-Feb-19 12:02 PM] TonyL#3577
+Suspicious that counting starting from 2
+
+[16-Feb-19 12:03 PM] jl777c#5810
+what about with inventory command?
+
+[16-Feb-19 12:03 PM] jl777c#5810
+you start with food and mace, arrows
+
+[16-Feb-19 12:03 PM] jl777c#5810
+and armor.. that should be 4
+
+[16-Feb-19 12:03 PM] TonyL#3577
+Bow also!
+
+[16-Feb-19 12:04 PM] TonyL#3577
+🏹
+
+[16-Feb-19 12:04 PM] jl777c#5810
+so the inventory count is off?
+
+[16-Feb-19 12:04 PM] jl777c#5810
+what is nobj
+
+[16-Feb-19 12:04 PM] jl777c#5810
+i pushed another version with print change
+
+[16-Feb-19 12:04 PM] TonyL#3577
+Food, mace, armor, bow, arrows that 5
+
+[16-Feb-19 12:04 PM] TonyL#3577
+Let me check new version
+
+[16-Feb-19 12:07 PM] TonyL#3577
+``` |........n_objs.5 vs inpack.5```
+
+[16-Feb-19 12:08 PM] TonyL#3577
+```n_objs.8 vs inpack.9``` picked up some stuff
+
+[16-Feb-19 12:08 PM] TonyL#3577
+```                                   a) 2 rations of food
+                                   b) +1 ring mail [protection 4] (being worn)
+                           ------- c) A +1,+1 mace (weapon in hand)
+                           |...... d) A +1,+0 short bow
+                           |...%.. e) 38 +0,+0 arrows
+                           +...... h) A two handed sword
+                           ------- f) A pewter wand
+                                   g) A balsa staff```
+
+[16-Feb-19 12:09 PM] TonyL#3577
+Let me try to make it 23
+
+[16-Feb-19 12:11 PM] TonyL#3577
+Hanged after `{` again
+
+[16-Feb-19 12:15 PM] jl777c#5810
+what was n_objs vs inpack during this?
+
+[16-Feb-19 12:16 PM] jl777c#5810
+if it starts at 5 vs 5 and then becomes 8 vs 9, that is not good
+
+[16-Feb-19 12:16 PM] jl777c#5810
+they should be the same, at least same difference between them
+
+[16-Feb-19 12:17 PM] TonyL#3577
+Isn't food a single object in inventory which can be stacked? (n_objs.8 vs inpack.9 is after I pickup second food)
+Let me try to check ` n_objs vs inpack` before I pick-up this `{`
+
+[16-Feb-19 12:20 PM] TonyL#3577
+n_objs is amount of inventory titles as  I understand:
+Let's say when I want to wield:
+```n_objs.4 vs inpack.9```
+Since only 4 items will be shown as items legit for wield and I have 9 items in my pack in total
+
+[16-Feb-19 12:22 PM] jl777c#5810
+some things you can have multiples of, like arrows
+
+[16-Feb-19 12:22 PM] TonyL#3577
+```n_objs.26 vs inpack.9```
+
+[16-Feb-19 12:22 PM] TonyL#3577
+Before `{`
+
+[16-Feb-19 12:22 PM] jl777c#5810
+what?
+
+[16-Feb-19 12:22 PM] jl777c#5810
+inpack is not getting bigger??
+
+[16-Feb-19 12:22 PM] TonyL#3577
+```a) 2 rations of food
+b) +1 ring mail [protection 4] (being worn)
+c) A +1,+1 mace
+d) A +1,+0 short bow (weapon in hand)
+e) 20 +0,+0 arrows
+z) An +0,+0 arrow
+y) An +0,+0 arrow
+x) An +0,+0 arrow
+w) An +0,+0 arrow
+v) An +0,+0 arrow
+u) An +0,+0 arrow
+t) An +0,+0 arrow
+s) An +0,+0 arrow
+r) An +0,+0 arrow
+q) An +0,+0 arrow
+p) An +0,+0 arrow
+o) An +0,+0 arrow
+n) An +0,+0 arrow
+m) An +0,+0 arrow
+l) An +0,+0 arrow
+k) An +0,+0 arrow
+j) An +0,+0 arrow
+i) An +0,+0 arrow```
+
+[16-Feb-19 12:23 PM] TonyL#3577
+Seems there is some specific bug around arrows
+
+[16-Feb-19 12:24 PM] TonyL#3577
+And next arrow I pickup is `{` and rogue hangs with 
+```Illegal command '^@'--More--```
+
+[16-Feb-19 12:24 PM] TonyL#3577
+You may try on your side - it's pretty fast:
+```./rogue 777 gui```
+Then pick up food and staff in first room and go to the right room, pick up stuff here and start to shoot arrows to wall
+
+[16-Feb-19 12:25 PM] TonyL#3577
+Then pick up arrows and it will hang after `z` arrow
+
+[16-Feb-19 12:25 PM] jl777c#5810
+ok, so its these arrows that are not being added to the 20, seems the issue
+
+[16-Feb-19 12:25 PM] TonyL#3577
+It hangs on other `{` items pickup now - but maybe unpacked arrows is the reason
+
+[16-Feb-19 12:26 PM] TonyL#3577
+But I'm 99% sure that few days ago it worked correct
+
+[16-Feb-19 12:27 PM] TonyL#3577
+Before I've updated yesterday. Since I not changed my gameplay style and unpacked arrows before as well and when inventory is full it printed that it's full (last item was always `z`, never `{`)
+
+[16-Feb-19 12:30 PM] jl777c#5810
+do you remember having 20 arrows like that?
+
+[16-Feb-19 12:30 PM] TonyL#3577
+No, but I can hang it without this test with arrows
+
+[16-Feb-19 12:30 PM] TonyL#3577
+On poision or something else - when just play usual and have inventory full
+

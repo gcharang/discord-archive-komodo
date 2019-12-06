@@ -1,0 +1,133 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"272003866906722306";"TonyL#3577";"18-Nov-18 06:44 AM";"https://komodoplatform.com/wp-content/uploads/2018/05/2018-05-09-Komodo-White-Paper-Full.pdf some useful info regards notarization I saw in whitepaper";"";"🙏 (1)";
+"412482228359266328";"CrisF#3405";"18-Nov-18 06:44 AM";"Bad timing if there's a problem!";"";"";
+"232679450301431808";"blackjok3r#3181";"18-Nov-18 06:45 AM";"I'm almost home, guess I should check out the testnet and start testing things";"";"";
+"272003866906722306";"TonyL#3577";"18-Nov-18 06:45 AM";"There is a `The Notarization Process` paragraph";"";"👌 (1)";
+"232679450301431808";"blackjok3r#3181";"18-Nov-18 06:46 AM";"Need to merge FSM down, tried this morning but again multiple conflicts so stopped.. Once that's on we can do a ac script chain to pay to multisig address.";"";"";
+"232679450301431808";"blackjok3r#3181";"18-Nov-18 06:47 AM";"And merge maatertest to master and do one last migrate stress test.. Need to make 100% sure all chain s are being mined and staked, as when they stall out my VM dies totally and reslts are incorrectly reported";"";"👍 (1)";
+"455741312273219595";"jl777c#5810";"18-Nov-18 10:07 AM";"you might want to change to jl777 from FSM. FSM is now in flux";"";"";
+"455741312273219595";"jl777c#5810";"18-Nov-18 10:08 AM";"jl777 was synced with FSM prior to the massive changes to FSM";"";"👍 (1)";
+"412482228359266328";"CrisF#3405";"18-Nov-18 10:13 AM";"@gt How's it going with the migration?";"";"";
+"232679450301431808";"blackjok3r#3181";"18-Nov-18 10:19 AM";"I just merged the ac_script fixes to mastertest on staked before Verus was added in... so I htink we are ok there.";"";"";
+"232679450301431808";"blackjok3r#3181";"18-Nov-18 10:22 AM";"@jl777c  would the Verus Nothing at stake contract be able to be used with komodo PoS ?";"";"";
+"400570483906707456";"gt#2812";"18-Nov-18 10:22 AM";"@CrisF i haven’t done any today sorry";"";"";
+"455741312273219595";"jl777c#5810";"18-Nov-18 10:22 AM";"that CC is not integrated";"";"";
+"412482228359266328";"CrisF#3405";"18-Nov-18 10:24 AM";"No worries, @gt .  I'll give it a go.  Please let Blackjok3r and Alright know if anything shows up in the logs or there are any troubles.";"";"";
+"412482228359266328";"CrisF#3405";"18-Nov-18 10:29 AM";"`CFEK` might need mining.  100%PoSvs51% target.  My 4 cores aren't doing much.  2414522 dificulty.";"";"";
+"232679450301431808";"blackjok3r#3181";"18-Nov-18 10:44 AM";"Yeah.... we identified that issue ... It seems as though the main chain will NEED hash power, but also we know that it should have a fair bit of it, a single mini corrected the % easily... if all chains are progressing, migrates should be wokring, provided the notary nodes are working... I sitll have the 2 of them, and havent checked them in a while.";"";"";
+"412482228359266328";"CrisF#3405";"18-Nov-18 10:45 AM";"Yeah, my NN has been very stable too.";"";"";
+"232679450301431808";"blackjok3r#3181";"18-Nov-18 12:03 PM";"I think I just solved the wallet cleaner problem with a very simple solution... starting new code project at 8pm ... have to stop doing this LOL";"";"";
+"412482228359266328";"CrisF#3405";"18-Nov-18 12:04 PM";"💥  Good stuff!";"";"";
+"232679450301431808";"blackjok3r#3181";"18-Nov-18 01:51 PM";"```    {
+        // listunspent call... this gets us all the txids that are unspent, we search this list for the oldest tx,
+        vector<COutput> vecOutputs;
+        assert(pwalletMain != NULL);
+        pwalletMain->AvailableCoins(vecOutputs, false, NULL, true);
+        int32_t oldestTxDepth = 0;
+        BOOST_FOREACH(const COutput& out, vecOutputs)
+        {
+          if ( out.nDepth > oldestTxDepth )
+              oldestTxDepth = out.nDepth;
+        }
+        oldestTxDepth = oldestTxDepth + 1; // add extra block just for safety.
+
+        // then add all txs in the wallet before this block to the list to remove.
+        for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
+        {
+            const CWalletTx& wtx = (*it).second;
+            if (wtx.GetDepthInMainChain() > oldestTxDepth)
+                TxToRemove.push_back(wtx.GetHash());
+        }
+    }
+
+    // erase txs
+    BOOST_FOREACH (uint256& hash, TxToRemove)
+    {
+        pwalletMain->EraseFromWallet(hash);
+        LogPrintf(""ERASED spent Tx: %s\n"",hash.ToString().c_str());
+    }```";"";"";
+"232679450301431808";"blackjok3r#3181";"18-Nov-18 01:51 PM";"works pefectly ... very fast and doesnt miss any txs or remove txs that are unspent.";"";"";
+"232679450301431808";"blackjok3r#3181";"18-Nov-18 03:09 PM";"Its merged into mastertest branch";"";"";
+"232679450301431808";"blackjok3r#3181";"18-Nov-18 03:09 PM";"Dont think I have anything really left needed... we are up to testing phase before launch of 10% blck reward and notaries to be chosen for mainnet.";"";"";
+"232679450301431808";"blackjok3r#3181";"18-Nov-18 03:10 PM";"@Alright  can you please test `mastertest` branch with your `ac_script` chain. to amke sure it works.";"";"";
+"232679450301431808";"blackjok3r#3181";"18-Nov-18 03:11 PM";"if thats confirmed I can merge mastertest to master tomorrow";"";"";
+"232679450301431808";"blackjok3r#3181";"18-Nov-18 03:14 PM";"RPC for wallet cleaner is : `cleanwallettransactions`";"";"";
+"405011811511828481";"Alright#0419";"18-Nov-18 03:57 PM";"need to test pos on ac_script, so I'll do FSM and staked at the same time";"";"";
+"455741312273219595";"jl777c#5810";"18-Nov-18 03:58 PM";"change to jl777 branch";"";"";
+"455741312273219595";"jl777c#5810";"18-Nov-18 03:58 PM";"FSM is having issues with all the latest changes";"";"";
+"405011811511828481";"Alright#0419";"18-Nov-18 03:58 PM";"👌";"";"";
+"459028995024093194";"kmdkrazy#8280";"18-Nov-18 11:10 PM";"Create a bash file for noobs....git pull ... start from scatch with new testname....you guys are killing the part time lovers.  
+
+AssetChain.sh";"";"";
+"459028995024093194";"kmdkrazy#8280";"18-Nov-18 11:11 PM";"Master and mastertest";"";"";
+"405011811511828481";"Alright#0419";"18-Nov-18 11:46 PM";"what?";"";"";
+"405011811511828481";"Alright#0419";"18-Nov-18 11:46 PM";"What is it you want us to do?";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 01:13 AM";"Staked repo does that @kmdkrazy";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 01:13 AM";"It starts all or a single chain with a so gle command";"";"";
+"459028995024093194";"kmdkrazy#8280";"19-Nov-18 01:58 AM";"I keep working on my business and keep coming back ....you guys change shit before i wake up..
+..please keep testing chains updated with some type of updated bash...so the newb 12 hours away can test.....";"";"";
+"459028995024093194";"kmdkrazy#8280";"19-Nov-18 01:59 AM";"Maybe im 2 weeks behind";"";"";
+"459028995024093194";"kmdkrazy#8280";"19-Nov-18 02:00 AM";"Stop progressing so dam fast !!";"";"";
+"405011811511828481";"Alright#0419";"19-Nov-18 02:08 AM";"the purpose of the test chains is testing, they aren't particularly important as we can just restart them if there is a problem. Mainnet will be much more consistent than the testnet";"";"";
+"459028995024093194";"kmdkrazy#8280";"19-Nov-18 02:10 AM";"Yeah...but changing to FSM and or from testnet needs a better stucture....i understand that you are in prototype.... but there should be a place to see these new changes without scrolling back";"";"";
+"459028995024093194";"kmdkrazy#8280";"19-Nov-18 02:12 AM";"If github has those";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 02:12 AM";"the staked repo will start a chain you specify from the correct branch with no user input required";"";"";
+"459028995024093194";"kmdkrazy#8280";"19-Nov-18 02:13 AM";"Fogive me";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 02:13 AM";"`./start.sh CFEK` for example";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 02:13 AM";"if you cant do a config.ini";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 02:13 AM";"I made it even easiuer";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 02:13 AM";"`./start.sh CFEK noconfig`";"";"";
+"459028995024093194";"kmdkrazy#8280";"19-Nov-18 02:13 AM";"Nice";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 02:13 AM";"yes it was needed";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 02:13 AM";"at the moment everything is in master branch anyway so its not really needed.";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 02:14 AM";"But I have bulk things to merge down, once we have verified everythiing in matsertest is working.";"";"";
+"459028995024093194";"kmdkrazy#8280";"19-Nov-18 02:14 AM";"Just change the komodod to staked 1375";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 02:14 AM";"Ideally everythig will be in master";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 02:14 AM";"I dont want to have to change things to often... likely the testnet will use a diffrent branch ...";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 02:15 AM";"but we dont expect everyone to actually run a testnet node.";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 02:15 AM";"its msotly for my testing, so I dont merge broken shit into the amin chain... that would eb very bad";"";"";
+"459028995024093194";"kmdkrazy#8280";"19-Nov-18 02:16 AM";"As a tester ...i need ""komodod"" to equal test chain  instead of the easier way you are operating";"";"";
+"459028995024093194";"kmdkrazy#8280";"19-Nov-18 02:17 AM";"When i kill komodod";"";"";
+"459028995024093194";"kmdkrazy#8280";"19-Nov-18 02:17 AM";"I want to know which one";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 02:17 AM";"you need a VM with this repo installed: https://github.com/StakedChain/staked";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 02:18 AM";"it cant get any easier than that...";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 02:18 AM";"or at least I cant make it any easier";"";"";
+"459028995024093194";"kmdkrazy#8280";"19-Nov-18 02:18 AM";"404 error on the link";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 02:18 AM";"yes the copy past fucked up";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 02:18 AM";"I just fixed it";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 02:18 AM";"still half a asleep lol";"";"";
+"459028995024093194";"kmdkrazy#8280";"19-Nov-18 02:18 AM";"And im going to bed";"";"";
+"459028995024093194";"kmdkrazy#8280";"19-Nov-18 02:19 AM";"Have a great night";"";"";
+"459028995024093194";"kmdkrazy#8280";"19-Nov-18 02:19 AM";"Day";"";"";
+"459028995024093194";"kmdkrazy#8280";"19-Nov-18 02:19 AM";"And ill sleep well";"";"";
+"459028995024093194";"kmdkrazy#8280";"19-Nov-18 02:19 AM";"Ill retest tomorrow....maybe";"";"";
+"459028995024093194";"kmdkrazy#8280";"19-Nov-18 02:20 AM";"You guys are monsters......i appreciate you";"";"";
+"405011811511828481";"Alright#0419";"19-Nov-18 03:17 AM";"@blackjok3r @webworker01 @CrisF @smk762 -  dracocanis ominator @jorian @TonyL @Deleted User @CHMEX @metaphilibert @jusoaresf @Mylo @gt @CMaurice @kmdkrazy @Bar_F1sh_Rel @zatJUM @Deleted User @dukeleto @gcharang @ComputerGenie 👴🏼📢 
+
+Please confirm the address and pubkey here are correct, and that you still own them. This is what is going into the source code. If there is a problem, send an email to stakechain@protonmail.com immediately . This is the only acceptable way to make sure you get your chance at being a notary. Discord messages easily get lost.";"";"👍 (8)";
+"405011811511828481";"Alright#0419";"19-Nov-18 03:18 AM";"https://pastebin.com/smnYZ3r5";"";"";
+"405011811511828481";"Alright#0419";"19-Nov-18 03:18 AM";"@CMaurice please send the corresponding address to stakedchain@protonmail.com";"";"";
+"405011811511828481";"Alright#0419";"19-Nov-18 03:19 AM";"@ComputerGenie 👴🏼📢 we need a compressed pubkey";"";"";
+"405011811511828481";"Alright#0419";"19-Nov-18 03:19 AM";"@ca333 please send an email with pubkey and address to stakedchain@protonmail.com. You were in the list previously, but you were removed to accommodate someone";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"19-Nov-18 03:21 AM";"if you need compressed, then I need to change addys 😛";"";"";
+"405011811511828481";"Alright#0419";"19-Nov-18 03:21 AM";"It's on you guys to verify. Don't assume I didn't make a mistake while creating that.";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 03:22 AM";"I will manually cross check it before adding to the ERA2 in the code ... and doing myt tests, I will check the email, Alright has given me access to it.";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 03:23 AM";"These are not mainnet pubkeys, but you can use them there aswell, if you like.";"";"";
+"412482228359266328";"CrisF#3405";"19-Nov-18 05:22 AM";"I'll send a new key in about 3 1/2 hours.";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"19-Nov-18 05:33 AM";"I have similar time frame for confirmation";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 05:45 AM";"No proiblem... decided not to do anything until much later on, so everyone can confirm.";"";"";
+"368864295397752833";"metaphilibert#0926";"19-Nov-18 06:33 AM";"Correct here";"";"";
+"423176312354635779";"gcharang#6833";"19-Nov-18 06:35 AM";"Mine is correct";"";"";
+"412482228359266328";"CrisF#3405";"19-Nov-18 07:11 AM";"It will take a while for the vanity generator to rollout `KMDLabsCrisF....`  ;)";"";"";
+"401454267812151298";"zatJUM#9924";"19-Nov-18 07:48 AM";"Is it ok if I generated it with the MGNX chain?";"";"";
+"456226577798135808";"Deleted User#0000";"19-Nov-18 07:58 AM";"Yup";"";"";
+"401454267812151298";"zatJUM#9924";"19-Nov-18 08:11 AM";"Thanks! I confirm my pubkey/address is ok";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"19-Nov-18 08:44 AM";"Radd/pubkey confirmed, etched into titanium, and buried in the outback 👌";"";"";
+"400570483906707456";"gt#2812";"19-Nov-18 08:48 AM";"all good";"";"";
+"412482228359266328";"CrisF#3405";"19-Nov-18 08:54 AM";"@Alright Radd/pubkey sent.";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 09:11 AM";"Will leave this another at least 4H before putting the keys into the code. then we can announce the activation time for era2 and launch of the 10% br chain.";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 09:12 AM";"everyone will have plenty of time to prepare a notary.";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 09:12 AM";"if they ahve not already done so.";"";"";
+"401454267812151298";"zatJUM#9924";"19-Nov-18 09:47 AM";"@blackjok3r everyone will have plenty of time to prepare a notary.";"";"";
+"401454267812151298";"zatJUM#9924";"19-Nov-18 09:48 AM";"Thank you for that!";"";"";
+"232679450301431808";"blackjok3r#3181";"19-Nov-18 09:48 AM";"it needs to be fair 😃";"";"";

@@ -1,0 +1,251 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"455741312273219595";"jl777c#5810";"25-Jul-19 10:27 AM";"nspv uses a single threaded model, sometimes the network request doesnt come back in time";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 10:27 AM";"reissuing the command will usually fix it as it will use things from the local RAM cache and avoid the timeout";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 10:28 AM";"if you get retcodes of all 0, then it is ready to broadcast";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 10:28 AM";"even if you dont, as long as it has scriptSig for all vins, it should still work";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 10:29 AM";"max of 64 vins, so this is not for any address with a lot of small utxo";"";"";
+"423176312354635779";"gcharang#6833";"25-Jul-19 10:29 AM";"got it
+it worked
+```bash
+curl --url ""http://127.0.0.1:$port"" --data ""{\""userpass\"":\""$userpass\"",\""method\"":\""broadcast\"",\""hex\"":\""0400008085202f890155c894ada147bf184bb7dff790ca429e6860775d3bb471dc0f69a28f080977e0010000006a47304402206774ff903a8a4b73bcd5a79fe5c744f34d2263160cd8877c198c2228c66a8a42022063e1d2d6403c395e3472a6a509f01cbff0b90e3413bc6f7bc492649302a4a64001210217a6aa6c0fe017f9e469c3c00de5b3aa164ca410e632d1c04169fd7040e20e06ffffffff0200e1f505000000001976a9144726f2838fc4d6ac66615e10604e18926e9b556e88ac48f804060000000023210217a6aa6c0fe017f9e469c3c00de5b3aa164ca410e632d1c04169fd7040e20e06ace77e395d000000000000000000000000000000\""}""
+```
+```json
+{""result"":""success"",""expected"":""c76fede03fd821cf718b8ca7de898b95d04d7b9f7fcaeda89ccc00519476ec4a"",""broadcast"":""c76fede03fd821cf718b8ca7de898b95d04d7b9f7fcaeda89ccc00519476ec4a"",""retcode"":1,""type"":""broadcast and mempool"",""lastpeer"":""nodeid.1""}
+```
+`https://kmdexplorer.io/tx/c76fede03fd821cf718b8ca7de898b95d04d7b9f7fcaeda89ccc00519476ec4a`";"";"👍 (1)";
+"455741312273219595";"jl777c#5810";"25-Jul-19 10:30 AM";"good, so the fix for oversize tx worked. still there is a 64kb limit now, but that should be sufficient for all <64 utxo tx with normal vins.";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 10:30 AM";"certainly possible to make some edge case >64kb tx, but those will not be supported by nspv";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 10:31 AM";"@blackjok3r i added a NSPV_methods[] array that describes how to map values in a params[] array to key:value json fields. when adding a new api call with parameters you need to add the appropriate entry in the NSPV_methods array";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Jul-19 10:33 AM";"Nice, started looking at GetTransaction, will do this tonight";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 10:54 AM";"@gcharang can you test the params array?";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 10:54 AM";"https://github.com/jl777/libnspv/blob/jl777/src/tools/nSPV_superlite.h##L754";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 10:55 AM";"that defines the order of the parameters and what type they need to be it will print the updated argjson after creating new fields based on the params array, so internally it is always using the ""key"":value";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 10:55 AM";"i was told using a params array makes it compatible with json 2.0 and a lot of tools";"";"";
+"423176312354635779";"gcharang#6833";"25-Jul-19 10:55 AM";"testing";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 10:56 AM";"first just study that NSPV_methods array to make sure all the fields are sane";"";"👍 (1)";
+"423176312354635779";"gcharang#6833";"25-Jul-19 10:56 AM";"```bash
+curl --url ""http://127.0.0.1:$port"" --data ""{\""userpass\"":\""$userpass\"",\""method\"":\""getnewaddress\""}""
+```
+
+```json
+{
+  ""wif"": ""Uxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"",
+  ""address"": ""Rxxxxxxxxxxxxxxxxxxxxxxxxxxxx"",
+  ""pubkey"": ""03xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"",
+  ""wifprefix"": 188,
+  ""compressed"": 1
+}
+```
+
+is `""compressed"": 1` a boolean?
+is it saying whether the wif is of a compressed private key?";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 10:58 AM";"it is integer value of 1";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 10:58 AM";"yes, it says the wif is for compressed pubkey";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 10:58 AM";"uncompressed is not supported";"";"";
+"423176312354635779";"gcharang#6833";"25-Jul-19 10:59 AM";"got it";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 11:00 AM";"you can look in the _NSPV_JSON function  all api calls";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 11:00 AM";"if ( strcmp(method,""apiname"") == 0 ) <- that means it is an api call";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 11:01 AM";"i guess i can add all the methods without parameters to the methods array so we have a single place with all active ones";"";"👌 (1)";
+"232679450301431808";"blackjok3r#3181";"25-Jul-19 11:02 AM";"Thats not a bad idea, keep things all the same";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 11:02 AM";"adding";"";"";
+"423176312354635779";"gcharang#6833";"25-Jul-19 11:10 AM";"```bash
+curl --data-binary '{""jsonrpc"": ""2.0"", ""id"":""curltest"", ""method"": ""broadcast"", ""params"": [0400008085202f890155c894ada147bf184bb7dff790ca429e6860775d3bb471dc0f69a28f080977e0010000006a47304402206774ff903a8a4b73bcd5a79fe5c744f34d2263160cd8877c198c2228c66a8a42022063e1d2d6403c395e3472a6a509f01cbff0b90e3413bc6f7bc492649302a4a64001210217a6aa6c0fe017f9e469c3c00de5b3aa164ca410e632d1c04169fd7040e20e06ffffffff0200e1f505000000001976a9144726f2838fc4d6ac66615e10604e18926e9b556e88ac48f804060000000023210217a6aa6c0fe017f9e469c3c00de5b3aa164ca410e632d1c04169fd7040e20e06ace77e395d000000000000000000000000000000] }' -H 'content-type: text/plain;' http://127.0.0.1:$port/
+```
+@jl777c is this the correct syntax?";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 11:13 AM";"for strings need to put in quotes \ """;"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 11:13 AM";"or maybe dont need the \";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 11:13 AM";"but why do you ask me?\";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 11:14 AM";"why not just test it";"";"";
+"423176312354635779";"gcharang#6833";"25-Jul-19 11:15 AM";"it gave 
+```
+curl: (52) Empty reply from server
+```
+this is my way of asking you to correct me 😅";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 11:18 AM";"doest listunspent work? that worked for me";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 11:18 AM";"you need to put it in quotes";"";"👍 (1)";
+"423176312354635779";"gcharang#6833";"25-Jul-19 11:22 AM";"```
+curl --data-binary '{""jsonrpc"": ""2.0"", ""id"":""curltest"", ""method"": ""broadcast"", ""params"": [""0400008085202f890155c894ada147bf184bb7dff790ca429e6860775d3bb471dc0f69a28f080977e0010000006a47304402206774ff903a8a4b73bcd5a79fe5c744f34d2263160cd8877c198c2228c66a8a42022063e1d2d6403c395e3472a6a509f01cbff0b90e3413bc6f7bc492649302a4a64001210217a6aa6c0fe017f9e469c3c00de5b3aa164ca410e632d1c04169fd7040e20e06ffffffff0200e1f505000000001976a9144726f2838fc4d6ac66615e10604e18926e9b556e88ac48f804060000000023210217a6aa6c0fe017f9e469c3c00de5b3aa164ca410e632d1c04169fd7040e20e06ace77e395d000000000000000000000000000000""] }' -H 'content-type: text/plain;' http://127.0.0.1:$port/
+```
+this worked for me
+
+just had to add quotes to the hex";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 11:27 AM";"{
+    ""result"": ""success"",
+    ""methods"": [{
+        ""method"": ""stop"",
+        ""fields"": []
+    }, {
+        ""method"": ""help"",
+        ""fields"": []
+    }, {
+        ""method"": ""logout"",
+        ""fields"": []
+    }, {
+        ""method"": ""getnewaddress"",
+        ""fields"": []
+    }, {
+        ""method"": ""getpeerinfo"",
+        ""fields"": []
+    }, {
+        ""method"": ""login"",
+        ""fields"": [{
+            ""wif"": ""string""
+        }]
+    }, {
+        ""method"": ""broadcast"",
+        ""fields"": [{
+            ""hex"": ""string""
+        }]
+    }, {
+        ""method"": ""listunspent"",
+        ""fields"": [{
+            ""address"": ""string""
+        }, {
+            ""isCC"": ""uint32_t""
+        }, {
+            ""skipcount"": ""uint32_t""
+        }, {
+            ""filter"": ""uint32_t""
+        }]
+    }, {
+        ""method"": ""listtransactions"",
+        ""fields"": [{
+            ""address"": ""string""
+        }, {";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 11:27 AM";"""isCC"": ""uint32_t""
+        }, {
+            ""skipcount"": ""uint32_t""
+        }, {
+            ""filter"": ""uint32_t""
+        }]
+    }, {
+        ""method"": ""notarizations"",
+        ""fields"": [{
+            ""height"": ""uint32_t""
+        }]
+    }, {
+        ""method"": ""hdrsproof"",
+        ""fields"": [{
+            ""prevheight"": ""uint32_t""
+        }, {
+            ""nextheight"": ""uint32_t""
+        }]
+    }, {
+        ""method"": ""getinfo"",
+        ""fields"": [{
+            ""hdrheight"": ""uint32_t""
+        }]
+    }, {
+        ""method"": ""txproof"",
+        ""fields"": [{
+            ""txid"": ""hash""
+        }, {
+            ""vout"": ""uint32_t""
+        }, {
+            ""height"": ""uint32_t""
+        }]
+    }, {
+        ""method"": ""spentinfo"",
+        ""fields"": [{
+            ""txid"": ""hash""
+        }, {
+            ""vout"": ""uint32_t""
+        }]
+    }, {
+        ""method"": ""spend"",
+        ""fields"": [{
+            ""address"": ""string""
+        }, {
+            ""amount"": ""float""
+        }]
+    }, {
+        ""method"": ""mempool"",
+        ""fields"": [{
+            ""address"": ""string""
+        }, {
+            ""isCC"": ""uint32_t""
+        }, {
+            ""memfunc"": ""uint32_t""
+        }, {
+            ""txid"": ""hash""
+        }, {
+            ""vout"": ""uint32_t""
+        }, {
+            ""evalcode"": ""uint32_t""
+        }, {
+            ""CCfunc"": ""uint32_t""
+        }]
+    }],
+    ""num"": 16
+}";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 11:27 AM";"implemented help api";"";"👌 (2)";
+"455741312273219595";"jl777c#5810";"25-Jul-19 11:52 AM";"@TonyL can you verify that nspv builds for windows and works?";"";"👍 (1)";
+"272003866906722306";"TonyL#3577";"25-Jul-19 11:53 AM";"libnspv, right?";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 11:53 AM";"yes";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 11:54 AM";"it uses mingw so it should just work";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 11:54 AM";"libevent and libsodium are the only dependencies";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Jul-19 11:55 AM";"I like this `NSPV_methods` thing 😃";"";"";
+"423176312354635779";"gcharang#6833";"25-Jul-19 12:05 PM";"@jl777c 
+all the methods in 
+`struct NSPV_methodarg NSPV_methods[] =`
+are working with the json2.0 syntax";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:13 PM";"thanks! now you should also have a very good idea of the api that exists and whenever a new one is added it will create a new entry";"";"👍 (1)";
+"423176312354635779";"gcharang#6833";"25-Jul-19 12:26 PM";"how is **hdrsproof prevheight nextheight** used?
+```bash
+curl --url ""http://127.0.0.1:$port"" --data ""{\""userpass\"":\""$userpass\"",\""method\"":\""hdrsproof\"",\""prevheight\"":1456692,\""nextheight\"":1456694}""
+```
+gives headers from 1456680 to 1456700";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"25-Jul-19 12:27 PM";"what does  `'retcodes': [-5]` indicate?
+on `spend` method";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:29 PM";"hdrsproof scans backwards from the prevheight to find the first notarization, forward from nextheight for the first notarization";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:30 PM";"then it gets both notarizations";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:30 PM";"and all the headers in between are returned";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:30 PM";"sp this way you can validate that all the blocks link back to each other and both endpoints of the segment are notarized";"";"👍 (1)";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:31 PM";"@smk762 -  dracocanis ominator the error codes are in the nSPV_wallet.h code only, somebody needs to dig into it and document each one";"";"🙏🏼 (1)";
+"232679450301431808";"blackjok3r#3181";"25-Jul-19 12:31 PM";"Are you sure the heights those scans do are right? Not 100% sure but I think last night while trying to fix overflow, it was gibing diffrent numbers to explorer?";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:32 PM";"-5 is a failure for NSPV_notarizationextract";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:32 PM";"the heights are the starting point for the scan";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Jul-19 12:32 PM";"Never mind, I will re check it while doing getransaction API. Oh thanks 😃";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:32 PM";"the first height with a notarization stops the search";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:33 PM";"i err on the side of getting a larger range of blocks between notarizations";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Jul-19 12:33 PM";"Yes I rember that it was a little confusing as the function returns the block the nota is in, rather than the notarized ht.";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:33 PM";"doesnt hurt too much to send back 20 hdrs vs 10 hdrs";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:33 PM";"as you know the exact location of notarization txid is not deterministic";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:34 PM";"though we do know that a notarization for height must happen after that height";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Jul-19 12:34 PM";"Yes and  as there could be reorged notas under rare circumstance more range is much safer./";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:34 PM";"reorgs wont matter if the txid is valid as it has the signatures";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Jul-19 12:34 PM";"it is if you ahev 100% of the hash rate and just ant to break it :troll:";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Jul-19 12:35 PM";"wonder where he is @Alright";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:35 PM";"even if the txid is in the mempool, the signed notarization would still be treated as vali";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:35 PM";"valid";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Jul-19 12:35 PM";"ahh, so they can be confirmed out of order or it checks for that and skips to next one?";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:36 PM";"i search until i find that the prevnotarized height is both <= desired height and the next notarized height is >= desired height";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:36 PM";"dereference the notarization txid to the height it has";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:37 PM";"to not confused my self, i just made it simple and not optimally efficient";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Jul-19 12:37 PM";"🤔  maybe im a bit tired to get this, Im sure I will figure out how it works while using it.";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:37 PM";"given a txid at height ht";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:37 PM";"scan backwards to find the first notarization of ntzht <= ht";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:37 PM";"scan forward for first notarization ntzht >= ht";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:38 PM";"get all the headers in between";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Jul-19 12:38 PM";"yes thats perfect";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:38 PM";"seems pretty foolproof and doesnt matter the order onchain of the notarizations";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Jul-19 12:38 PM";"no it doesnt, no MoMoM headaches";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:38 PM";"and now we have yet another way to do cross chain for notarized chains";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:39 PM";"just spin up a nspv for each chain";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:39 PM";"use the nSPV method to validate the tx on the other chain";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:39 PM";"then submit the proofs required using dimxy backup method from importcoins";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:40 PM";"since you can dynamically spin up and connect to a new chain via nspv in seconds, there isnt even a need to stay connected to all the chains in the cluster, can just do it on demand";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:40 PM";"which would be a very cool crosschain wallet";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:40 PM";"make a cluster of N chains";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:41 PM";"then do crosschain burns 100% via nspv";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Jul-19 12:41 PM";":PeepoThink:";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:41 PM";"of course the fullnode will use the dimxy baggage claim method";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:41 PM";"but the multichain client would be able to construct the required proofs as gettransaction returns the txproof";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:42 PM";"now we are not even limited by 65536 ports!";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Jul-19 12:42 PM";"ha yes";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:42 PM";"any chain to any chain can be connected to dynamically and disconnect when done, freeing up the port, so the same port can be for arbitrary number of otherwise conflicting chains";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:43 PM";"scaling to millions without breaking a sweat";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:43 PM";"scaling to billions, with a little bit of crosschain nspv magic";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Jul-19 12:44 PM";"sounds like we have a lot of work to do";"";"";
+"455741312273219595";"jl777c#5810";"25-Jul-19 12:44 PM";"with libnspv, most development will go 10x faster";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Jul-19 12:45 PM";"maybe for you!";"";"";

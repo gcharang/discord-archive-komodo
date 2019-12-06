@@ -1,0 +1,381 @@
+==============================================================
+Guild: Komodo
+Channel: kmdlabs
+Topic: Please read pinned messages
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[21-Oct-19 02:01 PM] CrisF#3405
+So reindex did the trick.
+
+[21-Oct-19 02:01 PM] ComputerGenie 👴🏼📢#7004
+I know it's moving, I need to know how long you need it to move for 😛
+
+[21-Oct-19 02:02 PM] blackjok3r#3181
+Seems an issue with the altest merge then. I'll double check this tomorrow. Can someone try to start KMD with utxocache branch to see if is also affected?
+
+[21-Oct-19 02:02 PM] CrisF#3405
+That's fine now.  Confirmed `6` can notarize here now.
+
+[21-Oct-19 02:02 PM] blackjok3r#3181
+Cant merge that down to our master if it breaks everything
+
+[21-Oct-19 02:02 PM] ComputerGenie 👴🏼📢#7004
+`Can someone try to start KMD with utxocache branch to see if is also affected?`
+sure, I need to collect rewards anyway 😛
+
+[21-Oct-19 02:02 PM] blackjok3r#3181
+sure KMD will be happy if we find bugs also
+
+[21-Oct-19 02:06 PM] ComputerGenie 👴🏼📢#7004
+still 9 days to sync, but KMD seems fine
+
+[21-Oct-19 02:06 PM] blackjok3r#3181
+did we work out what caused it, or just that doing a reindex fixes it?
+
+[21-Oct-19 02:08 PM] ComputerGenie 👴🏼📢#7004
+I can't sort out what actually caused it
+it wasn't a specific block or tx
+they "just didn't work" and then they did after a reindex 🤷🏽
+
+[21-Oct-19 02:09 PM] blackjok3r#3181
+wonder why it only did that to some of you?
+
+[21-Oct-19 02:09 PM] ComputerGenie 👴🏼📢#7004
+it would load a few new blocks each run (in the locked state)
+
+[21-Oct-19 02:10 PM] ComputerGenie 👴🏼📢#7004
+`wonder why it only did that to some of you?`
+that bit I cannot guess at even, since I can't even tell *why* it wouldn't go
+
+[21-Oct-19 02:11 PM] ComputerGenie 👴🏼📢#7004
+reindex fixes it, but I have no clue what it fixes 😕
+
+[21-Oct-19 02:11 PM] blackjok3r#3181
+yeah. iuf anyone still has a blockchain that does this please tar it for me
+
+[21-Oct-19 02:12 PM] ComputerGenie 👴🏼📢#7004
+the really strange bit for me was that after the reindex of CFEKMYLO6, CFEKMYLO "magically" did the same thing
+
+[21-Oct-19 02:12 PM] blackjok3r#3181
+its clearly a problem with mutex/locks... they are the hardest bugs to fix 😅
+
+[21-Oct-19 02:13 PM] ComputerGenie 👴🏼📢#7004
+stop introducing bugs then :troll_lol:
+
+[21-Oct-19 02:15 PM] blackjok3r#3181
+the fact that reindex "fixed" it may not be the case... just that it removed some condition that is needed for it to happen, it may reappar. 
+I only merged down FSM, it must be that, because master and utxocache are equal for us.. I merged FSM to utxocche for @CrisF  and then this happened... 
+Try to load a chain affected with master branch if anyone still has an issue. That should at least narrow ti down to tthat merge and give me something to look at
+
+{Reactions}
+👍 
+
+[21-Oct-19 02:17 PM] ComputerGenie 👴🏼📢#7004
+`I merged FSM to utxocche for @CrisF and then this happened... `
+or it may be entirely unrelated, so `Try to load a chain affected with master branch if anyone still has an issue.` is a really good next try if it happens to anyone else 👍🏽
+
+[21-Oct-19 02:19 PM] ComputerGenie 👴🏼📢#7004
+----------
+KMD with utxocache branch synced and worked with no obvious issues
+
+[21-Oct-19 02:20 PM] ComputerGenie 👴🏼📢#7004
+_wanders off to finish the staking script he should have finished 6 months ago...._
+
+[21-Oct-19 02:23 PM] blackjok3r#3181
+lol... after all that, CFEKMYLO6 has finally locked for me 🙂 Will check it out once Im finished what Im doing
+
+[21-Oct-19 02:24 PM] ComputerGenie 👴🏼📢#7004
+randomness: such a lovely, detestable thing
+
+[21-Oct-19 02:27 PM] CrisF#3405
+Haha, interested to know what's causing it.
+
+[21-Oct-19 02:41 PM] Oszy#5734
+
+{Attachments}
+https://cdn.discordapp.com/attachments/497080413387489291/635850256072048640/ciu5v4qf1dg11.png
+
+{Reactions}
+😂 💯 treasure 
+
+[21-Oct-19 05:02 PM] ComputerGenie 👴🏼📢#7004
+@blackjok3r 
+The issue seems to cascade for whatever reason
+I had it pop up again with 6, changed that to master, then it existed in CFEKMYLO. changed that to master, now it's present in CFEKAPOW
+😕
+
+[21-Oct-19 05:07 PM] blackjok3r#3181
+So its in master and utxocache branches? This isnt chain specific. I haver a node in a stuck state, need to gdb to it. you cant attach it to the thread and then find which lock is stuck.
+
+[21-Oct-19 05:07 PM] blackjok3r#3181
+but im deep in other code... really cant do it now
+
+[21-Oct-19 05:10 PM] ComputerGenie 👴🏼📢#7004
+everything that I switched to master worked
+the problem is that the issue seems to "jump" chains based on usage of the utxocache branch (the issue, oddly enough,seems to be contained to the 1st or 2nd chain used)
+
+{Reactions}
+3040_kingpeepo 
+
+[21-Oct-19 08:00 PM] blackjok3r#3181 (pinned)
+@LabsAssistant  
+I pushed update to remove CFEKOD and revert all chains back to master branch.
+`cd ~/StakedNotary`
+`git checkout many_iguana`
+`pkill -15 iguana`
+`pkill -15 komodod` 
+wait until the responding daemons stop
+`pkill -9 komodod`
+`./start.sh`
+
+{Reactions}
+✅ (2) 
+
+[21-Oct-19 08:03 PM] metaphilibert#0926
+stopped all and updating
+
+[21-Oct-19 08:03 PM] CHMEX#0686
+dont forget git pull
+
+[21-Oct-19 08:03 PM] metaphilibert#0926
+done 😉
+
+[21-Oct-19 08:04 PM] SHossain#0007
+`./start.sh` does `git pull` 🙂
+
+{Reactions}
+👆 
+
+[21-Oct-19 08:04 PM] CHMEX#0686
+I see true
+
+[21-Oct-19 08:04 PM] blackjok3r#3181
+yeah, i changed that becauise im lazy
+
+{Reactions}
+abused_smiley 
+
+[21-Oct-19 08:07 PM] SHossain#0007
+what a surprise today! no `Help human!` message at all
+
+[21-Oct-19 08:07 PM] CHMEX#0686
+😦 good for you
+
+[21-Oct-19 08:08 PM] SHossain#0007
+on the last update, i had to do fresh sync for all chains exccept KMD
+
+[21-Oct-19 08:08 PM] CHMEX#0686
+ufff at least KMD survived
+
+[21-Oct-19 08:10 PM] SHossain#0007
+but, had to launch KMD manually though :abused_smiley:
+
+[21-Oct-19 08:11 PM] PHBA2061#2530
+`pkill -15 komodod` followed by `pkill -9 komodod` 😅
+
+[21-Oct-19 08:12 PM] SHossain#0007
+use -9 IF -15 didnt work
+
+[21-Oct-19 08:19 PM] blackjok3r#3181
+there are more than 1 komodod... doing 15 first makes sure the ones thjat are not dead locked stop safley.
+
+[21-Oct-19 08:23 PM] PHBA2061#2530
+didn't you make a stop.sh script to stop everything ? I always used that
+
+[21-Oct-19 08:27 PM] zatJUM#9924
+👆 Here too 😉
+
+[21-Oct-19 08:40 PM] blackjok3r#3181
+yes, but when the daemon is deadlocked the stop script hangs
+
+[21-Oct-19 08:40 PM] zatJUM#9924
+Updated
+
+[22-Oct-19 10:11 AM] NutellaLicka#4241
+G'day fellows
+
+[22-Oct-19 10:11 AM] NutellaLicka#4241
+I hear you guys have a chain that uses aPoW in your cluster. What is the performance like? What test have been done/what can one expect?
+
+[22-Oct-19 10:25 AM] blackjok3r#3181
+yes CFEKAPOW has beeen running for a while. @Alright  and @ComputerGenie 👴🏼📢  were the ones messing with that. Not sure how far they got.
+
+[22-Oct-19 10:26 AM] Oszy#5734
+Shossain and Jl tested aPoW extensively back in August in #talk-mining  around the 8th of Aug you can see their results
+
+[22-Oct-19 12:48 PM] ComputerGenie 👴🏼📢#7004
+`Not sure how far they got.`
+the end result was that no one still believes what I said
+
+[22-Oct-19 02:12 PM] daemonfox#6136
+im in the dark on aPoW... what did the Genie say?!?
+
+[22-Oct-19 02:12 PM] daemonfox#6136
+https://tenor.com/view/popcorn-popcornday-national-popcorn-day-gif-9265562
+
+{Embed}
+https://tenor.com/view/popcorn-popcornday-national-popcorn-day-gif-9265562
+https://media.tenor.co/images/9e557e0b150dfac2b9a23bcc981b816d/raw
+
+[22-Oct-19 02:13 PM] daemonfox#6136
+Also, node updated and starting
+
+{Reactions}
+👌 
+
+[22-Oct-19 02:16 PM] daemonfox#6136
+So who is the whale buying up LABS on Graviex?
+
+[22-Oct-19 02:17 PM] Oszy#5734
+someone who knows that it's worth a lot more than 100th of a cent 😄
+
+[22-Oct-19 02:18 PM] daemonfox#6136
+25K in 3 days of buying
+
+[22-Oct-19 02:18 PM] daemonfox#6136
+not a bad haulr for them
+
+[22-Oct-19 02:19 PM] daemonfox#6136
+and for under 300 KMD no less
+
+[22-Oct-19 02:21 PM] Oszy#5734
+pretty cheap and staking 25k can get you around 500 or more a day
+
+[22-Oct-19 02:24 PM] daemonfox#6136
+thats about in line with my staking per amount held
+
+[22-Oct-19 02:35 PM] smk762 -  dracocanis ominator#7640
+someone almost cleaned me out on AtomicDEX 😄
+
+[22-Oct-19 02:47 PM] Oszy#5734
+well, shame on you selling at 0.02 😄
+
+[22-Oct-19 02:49 PM] smk762 -  dracocanis ominator#7640
+bot has sold 44k sold in last 2 days, and purchased 11k
+
+[22-Oct-19 02:51 PM] smk762 -  dracocanis ominator#7640
+still tryna find a good price point, graviex was all I had to go by and it's not that informative. I had enough to spare tho, and will adjust prices to reflect market
+
+[22-Oct-19 02:52 PM] Oszy#5734
+graviex has low volume and an arbitrage bot on btc/kmd not very informative regarding a fair price
+
+[22-Oct-19 02:57 PM] smk762 -  dracocanis ominator#7640
+well, its rising there also 🙂
+
+[22-Oct-19 02:57 PM] Oszy#5734
+😉
+
+[22-Oct-19 03:05 PM] smk762 -  dracocanis ominator#7640
+heh, you just grab the list bit? and just before I upped the price, nice snipe 😄
+
+[22-Oct-19 03:06 PM] Oszy#5734
+Me? 🙄
+
+[22-Oct-19 03:08 PM] smk762 -  dracocanis ominator#7640
+```---------------------------------------------------------
+ |     TIME     | RESULT | ROLE  |  LABS  |  KMD   | 
+ ------------------------------------------------------------
+ | Oct 22 22:55 |FINISHED| Maker | -36.37 | 0.7639 | 
+ | Oct 22 22:54 |FINISHED| Maker | -28.43 | 0.5970 | 
+ | Oct 22 22:20 |FINISHED| Maker | -439.6 | 9.2336 |
+ ------------------------------------------------------------```
+last hour, the last of my (for sale) LABS
+
+[22-Oct-19 03:08 PM] Oszy#5734
+😬
+
+[22-Oct-19 03:09 PM] smk762 -  dracocanis ominator#7640
+the last two were minutes after I posted
+
+[22-Oct-19 03:09 PM] Oszy#5734
+someone is very active :d
+
+[22-Oct-19 03:09 PM] smk762 -  dracocanis ominator#7640
+_looks around to try and sniff out the sniper_
+
+[22-Oct-19 03:10 PM] Oszy#5734
+https://tenor.com/view/simpsons-bush-homer-hiding-awkward-gif-3693496
+
+{Embed}
+https://tenor.com/view/simpsons-bush-homer-hiding-awkward-gif-3693496
+bush
+https://media.tenor.co/images/5facb4220b08ca2ec0ced55621a85388/raw
+
+{Reactions}
+😅 
+
+[22-Oct-19 03:12 PM] smk762 -  dracocanis ominator#7640
+shame to not have any up on market tho. If anyone wants me to post a setprice order on my LP node on their behalf let me know.
+
+[22-Oct-19 03:13 PM] smk762 -  dracocanis ominator#7640
+I'll be topping up as I stake either way
+
+[22-Oct-19 03:15 PM] Oszy#5734
+on the btc pair put up at least 0.0077 worth of labs or it'll just stay there forever
+
+[22-Oct-19 03:20 PM] smk762 -  dracocanis ominator#7640
+I have (had) LABS pairs for a dozen coins on AtomicDEX. Will activate BTC next round.
+
+[22-Oct-19 03:20 PM] Oszy#5734
+oh i thought that 7 labs on the btc pair is yours tooo
+
+[22-Oct-19 03:20 PM] Oszy#5734
+they i address that message to whom it may concern 😄
+
+[22-Oct-19 03:23 PM] Oszy#5734
+Is the oracle still broken to register for lottery?
+
+[22-Oct-19 03:30 PM] smk762 -  dracocanis ominator#7640
+yeah actually it is, I already had BTC active but only as buy not sell. my bot has two flags - one for buy and another for sell. most coins on binance have both active but I dont really have enough btc in there to make selling worth it (fees etc)
+
+[22-Oct-19 07:08 PM] phm87#7395
+Pinned a message.
+
+{Reactions}
+3040_kingpeepo 
+
+[22-Oct-19 08:59 PM] phm87#7395
+Wooohooo, after many failed attempts, I was able to connect to the VM, make the necessary update then ... the connection broke (my friend will try to fix the unstability in the network between the servers/pfsenses and he will also add a new entry point on the pfsense of the server containing KMDLabs VM).
+Good news is that I was able to update the KMDLabs nn ^^
+
+{Reactions}
+labs (3) 
+
+[22-Oct-19 09:09 PM] blackjok3r#3181
+just in time for the fun 😄
+
+{Reactions}
+♥ 🎊 😂 
+
+[22-Oct-19 09:12 PM] phm87#7395
+@smk762 -  dracocanis ominator  I read somewhere that you have a bot that allows you to create liquidity on atomicDEX, do some arbitrage and loose money (tiny %). Is it opensource ? Can I use it to add liquidity on something else ? (I am thinking about Chips tbh)
+
+[22-Oct-19 09:23 PM] PHBA2061#2530
+bots can add volume but not liquidity imo
+
+[22-Oct-19 09:39 PM] phm87#7395
+yes I see what you mean but it will create at least some movements and if we have an OTC deal with a whale, it can do the trick
+
+[22-Oct-19 10:56 PM] Alright#0419
+@blackjok3r can remove apow chain if it's still there, completely forgot about it
+
+[22-Oct-19 10:57 PM] Alright#0419
+pretty thoroughly tested, maybe ready for production, but should do some wider scale tests really
+
+[22-Oct-19 10:57 PM] Alright#0419
+who was thinking about using it?
+
+[22-Oct-19 11:02 PM] phm87#7395
+I guess that if apow is added into chips, dpow should run as fine as it is running on CFEKAPOW and as fine as it will run on "normal" chips
+
+[22-Oct-19 11:05 PM] Alright#0419
+you going to port it?
+
+[22-Oct-19 11:06 PM] phm87#7395
+jl helped me, code is done, I tested it the HF worked and I had cpu blocks, it worked but I tweaked too much
+
+[22-Oct-19 11:06 PM] Alright#0419
+make CHIPS 100% POS and increase overall supply 😛
+

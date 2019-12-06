@@ -1,0 +1,360 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[05-Dec-18 04:13 PM] dukeleto#7326
+which is why i always forget to fiddle that dumb table, and have pulled hair out for hours on that same error message
+
+[05-Dec-18 04:14 PM] dukeleto#7326
+so that is why it's very familiar to me :abusedsmily:
+
+[05-Dec-18 04:15 PM] jl777c#5810
+can anybody get z_importkey to work when specifying what height to rescan from?
+
+[05-Dec-18 04:15 PM] jl777c#5810
+it works for me from curl, but I couldnt get it to work from cli
+
+[05-Dec-18 04:16 PM] blackjok3r#3181
+should add the height to importprivkey while your at it 😉 there is no technical reason it cannot be there...
+
+[05-Dec-18 04:19 PM] dukeleto#7326
+@jl777c have you tested with sprout and sapling addrs? they are different codepaths, i think
+
+[05-Dec-18 04:21 PM] dukeleto#7326
+i know that Zcash upstream has had problems in the past with not updating the correct number of RPC args in some *import* RPCs
+
+[05-Dec-18 04:21 PM] dukeleto#7326
+perhaps the latest merge with 2.0.2 did something like that
+
+[05-Dec-18 04:21 PM] jl777c#5810
+it kept giving parse errors.
+
+[05-Dec-18 04:22 PM] jl777c#5810
+since curl worked i didnt spend too much time on it
+
+[05-Dec-18 04:22 PM] dukeleto#7326
+@jl777c did you get `JSON error is not integer as expected` ?
+
+[05-Dec-18 04:23 PM] jl777c#5810
+error: Error JSON:yes
+
+[05-Dec-18 04:24 PM] jl777c#5810
+kcli -ac_name=RKT z_importkey secret-extended-key-... yes 10000
+
+[05-Dec-18 04:24 PM] dukeleto#7326
+@jl777c i am looking at latest KMD FSM branch, is that correct?
+
+[05-Dec-18 04:25 PM] jl777c#5810
+FSM is latest
+
+[05-Dec-18 04:25 PM] jl777c#5810
+i changed yes to true, now it says: JSON value is not a string as expected
+
+[05-Dec-18 04:26 PM] jl777c#5810
+tried: "{\"rescan\":true}"
+
+[05-Dec-18 04:26 PM] jl777c#5810
+I just make all args to my rpc as strings
+
+[05-Dec-18 04:26 PM] dukeleto#7326
+@jl777c what about `kcli -ac_name=RKT z_importkey secret-extended-key-... "yes" 10000`
+
+[05-Dec-18 04:26 PM] jl777c#5810
+error: Error JSON:yes
+
+[05-Dec-18 04:26 PM] dukeleto#7326
+ok, same
+
+[05-Dec-18 04:27 PM] dukeleto#7326
+ok, i see a bit what is going on
+
+[05-Dec-18 04:28 PM] jl777c#5810
+{ "z_importkey", 2 },
+it is trying to convert it
+
+[05-Dec-18 04:28 PM] dukeleto#7326
+```    // Whether to perform rescan after import
+    bool fRescan = true;
+    bool fIgnoreExistingKey = true;
+    if (params.size() > 1) {
+        auto rescan = params[1].get_str();
+        if (rescan.compare("whenkeyisnew") != 0) {
+            fIgnoreExistingKey = false;
+            if (rescan.compare("yes") == 0) {
+                fRescan = true;
+            } else if (rescan.compare("no") == 0) {
+                fRescan = false;
+            } else {
+                // Handle older API
+                UniValue jVal;
+                if (!jVal.read(std::string("[")+rescan+std::string("]")) ||
+                    !jVal.isArray() || jVal.size()!=1 || !jVal[0].isBool()) {
+                    throw JSONRPCError(
+                        RPC_INVALID_PARAMETER,
+                        "rescan must be \"yes\", \"no\" or \"whenkeyisnew\"");
+                }
+                fRescan = jVal[0].getBool();
+            }
+        }
+    }```
+
+[05-Dec-18 04:28 PM] dukeleto#7326
+`auto rescan` is not something I see in KMD codebase a lot, i think that is the line that is failing
+
+[05-Dec-18 04:28 PM] jl777c#5810
+needs to be in an array
+
+[05-Dec-18 04:28 PM] dukeleto#7326
+i think some kind of c++ auto-conversion is adding to the problem
+
+[05-Dec-18 04:29 PM] dukeleto#7326
+older API is that JSON stuff, but newer api is what you are trying to tell it
+
+[05-Dec-18 04:29 PM] dukeleto#7326
+`get_str()` is failing on params[1]
+
+[05-Dec-18 04:30 PM] dukeleto#7326
+@jl777c it's arg 1, isn't it?
+
+[05-Dec-18 04:30 PM] dukeleto#7326
+0 is privkey, 1 is rescan
+
+[05-Dec-18 04:30 PM] jl777c#5810
+the second one, yes
+
+[05-Dec-18 04:31 PM] dukeleto#7326
+i see this: ```   { "z_importkey", 1 },
+    { "z_importkey", 2 },
+```
+
+[05-Dec-18 04:31 PM] dukeleto#7326
+in the conversion array
+
+[05-Dec-18 04:32 PM] dukeleto#7326
+so argument 1 and 2 are converted
+
+[05-Dec-18 04:38 PM] jl777c#5810
+it the conversion the problem?
+
+[05-Dec-18 04:39 PM] blackjok3r#3181
+was in my case .. I just added my RPC there with 1 for param 1 and now it works Thanks 😃
+
+[05-Dec-18 04:43 PM] dukeleto#7326
+@jl777c look at z_importviewingkey. It does not convert the rescan argument
+
+[05-Dec-18 04:44 PM] dukeleto#7326
+it only does `{ "z_importviewingkey", 2 },` in the conversion table
+
+[05-Dec-18 04:44 PM] dukeleto#7326
+@jl777c my guess is to remove the `1` entry from the conversion table, but i haven't looked into git history to see why it's that way
+
+[05-Dec-18 04:44 PM] dukeleto#7326
+perhaps it changes upstream and that didn't get pulled in
+
+[05-Dec-18 04:45 PM] dukeleto#7326
+whenever i am in doubt, i see how a working rpc declares it's arguments and parses them
+
+[05-Dec-18 05:24 PM] dukeleto#7326
+@jl777c i am compiling/testing a potential patch now
+
+[05-Dec-18 05:47 PM] FishyGuts#5085
+https://twitter.com/SafeCoins/status/1070321674485161984
+
+[05-Dec-18 05:47 PM] FishyGuts#5085
+Weren't these the guys who forked KMD and had no clue of how the notary nodes worked, nor did they audit the code they used?
+
+[05-Dec-18 05:48 PM] FishyGuts#5085
+Then blamed KMD for "maliciously attacking" the chain when really, they were dismissing the warnings from KMD and ignoring the statements, calling them attacks.
+
+That's how I saw it all go down back then.
+
+[05-Dec-18 05:48 PM] ComputerGenie 👴🏼📢#7004
+yes 🙄
+
+[05-Dec-18 05:48 PM] FishyGuts#5085
+Well they're working on dPoW 😛
+
+[05-Dec-18 05:48 PM] FishyGuts#5085
+😂
+
+[05-Dec-18 05:49 PM] FishyGuts#5085
+Let's let them screw that up on their own yea?
+
+[05-Dec-18 05:49 PM] ComputerGenie 👴🏼📢#7004
+they're also the guys that **still** refuse to admit that their entire chain can be stuffed up with a 30 line bash script 💤
+
+[05-Dec-18 05:50 PM] FishyGuts#5085
+A bunch of clowns was all I took them for when it all unfolded.
+
+[05-Dec-18 05:50 PM] FishyGuts#5085
+Angry and defensive over nothing
+
+[05-Dec-18 05:50 PM] FishyGuts#5085
+Bitter and retalitory
+
+[05-Dec-18 05:50 PM] ComputerGenie 👴🏼📢#7004
+they blame komodo for what I did but claim what I did can't be done
+
+[05-Dec-18 05:51 PM] FishyGuts#5085
+Yes, some KMD people mined your chain with notary powers.
+
+[05-Dec-18 05:51 PM] FishyGuts#5085
+You all didn't listen and someone proved you wrong
+
+[05-Dec-18 05:51 PM] jl777c#5810
+and they confuse a split funds with a notarization
+
+[05-Dec-18 05:51 PM] jl777c#5810
+but its safe to trust them that they can do BTC notarizations for free
+
+{Reactions}
+👆🏽 (2) 
+
+[05-Dec-18 05:51 PM] FishyGuts#5085
+And instead of being appreciative for the help they cry about malice.
+
+[05-Dec-18 05:53 PM] ComputerGenie 👴🏼📢#7004
+I'd bet $1 that this is still true:
+https://github.com/Fair-Exchange/safecoin/issues/6
+
+{Embed}
+https://github.com/Fair-Exchange/safecoin/issues/6
+Attack vector found · Issue #6 · Fair-Exchange/safecoin
+An attack vector exists in that when a specified number of "malformed" transactions enter the mempool, a stopage of the forward progression of the blockchain can occur. This issue is uniq...
+https://avatars0.githubusercontent.com/u/21057518?s=400&v=4
+
+[05-Dec-18 05:53 PM] jorian#4555
+haha that twitter, confusing a splitfund with a notarization
+
+[05-Dec-18 05:53 PM] jorian#4555
+it cannot get worse
+
+[05-Dec-18 05:54 PM] jorian#4555
+or maybe it will actually
+
+[05-Dec-18 05:55 PM] jorian#4555
+without any explanation or comments
+
+{Attachments}
+https://cdn.discordapp.com/attachments/463445317136809984/519934850447179826/unknown.png
+
+[05-Dec-18 05:56 PM] ComputerGenie 👴🏼📢#7004
+because they think it's not what I actually did
+
+[05-Dec-18 05:56 PM] ComputerGenie 👴🏼📢#7004
+🤦🏽
+
+[05-Dec-18 05:56 PM] SHossain#0007
+Do they actually know what is splitfund?
+
+[05-Dec-18 05:57 PM] ComputerGenie 👴🏼📢#7004
+`splitfund` that's where you take 2 SAFE and turn it into 1 SAFE and 1 SAFE, right? :trollface:
+
+[05-Dec-18 06:17 PM] Alright#0419
+https://www.blockchain.com/btc/tx/1539c83531d2d3f685241da9fb1431bfa1efd73c196a71ed873b97e416b8c2cb?show_adv=true
+
+[05-Dec-18 06:17 PM] Alright#0419
+that's not a notarization
+
+[05-Dec-18 06:18 PM] Alright#0419
+no OP_RETURN
+
+[05-Dec-18 06:18 PM] Alright#0419
+🤦
+
+[05-Dec-18 06:19 PM] Alright#0419
+Go ask a technical question on their discord. Their community has been conditioned to see anyone asking technical questions as an enemy since day 1. Because of this, they can spew whatever bullshit they want to their community and not be questioned
+
+[05-Dec-18 06:19 PM] Alright#0419
+If any SAFE people are reading this, THAT IS NOT A NOTARIZATION
+
+[05-Dec-18 06:19 PM] Alright#0419
+They are lying or incompetent
+
+[05-Dec-18 06:20 PM] ComputerGenie 👴🏼📢#7004
+`If any SAFE people are reading this` 
+😂 
+I see you have jokes today
+
+[05-Dec-18 06:21 PM] Alright#0419
+Whenever I think "it can't get worse than this", they prove me wrong
+
+[05-Dec-18 06:21 PM] Alright#0419
+every time
+
+[05-Dec-18 06:21 PM] jorian#4555
+where is their discord
+
+[05-Dec-18 06:21 PM] jorian#4555
+found it
+
+[05-Dec-18 06:22 PM] Alright#0419
+don't bother
+
+[05-Dec-18 06:22 PM] Alright#0419
+they'll just scapegoat KMD for all their problems
+
+[05-Dec-18 06:26 PM] jorian#4555
+oh okay
+
+[05-Dec-18 06:26 PM] jorian#4555
+the amount of sheeple in that discord is too damn high
+
+[05-Dec-18 06:28 PM] ComputerGenie 👴🏼📢#7004
+I said that a yr ago 👆🏽
+
+[05-Dec-18 06:33 PM] jorian#4555
+my dear lord
+
+[05-Dec-18 06:34 PM] Alright#0419
+@jorian seriously don't bother
+
+[05-Dec-18 06:35 PM] Alright#0419
+they will milk you for info then turn you into the enemy shortly after
+
+[05-Dec-18 06:35 PM] jorian#4555
+
+{Attachments}
+https://cdn.discordapp.com/attachments/463445317136809984/519944921499697163/unknown.png
+
+[05-Dec-18 06:35 PM] jorian#4555
+lets all have a good laugh
+
+[05-Dec-18 06:35 PM] jorian#4555
+and move on
+
+[05-Dec-18 06:35 PM] jorian#4555
+i'll leave the server
+
+[05-Dec-18 06:35 PM] Alright#0419
+don't explain *anything* to them
+
+[05-Dec-18 06:36 PM] Alright#0419
+I can't tell you how many things i helped them fix. Always gave them the benefit of the doubt, was very stupid on my part
+
+[05-Dec-18 06:36 PM] Alright#0419
+lol if that tx awarded the person sending it a block............
+
+[05-Dec-18 06:55 PM] ComputerGenie 👴🏼📢#7004
+`lol if that tx awarded the person sending it a block`
+sure it did, when you mine in a network size of 1, you get whatever blocks you want to get 😛
+
+[05-Dec-18 07:49 PM] dukeleto#7326
+@jl777c https://github.com/jl777/komodo/pull/1023
+
+{Embed}
+https://github.com/jl777/komodo/pull/1023
+Fix z_importkey by leto · Pull Request #1023 · jl777/komodo
+./src/komodo-cli z_importkey FOO "no" tested on both sprout and sapling generates no errors.
+https://avatars1.githubusercontent.com/u/30298?s=400&v=4
+
+[05-Dec-18 07:50 PM] dukeleto#7326
+sapling privkeys are very large in size, there is some interesting metadata going on in there
+
+[05-Dec-18 07:53 PM] jl777c#5810
+thanks! so it was over usage of the mapping!!
+

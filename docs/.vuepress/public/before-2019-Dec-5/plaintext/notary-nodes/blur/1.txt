@@ -1,0 +1,335 @@
+==============================================================
+Guild: Komodo
+Channel: blur
+Topic: 
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[14-Apr-19 09:59 AM] jl777c#5810
+@Biz @Decker @dukeleto @Alright
+
+[14-Apr-19 09:59 AM] jl777c#5810
+@dukeleto @jl777c About XMR forks and BLUR. I didn't have time yet to deep-in inside XMR, due election preparation tasks, but seems XMR forks is totally different from Bitcoin-based coins and it's will very hard and impressive work if we can get it compatible with Iguana. From KMD side seems all remains the same (mean, how the nota tx is created, signing process and others). But from XMR side, currently it looks for me as a "deep jungle" or "other planet". First, XMR uses  RingCT (Ring Confidential Transactions) protocol, instead of well-known bitcoin protocol. It means (for me) that i totally don't know how to construct, sign and verify tx in XMR-based coin network. But one thing i know (it's good), seems it's possible to create and sign multisig tx with - prepare_multisig, make_multisig, finalize_multisig daemon RPC's (but this is also, still "deep jungle", bcz i'm  quickly read about it, but didn't tried). Also, all bitcoin forks, including kmd and zcash is utxo based. And iguana work guessed work with utxos ... but in XMR seems things are different, if i'm don't wrong with it: "Monero doesn’t have an UTXO set (the whole blockchain is the TXO set)" ... so, for now, i'm totally confused how XMR work and how dPOW should work in XMR. Hope, it's only for now, and future learning will clear something for me.
+
+{Reactions}
+👀 (2) 
+
+[14-Apr-19 10:00 AM] jl777c#5810
+there are two main issues:
+1. how to store the notarization data (2 hashes and height)
+2. how to create a transaction that all the nodes in the network can recognize as a notarization
+
+[14-Apr-19 10:00 AM] jl777c#5810
+in bitcoin protocol we put the notarization data in opreturn data
+
+[14-Apr-19 10:01 AM] jl777c#5810
+for the recognition, we have the participating notaries all sign the same transaction that has the notarization data. that allows all nodes to verify the signatures are from the valid pubkeys and then they can see if the notarization data matches what they already have locally
+
+[14-Apr-19 10:03 AM] Biz#0842
+ah, this solution is actually fairly easy.  just not very well known that this is possible.  We have pay-to-scripthash type transactions as well.   The issue that @dukeleto is running into is probably the result of PoW hashes only being included in block hashes implicitly.  However, that's somewhat irrelevant to the ability for notarization nodes to be able to recognize a specific transaction.. within each transaction that occurs, we have a "tx_extra" field which is publicly viewable from the blockchain and is the same field that pools use for pool nonce.
+
+[14-Apr-19 10:04 AM] jl777c#5810
+how many bytes is it?
+
+[14-Apr-19 10:04 AM] Biz#0842
+This field is specifically left open, and not verified for content by other nodes, for the purpose of adding functionalities like this.
+
+[14-Apr-19 10:06 AM] Biz#0842
+it is the remainder of each block, until the block is full.  I will have to check to get you a number for sure... how many do we need?
+
+[14-Apr-19 10:06 AM] jl777c#5810
+80 is enough for the notarization data
+
+[14-Apr-19 10:06 AM] Biz#0842
+96?
+
+[14-Apr-19 10:06 AM] Biz#0842
+yes there is plenty of room for that and then some.
+
+[14-Apr-19 10:07 AM] jl777c#5810
+but I was thinking that if it has enough space for 13 signatures, we can put the signatures from the notaries there too
+
+[14-Apr-19 10:07 AM] jl777c#5810
+then we dont need to figure out how to determine which notary signed which input
+
+[14-Apr-19 10:08 AM] Biz#0842
+hmmm may have to get creative there.  I would just add a specific op_code for ntz txns.  Leading byte of the data in each field of transaction extra are parsed, which signal to the node parsing them how to handle the data that follows, and a size of bytes is included when the size isn't implied by the opcode/type of data itself
+
+[14-Apr-19 10:08 AM] jl777c#5810
+what would be easiest to integrate would be to put the rawtxbytes of a normal bitcoin notarization in there. that way the notarizer can just use the existing code to validate it. we then need to have some way of getting this tx confirmed
+
+[14-Apr-19 10:09 AM] jl777c#5810
+a notarization tx is about 2kb
+
+[14-Apr-19 10:10 AM] Biz#0842
+can you provide an explorer link to the precise formatting and length that would be necessary to support?
+
+[14-Apr-19 10:10 AM] Biz#0842
+or just a raw tx i suppose would be more helpful
+
+[14-Apr-19 10:11 AM] Biz#0842
+I could include this data in a transaction extra, and test it on our explorer, so we can know right away.
+
+[14-Apr-19 10:11 AM] Biz#0842
+basically, if the length fits, it will work.
+
+[14-Apr-19 10:13 AM] Biz#0842
+and as I said, this field is technically in the extranonce of a transaction's metadata, it gets seen by every node that comes in contact with it, but is never verified for content.
+
+[14-Apr-19 10:15 AM] Biz#0842
+I am not sure what you mean by getting the tx confirmed, but we could take that data, hash it with sha256, and give it a specific opcode as well or something as well if the data size is too large
+
+[14-Apr-19 10:16 AM] jl777c#5810
+https://kmdexplorer.ru/tx/0ab85c7b846d61bdc7add7fe87aa88ff698af3797b79105bafecb79fd1e2794f
+
+[14-Apr-19 10:19 AM] jl777c#5810
+0400008085202f890d070fe066112c5252faf6ad7f5bb43fdd2730e3e5833bf2299c5e2cd851dedad6010000004847304402202fe3bf0b71e872820d1fb6b77513a45605d0e8858257b759d4753f35c339899a022057fbb18d94a8a3fe16b32b3c02a5a02c8585059152b7539759fd73bef8a39b8801ffffffff3e3419fe8699fe83891373e80a467b97ecd77ff1cbec6941a98a9205a05af61c2500000049483045022100d70012e6e8629f43c3f83b24dcc0173afd252b861f66d373d22d3875de79efe002206979948a7ce576406538f0622584de6fce575592cbd1c803b0c42139e7e398ca01ffffffff398c8d4873ab6566ee36abb4bf114299ae107fb5fa7e61b9751241ec381a593d1c0000004847304402201ccbd6f14467689f03ccc0db3389f1f1163c0e10774d0eb950c2ccb79895286f0220570c79b68bf7dfe8b1d403c65130bbc62ad44872aa4e5211e7e170b51549573001ffffffff21e72aca2cac51bdf41fda3ba487a3
+
+[14-Apr-19 10:19 AM] jl777c#5810
+3f71ba7a42561777ead67b4bf1905f1a393200000049483045022100e5d47a326d5d8ab163563bf36afb89efc687df32b2185567e53cac27a1aa3f3602206202c457ca66f1c26e34a3b0f29eba152b2137ce27f3633acaba62dba7fb097101ffffffff99d5a4a3ee8929236078dd00ac30e90bea3e26a302c2b6f2782d631e840ef8560200000049483045022100fa288b212ab0fe3c58c57ac409769502674f9e8d82093c91eb47efb20bd6663a02203e8e34a18ee832d51910f453c763fc336af3f55dd280b83d22219db83047d27901ffffffffa972742c6993362511d0a825872a7def2833dba67c8d340d24f2dcfc8848d45101000000484730440220455a0f64f3681d3ae11aeabcdb627465b72f9063eb11520d0e51e6461f81c300022067a16579119a927751f333a0538a22e716087dd5659171b285f20d12931e5c0401ffffffff9d7ae76060cdd72fcee8404ce86310d2d7bde045a5a13eff65643d26215defdf010000004847304402200894dac80b9f732710a770d8a6117bf29990e29a14b1fcae331b85b355a970870220681d515a80d14d418fa29065598ad60dbda379377e9d2a525cc676c37cfb74ec01ffffffff9f1d6f0ecca20d12f2ec066e180444ac9eb6078c9c85b42e90bf2101f3aa224d0b0000004948304502210086682b2bd187c5670322cb18e332d2f214a98154c449116118bdef3a4d6dee2e02204a58313d624ffb4e7208d039d367c60dda9f1cd3c94f43f77837158a57140a8901ffffffffa14081fe735c11e3bb27e149d9b4a3f8ee289eee1963c95f8a172c89efdf1bcc0000000048473044022027dff95591e121942fe1d0c4de8aa4394a6eda3cd175239a915e7154f98725ac02204bcfd6175eb380477a17d20deb054339b6546b8cfd40aa3c4c6615ca061129fe01ffffffff12280aa016d171657a1344d0b9fb87e0f5a4fe62c03c1ca285b3950c1ab4aff41300000049483045022100f6d7ebf94005fe4d91ff028189776e511d9123eec9038da644d114ccd2cb9be4022009cd6f94f6875392379436eeecef324536ce46eb5d1e7c878cb0c4732bcbfc4301ffffffff068d694056b55d41452a7f3593ac33b3eddee89d357b899496fd846be6f0976a2600000049483045022100f837884fe80b894916e5c7cb4011dc176e7aefbf53f53d9e214195326783f40d02201ff3d7186969376b0516d3bbf4ec52cf1ebfa3064e58a7ad1a8a163c56
+
+[14-Apr-19 10:19 AM] jl777c#5810
+had to split it in two parts, that is from RFOX chain but the data size wont change by more than a few bytes (length of chain name)
+
+[14-Apr-19 10:19 AM] Biz#0842
+ok
+
+[14-Apr-19 10:20 AM] jl777c#5810
+bitcoin does not support a 13 of 64 multisig
+
+[14-Apr-19 10:20 AM] jl777c#5810
+so I made a standard transaction with 13 inputs and the daemon compares it against the 64 valid pubkeys
+
+[14-Apr-19 10:20 AM] jl777c#5810
+this achieves the 13of64 multisig in a much more compact rawtx
+
+[14-Apr-19 10:21 AM] jl777c#5810
+even without the signatures, just the redeemscript would have been 2kb
+
+[14-Apr-19 10:21 AM] Decker#3767
+https://bitcointalk.org/index.php?topic=1605144.msg32538076#msg32538076 - here is my explanation of nota tx, may be this also will helpful here.
+
+{Embed}
+https://bitcointalk.org/index.php?topic=1605144.msg32538076
+[ANN][KMD][dPoW] Komodo - next generation platform, Secured by Bitcoin
+[ANN][KMD][dPoW] Komodo - next generation platform, Secured by Bitcoin
+
+[14-Apr-19 10:23 AM] Biz#0842
+ah. okay. that makes  sense.  there are not really any documents to speak of for monero's multisignature. rbrunner made some as he/she is the dev behind integrating multisig messaging for them
+
+[14-Apr-19 10:23 AM] Biz#0842
+https://taiga.getmonero.org/project/rbrunner7-really-simple-multisig-transactions/wiki/extra-transaction-data
+
+{Embed}
+https://taiga.getmonero.org/project/rbrunner7-really-simple-multisig-transactions/wiki/extra-transaction-data
+Taiga
+Taiga is a project management platform for startups and agile developers & designers who want a simple, beautiful tool that makes work truly enjoyable.
+
+[14-Apr-19 10:23 AM] Biz#0842
+that is the most comprehensive documentation that exists, probably.
+
+[14-Apr-19 10:24 AM] jl777c#5810
+if it can support 13 of 64 multisig, that would be one way to skin this cat
+
+[14-Apr-19 10:24 AM] Biz#0842
+thanks @Decker
+
+[14-Apr-19 10:24 AM] Biz#0842
+I am pretty sure that it would be possible actually.
+
+[14-Apr-19 10:25 AM] Biz#0842
+AFAICT there is support for N/N, M/N, and N-1/N schemes
+
+[14-Apr-19 10:25 AM] Decker#3767
+i'm read that monero itself supports N / N and N-1 / N multisig ... to sign participants should exchange private view and public spend keys ...
+
+[14-Apr-19 10:26 AM] Decker#3767
+but, all of this is a still "deep jungle" for me ((
+
+[14-Apr-19 10:26 AM] Biz#0842
+I do not think exchanging private viewkeys is smart for security purposes
+
+[14-Apr-19 10:26 AM] Biz#0842
+they are deterministic from private spendkeys
+
+[14-Apr-19 10:26 AM] jl777c#5810
+encapsulating the entire normal raw tx feels the easiest way to get the notarization onchain
+
+[14-Apr-19 10:26 AM] Biz#0842
+i agree.
+
+[14-Apr-19 10:27 AM] jl777c#5810
+assuming that works
+
+[14-Apr-19 10:27 AM] Biz#0842
+let me give it a go
+
+[14-Apr-19 10:27 AM] jl777c#5810
+then the issue is who is posting these tx onchain
+
+[14-Apr-19 10:27 AM] jl777c#5810
+it really doesnt matter as the contents are signed
+
+[14-Apr-19 10:27 AM] Biz#0842
+just logistically, yes i understand
+
+[14-Apr-19 10:27 AM] jl777c#5810
+but unless we have a way to make sure it gets onchain just once, we end up with a veriblock spam situation or nobody posting
+
+[14-Apr-19 10:28 AM] Biz#0842
+yeah, that kind of spam is a big part of why i didn't feel their system was the one for us
+
+[14-Apr-19 10:28 AM] jl777c#5810
+maybe some sort of deterministically based order and the notaries monitor to make sure it goes out, so there might be a delay of a few blocks if one some of the 13 signers are not posting it
+
+[14-Apr-19 10:28 AM] jl777c#5810
+yes, that works. (notarizationheight % 13)
+
+[14-Apr-19 10:29 AM] Biz#0842
+that sounds doable
+
+[14-Apr-19 10:29 AM] jl777c#5810
+that is the notary that should post the tx
+
+[14-Apr-19 10:29 AM] jl777c#5810
+if he doesnt, then the next block the next in line does
+
+[14-Apr-19 10:29 AM] jl777c#5810
+and since they just signed the notarization, we should get 99.9% success on the first one
+
+[14-Apr-19 10:29 AM] jl777c#5810
+just an untimely shutdown would need to have the second in line
+
+[14-Apr-19 10:30 AM] jl777c#5810
+but we have all 13 monitoring to make sure it is sent
+
+[14-Apr-19 10:30 AM] jl777c#5810
+@blackjok3r
+
+[14-Apr-19 10:31 AM] Biz#0842
+yes that sounds good as long as we have all 13 waiting in line as you say. I also dont think it would pose an issue if we had say 3/10 send it
+
+[14-Apr-19 10:31 AM] jl777c#5810
+i dont like 3x inefficiencies, actually i dont like 10% inefficiencies...
+
+[14-Apr-19 10:32 AM] Biz#0842
+I think maybe relying on a waiting queue that has a single point of failure could maybe cause problems, especially if latency is the only thing responsible... could end up with some nodes sending more than one anyway in that event though
+
+[14-Apr-19 10:32 AM] Biz#0842
+you are right. probably best the way you say
+
+[14-Apr-19 10:32 AM] jl777c#5810
+its simple and if the mempool is also there we can prevent duplicates
+
+[14-Apr-19 10:33 AM] Biz#0842
+sure.  with only 13 nodes sending the transaction, duplicates aren't a huge concern.
+
+[14-Apr-19 10:33 AM] Biz#0842
+let me get to embedding this data, and i'll be right back
+
+[14-Apr-19 10:37 AM] jl777c#5810
+@Decker I think this method will require the least changes in the notarizer. Basically pretend BLUR is a normal coin, get a notarized tx fully signed. then instead of sending it out, embed it in a tx in the extra data and set the first height to broadcast
+
+[14-Apr-19 10:59 AM] Biz#0842
+we can include up to 2 times the median block limit: which is  `Median block size limit: 292.97 kB`.. compiling now, and then i'll send a tester
+
+[14-Apr-19 10:59 AM] Biz#0842
+so it should work either way. but lets make sure
+
+[14-Apr-19 11:04 AM] Biz#0842
+I think our blockchain would run into issues economically with bloat, honestly, before we hit a limit
+
+[14-Apr-19 11:05 AM] Biz#0842
+But ring sigs are sizeable too
+
+[14-Apr-19 11:21 AM] Biz#0842
+So, yes it will work. All that would need done is the extra field would need  extended beyond the 255 bytes of padding currently allotted
+
+[14-Apr-19 11:23 AM] Biz#0842
+Or we could add a separate field within the extra with a different opcode.  we will be changing consensus rules already for DPoW, extending this field to include additional op codes, even one a specific one for one for each notary node would be trivial to implement. Currently, the field is limited to 255 bytes. But blocks have much more room
+
+[14-Apr-19 11:30 AM] Biz#0842
+The size of the a given field in an tx extra (not the whole extra) is limited by the ability to encode the number 255 into the bytes that follows the opcode
+
+[14-Apr-19 11:32 AM] Biz#0842
+So we include a field field with the notation of 0xFA and include ten of those, to achieve 2.5kb necessary in a block, or we could do 13 iterations of a smaller field etc.
+
+[14-Apr-19 11:33 AM] Biz#0842
+This is the same way that pubkeys are read from transactions currently
+
+[14-Apr-19 12:19 PM] Biz#0842
+http://explorer.blur.cash/tx/ed843f2e17c4cf23d1e07f5134196ac4457215d67f75e6a0931e2882f7f21246
+
+[14-Apr-19 12:22 PM] Biz#0842
+this is an example of a transaction with some embedded data.  I made that one two days ago or so.  codes not cooperating with my larger static sizes currently, but i may just be messing up the count..  i'll pm decker so that we can figure out way to go about this.  embedding the whole thing at once will not work though, on second thought, due to the reason i cited above.  we'll need to do something more creative but I'll pm @Decker and we have a project board up at https://github.com/orgs/blur-network/projects/1 if you'd like access to post there, decker
+
+{Embed}
+https://github.com/orgs/blur-network/projects/1
+Build software better, together
+GitHub is where people build software. More than 31 million people use GitHub to discover, fork, and contribute to over 100 million projects.
+https://github.githubassets.com/images/modules/open_graph/github-logo.png
+
+[14-Apr-19 12:32 PM] Decker#3767
+I'm not really sure that i'll be a person who can help with all of this, during my lack of knowledge about XMR based coins. At this moment, i think i know nothing about tx structure in xmr, ringct and other things. but i will try to do my best and learn something new, anyway, i think i can help with other things. so, for now, i'm more "reader", than "person who can produce nice ideas or write code".
+
+[14-Apr-19 12:34 PM] Biz#0842
+Oh no worries there. I’ll take care on that end
+
+[14-Apr-19 12:34 PM] Biz#0842
+I’m speaking more about iguana’s capabilities and my understanding of those as well
+
+[14-Apr-19 12:36 PM] Biz#0842
+I wouldn’t expect anyone else to do the code related to tx’s in our base. I’m a bit sleep deprived after working for the last 10 hours or so.. so I’m going to rest and I’m sure I’ll be able to communicate all of this, and a more clever solution once I’ve done that.
+
+[14-Apr-19 12:41 PM] dukeleto#7326
+wow, I will catch up on this room after HUSH v3 is happy on it's new chain. So much going on!
+
+[14-Apr-19 12:44 PM] grewalsatinder#9653
+Welcome @Biz 
+Pleasure to have you here 🙂
+
+[14-Apr-19 12:46 PM] Biz#0842
+Thank you guys for having me, and for giving us the opportunity to get some cool stuff going on across chains with you 👍🏻
+
+{Reactions}
+👍 (6) 😎 (6) 👌 (2) Komodo (8) 
+
+[15-Apr-19 02:35 AM] Biz#0842
+whoops. yeah i was really tired when I was doing the transaction extra stuff it appears.  i gave you guys the wrong tx hash. here is a real example of one with custom data.  The other one simply had a payment id
+
+[15-Apr-19 02:35 AM] Biz#0842
+http://explorer.blur.cash/tx/da70cc2848d356e7da8ab5d43f5c1c22a52854b4469e4b52fa8f648370701c7d/1
+
+[15-Apr-19 05:20 AM] Biz#0842
+@jl777c a 13/64 multisig scheme, with 13 signatures required to send a tx would work, yes?
+
+[15-Apr-19 05:21 AM] Biz#0842
+If so, monero does have this functionality, but our codebase needs upgraded to support.  If that route is the best, I'll start getting BLUR up to speed there.
+
+[15-Apr-19 05:24 AM] Biz#0842
+Sorry, just paged back up.  Seeing that you said that would be best.  I'll start getting things moving on that.
+
+[15-Apr-19 06:00 AM] jl777c#5810
+13/64 likely would be much bigger tx and would require all the nodes doing xmr style multisig, which I assume would be much more work than sending the embeded notarization. but if the update for msig is a safe thing to do, it seems a good idea as having two ways is more flexible
+
+[15-Apr-19 07:51 PM] dukeleto#7326
+i read the backlog and i think i am mostly caught up
+
+[15-Apr-19 07:51 PM] dukeleto#7326
+exciting stuff to watch unfold
+
+[16-Apr-19 03:40 AM] Mylo#8306
+i put off reading this channel until hush3 was notarizing on our node :)
+in any event -  far far too low-level for me to contribute anything useful, but will include in today's tech tuesday update and follow the conversation without sticking my big nose in 👃 
+all the best with the trials and tribulations of leading the pack!!
+
+[16-Apr-19 04:41 AM] dukeleto#7326
+@Mylo my take is that BLUR is on the leading edge of research inside the XMR community, and is now integrating bleeding edge tech from KMD world, which makes this a very exciting project, since it will be hard proof that DPoW is compatible with coins which are not Bitcoin forks
+
+[16-Apr-19 04:41 AM] dukeleto#7326
+and you can quote me 👼
+
+[16-Apr-19 04:41 AM] Mylo#8306
+"hush lead dev...." sed
+

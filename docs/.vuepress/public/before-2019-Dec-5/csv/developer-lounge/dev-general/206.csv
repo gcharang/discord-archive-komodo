@@ -1,0 +1,128 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"365714438864633856";"dukeleto#7326";"23-Aug-19 09:53 AM";"but I must have missed something, because even `zindex` is off, it messed my node up, to update to my `duke` branch";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Aug-19 09:55 AM";"👍";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 10:02 AM";"@blackjok3r by explaining it to you, i might have realized what it is";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 10:03 AM";"but maybe not";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 10:04 AM";"i think i need to check `fZindex` in more places";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Aug-19 10:04 AM";"thats usually how ti works man";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 10:04 AM";"everything works fine when `zindex` is enabled";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 10:04 AM";"but updating an existing node, and leaving `zindex` off, breaks the index";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Aug-19 10:04 AM";"yes";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Aug-19 10:05 AM";"because you nede to make sure that it skips the READWRITE";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Aug-19 10:05 AM";"other wise it overflows";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 10:05 AM";"hmm, but i did!";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Aug-19 10:05 AM";"I didnt  look at the code yet 😅";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 10:05 AM";"```
+        // These values only serialized when -zindex enabled
+        if(fZindex) {
+            READWRITE(VARINT(nShieldedTx));
+            READWRITE(VARINT(nShieldingTx));
+            READWRITE(VARINT(nDeshieldingTx));
+            READWRITE(VARINT(nFullyShieldedTx));
+
+            READWRITE(VARINT(nShieldedPayments));
+            READWRITE(VARINT(nShieldingPayments));
+            READWRITE(VARINT(nDeshieldingPayments));
+            READWRITE(VARINT(nFullyShieldedPayments));
+
+            READWRITE(VARINT(nNotarizations));
+        }
+```";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 10:06 AM";"@blackjok3r https://github.com/MyHush/hush3/blob/duke/src/chain.h#L622";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 10:07 AM";"maybe fZindex is only the default, and I need to do GetBoolArg(""-zindex""), but that doesn't quite explain the bug either";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 10:08 AM";"in my SetNull(), maybe I need `if(fZindex)` there too";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 10:08 AM";"maybe I am setting values which don't have serialization methods and that blows up?";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Aug-19 10:10 AM";"if (s.GetType() & SER_DISK)";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Aug-19 10:10 AM";"try sticking that in the if with fZindex";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 10:19 AM";"@blackjok3r what is this fine black magic ?";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 10:20 AM";"yes, you seem to be right, i see other things doing that";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 10:21 AM";"```
+        // Only read/write nSproutValue if the client version used to create
+        // this index was storing them.
+        if ((s.GetType() & SER_DISK) && (nVersion >= SPROUT_VALUE_VERSION)) {
+            READWRITE(nSproutValue);
+        }
+```";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 10:21 AM";"this calls for some ☕";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Aug-19 10:22 AM";"trial and eror my freind... no use you needing to spend all that time working it out too";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 11:20 AM";"@blackjok3r thanks, I really appreciate it. I hit that bug at the very end of the night and it was a bummer. This really helps! I saw that SER_DISK stuff but I wasn't putting together that I needed it";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Aug-19 11:22 AM";"Yeah I messed with that for hours until i worked it out...";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Aug-19 11:22 AM";"no problem 🙂";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 11:22 AM";"who is the official KMD OS X bug chaser? https://github.com/jl777/komodo/issues/1689";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Aug-19 11:23 AM";"@Alright  :troll:";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 11:23 AM";"and maybe @TonyL too, I heard he likes to debug stuff";"";"";
+"405011811511828481";"Alright#0419";"23-Aug-19 11:23 AM";"Yea I got cha";"";"";
+"405011811511828481";"Alright#0419";"23-Aug-19 11:24 AM";"bought a freaking mac the last time this happened 😫";"";"";
+"405011811511828481";"Alright#0419";"23-Aug-19 11:28 AM";"@jl777c https://github.com/jl777/komodo/blob/ebc5339fe22062cf47ea070609609f31ef68b77a/src/cc/gateways.cpp#L1048
+this needs to return something by default";"";"";
+"405011811511828481";"Alright#0419";"23-Aug-19 11:28 AM";"if it doesn't hit any of those ifs";"";"";
+"405011811511828481";"Alright#0419";"23-Aug-19 11:30 AM";"@dukeleto ^";"";"";
+"455741312273219595";"jl777c#5810";"23-Aug-19 11:30 AM";"Gateways is for @Mihailo to fix";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 12:02 PM";"@Alright i am merely a messenger, I will wait for the fix from @Mihailo";"";"";
+"424224648889106444";"Mihailo#5902";"23-Aug-19 01:17 PM";"@Alright Ah, forgot to return the error like on other RPCs. If it is urgent, please copy else part from other rpc, if not I'll fix it as soon as I'm back(monday).";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 07:25 PM";"https://twitter.com/dukeleto/status/1164981685991157760";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 09:04 AM";"which komodo branch should I try to compile on mac 🤔";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 09:43 AM";"doing compilation of jl777/komodo branch beta results in:
+```configure: error: Cannot enable RELRO```";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 09:43 AM";"I also tried changing to gcc to gcc-9 but that also ended up with same error";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 09:43 AM";"tried the same few days ago, and then moved on to other work.";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 09:43 AM";"didn't try solving it.";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 09:49 AM";"@ns408";"";"";
+"352577127494713345";"phm87#7395";"24-Aug-19 09:51 AM";"@grewalsatinder dukeleto talked about this pb yesterday on this channel. He gave ideas how to fix it";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 09:52 AM";"cool, checking a bit of channel history then 🙂 thanks";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 09:54 AM";"could find the link to github issue for FMS mac branch, but not a solution 🤔";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 09:54 AM";"gonna try FMS on mac";"";"";
+"347654634199842826";"ns408#8889";"24-Aug-19 10:08 AM";"Ack @grewalsatinder";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 10:08 AM";"thanks mate 🙂";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 10:08 AM";"FMS branch still compiling";"";"";
+"347654634199842826";"ns408#8889";"24-Aug-19 10:08 AM";"On my way to home. Will check it once home. And I gotta make it work with brew directly.";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 10:08 AM";"haven't reach the point where it errors";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 10:09 AM";"could most probably be also my mac's  environment setup issue 🤔 
+don't know";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 10:09 AM";"@ns408 yep, `brew install komodo` would be awesome!";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 10:18 AM";"same result for FSM. that RELRO error";"";"";
+"352577127494713345";"phm87#7395";"24-Aug-19 11:56 AM";"@grewalsatinder I think that the code should be adapted as explained by alright and dukeleto. We can wait for @Mihailo (gateway) fix or we can try to do sth but I don t have any mac so I am notable to test my random changes";"";"";
+"352577127494713345";"phm87#7395";"24-Aug-19 11:57 AM";"https://discordapp.com/channels/412898016371015680/463445317136809984/614420709384388648";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 11:58 AM";"okay mate 🙂 👍";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 12:58 PM";"this python example to create bitcoin address is done in go too:
+https://github.com/satindergrewal/btc-practice/blob/master/gareth_file04.py
+https://github.com/satindergrewal/btc-practice/blob/master/btcbook_addr_03.go";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 12:59 PM";"the friend helping me with understanding it all helped with it.";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 01:00 PM";"It's following the Mastering Bitcoin book examples and other sources related to bitcoin.";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 01:00 PM";"good thing is that with this I don't need to rely on packages/libraries like btcsuite";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 01:01 PM";"it's all go language's own libraries";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 01:01 PM";"and much simpler and minimal stuff to get started with.";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 01:03 PM";"I will try to make documentation on this learning part with help of my friend also explaining the maths part, if I could.
+But at least this is great to practice and understand the most basic stuff.";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 01:04 PM";"couldn't have done so far without his help 🙂";"";"";
+"365714438864633856";"dukeleto#7326";"24-Aug-19 01:32 PM";"https://twitter.com/rdegges/status/1164732840447217664";"";"";
+"365714438864633856";"dukeleto#7326";"24-Aug-19 01:33 PM";"@grewalsatinder RELRO error means you are using build.sh instead of build-mac.sh";"";"";
+"365714438864633856";"dukeleto#7326";"24-Aug-19 01:33 PM";"FSM also currently has a compile error for mac on it";"";"";
+"365714438864633856";"dukeleto#7326";"24-Aug-19 01:33 PM";"@Mihailo promised to fix soon 😉";"";"";
+"365714438864633856";"dukeleto#7326";"24-Aug-19 01:34 PM";"@Mihailo maybe next time you test the code on a mac first, so we don't spam you so much 😉";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 01:34 PM";"you are correct @dukeleto";"";"";
+"365714438864633856";"dukeleto#7326";"24-Aug-19 01:34 PM";"Yes, I usually hit mac bugs first in KMD land";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 01:34 PM";"I don't understand that tweet image joke";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 01:34 PM";"is that in relation to a reply to me?";"";"";
+"365714438864633856";"dukeleto#7326";"24-Aug-19 01:34 PM";"it's a programming joke";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 01:34 PM";"okay";"";"";
+"365714438864633856";"dukeleto#7326";"24-Aug-19 01:34 PM";"if you don't get it, you probably never worked in corporate jobs";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 01:35 PM";"I hated working for corporate jobs.";"";"";
+"365714438864633856";"dukeleto#7326";"24-Aug-19 01:35 PM";"https://en.wikipedia.org/wiki/SOLID";"";"";
+"365714438864633856";"dukeleto#7326";"24-Aug-19 01:35 PM";"it's just making fun of corporate 9-5 programming culture";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 01:35 PM";"interesting 🤔 👍";"";"";
+"365714438864633856";"dukeleto#7326";"24-Aug-19 01:36 PM";"add `return("""")` to the function with the error and send a PR to kmd if you feel inclined";"";"";
+"365714438864633856";"dukeleto#7326";"24-Aug-19 01:37 PM";"@Mihailo will thank you";"";"";
+"365714438864633856";"dukeleto#7326";"24-Aug-19 01:37 PM";"because surely @Mihailo is sick of me mentioning him about this compile error 😉";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 01:38 PM";"gonna try build mac and try that fix if required.... will update here";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 01:38 PM";"👍";"";"";
+"365714438864633856";"dukeleto#7326";"24-Aug-19 01:42 PM";"what kind of person thinks this is a good idea? https://github.com/jansenmarc/WavesGatewayLTCExample/blob/master/waves_litecoin_gateway/lib/litecoin_integer_converter_service.py";"";"";
+"365714438864633856";"dukeleto#7326";"24-Aug-19 01:42 PM";"a microservice to convert integers, smh";"";"";
+"365714438864633856";"dukeleto#7326";"24-Aug-19 01:43 PM";"I am looking into what it would take to add HUSH to the waves dex";"";"";
+"365714438864633856";"dukeleto#7326";"24-Aug-19 01:43 PM";"that is their LTC example";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 02:12 PM";"nice! compiled with build-mac.sh 😄";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 02:12 PM";"@ns408 @dukeleto";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 02:12 PM";"I think I tried build-mac.sh a week or so ago and that failed too at that time....";"";"";
+"347922216429813760";"grewalsatinder#9653";"24-Aug-19 02:12 PM";"so I tried build.sh and here I'm today....";"";"";
+"365714438864633856";"dukeleto#7326";"24-Aug-19 02:33 PM";"i can't describe how many times I have accidentally run build.sh instead of build-mac.sh";"";"";
+"365714438864633856";"dukeleto#7326";"24-Aug-19 02:33 PM";"which prompted me to angrily make this issue one day: https://github.com/jl777/komodo/issues/1373";"";"";

@@ -1,0 +1,451 @@
+==============================================================
+Guild: Komodo
+Channel: cc-heir
+Topic: https://developers.komodoplatform.com
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[25-Jan-19 04:47 PM] TonyL#3577
+Upload file to AWS S3 bucket -> triggers lambda functions and metadata + hash writing to oracle
+
+[25-Jan-19 04:55 PM] blackjok3r#3181
+Yes, hash to OP_RETURN is all thats needed... I created streamer that can upload file of any size into OP_RETURN .... but its not really suefl for most things... just place hash of file on BTC or any  dPOW coin.
+
+[25-Jan-19 05:25 PM] dukeleto#7326
+i have stored a 1MB file in memo fields directly on ZEC mainnet, with amount=0 and fee=0, just sayin' 😈
+
+[25-Jan-19 05:25 PM] dukeleto#7326
+all in 1 xtn that almost filled a block
+
+[26-Jan-19 12:55 PM] siu - Chainmakers#3920
+I want to learn to use this
+
+[26-Jan-19 12:55 PM] siu - Chainmakers#3920
+but i see only one rpc command
+
+[26-Jan-19 12:55 PM] siu - Chainmakers#3920
+```heiraddress func txid amount [destpubkey]
+```
+
+[26-Jan-19 01:04 PM] jl777c#5810
+help | grep heir shows half a dozen
+
+[26-Jan-19 01:04 PM] dimxy#2587
+Hi,
+this is some doc for Heir cc https://github.com/dimxy/Documentation/blob/patch-1/docs/source/cc/contracts/heir/introduction.rst
+
+{Embed}
+https://github.com/dimxy/Documentation/blob/patch-1/docs/source/cc/contracts/heir/introduction.rst
+dimxy/Documentation
+Developer and End user documentation. Contribute to dimxy/Documentation development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/21120539?s=400&v=4
+
+[26-Jan-19 01:05 PM] siu - Chainmakers#3920
+i must be in the wrong branch then
+
+[26-Jan-19 01:05 PM] siu - Chainmakers#3920
+which branch is better for testing this?
+
+[26-Jan-19 01:08 PM] dimxy#2587
+the latest is in the FSM
+
+[26-Jan-19 01:14 PM] siu - Chainmakers#3920
+thanks
+
+[26-Jan-19 03:38 PM] dimxy#2587
+@jl777c  what about the output variable names in heirinfo? Now they are called like 'owner inactivity time, sec', 'spending allowed for the heir',... (with spaces). Probably not very good names for rpc. Maybe, better to make them shorter and with no spaces?
+
+[26-Jan-19 03:55 PM] jl777c#5810
+yes
+
+[27-Jan-19 02:37 PM] dimxy#2587
+There is a question about the suggestion to heir cc by @dukeleto to add a memo field.
+Seems, just to add this memo with the owner's will is not enough because it is not clear for the Heir cc how to fulfill  the conditions in this memo. Now Heir cc contract unconditionally allows to spend the funds for the heir, if inactivity time is passed.
+If we want to add some real world will, seems, we need who would execute its conditions. That is, we probably need 3-rd person, an executor of the will. He should add his signed permission to spend funds from our 1of2 cryptocondition where the funds are.
+
+[27-Jan-19 02:54 PM] jl777c#5810
+it seems to create a lot of unsolved issues and require trusted arbiter
+
+[27-Jan-19 03:03 PM] dimxy#2587
+Evidently yes, as it is going to be a connection to the real world (outside the blockchain)
+
+[27-Jan-19 03:05 PM] dimxy#2587
+I added this memo field to the new fix and marked it as 'for future use'
+
+[27-Jan-19 03:11 PM] dukeleto#7326
+@dimxy i see heir CC + memo field data being used together, to bridge the gap from "blockchain smart contract" to "signed + human notarized PDF of a will" (which stands up in court)
+
+[27-Jan-19 03:13 PM] dukeleto#7326
+no legal precedent for heir CC, means it needs help to be considered "real". tying together a legal will with a heir CC, i think makes it much stronger
+
+[27-Jan-19 03:13 PM] dukeleto#7326
+the will can specify exactly what the heir CC is, and give instructions to the heir on how to use it, solve all the "icky" real-world problems that heir CC internals avoid
+
+[27-Jan-19 03:17 PM] dukeleto#7326
+to clarify, my idea is that memo fields + heir CC's get tied together at a higher level, up the stack, not changing the heir CC to use memo fields directly
+
+[27-Jan-19 03:18 PM] dukeleto#7326
+@radix42 you might have some opinion re: the above ^^^
+
+[27-Jan-19 04:04 PM] TonyL#3577
+Great, adjusting tests for latest PR
+
+[27-Jan-19 04:57 PM] TonyL#3577
+@dimxy ```"OwnerRemainderTokens": "0"``` What this param should reflect? It's 0 before and after claiming
+
+[27-Jan-19 05:10 PM] dimxy#2587
+@TonyL  it shows if the owner has some 'unconverted' tokens on his balance. If you did heirfund for all the created token amount then it should be 0. That is, tokenbalance would show the same value
+
+{Reactions}
+👌 
+
+[28-Jan-19 09:15 AM] TonyL#3577
+Updated heir seems fine so far @dimxy 
+Params errors still returns not in JSON:
+```./komodo-cli -ac_name=TONY11 heirfund -1 100 test 024f4f2b781c247b3609ba777a222d93d44182466c01dad3f2aa0def2be8f69e56 100
+error code: -1
+error message:
+incorrect txfee param
+```
+```./komodo-cli -ac_name=TONY11 heirfund 0 100 test 024f4f2b781c247b3609ba777a222d93d44182466c01dad3f2aa0def2be8f69e56 0
+error code: -1
+error message:
+incorrect inactivity time param```
+And so on
+
+[28-Jan-19 09:15 AM] TonyL#3577
+As example for diceCC:
+```./komodo-cli -ac_name=TONY11 dicefund test 10000 0 0 0 0
+{
+  "result": "error",
+  "error": "invalid parameter error"
+}
+```
+As I remember there is some errors returning solution defined in rpc code which using by other CCs (https://github.com/tonymorony/komodo/commit/ab3ae964e16f4a89e1606723cd784e9463ccacf7)
+
+[28-Jan-19 09:18 AM] TonyL#3577
+Little issue I found on params validation stage.
+Negative txfee retrurns error:
+```./komodo-cli -ac_name=TONY11 heirfund -1 100 test 024f4f2b781c247b3609ba777a222d93d44182466c01dad3f2aa0def2be8f69e56 100
+error code: -1
+error message:
+incorrect txfee param```
+Random text input as txfee accepts (creating tx with default txfee so it not seems a big issue, but anyway I think it's not good that text input accepting in this field):
+```
+ ./komodo-cli -ac_name=TONY11 heirfund tony 100 test 
+024f4f2b781c247b3609ba777a222d93d44182466c01dad3f2aa0def2be8f69e56 100
+{
+  "result": "success",
+  "hextx": "0400008085202f8902005d879a7df2e82d1abb675025e01f41311ddc763ddcd6ac9ed5e7bea4c3e935000000004847304402207d74535a687a83046f6e3a707ad700ef41349edc3c91bc1b36f97f8c68817d96022057e909ba21cd8831a8661a510d7078d74fd074718148a541129c448d7886532501ffffffff00627587d37acad0ad84b7fc8c20a0131f5b76505dd11baf1c9caef17e4476fe0000000049483045022100ab082dcd6487f2d11be505fdd912382dd54f77f0c9d9a2ce5dc154cf90c9d6500220435a1a9e2e299054c931521491fd7bb266735a82f4a3f2d9a3d393ad57e102b201ffffffff0500e40b5402000000302ea22c8020bd33702483a051e3011fa0ba68b49cb28c449beb8e63b2942b9545cd55e9fe8081031210008203000401cc1027000000000000302ea22c8020286b36b233cc03c91652560f4ecf9404bcf10b61033916d67edf4a216c92cf758103120c008203000401cc00bc66fa1509000023210340a8b7f0368762d69532b2c8c250d42c5442b756a64d68db17fa88df742089a1ace051724e1809000023210340a8b7f0368762d69532b2c8c250d42c5442b756a64d68db17fa88df742089a1ac0000000000000000566a4c53ea46210340a8b7f0368762d69532b2c8c250d42c5442b756a64d68db17fa88df742089a121024f4f2b781c247b3609ba777a222d93d44182466c01dad3f2aa0def2be8f69e566400000000000000047465737400000000b21600000000000000000000000000"
+}
+```
+
+[28-Jan-19 12:09 PM] dimxy#2587
+strange, i corrected all this
+
+[28-Jan-19 12:10 PM] dimxy#2587
+checking..  
+
+I PR'ed the json changes into FSM. Seems they are there
+
+[28-Jan-19 12:12 PM] Mihailo#5902
+As I see that merge from JL is resolving conflicts. It may be that when resolving conflicts, he brought the old version. I'm always confused when solving conflicts in git, which is new version and which old one !
+
+{Reactions}
+💯 ➕ 
+
+[28-Jan-19 12:14 PM] TonyL#3577
+```git log -1
+commit d4b0c5ee3bd70f71ad333c5bdbafa9706eb72ec5 (HEAD -> FSM, origin/FSM)
+Merge: 76024c356 134534b38
+Author: jl777 <jl777@users.noreply.github.com>
+Date:   Sun Jan 27 04:57:12 2019 -1100
+
+    Merge pull request #1215 from dimxy/heir-json-issues
+    
+    Heir json issues
+```
+@dimxy Hmm, I'm testing FSM with this merge
+
+[28-Jan-19 12:18 PM] Mihailo#5902
+@dimxy, who's gonna push that fix for continue?
+
+[28-Jan-19 12:19 PM] dimxy#2587
+maybe you?
+
+[28-Jan-19 12:20 PM] dimxy#2587
+😃
+
+[28-Jan-19 12:20 PM] Mihailo#5902
+Np, I thought maybe someone have some PR to make and just to change this...
+
+[28-Jan-19 12:23 PM] dimxy#2587
+I did PR yesterday
+
+[28-Jan-19 12:23 PM] Mihailo#5902
+Ok, done
+
+[28-Jan-19 12:26 PM] dimxy#2587
+@TonyL  So you dont see this code in rpcwallet.cpp in heirfund() func?
+7385          if (txfee < 0) {
+7386        result.push_back(Pair("result", "error"));
+7387        result.push_back(Pair("error", "incorrect txfee"));
+7388        return result;    
+7389    }
+
+[28-Jan-19 12:31 PM] TonyL#3577
+Hmm, I see this code @dimxy
+
+[28-Jan-19 12:32 PM] TonyL#3577
+Let me try to rebuild one more time on my side
+
+[28-Jan-19 12:39 PM] TonyL#3577
+@dimxy Built again to ensure that I did it - same behaviour as described above
+
+[28-Jan-19 12:42 PM] TonyL#3577
+@dimxy ```./komodo-cli -ac_name=TONY11 heirfund -1 100 test 024f4f2b781c247b3609ba777a222d93d44182466c01dad3f2aa0def2be8f69e56 100 test
+{
+  "result": "error",
+  "error": "incorrect txfee"
+}
+``` false alarm again :/
+
+[28-Jan-19 12:44 PM] TonyL#3577
+Seems daemon used komodod from other folder, noticed it when was able to call without new `memo` param
+
+[28-Jan-19 12:44 PM] TonyL#3577
+2 false alarms for @dimxy for 2 days, seems it's time for vacation 😂
+
+{Reactions}
+👍 
+
+[28-Jan-19 12:45 PM] blackjok3r#3181
+Wrong terminal window :troll_cool:
+
+{Reactions}
+troll_compadre 😀 
+
+[28-Jan-19 12:53 PM] TonyL#3577
+https://github.com/tonymorony/komodo/commit/7bd8f456c30bb2bcb500ea77e6687e8ce8deb3fb I even adjusted tests for this PR merge yesterday and tried it on the same daemon so gimmicks weren't expected 😂
+
+{Embed}
+https://github.com/tonymorony/komodo/commit/7bd8f456c30bb2bcb500ea77e6687e8ce8deb3fb
+tests adjusted for heirCC json enhancement · tonymorony/komodo@7b...
+https://avatars3.githubusercontent.com/u/24797699?s=200&v=4
+
+[28-Jan-19 12:59 PM] dimxy#2587
+BTW about the 'memo' param: I added it as a first try just to OP_RETURN. So it is limited by 10000 b and I added some recommendations for its content (that is, if the 'will' is too big  the put the url on it and its hash).
+https://github.com/dimxy/Documentation/blob/patch-1/docs/source/cc/contracts/heir/introduction.rst
+Waiting for additional ideas (provide more space, add third person 'will executor',...) @dukeleto
+
+{Embed}
+https://github.com/dimxy/Documentation/blob/patch-1/docs/source/cc/contracts/heir/introduction.rst
+dimxy/Documentation
+Developer and End user documentation. Contribute to dimxy/Documentation development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/21120539?s=400&v=4
+
+[28-Jan-19 01:04 PM] dukeleto#7326
+@Mihailo `git merge -Xtheirs` or `git merge -Xours` will either resolve all conflicts with the other branch, or your current branch's changes. Sometimes it's what you want
+
+[28-Jan-19 01:05 PM] dukeleto#7326
+-X lets you tell git a "merge strategy"
+
+[28-Jan-19 01:06 PM] Mihailo#5902
+@dukeleto  Thnx. I usually use VSCode to see the changes and resolve conflicts. But I always stop and check with myself which changes are mine 😛
+
+[28-Jan-19 01:06 PM] dukeleto#7326
+the github merge conflict web tool is pretty decent too
+
+[28-Jan-19 01:07 PM] dukeleto#7326
+@dimxy cool, it just makes sense to allow using that extra data. ~10KB is enough for a textual representation of a will, with perhaps a URL + hash to a signed PDF version
+
+{Reactions}
+👍 
+
+[28-Jan-19 07:17 PM] Bryan_Beus#6442
+@jl777c 
+
+I'm updating channel topics at the moment, and need the best location to link to for cc-heir documentation.
+
+What's the best spot?
+
+Can I put @dimxy's post up there?
+
+https://github.com/dimxy/Documentation/blob/patch-1/docs/source/cc/contracts/heir/introduction.rst
+
+(I haven't met you before, @dimxy, hello!)
+
+{Embed}
+https://github.com/dimxy/Documentation/blob/patch-1/docs/source/cc/contracts/heir/introduction.rst
+dimxy/Documentation
+Developer and End user documentation. Contribute to dimxy/Documentation development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/21120539?s=400&v=4
+
+[28-Jan-19 07:20 PM] dimxy#2587
+Hello @Bryan_Beus!   BTW gcharang told me there is a docs migration is going on into the new docs format. So my heir doc seems needs to be migrated to it too
+
+[28-Jan-19 07:20 PM] Bryan_Beus#6442
+@dimxy 
+
+Are you a team member, btw?
+
+[28-Jan-19 07:21 PM] dimxy#2587
+i think so😀
+
+[28-Jan-19 08:49 PM] jl777c#5810
+yes he is
+
+[28-Jan-19 09:18 PM] Mihailo#5902
+@dimxy You think good 😂 😎
+
+{Reactions}
+😀 (2) 
+
+[28-Jan-19 09:22 PM] SHossain#0007
+all team member has a `Team` role assigned to them
+
+{Reactions}
+Komodo 
+
+[02-Feb-19 06:43 PM] Regnar#6164
+https://twitter.com/Regnar__/status/1091767381221928960
+
+{Embed}
+Regnar (@Regnar__)
+https://twitter.com/Regnar__/status/1091767381221928960
+@LamboLlama Yea there's a cryptocondition contract developed by @KomodoPlatform called CC Heir. Here's the article on how it works. https://t.co/2zFrzmA5Ql
+and they have a discord channel dedicated to it too
+Twitter
+
+[18-Feb-19 01:38 PM] gcharang#6833
+@dimxy I am going through the heir doc now,
+```
+After the inactivity time has passed, both the heir and owner may freely claim available funds. This is achieved by that that after the first heir spending, a special flag is set depicting that spending is allowed for the heir from now on, whether the owner adds more funds or spends them.
+```
+Can you explain who sets the special flag ? miners or the heir when he submits the claim transaction?
+
+[18-Feb-19 01:46 PM] dimxy#2587
+the heir sets this flag when he successfully claims funds first time  (after inactivity time passed)
+
+[18-Feb-19 02:38 PM] gcharang#6833
+Got it.
+
+[18-Feb-19 03:27 PM] gcharang#6833
+```
+When using Heir contract on a private chain, to make funds available for the heir, you should wait for inactivity time and add any arbitrary transaction to the chain (for the duration between owner tx and chain tip to be calculated correctly).
+```
+"you should wait" --  here is it the heir?
+
+[18-Feb-19 03:29 PM] gcharang#6833
+@dimxy are private funds be able to use in inheritance? If not what is the difference here from a purely public chain?
+
+[18-Feb-19 03:33 PM] dimxy#2587
+well I suggest removing this (this is just for testing), sorry, overlooked
+
+[18-Feb-19 03:37 PM] gcharang#6833
+So, there are no special/extra things to be done by anyone for the heir contract in a private chain that are not needed in a public chain?
+
+[18-Feb-19 03:38 PM] gcharang#6833
+I mean is there any difference in the usage of the contract on a chain where private transactions are possible VS a pure Public chain?
+
+[18-Feb-19 03:38 PM] gcharang#6833
+@dimxy
+
+[18-Feb-19 03:44 PM] dimxy#2587
+I used the name 'private' chain incorrectly, I meant 'test chains'
+There is no differences in using heir cc on various chains
+The difference might be in that on KMD chain heir cc will be used with coins, on asset chain it will be used with tokens. It supports both
+
+[18-Feb-19 03:46 PM] gcharang#6833
+Ah, got it. Will just delete the note.
+
+[18-Feb-19 03:48 PM] gcharang#6833
+Is this statement true:
+```
+The `heiradd` rpc call warns the user that he is making a donation to the fund if he is neither the **owner** nor the **heir**
+```
+
+[18-Feb-19 03:54 PM] gcharang#6833
+```
+The `heiradd` rpc call doesn't allow addition of funds from both owner and non-owner inputs in a single transaction. In any case such fund additions will be considered as donations too.
+```
+So the rpc call doesn't allow it, but if someone creates a raw transaction manually to include both owner and non-owner inputs in the fund transaction, will the other nodes reject it? @dimxy I mean does such a txn break consensus rules?
+
+[18-Feb-19 03:56 PM] jl777c#5810
+how can someone else spend funds out of owner address?
+
+[18-Feb-19 03:57 PM] gcharang#6833
+If the wallet has utxo of both owner pubkey and and another pubkey then can't a txn be constructed that adds funds from both to the heir fund?
+
+[18-Feb-19 03:59 PM] dimxy#2587
+Yes, here it states about if someone manages to create a tx with both owner inputs and other inputs (having both keys)
+
+[18-Feb-19 03:59 PM] dimxy#2587
+Is it an artifical situation?
+
+[18-Feb-19 04:00 PM] jl777c#5810
+only the owner would be able to do that
+
+[18-Feb-19 04:00 PM] jl777c#5810
+unless he is hacked
+
+[18-Feb-19 04:00 PM] jl777c#5810
+but if this tx is rejected anyway, what is the issue?
+
+[18-Feb-19 04:00 PM] gcharang#6833
+I am asking if it is rejected
+
+[18-Feb-19 04:01 PM] gcharang#6833
+I mean is it rejected now according to the heir contract
+
+[18-Feb-19 04:02 PM] dimxy#2587
+Such tx would not be rejected now and it would be considered as donations to the heir fund (if it is created bypassing the rpc)
+
+[18-Feb-19 04:03 PM] dimxy#2587
+we are speaking about normal inputs BTW
+
+[18-Feb-19 04:03 PM] gcharang#6833
+Got it.  So such a txn won't reset the countdown to inactivity period?
+
+[18-Feb-19 04:04 PM] dimxy#2587
+yes donations won't reset the inactivity countdown
+
+[18-Feb-19 04:04 PM] dimxy#2587
+only owner tx will do that
+
+[18-Feb-19 04:06 PM] gcharang#6833
+Got it. btw @dimxy after I have gone through the doc, can you please go through it again to check if everything is accurate?
+
+[18-Feb-19 04:07 PM] dimxy#2587
+yes of course, 
+is it on the dev branch?
+
+[18-Feb-19 04:07 PM] gcharang#6833
+No not now. I will ping you after I am done. Its currently in a branch named `gcharang` . I am still editing it
+
+[18-Feb-19 04:07 PM] dimxy#2587
+okay
+
+[19-Feb-19 02:04 AM] Alright#0419
+@dimxy does jl's branch have latest Heir code?
+
+[19-Feb-19 03:57 AM] dimxy#2587
+I PRed heir  to the FSM branch.
+But it is merged into JL777 also
+
+[19-Feb-19 10:55 AM] gcharang#6833
+```
+./komodo-cli -ac_name=TESTAC heirfund 0 5 MyDogHeir 037736c263991316c6a23397a982a1f8c18ae8642e944448162a93a824c31f9299 100 'http://billionaire.com/mywill md5=5385639869'
+```
+Does the txfee= 0 mean it will use default txn fee of  10000 satoshis? @dimxy
+
+[19-Feb-19 10:56 AM] dimxy#2587
+yes, txfee=0  is 10000
+
+[19-Feb-19 10:57 AM] gcharang#6833
+thanks
+
+[19-Feb-19 10:58 AM] Mihailo#5902
+@dimxy why do we have txfee as parameter to rpc call? I don't seems to recall that other have it...
+

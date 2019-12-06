@@ -1,0 +1,478 @@
+==============================================================
+Guild: Komodo
+Channel: cc-rogue
+Topic: use FSM branch AND then build as normal
+ 
+./komodod -ac_name=ROGUE -ac_supply=1000000 -pubkey=<yourpubkey> -addnode=5.9.102.210  -ac_cclib=rogue -ac_perc=10000000 -ac_reward=100000000 -ac_cc=60001 -ac_script=2ea22c80203d1579313abe7d8ea85f48c65ea66fc512c878c0d0e6f6d54036669de940febf8103120c008203000401cc -daemon
+Guide here: https://github.com/KomodoPlatform/komodo/wiki/Get-Started-with-Rogue-Game
+Explorer: http://rogue.explorer.dexstats.info/
+Player's Handbook: https://github.com/jl777/komodo/blob/jl777/src/cc/rogue/rogue.doc
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[18-Feb-19 07:59 PM] joe2x4#5987
+Is it possible to allow in game items to also be tradeable via Dex in addition to whole characters? It seems this would add a delightful experience. -Asking for a friend...
+
+[18-Feb-19 08:00 PM] joe2x4#5987
+Is it probable?
+
+[18-Feb-19 08:08 PM] SHossain#0007
+i believe this is possible and you may see it in the future
+
+[18-Feb-19 08:26 PM] TonyL#3577
+Found where these tricky arrows should create:
+https://github.com/jl777/komodo/blob/jl777/src/cc/rogue/things.c#L251
+https://github.com/jl777/komodo/blob/jl777/src/cc/rogue/weapons.c#L179
+
+{Embed}
+https://github.com/jl777/komodo/blob/jl777/src/cc/rogue/things.c
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+{Embed}
+https://github.com/jl777/komodo/blob/jl777/src/cc/rogue/weapons.c
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[18-Feb-19 08:28 PM] TonyL#3577
+There are this o_group property checks in pack.c but can't collect puzzle pieces together so far
+
+[18-Feb-19 08:30 PM] TonyL#3577
+Interesting that on pickup there is no any check if it group https://github.com/jl777/komodo/blob/jl777/src/cc/rogue/pack.c#L229
+But on leave pack it's checking if obj->o_group
+In original rogue such groups counted as 1
+
+Will try to remove this o_group argument at all - maybe it's a clue
+ Interesting how things will behave 😃
+
+{Embed}
+https://github.com/jl777/komodo/blob/jl777/src/cc/rogue/pack.c
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[18-Feb-19 09:30 PM] TonyL#3577
+What I've detected so far (without code modifications) is that it counting initial arrows as one object when drop it and pick up
+Playing by ./rogue 777 gui
+When pickup food with initial pack:
+```                           |...%@. strength*3 48 vs total.42 vs 5 inventory let
+                           +...... a) 2 rations of food
+                           ------- b) +1 ring mail [protection 4] (being worn)
+                                   c) A +1,+1 mace (weapon in hand)
+                                   d) A +1,+0 short bow
+                                   e) 38 +0,+0 arrows
+                                   --Press space to continue--```
+
+[18-Feb-19 09:30 PM] TonyL#3577
+When then drop and pickup pack with arrows it's counting as 1:
+```                                   strength*3 48 vs total.5 vs 4 inventory lett
+                                   a) 2 rations of food
+                           ------- b) +1 ring mail [protection 4] (being worn)
+                           |...... c) A +1,+1 mace (weapon in hand)
+                           |...%.. d) A +1,+0 short bow
+                           +...... e) 38 +0,+0 arrows
+                           ------- --Press space to continue--```
+
+But if shot one arrow, drop pack and pickup pack counting not as 1 items but as total arrows amount
+
+[18-Feb-19 09:34 PM] TonyL#3577
+So on pick up  arrows not recounting. There are really tricky state changes conditions on drop/pick-up packed throwable stuff. Mindblowing - easier just count these throwable items packs as 1 item imo and not even try to count/recount on pickup - just count any pickup as +1 item 😂
+
+[19-Feb-19 06:12 AM] jl777c#5810
+i dont want to mess with the code unless to fix a serious issue. as you see it is very tricky and intricate
+
+{Reactions}
+💯 
+
+[19-Feb-19 07:43 AM] grewalsatinder#9653
+going to compile https://github.com/KomodoPlatform/komodo/tree/rogue_multiOS on mac
+
+{Embed}
+https://github.com/KomodoPlatform/komodo/tree/rogue_multiOS
+KomodoPlatform/komodo
+Komodo. Contribute to KomodoPlatform/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[19-Feb-19 07:43 AM] grewalsatinder#9653
+@TonyL 
+so I compile it with zcbuild/build-mac and then do makerouge and then src/ make?
+
+[19-Feb-19 07:43 AM] grewalsatinder#9653
+@SHossain
+
+[19-Feb-19 07:44 AM] grewalsatinder#9653
+is it good to compile on mac or still issues?
+
+[19-Feb-19 07:52 AM] TonyL#3577
+No need to makerogue if you're using rogue_multiOS, build/build-mac should makerogue automatically. Just build and try to sync then
+
+[19-Feb-19 07:52 AM] TonyL#3577
+Yesterday it compiled fine on Mac
+
+[19-Feb-19 07:54 AM] grewalsatinder#9653
+perfect! executed build-mac already 😃
+
+{Reactions}
+🚀 
+
+[19-Feb-19 08:15 AM] TonyL#3577
+@jl777c true, in the end I just tried to understand why counters in max inventory limit count 1 more (it allows to take x3*strength + item) - seems it's connected to original game hardcoded rule that you can't have less than 1 item in inventory (it have validation if you'll try to drop last one). Was just interesting research - realised that can read C code if just imagine -> as . and {} as 4 spaces idents 😂
+
+[19-Feb-19 08:15 AM] TonyL#3577
+Proceeding to multiplayer
+
+[19-Feb-19 08:17 AM] jl777c#5810
+I changed it so ISMANY objects count as 1
+
+[19-Feb-19 08:17 AM] jl777c#5810
+but the maxtotal is 2x strength
+
+[19-Feb-19 08:17 AM] jl777c#5810
+whitespace having effect on code is quite crazy
+
+[19-Feb-19 08:18 AM] jl777c#5810
+violates some basic rules about being unambiguous, eg. is 4 spaces the same as tab
+
+[19-Feb-19 08:18 AM] TonyL#3577
+But in python miss one space is quite same as forget { in C :)
+Oh cool, ISMANY as 1  - it should eliminate this headache
+
+[19-Feb-19 08:19 AM] TonyL#3577
+Thanks god IDE converting tab to 4 spaces - one time I've edited python code in nano - pressed tab instead of 4 spaces and then troubleshooted for a while
+
+[19-Feb-19 08:20 AM] jl777c#5810
+it is just wrong to be able to look at the code and not know for sure what it says due to any ambiguity,let alone invisible things like spaces, tabs
+
+[19-Feb-19 08:22 AM] TonyL#3577
+https://bugs.python.org/issue22086 people even opening issues because of such problems lol
+
+[19-Feb-19 08:31 AM] TonyL#3577
+Cool, ISMANY as 1 working as a charm, even when I shot one arrow and dropped pack and picked up it's counting as 1
+Player can just imagine that it's a magic quiver. Like a when you have ammo pack - in games it's usually just pack, not depends how many ammo you have
+
+[19-Feb-19 08:33 AM] jl777c#5810
+so it can take up many inventory spots, but just one maxstrength spot
+
+{Reactions}
+💯 
+
+[19-Feb-19 08:44 AM] grewalsatinder#9653
+finished compiled a min or so ago.
+doing fresh sync. got past block 196, and also shows rogue calls in cclibfino output 🙂
+
+{Reactions}
+👍 
+
+[19-Feb-19 08:48 AM] TonyL#3577
+`newgame 17 \"[2,0.1]\"` created game for 2 players, will try to win myself now
+
+[19-Feb-19 08:52 AM] TonyL#3577
+```./komodo-cli -ac_name=ROGUE cclib gameinfo 17 \"[%22bc0e7663eb2a31a64b47f651bfee3a2048a9cccd15b8f9940482ea7cc8a95539%22]\"
+{
+  "name": "rogue",
+  "method": "gameinfo",
+  "gametxid": "bc0e7663eb2a31a64b47f651bfee3a2048a9cccd15b8f9940482ea7cc8a95539",
+  "result": "success",
+  "gameheight": 23894,
+  "height": 23894,
+  "start": 23899,
+  "alive": 0,
+  "numplayers": 0,
+  "maxplayers": 2,
+  "buyin": 0.10000000,
+  "players": [
+  ]
+}
+```
+@jl777c Should wait 5 blocks before registration is opened? Oh no, registered in next block after gametxid is mined, just tried wrong txid
+
+[19-Feb-19 08:55 AM] TonyL#3577
+```{
+  "name": "rogue",
+  "method": "gameinfo",
+  "gametxid": "bc0e7663eb2a31a64b47f651bfee3a2048a9cccd15b8f9940482ea7cc8a95539",
+  "result": "success",
+  "gameheight": 23894,
+  "height": 23894,
+  "start": 23899,
+  "starthash": "00066677a09d661db4281149da99b6cda6cb4859657e62e97cb79c9e423a3b65",
+  "seed": 4375137766543604581,
+  "run": "cc/rogue/rogue 4375137766543604581 bc0e7663eb2a31a64b47f651bfee3a2048a9cccd15b8f9940482ea7cc8a95539",
+  "alive": 2,
+  "numplayers": 2,
+  "maxplayers": 2,
+  "buyin": 0.10000000,
+  "players": [
+    {
+      "slot": 0,
+      "status": "registered",
+      "baton": "0feabb85be788f286efc78e19e3106cc8f7294305995657e74179f1be069b01d",
+      "tokenid": "0000000000000000000000000000000000000000000000000000000000000000",
+      "batonaddr": "RFRFeXa81GsEYURQbQN9eh7LPxxbbJVsxX",
+      "ismine": true,
+      "batonvout": 0,
+      "batonvalue": 0.10990000,
+      "batonht": 23899
+    },
+    {
+      "slot": 1,
+      "status": "registered",
+      "baton": "fbdd6c27b25864749cca6c9946dd1993ba980a523e1641cacb2197829faf2cde",
+      "tokenid": "0000000000000000000000000000000000000000000000000000000000000000",
+      "batonaddr": "RVuzXY65FyJiPPWSBc9efATh6nb4M9MceR",
+      "ismine": false,
+      "batonvout": 0,
+      "batonvalue": 0.10990000,
+      "batonht": 23899
+    }
+  ]
+}
+```
+
+[19-Feb-19 08:55 AM] TonyL#3577
+Seems fine
+
+[19-Feb-19 08:58 AM] TonyL#3577
+Died by one player, let's try to bailout
+
+[19-Feb-19 08:59 AM] TonyL#3577
+Immediately after I've broadcasted bailout status of this player in gameinfo changed to finished:
+```    {
+      "slot": 1,
+      "status": "finished",
+      "baton": "4e29e16c00265b9176edbd687b167181d3f32b1bf8c19ffe37c18f93f3cc57ee",
+      "tokenid": "0000000000000000000000000000000000000000000000000000000000000000",
+      "batonaddr": "RVuzXY65FyJiPPWSBc9efATh6nb4M9MceR",
+      "ismine": true,
+      "batonvout": 0,
+      "batonvalue": 0.10950000,
+      "batonht": 23905
+    }```
+Let's quit on second node and try to highlander
+
+[19-Feb-19 09:00 AM] TonyL#3577
+```  "txid": "abb9319da94c88200107abddc69ee8e283fe5f6c2a56d7c1c0df6f9edde513d3",
+  "result": "success"``` highlander broadcasted
+
+[19-Feb-19 09:00 AM] TonyL#3577
+Gameinfo started to return error:
+```./komodo-cli -ac_name=ROGUE cclib gameinfo 17 \"[%22bc0e7663eb2a31a64b47f651bfee3a2048a9cccd15b8f9940482ea7cc8a95539%22]\"
+{
+  "name": "rogue",
+  "method": "gameinfo",
+  "gametxid": "bc0e7663eb2a31a64b47f651bfee3a2048a9cccd15b8f9940482ea7cc8a95539",
+  "status": "error",
+  "error": "couldnt find valid game"
+}
+```
+
+[19-Feb-19 09:03 AM] jl777c#5810
+it worked for me, both players finished
+
+[19-Feb-19 09:03 AM] jl777c#5810
+did the highlander win both buyins?
+
+[19-Feb-19 09:04 AM] TonyL#3577
+http://rogue.explorer.dexstats.info/tx/abb9319da94c88200107abddc69ee8e283fe5f6c2a56d7c1c0df6f9edde513d3 highlander transaction
+Hmm in which transaction player which broadcasted highlander should receive pot?
+
+[19-Feb-19 09:04 AM] TonyL#3577
+I can see output only to loosing player (loosing player wallet R9vESme6P1rqVNFVBidtViGevZ3SJ7KVia)
+
+[19-Feb-19 09:04 AM] TonyL#3577
+Buyin in this game was 0.1
+
+[19-Feb-19 09:05 AM] TonyL#3577
+Oh no, it's winner wallet
+
+[19-Feb-19 09:05 AM] jl777c#5810
+how much gold did you have?
+
+[19-Feb-19 09:05 AM] jl777c#5810
+that plus both buyins it should be
+
+[19-Feb-19 09:05 AM] TonyL#3577
+Not remember but less than 100
+
+[19-Feb-19 09:05 AM] jl777c#5810
+and multiplayer games pay double rate for gold
+
+[19-Feb-19 09:06 AM] TonyL#3577
+I've quit on level2
+
+[19-Feb-19 09:06 AM] jl777c#5810
+highlander 10x
+
+[19-Feb-19 09:06 AM] jl777c#5810
+0.01 ROGUE per gold
+
+[19-Feb-19 09:06 AM] jl777c#5810
+for the highlander
+
+[19-Feb-19 09:06 AM] jl777c#5810
+0.87 payout -> 0.67 in gold, could you have had 67 gold?
+
+[19-Feb-19 09:06 AM] TonyL#3577
+Oh I see so if it was 70 gold - player received 0,7 + 0,2 buyins
+
+[19-Feb-19 09:07 AM] TonyL#3577
+Looks like a true, next game will track gold balance
+
+[19-Feb-19 09:08 AM] TonyL#3577
+So if highlander in multiplayer with 5000 gold it's  50 ROGUE coins - cool!
+
+[19-Feb-19 09:08 AM] jl777c#5810
+i can see a lot more multiplayer games in the future
+
+[19-Feb-19 09:08 AM] TonyL#3577
+But aren't players can't cheat this way? Just  play against each other with buyin 0.01 to grind gold and cashout
+
+[19-Feb-19 09:09 AM] jl777c#5810
+yes, there is the 5 block wait
+
+[19-Feb-19 09:09 AM] jl777c#5810
+and the strict time limit
+
+[19-Feb-19 09:10 AM] jl777c#5810
+maybe it devalues ROGUE by 10x, but as it was likely few are selling ROGUE as it is so hard to get
+
+[19-Feb-19 09:10 AM] TonyL#3577
+Yep, some devalue was the point
+
+[19-Feb-19 09:10 AM] jl777c#5810
+the more ROGUE circulating, the more people will pay for playerdata
+
+[19-Feb-19 09:11 AM] jl777c#5810
+maybe it shouldnt be 10x for a last man standing...
+
+[19-Feb-19 09:11 AM] jl777c#5810
+but only if you have amulet
+
+{Reactions}
+💯 
+
+[19-Feb-19 09:11 AM] jl777c#5810
+ok, I will change to 2x if lastman standing
+
+[19-Feb-19 09:11 AM] TonyL#3577
+Abusing prevention
+
+[19-Feb-19 09:11 AM] jl777c#5810
+so 4x single player
+
+[19-Feb-19 09:12 AM] jl777c#5810
+still worth doing, but with 5 block wait time maybe not that much benefit as you can almost get killed in 5 blocks
+
+[19-Feb-19 09:12 AM] TonyL#3577
+If you're so cool to find amulet you earn a lot of gold
+
+[19-Feb-19 09:12 AM] TonyL#3577
+And it's stimulating playerdata market even more
+
+[19-Feb-19 09:13 AM] TonyL#3577
+Since players will want not only defeat opponent to take the buyin but also find the amulet
+
+[19-Feb-19 09:13 AM] TonyL#3577
+So will need strong enough warriors
+
+[19-Feb-19 09:16 AM] CrisF#3405
+Hi, could someone please tell me where the original game code comes from?
+
+[19-Feb-19 09:18 AM] jl777c#5810
+I got it from: https://github.com/Davidslv/rogue, but it is basically the same code as original
+Rogue: Exploring the Dungeons of Doom
+Copyright (C) 1980-1983, 1985, 1999 Michael Toy, Ken Arnold and Glenn Wichman
+
+[19-Feb-19 09:18 AM] jl777c#5810
+almost 40 years old!
+
+{Reactions}
+👵 
+
+[19-Feb-19 09:19 AM] CrisF#3405
+Thank you 😃  Amazing isn't it!
+
+[19-Feb-19 09:21 AM] TonyL#3577
+That feeling when code is older almost twice than you 😂
+
+{Reactions}
+🍼 (4) 
+
+[19-Feb-19 09:22 AM] jl777c#5810
+updated jl777 branch with reduction of last man standing reward
+
+[19-Feb-19 09:22 AM] jl777c#5810
+so now it is 2x for multiplayer, 4x for last man standing, 20x for amulet win (over single player farming)
+
+{Reactions}
+treasure 
+
+[19-Feb-19 09:23 AM] jl777c#5810
+it encourages multiplayer (real or no) with the 2x. at least there is a chance some random roguer will join and play against you
+
+[19-Feb-19 09:23 AM] jl777c#5810
+also when you win, your pack items are converted to gold and I think it is many thousands of gold
+
+[19-Feb-19 09:24 AM] TonyL#3577
+Stimulating to move into multiplayer 👍
+
+[19-Feb-19 09:24 AM] TonyL#3577
+After you trained in singleplayer
+
+[19-Feb-19 09:24 AM] jl777c#5810
+still the total won even with amulet should be less than 100 ROGUE
+
+[19-Feb-19 09:24 AM] jl777c#5810
+and considering some player play for years and never win, it seems the value per ROGUE cant be very low
+
+[19-Feb-19 09:26 AM] ph03nix#3115
+what is max supply of ROGUE
+
+[19-Feb-19 09:27 AM] jl777c#5810
+infinite
+
+[19-Feb-19 09:27 AM] jl777c#5810
+10% of all transactions goes into the main CC address, which pays out the gold -> ROGUE
+
+[19-Feb-19 09:28 AM] jl777c#5810
+so the more games played, the more funds available
+
+[19-Feb-19 09:28 AM] jl777c#5810
+"CCbalance": 1202386.13391190,
+
+[19-Feb-19 09:28 AM] jl777c#5810
+I estimate about 20,000 free trading ROGUE exists at this moment
+
+[19-Feb-19 09:29 AM] jl777c#5810
+a better store of value in ROGUE would be a high quality playerdata
+
+[19-Feb-19 09:29 AM] jl777c#5810
+but the inflation rate of ROGUE is designed to scale with usage, and the more usage, the more it is worth. Not sure if the -ac_perc 10% is the exact right value
+
+[19-Feb-19 09:29 AM] jl777c#5810
+but pretty sure it is within an order of magnitude
+
+[19-Feb-19 09:34 AM] ph03nix#3115
+so the main CC address will never run out of funds?
+
+[19-Feb-19 09:35 AM] jl777c#5810
+it might temporarily run out of funds. in that case, you would need to wait with your bailout/highlander tx, but it is self-replenishing based on usage
+
+{Reactions}
+👌 
+
+[19-Feb-19 09:35 AM] jl777c#5810 (pinned)
+ROGUERS update to latest version (jl777 and FSM are in sync). there are "hardforking" changes in gameplay interpretation and I will be enabling strict validation soon. When I do, if you are not running the latest, you will go on a fork
+
+{Reactions}
+👆 
+
+[19-Feb-19 09:38 AM] jl777c#5810
+I believe the ability for percentage of transaction volumes to go to a locked address is pretty unique, let alone where the release of funds is based on actual gameplay keystrokes
+
+[19-Feb-19 09:40 AM] jl777c#5810
+also can use some testgames by non-TonyL to make sure the validation is working properly
+

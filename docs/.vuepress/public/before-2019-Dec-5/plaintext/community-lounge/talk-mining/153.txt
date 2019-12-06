@@ -1,0 +1,346 @@
+==============================================================
+Guild: Komodo
+Channel: talk-mining
+Topic: ./komodod -ac_name=ZAWY24 -ac_adaptivepow=1 -ac_supply=1000000 -ac_reward=10000000000 -ac_cc=2 -addnode=5.9.102.210 &
+
+A channel to discuss mining. For useful links and more info click the pinned messages to the right.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[06-Aug-19 03:04 PM] jl777c#5810
+6x was detected on the 5th block
+
+[06-Aug-19 03:04 PM] jl777c#5810
+but we got a 2, 5, 7 solvetimes, so pretty lucky miners
+
+[06-Aug-19 03:06 PM] jl777c#5810
+having the algo use "common sense" is what it sounds like, where the more you are behind and the faster the recent solves are, the more aggressive it needs to be
+
+[06-Aug-19 03:18 PM] jl777c#5810
+the 6x only triggered a few times, the first time the exp came in, after that mostly just digishield and blocks are fast. 255 was first 6x block:
+
+[06-Aug-19 03:18 PM] jl777c#5810
+254,1565103748,20010540,01054000000000000000000000000000,00dfbc89a3a7e142808b96d7fb314772,14.8,14.7,99
+255,1565103792,200105a0,0105a000000000000000000000000000,00cf7d714f1d1209fbfebd9f3e88f147,14.7,14.7,44
+256,1565103794,200105bc,0105bc00000000000000000000000000,003b5390cee7693bac825a07d8f5f00d,14.7,14.8,2
+257,1565103799,2001046c,01046c00000000000000000000000000,00f2922ff51786f71eaeba4dff293912,14.8,14.7,5
+258,1565103806,2001062c,01062c00000000000000000000000000,009dc39c4eaaf3898000e5c1e0f91881,14.7,14.9,7
+259,1565104428,1f461e77,00461e77000000000000000000000000,00040e1fe3b9b6f79546a3db7ffee5df,55.0,15.3,622
+260,1565104434,2000f7f4,00f7f400000000000000000000000000,0006d09a07fb49dae6f8d44e30a75f1e,15.5,15.6,6
+261,1565104438,2000f31c,00f31c00000000000000000000000000,00603bd82d95f3fee9ab5a80d3271afb,15.9,15.9,4
+262,1565104459,2000edd8,00edd800000000000000000000000000,005670e17846c6abc30b49a10294b6d3,16.2,16.3,21
+263,1565104491,2000e88c,00e88c00000000000000000000000000,003a837f9049a6a24d2ea6d9ea011c50,16.6,16.4,32
+264,1565104500,2000e6c0,00e6c000000000000000000000000000,006dbe714e769ea3b9067c00f1c50b94,16.7,14.3,9
+265,1565104508,200108cc,0108cc00000000000000000000000000,00b260d6ea3c34f701a1d0857cbe0e1c,14.6,14.4,8
+266,1565104531,20010814,01081400000000000000000000000000,003c05bed62867b9f0fa1c47a2113471,14.6,14.9,23
+267,1565104544,2000fe50,00fe5000000000000000000000000000,0098a9055e6a709db113afff49ea3abc,15.2,15.2,13
+268,1565104546,2000f974,00f97400000000000000000000000000,008d523eef2d209e37fd48a1937542ff,15.5,15.4,2
+269,1565104559,2000f58c,00f58c00000000000000000000000000,007eee9a9ba555164833ad39f3eddb1c,15.7,15.9,13
+270,1565104584,2000ef08,00ef0800000000000000000000000000,0033248dea21d6b0b5d06c4696912e31,16.1,15.9,25
+
+[06-Aug-19 03:20 PM] jl777c#5810
+which is why i guess you said "adjusting based on CST  with an EMA difficulty algorithm
+so it would be 1 equation that would be more aggressive in proportion to number of blocks behind and faster recent solve speeds"
+
+[06-Aug-19 03:20 PM] jl777c#5810
+i think i will wait for the next algo as this one shows that the basic concept works (slowing blocks while increasing diff), but the triggers need to be tuned and something to bring down the diff if the exp() is avoided
+
+[06-Aug-19 04:40 PM] zawy#5864
+I need to first determine what the correct target correction is.  I can't trust it until it's theoretically correct.
+
+[06-Aug-19 07:51 PM] zawy#5864
+That mistake at the beginning where you said previous data was no good, did that apply to yesterday's data too where we got 45 s solvetimes from not changing target?
+
+[06-Aug-19 08:46 PM] zawy#5864
+None of that sequence above looks right.
+
+[07-Aug-19 01:02 AM] zawy#5864
+I found what I believe is the proper conversion for the targets.  The RST will probably have problems until that conversion is correct.
+
+[07-Aug-19 07:49 AM] jl777c#5810
+i think the data could have been valid at first, but the longer the RST block, the more likely it would retrograde.
+
+[07-Aug-19 09:46 AM] zawy#5864
+The 600 is way too high (target is too low)  and it does not seem it's working on the subsequent solvetimes (tey are too fast, target is high) .  My math is telling me something a lot different than my intuition that said lower all on-chain targets (to be used in all the DAs) to 1/2  (and different from your method of adjusting by solvetime).  It's tellign me targets the miners have to solve from RST should be adjusted to (nTime-ct[0])^2\*1000/784.  I need to see full testing on that or I have to abandon RST work until I get my computer that I used to use for modelling working again.
+
+[07-Aug-19 09:48 AM] zawy#5864
+By "600" I mean the 622 solve in block 259 @jl777c
+
+[07-Aug-19 09:49 AM] jl777c#5810
+RST does get some very high diff. i smoothed that out with averaging with the prior bnTarget, but you said to remove that
+
+[07-Aug-19 09:49 AM] jl777c#5810
+so change the new target to that equation when i == 0  in the ii loop?
+
+[07-Aug-19 09:50 AM] jl777c#5810
+wait! is that an N squared?
+
+[07-Aug-19 09:50 AM] jl777c#5810
+tipdiff * tipdiff * 1000 / 784
+
+[07-Aug-19 09:51 AM] jl777c#5810
+you mean ts[0] not ct[0]
+
+[07-Aug-19 09:51 AM] zawy#5864
+Yes, if my math is right, my intuition was way way off, and your intuition of what you thought i was saying was closer..    You've been looking at the data....does this feel like it would work better?
+
+[07-Aug-19 09:52 AM] zawy#5864
+I mean tipdiff.     yes, i meant ts[]
+
+[07-Aug-19 09:53 AM] jl777c#5810
+it would certainly adjust a lot faster than 600 seconds
+
+[07-Aug-19 09:53 AM] jl777c#5810
+tipdiff squared is a monster numerator
+
+[07-Aug-19 09:53 AM] jl777c#5810
+what about the initial setting at the top ? that one seems to have much less aggressive numbers, so it is probably ok?
+
+[07-Aug-19 09:54 AM] zawy#5864
+this should not affect the 622 because (i thought) the 622 was the adjustment outside the loop......
+
+[07-Aug-19 09:54 AM] jl777c#5810
+i will make this change and fire up ZAWY18
+
+[07-Aug-19 09:55 AM] zawy#5864
+We need to check on that.....You said we were lucky to get those 3 solvetimes which I thought meant the first trigger which means the eq before the loop
+
+[07-Aug-19 09:55 AM] jl777c#5810
+it triggered the ii loop also
+
+[07-Aug-19 09:56 AM] zawy#5864
+so the 3 fast were supposed to cause the 622.... the loop's not supposed to overwrite that......also, the loop should have immiedately stopped if it saw the 622....so my code is goign into the loop 1st time when it shouldn't....i think you asked me about that and i told you wrong
+
+[07-Aug-19 09:57 AM] zawy#5864
+see, 622 erases the 3 blocks lost to emissiona nd puts it 6 block behind instead of ahead so the loops not supposed to be active
+
+[07-Aug-19 09:57 AM] jl777c#5810
+you mean if the initial (ts[0] - ts[W]) < T*num/den is trigged, it should just use that and not go into the loop?
+
+[07-Aug-19 09:57 AM] zawy#5864
+yes, my bad
+
+[07-Aug-19 09:58 AM] jl777c#5810
+ok, changing the control flow to just return what the initial conditions does (unless altK > 1 million)
+
+[07-Aug-19 09:58 AM] jl777c#5810
+and the ii loop equation to tipdiff squared, instead of tipdiff * (ts[0] - ts[W])
+
+[07-Aug-19 09:59 AM] jl777c#5810
+any other changes?
+
+[07-Aug-19 10:00 AM] zawy#5864
+I think this means erasing the -1 here
+
+[07-Aug-19 10:00 AM] jl777c#5810
+this will definitely speed up the "unsolvable" blocks as the (ts[0] - ts[W]) is often much smaller than tipdiff
+
+[07-Aug-19 10:00 AM] zawy#5864
+```for (i=j-1; i>=0; i-- )```
+
+[07-Aug-19 10:00 AM] zawy#5864
+I mean make it -2?
+
+[07-Aug-19 10:00 AM] jl777c#5810
+-2? or -W?
+
+[07-Aug-19 10:01 AM] jl777c#5810
+it seems maybe -W makes more sense as emission cant change until after its triggered
+
+[07-Aug-19 10:01 AM] jl777c#5810
+and it cant trigger before W blocks
+
+[07-Aug-19 10:01 AM] jl777c#5810
+should i reduce past also?
+
+[07-Aug-19 10:03 AM] zawy#5864
+I want to be sure to tell you right.  Right now I'm thinking you only need to change the -1 to -2
+
+[07-Aug-19 10:03 AM] zawy#5864
+outer loop only tries to find the initial trigger
+
+[07-Aug-19 10:04 AM] zawy#5864
+inner loop determines if that trigger stayed active all the way to current block and then adjusts current block if it did
+
+[07-Aug-19 10:04 AM] zawy#5864
+if it does not find it lasted all the way, it looks for next possible trigger
+
+[07-Aug-19 10:05 AM] zawy#5864
+in outer loop
+
+[07-Aug-19 10:05 AM] jl777c#5810
+i will change the outerloop to stop when j hits 1, as if you -2, it will be illegal index
+
+[07-Aug-19 10:05 AM] zawy#5864
+yeah, I believe the -2 is needed..
+
+[07-Aug-19 10:05 AM] jl777c#5810
+should i change the 2x, 3x, 4x multipliers ?
+
+[07-Aug-19 10:07 AM] jl777c#5810
+maybe just always make it a 2x?
+
+[07-Aug-19 10:07 AM] zawy#5864
+yes, but if the equation fails, try your 1, 2, 3, (which should be linearized to use (nTime-ts[0])   instea dof my  (nTime-ts[0])\* (nTime-ts[0])    ) and then lastly try my initial resuce all miner RST  targets to 1/2
+
+[07-Aug-19 10:07 AM] zawy#5864
+I mean try my equation above first and test it good, and send me all output
+
+[07-Aug-19 10:08 AM] jl777c#5810
+so disable the 2x,3x,4x multiplier totally?
+
+[07-Aug-19 10:08 AM] zawy#5864
+no, replace  it with my equation
+
+[07-Aug-19 10:09 AM] zawy#5864
+A linear version of your equation (if I understand what you're doing ) is 
+tipdiff  \* 1000 / 1000  as opposed to my tipdiff \* tipdiff \* 1000 / 784
+
+[07-Aug-19 10:13 AM] jl777c#5810
+a bit confused....
+```altK = (K * tipdiff * tipdiff) / (W * T * T)```
+
+[07-Aug-19 10:13 AM] jl777c#5810
+that is for the ii loop, but you are saying there is a 1000 / 784 instead of K and (W * T * T)?
+
+[07-Aug-19 10:14 AM] jl777c#5810
+can you write the full altK = line, just to make sure i dont botch it
+
+[07-Aug-19 10:16 AM] zawy#5864
+No, it appears to me your "on-chain" targets (not actually on chain, but the ones being used for future RST and digi and exp) are not being creatde inside the loop.  Similarly, I am not suggesting any change to the loop if you have not changed it to do that.   I didn't understand how you're doing it outside the loop, but it sounded like we are on the same page about what we're doing......so I am only saying wherever you have the 2x, 3x, 4x, replace it with this.
+
+[07-Aug-19 10:17 AM] jl777c#5810
+oh, so the only change to the RST itself would be to make the initial check have priority over the ii loop and change j-1, to j-2
+
+[07-Aug-19 10:18 AM] zawy#5864
+yes.....let's make sure we're on the same page about "on chain.....
+
+[07-Aug-19 10:18 AM] jl777c#5810
+that is what goes onchain
+
+[07-Aug-19 10:19 AM] jl777c#5810
+then offchain (just in the ct[] and digishield) to change the 2x, 3x, 4x to being (solvetime * 1000) / 784 ?
+
+[07-Aug-19 10:19 AM] zawy#5864
+targets the miners have to solve from RST are what the loop says....but future DA calculations are based on adjusting that RST value.  The future inputs to RST and digi and exp are my equation's adjustment to the RST value
+
+[07-Aug-19 10:20 AM] jl777c#5810
+yes, so if it was RST, adjust the values used to calculate
+
+[07-Aug-19 10:20 AM] jl777c#5810
+but it seems there needs to be a / T in there?
+
+[07-Aug-19 10:20 AM] jl777c#5810
+(solvetime * 1000) / (T * 784) ?
+
+[07-Aug-19 10:20 AM] zawy#5864
+yes
+
+[07-Aug-19 10:20 AM] jl777c#5810
+and that is the divisor to the bnTarget
+
+[07-Aug-19 10:21 AM] jl777c#5810
+but it will make it easier if it solved it quickly?
+
+[07-Aug-19 10:21 AM] zawy#5864
+let me be more precise with it
+
+[07-Aug-19 10:22 AM] jl777c#5810
+oh, last version was using the blockhash as diff. i guess to undo that trick
+
+[07-Aug-19 10:25 AM] zawy#5864
+let's say there is a ctA[] that  has all the DA outputs and the RST values that the miners had to solve.   The on-chain  ct[] values will be ctB[].  This will be what all aspects of the DA uses.  
+ if (ctA[i] is RST value) { 
+
+ctB[i] = ctA[i]\* (( ts[i+1]  - ts[i] ) \* ( ts[i+1]  - ts[i] ) \* 1000 /T/T/784 
+
+ }
+
+[07-Aug-19 10:26 AM] jl777c#5810
+even if ctB[i] might end up easier to solve than ctA[i] ?
+
+[07-Aug-19 10:27 AM] zawy#5864
+Where my understanding is that you were doing this
+if (ctA[i] is RST value) { 
+
+ctB[i] = ctA[i] * (( ts[i+1]  - ts[i] ) * 1000 /T/1000
+
+ }
+
+[07-Aug-19 10:28 AM] jl777c#5810
+what i was doing was far more caveman
+
+[07-Aug-19 10:28 AM] zawy#5864
+ctB is harder if  solvetime was < 1xT, else easier
+
+[07-Aug-19 10:28 AM] zawy#5864
+right, yuo did not linearize it
+
+[07-Aug-19 10:29 AM] jl777c#5810
+conceptually i dont understand why to make . it easier if it took 40 seconds to solve, the average target would be what the target was at 20 seconds
+
+[07-Aug-19 10:30 AM] zawy#5864
+no it's harder to solve if it's 40 seconds
+
+[07-Aug-19 10:31 AM] jl777c#5810
+whereever the cutoff is, 20 seconds
+
+[07-Aug-19 10:31 AM] zawy#5864
+The cutoff is 1000/784 x T.   solvetimes below that are harder
+
+[07-Aug-19 10:34 AM] jl777c#5810
+dont understand, but i will set it to ```ctA[i] * (solvetime * solvetime * 1000) / (T * T * 784)```
+
+[07-Aug-19 10:34 AM] zawy#5864
+yes
+
+[07-Aug-19 10:34 AM] zawy#5864
+you could do this to prevent overflow
+
+[07-Aug-19 10:35 AM] jl777c#5810
+int64_t wont overflow with solvetime squared
+
+[07-Aug-19 10:36 AM] zawy#5864
+```(ctA[i] /1e6)* (( (1e6* solvetime * solvetime * 1000)) / (T * T * 784)  )```
+
+[07-Aug-19 10:36 AM] zawy#5864
+I'm worried about arith256  in ctA
+
+[07-Aug-19 10:36 AM] jl777c#5810
+good point
+
+[07-Aug-19 10:37 AM] zawy#5864
+you remember my k in the loop I think was a good idea
+
+[07-Aug-19 10:37 AM] zawy#5864
+I did it this way too
+
+[07-Aug-19 10:39 AM] jl777c#5810
+but putting the 1e6 in the solvetime squared wont prevent any overflow, so the multiply by 1e6 needs to happen last
+
+[07-Aug-19 10:39 AM] jl777c#5810
+basically scale down ct[i] by a million, do the original equation, scale it up by a million. that will avoid any bnTarget overflows
+
+[07-Aug-19 10:40 AM] zawy#5864
+I'm not following.  I think what I've got resolves everything, both potential overflows and round off error
+
+[07-Aug-19 10:41 AM] jl777c#5810
+i missed the parentheses precedence. ok it works, but i split out each step so i can explicitly see there is no problem
+
+[07-Aug-19 10:42 AM] jl777c#5810
+```            if ( zflags[i] != 0 )
+            {
+                ct[i] /= arith_uint256(K);
+                ct[i] *= arith_uint256((int64_t)(ts[i] - ts[i+1]) * (ts[i] - ts[i+1]) * 1000);
+                ct[i] /= arith_uint256(T * T * 784);
+                ct[i] *= arith_uint256(K);
+            }
+```
+
+[07-Aug-19 10:42 AM] zawy#5864
+I guess I have 1 excess pair of parenthesis
+
+[07-Aug-19 10:43 AM] jl777c#5810
+you had right parens. without the second set, it would have overflowed any target less than a million
+

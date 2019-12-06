@@ -1,0 +1,389 @@
+==============================================================
+Guild: Komodo
+Channel: cc-prices
+Topic: ./komodod -ac_cbopret=7 -ac_prices="LTC, BCHABC, XMR, IOTA, ZEC, WAVES, LSK, DCR, RVN, DASH, XEM, BTS, ICX, HOT, STEEM, ENJ, STRAT" -pubkey=<yourpubkey> -ac_name=REKT0 -ac_cclib=prices -ac_cc=10777 -ac_reward=3000000000 -ac_supply=120000000 -ac_pubkey=039433dc3749aece1bd568f374a45da3b0bc6856990d7da3cd175399577940a775 -ac_perc=77777 -ac_blocktime=600 -addnode=5.9.102.210 &
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[23-Apr-19 02:28 PM] TonyL#3577
+Closed one position - as expected it showing now in `mypriceslist closed` and not showing in `mypriceslist open`
+
+[23-Apr-19 02:48 PM] TonyL#3577
+https://paste.ubuntu.com/p/32YYcqPkrw/ not totally understand how it works, but after costbasis fixing `profit` changing  (costbasis value remains the same)
+
+[23-Apr-19 02:51 PM] TonyL#3577
+Looks like before `pricessetcostbasis` field `profit` reflects some not correct value and after this call it became correct
+
+[23-Apr-19 06:51 PM] dimxy#2587
+before  pricessetcostbasis call, a temp costbasis is used which is calculated with another algorithm ('minmax')
+
+[23-Apr-19 06:54 PM] jl777c#5810
+the minmax needs to be used for the pricessetcostbasis call also!
+
+[23-Apr-19 06:54 PM] jl777c#5810
+there should be no sudden change in costbasis
+
+[23-Apr-19 06:54 PM] jl777c#5810
+and the same should be used for permanent as the minmax
+
+[23-Apr-19 06:58 PM] dimxy#2587
+yes, however for the permanent costbasis it is calculated as max (or min) value for the single point at 24h
+and for temp costbasis (before 24h) it is additionally calculated as max (or min) for the point for the total period  for firstheight to refheight!
+
+[23-Apr-19 06:59 PM] dimxy#2587
+that is why the difference might be
+
+[23-Apr-19 06:59 PM] dimxy#2587
+(or this needs to be corrected?)
+
+[23-Apr-19 07:00 PM] jl777c#5810
+it needs to be corrected
+
+[23-Apr-19 07:01 PM] jl777c#5810
+the permanent costbasis should be the max (or min) for entire first 24 hour period
+
+[23-Apr-19 07:01 PM] jl777c#5810
+regardless of when the tx is actually made
+
+[23-Apr-19 07:06 PM] TonyL#3577
+I'm still not understand clear purpose of `pricessetcostbasis` call. By design - should it be done by trader or some automated tool? Why this basis cost can't be set automatically after bet "maturing" ?
+
+[23-Apr-19 07:07 PM] jl777c#5810
+who sets it?
+
+[23-Apr-19 07:07 PM] jl777c#5810
+it is an "event" the passage of 24hrs
+
+[23-Apr-19 07:07 PM] jl777c#5810
+so an incentivized tx is use to have users "mine" it
+
+[23-Apr-19 07:08 PM] TonyL#3577
+There is a RPC call `pricessetcostbasis bettxid` which I have to execute and broadcast transaction for it before execution of `pricescashout bettxid`
+
+[23-Apr-19 07:08 PM] jl777c#5810
+yes, initial design required a costbasis set before cashout is allowed
+
+[23-Apr-19 07:09 PM] TonyL#3577
+Aha, so in app when user click "cashout" I just can broadcast `pricessetcostbasis` and `pricescashout`
+
+[23-Apr-19 07:10 PM] TonyL#3577
+And user will see only pricescashout output
+
+[23-Apr-19 07:11 PM] TonyL#3577
+Ok, so just need some maturity flag to make cashout button active only for positions for which possible to call `pricessetcostbasis`
+
+[23-Apr-19 07:12 PM] jl777c#5810
+yes the one doing cashout can do a costbasis first
+
+[23-Apr-19 07:12 PM] jl777c#5810
+one there are miners for this, it shouldnt be an issue
+
+[23-Apr-19 07:49 PM] dimxy#2587
+again about costbasis.
+
+{Attachments}
+https://cdn.discordapp.com/attachments/560714286369079299/570335375831072813/unknown.png
+
+[23-Apr-19 07:51 PM] jl777c#5810
+the max value is only for the greenline
+
+[23-Apr-19 07:51 PM] jl777c#5810
+the min value is only for the greenline
+
+[23-Apr-19 08:18 PM] dimxy#2587
+So costbasis is the max of smoothed values
+And what about cashout price value?
+
+{Attachments}
+https://cdn.discordapp.com/attachments/560714286369079299/570342717532536853/unknown.png
+
+[23-Apr-19 08:25 PM] dimxy#2587
+if I want to cashout at t=T2 
+it seems logical if the cashout price value is calculated by a similar way as costbasis (that is, as the max for the following 24h?)
+(the value V2 on the screen is how the cashout price is calculated now)
+
+[23-Apr-19 08:33 PM] jl777c#5810
+no, the cashout price is the smoothed price at the current height
+
+[23-Apr-19 08:33 PM] jl777c#5810
+i guess prior block value
+
+[23-Apr-19 08:34 PM] jl777c#5810
+the costbasis is the max, the cashout is the current value
+
+[23-Apr-19 08:34 PM] jl777c#5810
+this is the house edge and compensates for the fee being on just the amount bet, instead of leveraged amount, which is in some cases 100x lower fee
+
+[23-Apr-19 08:36 PM] jl777c#5810
+cashout must use the realtime price
+
+[23-Apr-19 08:36 PM] jl777c#5810
+so there is no waiting, it closes the position and it uses just the smoothed price
+
+[23-Apr-19 08:38 PM] jl777c#5810
+so costbasis is recalculated during first 24 hours using max (or min) of smoothed price and the permanent one is just the last value
+
+{Reactions}
+👌 
+
+[23-Apr-19 08:39 PM] jl777c#5810
+current price is always the current price and that is used for cashout
+
+[23-Apr-19 08:40 PM] jl777c#5810
+for rekt, ANY height can be used. I think we need a special case to allow rekt of a position before 24hrs without a permanent costbasis
+
+[23-Apr-19 08:40 PM] jl777c#5810
+or maybe we can actually get rid of the costbasis tx, it seems like the appendix. a tx without any known reason
+
+[23-Apr-19 08:41 PM] jl777c#5810
+i think allowing  position to be rekt during first 24 hours deprecates the costbasis tx and we just need to calculate it all the time for cashout and rekt
+
+{Reactions}
+👌 
+
+[23-Apr-19 08:42 PM] jl777c#5810
+the early rekt compensates for bettors being able to add funding
+
+[23-Apr-19 08:42 PM] jl777c#5810
+the 24 hours prevents any future knowledge to be used when making the bet
+
+[23-Apr-19 08:43 PM] jl777c#5810
+the percentage of equity that means rekt would need to change from 10% to higher values if funds are added. just not sure what algo to use to adjust it
+
+[23-Apr-19 08:43 PM] jl777c#5810
+if we dont do that, bettors can just add 10x the value to avoid any chance of being rekt
+
+[23-Apr-19 08:44 PM] jl777c#5810
+what we want to do is tune it so that adding more funds might reduce the rekt chance in the short term, but doesnt change it much at all in the long term
+
+[23-Apr-19 08:44 PM] jl777c#5810
+so the adding funds should be equivalent to having made a bigger bet, i guess at a lower margin
+
+[23-Apr-19 08:45 PM] jl777c#5810
+open to suggestions
+
+[23-Apr-19 08:45 PM] jl777c#5810
+once we see the costbasis and profits at leverage, i think we can see how addfunds affects specific positions
+
+[23-Apr-19 08:45 PM] jl777c#5810
+it might be we have to remove the ability to be able to add funds
+
+[23-Apr-19 08:46 PM] jl777c#5810
+oh, maybe adding funds adjusts the cost basis so it is a bit more preferential, but it increases leverage?
+
+[23-Apr-19 08:47 PM] jl777c#5810
+double the funds, then doubles the leverage. i think the odds of rekt are pretty much the same
+
+[23-Apr-19 08:47 PM] jl777c#5810
+if this checks out, then leverage is the specified leverage * (total funds/positionsize)
+
+[23-Apr-19 08:48 PM] jl777c#5810
+it does complicate things quite a bit though if leverage is different at different heights
+
+[23-Apr-19 08:49 PM] jl777c#5810
+it might even need a bit of a delay to help save the losing position. anyway, I think you guys can see the tradeoffs and the goal, so hopefully a good solution will emerge
+
+[23-Apr-19 09:06 PM] dimxy#2587
+ok, I need to review this more carefully😀 
+I can see that who bets should understand he would deal not with real values but with math processed values (more like betting on trends, not short time changes)
+
+[23-Apr-19 09:10 PM] TonyL#3577
+Betting on trend is possible when leverage is small, because with high leverage your position might be liquidated super fast and trend forming quite long. 
+Usually high leverage positions (like a 100x) aimed to minute candles gambling
+
+[23-Apr-19 09:11 PM] TonyL#3577
+So if you bet with high leverage you should be able to close your position on the next price change, otherwise it have not much sense imo
+
+[23-Apr-19 09:17 PM] TonyL#3577
+With leverage below level x25 you can monitor it, carefully protect by margin adding or close by stop and your close target might be in few weeks or months, but high leverage it's pure gambling with some apofenia usually where you mostly aiming to "double or nothing" in a few minutes
+
+[23-Apr-19 09:23 PM] jl777c#5810
+for such betting needs, there is dice
+
+[23-Apr-19 09:23 PM] jl777c#5810
+prices CC is for non-minute by minute tradings
+
+[23-Apr-19 09:24 PM] TonyL#3577
+But there is a 777 max leverage 😃
+
+[23-Apr-19 09:24 PM] jl777c#5810
+somebody has to finance the payouts for the other leverages
+
+{Reactions}
+😂 
+
+[23-Apr-19 09:24 PM] jl777c#5810
+i think due to min/max any high leverage will indeed be very rare to payout, but when it does it is a crazy big amount
+
+[23-Apr-19 09:25 PM] jl777c#5810
+so we do need to have ways to see total exposure of all the bets
+
+[23-Apr-19 09:25 PM] jl777c#5810
+and then maybe to limit maxleverage*position side to be within some reasonable limits
+
+{Reactions}
+👍 
+
+[23-Apr-19 09:26 PM] TonyL#3577
+
+{Attachments}
+https://cdn.discordapp.com/attachments/560714286369079299/570359867999649826/777-online-slots.png
+
+[23-Apr-19 09:26 PM] TonyL#3577
+777 leverage ^^  😃
+
+[23-Apr-19 10:13 PM] TonyL#3577
+Playing with `pricesaddfunding` at the moment. Was able to add 1 coin 3 times, but on forth I got error with blank message and no daemon prints:
+```./komodo-cli -ac_name=REKT0 pricesaddfunding 02d161b021fbeebd2257db135ab2463f0da4887377a9ea0526a4fa5807bc897a 1
+prices_batontxid() added amount=100000000
+prices_batontxid() added amount=100000000
+prices_batontxid() added amount=100000000
+{
+  "hex": "0400008085202f89029a0341e85025ec929e9c40d5eff60d9759208d4c3a430c3b0dc7b930336727490400000049483045022100dc61b42f24782421bfdff5603d2bb1e440de4f10fd34cf96cffb1982a107a3ce022063d0d6f32fa6f3d661bdfc8dcf68dd3497cec9617afc22abf2827e66667f282201ffffffffa28c6176da057057be84cfa6cbff9d25b2e511aaa4aa25cdbec45927c5e40290000000007b4c79a276a072a26ba067a5658021029fe332bce5ccc040c8a13ef5a4664ae841a7b5d3ee6c3ada144c1f3f9b4e1186814042de381d60c1bdc46efea179988eac9222e4c466ace2e5d050fecaf944e9815c4b2bbc1cbd186f1fd56d733bc4f9d7f00ff8431b19b8f4033ea1e71dae774f70a100af038001eda10001ffffffff041027000000000000302ea22c8020e3878d662c6e70069aff63095bf1ce79e7c24eebfb87e2d3e398314e84e09ba38103120c008203000401cc00e1f50500000000302ea22c80203ee64ec5f134da404710d306dcd9ca54a0139b3c4827b43a988fc6316e6c2a688103120c008203000401cc10c0a537160000002321029fe332bce5ccc040c8a13ef5a4664ae841a7b5d3ee6c3ada144c1f3f9b4e1186ac00000000000000004f6a4c4ced417a89bc0758faa42605eaa9777388a40d3f46b25a13db5722bdeefb21b061d10221029fe332bce5ccc040c8a13ef5a4664ae841a7b5d3ee6c3ada144c1f3f9b4e118600e1f5050000000000000000c90b00000000000000000000000000",
+  "txid": "291279986c61e374f43579b9f3e8d7871038a4daa5aa33d061dd4ffb2245acb8",
+  "result": "success"
+}
+```
+
+[23-Apr-19 10:13 PM] TonyL#3577
+```./komodo-cli -ac_name=REKT0 sendrawtransaction 0400008085202f89029a0341e85025ec929e9c40d5eff60d9759208d4c3a430c3b0dc7b930336727490400000049483045022100dc61b42f24782421bfdff5603d2bb1e440de4f10fd34cf96cffb1982a107a3ce022063d0d6f32fa6f3d661bdfc8dcf68dd3497cec9617afc22abf2827e66667f282201ffffffffa28c6176da057057be84cfa6cbff9d25b2e511aaa4aa25cdbec45927c5e40290000000007b4c79a276a072a26ba067a5658021029fe332bce5ccc040c8a13ef5a4664ae841a7b5d3ee6c3ada144c1f3f9b4e1186814042de381d60c1bdc46efea179988eac9222e4c466ace2e5d050fecaf944e9815c4b2bbc1cbd186f1fd56d733bc4f9d7f00ff8431b19b8f4033ea1e71dae774f70a100af038001eda10001ffffffff041027000000000000302ea22c8020e3878d662c6e70069aff63095bf1ce79e7c24eebfb87e2d3e398314e84e09ba38103120c008203000401cc00e1f50500000000302ea22c80203ee64ec5f134da404710d306dcd9ca54a0139b3c4827b43a988fc6316e6c2a688103120c008203000401cc10c0a537160000002321029fe332bce5ccc040c8a13ef5a4664ae841a7b5d3ee6c3ada144c1f3f9b4e1186ac00000000000000004f6a4c4ced417a89bc0758faa42605eaa9777388a40d3f46b25a13db5722bdeefb21b061d10221029fe332bce5ccc040c8a13ef5a4664ae841a7b5d3ee6c3ada144c1f3f9b4e118600e1f5050000000000000000c90b00000000000000000000000000
+
+error code: -25
+error message:
+```
+
+[23-Apr-19 10:18 PM] TonyL#3577
+Hmm probably it's consensus problems, my bets creation transactions stuck in mempool, have `"connections": 1` and such ```2019-04-23 22:14:29 connect() to [2a04:2180:0:2::29]:42217 failed after select(): Permission denied (13)
+2019-04-23 22:15:35 connect() to [64:ff9b::3441:3a67]:42217 failed after select(): Connection refused (111)
+2019-04-23 22:15:47 connect() to [64:ff9b::4e2f:c492]:42217 failed after select(): Connection refused (111)
+2019-04-23 22:16:47 connect() to 185.64.105.111:42217 failed after select(): No route to host (113)
+2019-04-23 22:16:59 connect() to 159.65.134.48:42217 failed after select(): Connection refused (111)
+2019-04-23 22:17:08 connect() to [64:ff9b::5fd5:ee62]:42217 failed after select(): Connection refused (111)
+``` prints in debug.log
+
+[24-Apr-19 05:43 AM] jl777c#5810
+it could be that with different versions with different validations, there are consensus conflicts
+
+[24-Apr-19 05:44 AM] jl777c#5810
+maybe it is good for now to just always allow CC tx, eg. validation returns true but just have error messages instead of returning false
+
+[24-Apr-19 05:44 AM] jl777c#5810
+when all the new tx are working without error messages, then we spawn a new chain with all the validation active
+
+[24-Apr-19 06:00 AM] dimxy#2587
+I ve already guessed about just logging😀
+
+[24-Apr-19 07:49 AM] dimxy#2587
+I found  what validation error was with that txn  02d161b021fbeebd2257db135ab2463f0da4887377a9ea0526a4fa5807bc897a .
+Actually I implemented a validation rule when bettx is checked if its normal inputs are really signed with the pubkey in the opret.
+The idea was not to allow to do bets for others.
+But if a wallet has several privkeys it might cause this rule violation.
+Is this check useful?
+(I think I need also to check this also at the creation of bet txns to prevent validation errors, if to do this at all. And the problem is we cannot add normal vins for the specified pk, AddNormalinputs func always adds vins for any available privkey in the wallet)
+
+[24-Apr-19 07:52 AM] jl777c#5810
+maybe change to adding just inputs from the same -pubkey?
+
+[24-Apr-19 07:55 AM] dimxy#2587
+for this we need to change AddNormalinputs (currently it does not use the pubkey param)
+
+[24-Apr-19 07:57 AM] jl777c#5810
+yes, maybe make an optional parameter that allows this
+
+[24-Apr-19 07:58 AM] jl777c#5810
+or maybe we dont care who is funding things?
+
+[24-Apr-19 08:05 AM] dimxy#2587
+ok, maybe for now it is okay to postpone this issue.
+And I had the similar one for tokens: in token creation tx there is also a pubkey who created it. I thought it is good to check if token creation txn's normal inputs are really signed with the pk in the opret (to be able to trust that the token is really created with this pubkey)
+
+[24-Apr-19 08:21 AM] jl777c#5810
+the pubkey in the opreturn signifies who owns it
+
+[24-Apr-19 08:22 AM] jl777c#5810
+it seems ok to create a token on behalf of someone else
+
+[24-Apr-19 08:42 AM] dimxy#2587
+ok,
+(but I thought it could be a way of cheating with tokens. As tokens are issued with some pubkey token users should trust this pubkey. So they probably want to be sure that the token was really issued with this pk. What if someone tries to create a fake token and puts in the opret a well-known pk which everybody trusts?)
+
+[24-Apr-19 08:43 AM] jl777c#5810
+but then wouldnt the token be owned by that trusted pubkey?
+
+[24-Apr-19 08:43 AM] jl777c#5810
+maybe make sure at least one vin is signed by the same pubkey?
+
+[24-Apr-19 08:49 AM] dimxy#2587
+yes, if at least one input is signed with the pubkey it would prove the ownership.
+
+[24-Apr-19 02:38 PM] TonyL#3577
+Technically the web-interface works now - have graph, showing balance, possible to open position, displaying opened postions with possibility to add leverage or cashout and also possible to check closed positions history
+Only problem is that it's super ugly now 😃
+
+[24-Apr-19 02:44 PM] dimxy#2587
+I'reviewing the notes from prices.cpp. It states:
+ 'In order to allow finding the right costbasis, for long bets the maximum price between the correlated and smoothed price is needed over the first day after the bet. For short bets, the minimum price is needed.'
+So this is going to be corrected (as we discussed earlier that costbasis is max (or min) for only green line for 24h)?
+
+{Reactions}
+🤕 
+
+[24-Apr-19 03:29 PM] jl777c#5810
+change the notes
+
+[24-Apr-19 03:29 PM] jl777c#5810
+only use smoothed prices
+
+[24-Apr-19 03:59 PM] dimxy#2587
+I'm thinking about adding funds to bets.
+To calculate profits for a bet (without any added funds) at some moment we need a costbasis which is actually price value for the moment of position opening (calculated with some algo). Plus we need a price at this given moment. So profits(loss) = position*(price-costbasis)/costbasis*leverage
+What if the bettor added some funds? Actually it means the bettor continues to believe in the price's trend.
+But as he added funds later, for this addition profits/loss would be at lower proportion (it would allow to save from rekt).
+So why not to calculate its own costbasis for added fund, just at the height when the fund was added? 
+And the leverage should be the same, the bettor cannot change it (otherwise it would be just a new bet)
+
+Example:
+init position=1000, lev=10, costbasis=100, at some moment price=90 (the price decrease was linear)
+at this moment profits=1000*10*(90-100)/100 = -1000 (complete loss)
+if a fund of 1000 was added in the middle of the period, its costbasis = 95
+for the added funds for the same moment profits = 1000 * 10 (90-95)/95 = -526
+total profits = -1526
+but total bet now = 2000, so we are not rekt!
+
+[24-Apr-19 04:10 PM] TonyL#3577
+`So why not to calculate its own costbasis for added fund, just at the height when the fund was added? ` - so added funds will be like a positions inside position which accumulating to single rekt price 
+Imo there should be clear formula for rektprice movment depends of margin (aka funding) adding/taking. (added margin is single accumulated number actually) - such separation on each added funding looks like a over complication.
+After position opening rekt price (price when position will be liquidated) is X, when added leverage liquadtion price is X1, when added more - liquidation price is X2
+
+[24-Apr-19 04:10 PM] TonyL#3577
+Clue is to find correct formula for liqudation price calculation depends of margin amount
+
+[24-Apr-19 04:15 PM] TonyL#3577
+Init position=1000, lev=10, costbasis 100: your liqudation price is ~90 (10% spike = 100% loss with 10x leverage)
+Let's say 100 funds added to position, now you have 1100 as position amount (your funds placed into position) and initial 9000 as leveraged funds (funds added as margin so werent leveraged), so now actual leverage is less (not 1000/9000 but 1100/9000) and rekt price is moving
+
+[24-Apr-19 04:17 PM] TonyL#3577
+Marginal trading working approx like this in my understanding
+
+[24-Apr-19 04:24 PM] dimxy#2587
+yes for your example I calculated the liquidation price = 89,5
+that is what adding funds allows to achieve - to add cover from losses.
+
+[24-Apr-19 04:37 PM] jl777c#5810
+yes, clearly it needs to be a deterministic formula. I think what you describe is certainly better than my initial version
+
+[24-Apr-19 04:38 PM] jl777c#5810
+maybe we can model it with a few examples and see how it works, if it seems reasonable, implement it and try it out
+
+[24-Apr-19 04:39 PM] jl777c#5810
+or if it is easy to implement it, just implement it and see if it allows for any way to cheat or have some system that can make money more than 50% of the time. We assume that price predictions without future knowledge is a 50% accuracy thing to do
+
+{Reactions}
+👍 
+
+[24-Apr-19 05:10 PM] TonyL#3577
+http://18.219.69.40:777/ made kinda open demo of trading interface 😃 
+So anybody can place bet for my wallet (if you will try - please use not huge amounts to not drain it fast)
+Synthetic input just like a `BTC_USD, 1` and etc, without `"`
+

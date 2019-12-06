@@ -1,0 +1,331 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[06-Apr-19 11:02 AM] Alright#0419
+how?
+
+[06-Apr-19 11:03 AM] ComputerGenie 👴🏼📢#7004
+amt * 10^-8
+
+[06-Apr-19 11:03 AM] Alright#0419
+that's the same thing I posted originally
+
+[06-Apr-19 11:03 AM] dukeleto#7326
+satoshis is multiplying by 10^8, not 10^-8
+
+[06-Apr-19 11:04 AM] dukeleto#7326
+and depending on int32 and int64 on your platform and your language, bad things could happen
+
+[06-Apr-19 11:04 AM] dukeleto#7326
+```
+my $satoshis = 100_000_000;
+my $amount   = int(12.5*$satoshis);
+```
+
+[06-Apr-19 11:04 AM] dukeleto#7326
+is what my hush_supply script does, but 12.5 keeps the value kind of small. If you used a large value, that code above might not be correct because of overflow of int32. fucking life is messy
+
+[06-Apr-19 11:05 AM] dukeleto#7326
+Python int() and Perl int() might not have same rounding, and also Perl does a lot of work to use bigints behind the scene, python doesn't
+
+[06-Apr-19 11:05 AM] dukeleto#7326
+99 ways to cut yourself
+
+[06-Apr-19 11:06 AM] ComputerGenie 👴🏼📢#7004
+does py not have a simple math pow function?
+
+[06-Apr-19 11:06 AM] ComputerGenie 👴🏼📢#7004
+like the shit they teach in 5th grade?
+
+[06-Apr-19 11:08 AM] dukeleto#7326
+it's a C builtin, most langs have it, pretty sure python does
+
+[06-Apr-19 11:08 AM] dukeleto#7326
+most langs just bind to `pow()` from C
+
+[06-Apr-19 11:09 AM] ComputerGenie 👴🏼📢#7004
+```The ** operator in Python is used to raise the number on the left to the power of the exponent of the right. That is, in the expression 5 ** 3, 5 is being raised to the 3rd power. ```
+
+[06-Apr-19 11:13 AM] ComputerGenie 👴🏼📢#7004
+would seem to me that round(x,8) and then \*\* to move the decimal out?
+
+[06-Apr-19 11:16 AM] dukeleto#7326
+my Perl code above just works
+
+[06-Apr-19 11:16 AM] dukeleto#7326
+this is why I just fucking write Perl while others are figuring out how their languages work :troll_king:
+
+[06-Apr-19 11:16 AM] Alright#0419
+added valueSat to listunspent
+
+[06-Apr-19 11:17 AM] dukeleto#7326
+Abomination!
+
+[06-Apr-19 11:17 AM] Alright#0419
+why?
+
+[06-Apr-19 11:17 AM] dukeleto#7326
+what is the code diff?
+
+[06-Apr-19 11:19 AM] Alright#0419
+1 line
+
+[06-Apr-19 11:21 AM] Alright#0419
+https://github.com/jl777/komodo/blob/e2ddb727d4cf22f4305625ca4774bd907202da0f/src/wallet/rpcwallet.cpp#L2928
+```
+ entry.push_back(Pair("amount", ValueFromAmount(nValue)));
+ entry.push_back(Pair("valueSat", nValue));
+```
+
+{Embed}
+https://github.com/jl777/komodo/blob/e2ddb727d4cf22f4305625ca4774bd907202da0f/src/wallet/rpcwallet.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[06-Apr-19 11:22 AM] ComputerGenie 👴🏼📢#7004
+since you're both here...
+Is there a specific chain param that determines if coinbase maturity applies to an assetchain or not?
+
+[06-Apr-19 11:22 AM] Alright#0419
+ac_eras will be 100
+
+[06-Apr-19 11:22 AM] Alright#0419
+else 1
+
+[06-Apr-19 11:23 AM] Alright#0419
+needs to change to it's own param IMO
+
+[06-Apr-19 11:23 AM] dukeleto#7326
+@Alright i don't like the name
+
+[06-Apr-19 11:23 AM] Alright#0419
+and default 1 before any real ac_era chains are made
+
+[06-Apr-19 11:23 AM] dukeleto#7326
+amountSat would be better, `amount` and `amountSat`
+
+[06-Apr-19 11:23 AM] ComputerGenie 👴🏼📢#7004
+HUSH solo is doa because of maturity
+
+[06-Apr-19 11:23 AM] dukeleto#7326
+@ComputerGenie 👴🏼📢 tell me more
+
+[06-Apr-19 11:23 AM] dukeleto#7326
+i am willing to just do ac_founders=1 to simplify life
+
+[06-Apr-19 11:23 AM] dukeleto#7326
+I like the idea of ac_founders=500, but it's causing so much issues
+
+[06-Apr-19 11:24 AM] Alright#0419
+what issue?
+
+[06-Apr-19 11:24 AM] dukeleto#7326
+making every pool work correctly with it
+
+[06-Apr-19 11:24 AM] Alright#0419
+ac_founders has nothing to do with coinbase maturity
+
+[06-Apr-19 11:24 AM] dukeleto#7326
+you are probably right, was just mentioning it
+
+[06-Apr-19 11:24 AM] dukeleto#7326
+@Alright if you change to `amountSat`, I am 👍 to simplify peoples lives
+
+[06-Apr-19 11:25 AM] ComputerGenie 👴🏼📢#7004
+the CPU overhead of trying to backlog cb maturity and then send out z txes can grow insane
+
+[06-Apr-19 11:25 AM] dukeleto#7326
+`amount` and `amountSat`
+
+[06-Apr-19 11:25 AM] Alright#0419
+no idea why it's amount here to begin with
+
+[06-Apr-19 11:25 AM] Alright#0419
+everywhere else it's `value`
+
+[06-Apr-19 11:25 AM] dukeleto#7326
+internals lingo is different than RPC output lingo
+
+[06-Apr-19 11:25 AM] Alright#0419
+but sure, I'll PR with amountSat
+
+[06-Apr-19 11:25 AM] dukeleto#7326
+what do most RPCs output the key as?
+
+[06-Apr-19 11:26 AM] dukeleto#7326
+it seems more intuitive to have both keys be named similar, they are the same value, in 2 different formats
+
+[06-Apr-19 11:27 AM] Alright#0419
+I've always seen `value` and `valueSat`/`valueZat`
+
+[06-Apr-19 11:27 AM] Alright#0419
+can't think of any place I've seen `amount`
+
+[06-Apr-19 11:27 AM] Alright#0419
+except here
+
+[06-Apr-19 11:27 AM] dukeleto#7326
+listunspent is pretty old
+
+[06-Apr-19 11:29 AM] Alright#0419
+I have a bit of disdain for ZEC for using valueZat
+
+[06-Apr-19 11:29 AM] Alright#0419
+just randomly valueZat in some places
+
+[06-Apr-19 11:29 AM] Alright#0419
+when it has nothing to do with zkSNARKs
+
+[06-Apr-19 11:31 AM] dukeleto#7326
+they call them "zatoshis"
+
+[06-Apr-19 11:31 AM] dukeleto#7326
+that is why
+
+[06-Apr-19 11:32 AM] ComputerGenie 👴🏼📢#7004
+@dukeleto I can't see any way to do a solo pool that pays in z and has 100 block maturity that isn't going to irk ops, users, or both
+
+[06-Apr-19 11:33 AM] dukeleto#7326
+@ComputerGenie 👴🏼📢 never even thought about solo + zaddr payouts
+
+[06-Apr-19 11:34 AM] ComputerGenie 👴🏼📢#7004
+oh, you wanted the z for regular pools?
+
+[06-Apr-19 11:35 AM] dukeleto#7326
+that is what I originally meant, Hush will give bounties to the first pools to enable zaddr payouts
+
+[06-Apr-19 11:35 AM] Alright#0419
+there is no good reason to use coinbase maturity 100
+
+[06-Apr-19 11:36 AM] dukeleto#7326
+i would pay a special bounty for solo zaddr payout, sounds cool and nontrivial
+
+[06-Apr-19 11:36 AM] dukeleto#7326
+coinbase maturity 100 is hardcoded in KMD, but HUSH is a source code fork of KMD *and* an asset chain, so I could change that for HUSH, it's on the table
+
+[06-Apr-19 11:36 AM] dukeleto#7326
+but that table needs to be prepared to eat, very soon
+
+[06-Apr-19 11:37 AM] Alright#0419
+I'll include it in the PR? 😂
+
+[06-Apr-19 11:37 AM] Alright#0419
+also 1 line
+
+[06-Apr-19 11:37 AM] dukeleto#7326
+it's the implications, lol
+
+[06-Apr-19 11:37 AM] ComputerGenie 👴🏼📢#7004
+yes, it's hard coded, but there's a way around it; PIRATE doesn't have that issue 😛
+
+[06-Apr-19 11:37 AM] dukeleto#7326
+changing supply of BTC is a one line change, too
+
+[06-Apr-19 11:39 AM] ComputerGenie 👴🏼📢#7004
+`but that table needs to be prepared to eat, very soon`
+well, I've been throwing forks and knives at the pools for 2 weeks now 😛
+
+[06-Apr-19 11:40 AM] ComputerGenie 👴🏼📢#7004
+even without z, maturity of 100 sux for solo pools
+
+[06-Apr-19 11:40 AM] Alright#0419
+https://github.com/jl777/komodo/blob/80e74e0c8b472822d57b527d0b87d25de583d1e9/src/komodo_utils.h#L1938
+change to ` if ( strcmp(ASSETCHAINS_SYMBOL,"VRSC") != 0 )`
+
+{Embed}
+https://github.com/jl777/komodo/blob/80e74e0c8b472822d57b527d0b87d25de583d1e9/src/komodo_utils.h
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[06-Apr-19 11:41 AM] Alright#0419
+@dukeleto are you going to be hardcoding HUSH unique things?
+
+[06-Apr-19 11:42 AM] Alright#0419
+simplest way to keep rebases clean is to add anything specific as 
+`if ( strcmp(ASSETCHAINS_SYMBOL,"HUSH") == 0 )`
+
+[06-Apr-19 11:42 AM] Alright#0419
+or something like this
+
+[06-Apr-19 11:44 AM] Alright#0419
+or better yet, make ac_params, so we can all use any of it 🙏
+
+[06-Apr-19 11:45 AM] jl777c#5810
+I will accept a pull request for -ac_cbmaturity
+
+[06-Apr-19 11:47 AM] ComputerGenie 👴🏼📢#7004
+@dukeleto 👆🏽 You'd be my favorite HUSH dev :troll:
+
+[06-Apr-19 11:56 AM] dukeleto#7326
+@Alright HUSH is a source code fork AND asset chain just like the venerable VRSC, which allows us to retain control of our code in case we ever want  to make different decisions than KMD
+
+[06-Apr-19 11:56 AM] dukeleto#7326
+also, control over branch structure
+
+[06-Apr-19 11:56 AM] dukeleto#7326
+By default, I send everything upstream to KMD
+
+[06-Apr-19 11:56 AM] Alright#0419
+Yea I understand
+
+[06-Apr-19 11:57 AM] dukeleto#7326
+and I try to make it all as agnostic as possible
+
+[06-Apr-19 11:57 AM] Alright#0419
+but like SAFE for example would hard code things
+
+[06-Apr-19 11:57 AM] Alright#0419
+not understanding that they just broke 10 other things
+
+[06-Apr-19 11:57 AM] dukeleto#7326
+i made -clientname so that Hush didn't have to hardcode a different one
+
+[06-Apr-19 11:57 AM] Alright#0419
+VRSC did it cleanly by using VRSC specific exceptions for the most part
+
+[06-Apr-19 11:57 AM] dukeleto#7326
+and now every coin can choose their own and each node can too, without modifying source code
+
+[06-Apr-19 11:57 AM] dukeleto#7326
+there are no HUSH specific code in the full node, yet
+
+[06-Apr-19 11:58 AM] dukeleto#7326
+HushList + Sapling will probably have some RPC support for advanced features
+
+[06-Apr-19 11:58 AM] ComputerGenie 👴🏼📢#7004
+_thinks that unsafe is a bad example because duke is better even when he's asleep than that whole crew  is ever_
+
+[06-Apr-19 11:58 AM] dukeleto#7326
+Hush will eventually deviate from KMD, but slowly
+
+[06-Apr-19 11:58 AM] dukeleto#7326
+and KMD might want all/most Hush changes ever makes. But the structure allows Hush to *keep* full control of our destiny
+
+[06-Apr-19 11:59 AM] dukeleto#7326
+it's all about finding the middle path
+
+[06-Apr-19 11:59 AM] dukeleto#7326
+ZEC as our upstream is one side of the spectrum
+
+[06-Apr-19 11:59 AM] dukeleto#7326
+our own HUSH codebase the other
+
+[06-Apr-19 11:59 AM] dukeleto#7326
+source fork + asset chain is in the middle and has the best of both worlds
+
+[06-Apr-19 11:59 AM] dukeleto#7326
+jl777 is my upstream
+
+[06-Apr-19 12:00 PM] dukeleto#7326
+or at least will be very soon
+
+[06-Apr-19 12:00 PM] dukeleto#7326
+and since I submit so many patches to jl777, I am pulling in lots of my own work I send to KMD for the new HUSH
+

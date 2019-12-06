@@ -1,0 +1,392 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[23-Aug-19 09:53 AM] dukeleto#7326
+but I must have missed something, because even `zindex` is off, it messed my node up, to update to my `duke` branch
+
+[23-Aug-19 09:55 AM] blackjok3r#3181
+👍
+
+[23-Aug-19 10:02 AM] dukeleto#7326
+@blackjok3r by explaining it to you, i might have realized what it is
+
+[23-Aug-19 10:03 AM] dukeleto#7326
+but maybe not
+
+[23-Aug-19 10:04 AM] dukeleto#7326
+i think i need to check `fZindex` in more places
+
+[23-Aug-19 10:04 AM] blackjok3r#3181
+thats usually how ti works man
+
+[23-Aug-19 10:04 AM] dukeleto#7326
+everything works fine when `zindex` is enabled
+
+[23-Aug-19 10:04 AM] dukeleto#7326
+but updating an existing node, and leaving `zindex` off, breaks the index
+
+[23-Aug-19 10:04 AM] blackjok3r#3181
+yes
+
+[23-Aug-19 10:05 AM] blackjok3r#3181
+because you nede to make sure that it skips the READWRITE
+
+[23-Aug-19 10:05 AM] blackjok3r#3181
+other wise it overflows
+
+[23-Aug-19 10:05 AM] dukeleto#7326
+hmm, but i did!
+
+[23-Aug-19 10:05 AM] blackjok3r#3181
+I didnt  look at the code yet 😅
+
+[23-Aug-19 10:05 AM] dukeleto#7326
+```
+        // These values only serialized when -zindex enabled
+        if(fZindex) {
+            READWRITE(VARINT(nShieldedTx));
+            READWRITE(VARINT(nShieldingTx));
+            READWRITE(VARINT(nDeshieldingTx));
+            READWRITE(VARINT(nFullyShieldedTx));
+
+            READWRITE(VARINT(nShieldedPayments));
+            READWRITE(VARINT(nShieldingPayments));
+            READWRITE(VARINT(nDeshieldingPayments));
+            READWRITE(VARINT(nFullyShieldedPayments));
+
+            READWRITE(VARINT(nNotarizations));
+        }
+```
+
+[23-Aug-19 10:06 AM] dukeleto#7326
+@blackjok3r https://github.com/MyHush/hush3/blob/duke/src/chain.h#L622
+
+{Embed}
+https://github.com/MyHush/hush3/blob/duke/src/chain.h
+MyHush/hush3
+HUSH fork of KMD. Contribute to MyHush/hush3 development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/26923909?s=400&v=4
+
+[23-Aug-19 10:07 AM] dukeleto#7326
+maybe fZindex is only the default, and I need to do GetBoolArg("-zindex"), but that doesn't quite explain the bug either
+
+[23-Aug-19 10:08 AM] dukeleto#7326
+in my SetNull(), maybe I need `if(fZindex)` there too
+
+[23-Aug-19 10:08 AM] dukeleto#7326
+maybe I am setting values which don't have serialization methods and that blows up?
+
+[23-Aug-19 10:10 AM] blackjok3r#3181
+if (s.GetType() & SER_DISK)
+
+[23-Aug-19 10:10 AM] blackjok3r#3181
+try sticking that in the if with fZindex
+
+[23-Aug-19 10:19 AM] dukeleto#7326
+@blackjok3r what is this fine black magic ?
+
+[23-Aug-19 10:20 AM] dukeleto#7326
+yes, you seem to be right, i see other things doing that
+
+[23-Aug-19 10:21 AM] dukeleto#7326
+```
+        // Only read/write nSproutValue if the client version used to create
+        // this index was storing them.
+        if ((s.GetType() & SER_DISK) && (nVersion >= SPROUT_VALUE_VERSION)) {
+            READWRITE(nSproutValue);
+        }
+```
+
+[23-Aug-19 10:21 AM] dukeleto#7326
+this calls for some ☕
+
+[23-Aug-19 10:22 AM] blackjok3r#3181
+trial and eror my freind... no use you needing to spend all that time working it out too
+
+[23-Aug-19 11:20 AM] dukeleto#7326
+@blackjok3r thanks, I really appreciate it. I hit that bug at the very end of the night and it was a bummer. This really helps! I saw that SER_DISK stuff but I wasn't putting together that I needed it
+
+[23-Aug-19 11:22 AM] blackjok3r#3181
+Yeah I messed with that for hours until i worked it out...
+
+[23-Aug-19 11:22 AM] blackjok3r#3181
+no problem 🙂
+
+[23-Aug-19 11:22 AM] dukeleto#7326
+who is the official KMD OS X bug chaser? https://github.com/jl777/komodo/issues/1689
+
+{Embed}
+https://github.com/jl777/komodo/issues/1689
+Compile error on FSM + mac · Issue #1689 · jl777/komodo
+This happened when I merged ebc5339 into Hush cc/gateways.cpp: In function &#39;std::__cxx11::string GatewaysClaim(uint64_t, uint256, std::__cxx11::string, uint256, CPubKey, int64_t)&#39;: ...
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[23-Aug-19 11:23 AM] blackjok3r#3181
+@Alright  :troll:
+
+[23-Aug-19 11:23 AM] dukeleto#7326
+and maybe @TonyL too, I heard he likes to debug stuff
+
+[23-Aug-19 11:23 AM] Alright#0419
+Yea I got cha
+
+[23-Aug-19 11:24 AM] Alright#0419
+bought a freaking mac the last time this happened 😫
+
+[23-Aug-19 11:28 AM] Alright#0419
+@jl777c https://github.com/jl777/komodo/blob/ebc5339fe22062cf47ea070609609f31ef68b77a/src/cc/gateways.cpp#L1048
+this needs to return something by default
+
+{Embed}
+https://github.com/jl777/komodo/blob/ebc5339fe22062cf47ea070609609f31ef68b77a/src/cc/gateways.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[23-Aug-19 11:28 AM] Alright#0419
+if it doesn't hit any of those ifs
+
+[23-Aug-19 11:30 AM] Alright#0419
+@dukeleto ^
+
+[23-Aug-19 11:30 AM] jl777c#5810
+Gateways is for @Mihailo to fix
+
+[23-Aug-19 12:02 PM] dukeleto#7326
+@Alright i am merely a messenger, I will wait for the fix from @Mihailo
+
+[23-Aug-19 01:17 PM] Mihailo#5902
+@Alright Ah, forgot to return the error like on other RPCs. If it is urgent, please copy else part from other rpc, if not I'll fix it as soon as I'm back(monday).
+
+[23-Aug-19 07:25 PM] dukeleto#7326
+https://twitter.com/dukeleto/status/1164981685991157760
+
+{Embed}
+Duke Leto (@dukeleto)
+https://twitter.com/dukeleto/status/1164981685991157760
+In porting getchaintxstats RPC to various other coins + extending it to study shielded transactions+payments, I saw a chance to push a tiny improvement back to $BTC upstream.
+
+There are many like it, but this one is mine: My first Bitcoin Pull Request
+
+https://t.co/v7Q8Y9C...
+https://pbs.twimg.com/media/ECrYoWaXoAAEgK8.jpg:large
+Twitter
+
+[24-Aug-19 09:04 AM] grewalsatinder#9653
+which komodo branch should I try to compile on mac 🤔
+
+[24-Aug-19 09:43 AM] grewalsatinder#9653
+doing compilation of jl777/komodo branch beta results in:
+```configure: error: Cannot enable RELRO```
+
+[24-Aug-19 09:43 AM] grewalsatinder#9653
+I also tried changing to gcc to gcc-9 but that also ended up with same error
+
+[24-Aug-19 09:43 AM] grewalsatinder#9653
+tried the same few days ago, and then moved on to other work.
+
+[24-Aug-19 09:43 AM] grewalsatinder#9653
+didn't try solving it.
+
+[24-Aug-19 09:49 AM] grewalsatinder#9653
+@ns408
+
+[24-Aug-19 09:51 AM] phm87#7395
+@grewalsatinder dukeleto talked about this pb yesterday on this channel. He gave ideas how to fix it
+
+[24-Aug-19 09:52 AM] grewalsatinder#9653
+cool, checking a bit of channel history then 🙂 thanks
+
+[24-Aug-19 09:54 AM] grewalsatinder#9653
+could find the link to github issue for FMS mac branch, but not a solution 🤔
+
+[24-Aug-19 09:54 AM] grewalsatinder#9653
+gonna try FMS on mac
+
+[24-Aug-19 10:08 AM] ns408#8889
+Ack @grewalsatinder
+
+[24-Aug-19 10:08 AM] grewalsatinder#9653
+thanks mate 🙂
+
+[24-Aug-19 10:08 AM] grewalsatinder#9653
+FMS branch still compiling
+
+[24-Aug-19 10:08 AM] ns408#8889
+On my way to home. Will check it once home. And I gotta make it work with brew directly.
+
+[24-Aug-19 10:08 AM] grewalsatinder#9653
+haven't reach the point where it errors
+
+[24-Aug-19 10:09 AM] grewalsatinder#9653
+could most probably be also my mac's  environment setup issue 🤔 
+don't know
+
+[24-Aug-19 10:09 AM] grewalsatinder#9653
+@ns408 yep, `brew install komodo` would be awesome!
+
+[24-Aug-19 10:18 AM] grewalsatinder#9653
+same result for FSM. that RELRO error
+
+[24-Aug-19 11:56 AM] phm87#7395
+@grewalsatinder I think that the code should be adapted as explained by alright and dukeleto. We can wait for @Mihailo (gateway) fix or we can try to do sth but I don t have any mac so I am notable to test my random changes
+
+[24-Aug-19 11:57 AM] phm87#7395
+https://discordapp.com/channels/412898016371015680/463445317136809984/614420709384388648
+
+[24-Aug-19 11:58 AM] grewalsatinder#9653
+okay mate 🙂 👍
+
+[24-Aug-19 12:58 PM] grewalsatinder#9653
+this python example to create bitcoin address is done in go too:
+https://github.com/satindergrewal/btc-practice/blob/master/gareth_file04.py
+https://github.com/satindergrewal/btc-practice/blob/master/btcbook_addr_03.go
+
+[24-Aug-19 12:59 PM] grewalsatinder#9653
+the friend helping me with understanding it all helped with it.
+
+[24-Aug-19 01:00 PM] grewalsatinder#9653
+It's following the Mastering Bitcoin book examples and other sources related to bitcoin.
+
+[24-Aug-19 01:00 PM] grewalsatinder#9653
+good thing is that with this I don't need to rely on packages/libraries like btcsuite
+
+[24-Aug-19 01:01 PM] grewalsatinder#9653
+it's all go language's own libraries
+
+[24-Aug-19 01:01 PM] grewalsatinder#9653
+and much simpler and minimal stuff to get started with.
+
+[24-Aug-19 01:03 PM] grewalsatinder#9653
+I will try to make documentation on this learning part with help of my friend also explaining the maths part, if I could.
+But at least this is great to practice and understand the most basic stuff.
+
+[24-Aug-19 01:04 PM] grewalsatinder#9653
+couldn't have done so far without his help 🙂
+
+[24-Aug-19 01:32 PM] dukeleto#7326
+https://twitter.com/rdegges/status/1164732840447217664
+
+{Embed}
+Randall Degges (@rdegges)
+https://twitter.com/rdegges/status/1164732840447217664
+Oh boy. Hah.
+Retweets
+763
+Likes
+1981
+https://pbs.twimg.com/media/ECn2V6JXYAAF3x4.jpg:large
+Twitter
+
+[24-Aug-19 01:33 PM] dukeleto#7326
+@grewalsatinder RELRO error means you are using build.sh instead of build-mac.sh
+
+[24-Aug-19 01:33 PM] dukeleto#7326
+FSM also currently has a compile error for mac on it
+
+[24-Aug-19 01:33 PM] dukeleto#7326
+@Mihailo promised to fix soon 😉
+
+[24-Aug-19 01:34 PM] dukeleto#7326
+@Mihailo maybe next time you test the code on a mac first, so we don't spam you so much 😉
+
+[24-Aug-19 01:34 PM] grewalsatinder#9653
+you are correct @dukeleto
+
+[24-Aug-19 01:34 PM] dukeleto#7326
+Yes, I usually hit mac bugs first in KMD land
+
+[24-Aug-19 01:34 PM] grewalsatinder#9653
+I don't understand that tweet image joke
+
+[24-Aug-19 01:34 PM] grewalsatinder#9653
+is that in relation to a reply to me?
+
+[24-Aug-19 01:34 PM] dukeleto#7326
+it's a programming joke
+
+[24-Aug-19 01:34 PM] grewalsatinder#9653
+okay
+
+[24-Aug-19 01:34 PM] dukeleto#7326
+if you don't get it, you probably never worked in corporate jobs
+
+[24-Aug-19 01:35 PM] grewalsatinder#9653
+I hated working for corporate jobs.
+
+[24-Aug-19 01:35 PM] dukeleto#7326
+https://en.wikipedia.org/wiki/SOLID
+
+{Embed}
+https://en.wikipedia.org/wiki/SOLID
+SOLID
+In object-oriented computer programming, SOLID is a mnemonic acronym for five design principles intended to make software designs more understandable, flexible and maintainable. It is not related to the GRASP software design principles. The principles are a subset of many pri...
+
+[24-Aug-19 01:35 PM] dukeleto#7326
+it's just making fun of corporate 9-5 programming culture
+
+[24-Aug-19 01:35 PM] grewalsatinder#9653
+interesting 🤔 👍
+
+[24-Aug-19 01:36 PM] dukeleto#7326
+add `return("")` to the function with the error and send a PR to kmd if you feel inclined
+
+[24-Aug-19 01:37 PM] dukeleto#7326
+@Mihailo will thank you
+
+[24-Aug-19 01:37 PM] dukeleto#7326
+because surely @Mihailo is sick of me mentioning him about this compile error 😉
+
+[24-Aug-19 01:38 PM] grewalsatinder#9653
+gonna try build mac and try that fix if required.... will update here
+
+[24-Aug-19 01:38 PM] grewalsatinder#9653
+👍
+
+[24-Aug-19 01:42 PM] dukeleto#7326
+what kind of person thinks this is a good idea? https://github.com/jansenmarc/WavesGatewayLTCExample/blob/master/waves_litecoin_gateway/lib/litecoin_integer_converter_service.py
+
+{Embed}
+https://github.com/jansenmarc/WavesGatewayLTCExample/blob/master/waves_litecoin_gateway/lib/litecoin_integer_converter_service.py
+jansenmarc/WavesGatewayLTCExample
+An example connecting the Litecoin blockchain to the Waves platform. - jansenmarc/WavesGatewayLTCExample
+https://avatars0.githubusercontent.com/u/9219148?s=400&v=4
+
+[24-Aug-19 01:42 PM] dukeleto#7326
+a microservice to convert integers, smh
+
+[24-Aug-19 01:43 PM] dukeleto#7326
+I am looking into what it would take to add HUSH to the waves dex
+
+[24-Aug-19 01:43 PM] dukeleto#7326
+that is their LTC example
+
+[24-Aug-19 02:12 PM] grewalsatinder#9653
+nice! compiled with build-mac.sh 😄
+
+[24-Aug-19 02:12 PM] grewalsatinder#9653
+@ns408 @dukeleto
+
+[24-Aug-19 02:12 PM] grewalsatinder#9653
+I think I tried build-mac.sh a week or so ago and that failed too at that time....
+
+[24-Aug-19 02:12 PM] grewalsatinder#9653
+so I tried build.sh and here I'm today....
+
+[24-Aug-19 02:33 PM] dukeleto#7326
+i can't describe how many times I have accidentally run build.sh instead of build-mac.sh
+
+[24-Aug-19 02:33 PM] dukeleto#7326
+which prompted me to angrily make this issue one day: https://github.com/jl777/komodo/issues/1373
+
+{Embed}
+https://github.com/jl777/komodo/issues/1373
+build-mac.sh does not support --disable-tests · Issue #1373 · jl...
+I am a fan of not having build-mac.sh at all and making build.sh smarter, but that is a different issue. build-mac.sh should support the same options, like --disable-tests, as build.sh, if it exists.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+

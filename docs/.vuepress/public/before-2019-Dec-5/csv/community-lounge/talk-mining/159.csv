@@ -1,0 +1,161 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"455741312273219595";"jl777c#5810";"07-Aug-19 07:22 PM";"so smooth it out a bit?";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:23 PM";"make it avg past 4 targets";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:27 PM";"it might need to be made softer response:";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:29 PM";"use this";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 07:29 PM";"what do i do if (tipdiff - T) is negative?";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:29 PM";"```bnTarget = prevTarget*(T+(tipdiff-T) * zexp((tipdiff+1)/2) )/tipdiff```";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:30 PM";"it's supposed to be OK";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:30 PM";"use previous target, and that +1 is to prevent  1/2 from being zero";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 07:30 PM";"multiplying a arith_uint256 by negative number -> bad things will happen";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:31 PM";"break it apart?";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:31 PM";"use exp twice";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 07:31 PM";"the zexp is not the issue";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:32 PM";"you can subtract the negative instead of multiplying it";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 07:32 PM";"oh sorry, there is a T+(tipdiff -T)";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 07:32 PM";"that can never go below 0";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:32 PM";"my notes say this is the version that does not go below zero if I divide by that 2";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:35 PM";"```bnTarget = (prevT*T + prevT*st*zexp(max(2, st))/2 - prevT*T*zexp(max(2, st))/2 ) ) / st```";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 07:36 PM";"but we know tipdiff is always 4 or more";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 07:36 PM";"i think we are ok with the original simpler one";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:36 PM";"why is tipdiff 4 or more?";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:37 PM";"here it should be  nTime - TS[0]";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 07:37 PM";"oh it could be 1, maybe we just set it to 4  if below 4?";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 07:37 PM";"also T+(tipdiff-T) isnt that just tipdiff?";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:37 PM";"no, this thing will jump around a lot each block.....";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:38 PM";"no 1st T does not have the exp";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 07:38 PM";"```bnTarget = prevTarget*(T+(tipdiff-T) * zexp((tipdiff+1)/2) )/tipdiff```";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 07:39 PM";"```(T+(tipdiff-T) * zexp((tipdiff+1)/2) )```";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:39 PM";"that's correct....exp is only on 2nd T";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 07:39 PM";"that looks like a scalar value";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:40 PM";"i know you don't like the max, but this is what I'd do  ```bnTarget = (prevT*T + prevT*st*zexp(max(2, st))/2 - prevT*T*zexp(max(2, st))/2 ) ) / st```";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:40 PM";"what do you mean scalar?";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:40 PM";"negative problem?";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 07:42 PM";"no problem, i can use the new equation. i assume prevT is ct[0], st is tipdiff, then all is well";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:42 PM";"yes";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:45 PM";"RST and this could possibly have an aggressiveness factor that is in proportion to the number of blocks it is getting behind.  In other words the 4 could be a variable based on how far behind it is.";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:47 PM";"In this case, you could change the 2 to a 8  to make it a lot more stable almost like a normal DA and then if blocks start going imporbably fast, you reduce the 8 in proportion to the imprabability, potentially as low as 2.";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:48 PM";"Now, that, finally, is what I think you should do.  If this channel allowed pictures I could show N=2 verses N=8";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:50 PM";"So finally, in the most tortuous way, I'm back to an idea I already had....but I didn;t realize my old ""dynamic"" difficulty algorithms would finally work good by using tipdiff....which KMD will be the first to do. (other than XCG who soon after went defunct from trying too many things at once and the dev leaving)";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 07:50 PM";"by soon, I meant I got a few days of TSA data and they were gone";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:01 PM";"This is my dynamic idea, which goes back to Zcash threads in 2016, and EMA which Jacob Eliosoff discovered in 2017 as a possibility for BCH (that I showed him and Tom Harding was actually a really important thing...otherwise it might have gotten lost)  and TSA (which originated from Andrew Stone who showed it to me in BCH mail list).   By being a DA focal point the ideas come.  So  JL  recognized the ideas were legitimate and actually needed in KMD and very importantly he was to implement them so fast.    I was pushing TSA, but everyone said it was too difficult to implement.  It's getting close to a year old, and 2  years old going back to andrew.   A new thing here is that my dynmic ideas were to just notice higher hashrate and respond accordingly.  But here we're talking about responding enough to actively fix emission rate as integral to part of detecting and responding to higher hashrate, so it's symmetry is forced more locally.";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:05 PM";"starting first test, likely will have some calc issues, and also i just start at height 64 to fit into existing structure. i know it can start at height 5";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:12 PM";"Actually, this EMA is taking 15 blocks to respond to 1000x";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:13 PM";"i must have the math wrong as it isnt increasing diff";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:13 PM";"63,1565208559,20039dd8,039dd800000000000000000000000000,00000000000000000000000000000000,4.2,4.3,26
+64,1565208587,2009b450,09b45000000000000000000000000000,00000000000000000000000000000000,1.6,4.1,28
+65,1565208598,200cce78,0cce7800000000000000000000000000,00000000000000000000000000000000,1.2,3.7,11
+66,1565208624,200ee4f8,0ee4f800000000000000000000000000,00000000000000000000000000000000,1.0,3.4,26
+67,1565208636,2000fb7c,00fb7c00000000000000000000000000,00000000000000000000000000000000,15.3,3.5,12
+68,1565208638,2006e01c,06e01c00000000000000000000000000,00000000000000000000000000000000,2.2,3.4,2
+69,1565208641,200c1b1c,0c1b1c00000000000000000000000000,00000000000000000000000000000000,1.2,3.2,3
+70,1565208656,200ea344,0ea34400000000000000000000000000,00000000000000000000000000000000,1.0,2.9,15
+71,1565208678,20030ff4,030ff400000000000000000000000000,00000000000000000000000000000000,4.9,2.9,22
+72,1565208695,200ed9a0,0ed9a000000000000000000000000000,00000000000000000000000000000000,1.0,2.7,17
+73,1565208711,2008e970,08e97000000000000000000000000000,00000000000000000000000000000000,1.7,2.6,16
+74,1565208713,200406cc,0406cc00000000000000000000000000,00000000000000000000000000000000,3.7,2.6,2
+75,1565208720,2008e0cc,08e0cc00000000000000000000000000,00000000000000000000000000000000,1.7,2.5,7
+76,1565208725,20076d50,076d5000000000000000000000000000,00000000000000000000000000000000,2.0,2.4,5
+77,1565208734,2004dbfc,04dbfc00000000000000000000000000,00000000000000000000000000000000,3.1,2.4,9
+78,1565208754,2003bad0,03bad000000000000000000000000000,00000000000000000000000000000000,4.0,2.4,20
+79,1565208763,2009fa14,09fa1400000000000000000000000000,00000000000000000000000000000000,1.5,2.3,9";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:13 PM";"I was excited about thisEMA, but our RST should get very high a lot quicker";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:14 PM";"```            arith_uint256 A,B,C;
+            if ( tipdiff < 2 )
+                tipdiff = 2;
+            bnTarget = ct[0] / arith_uint256(K);
+            A = bnTarget * arith_uint256(T);
+            B = bnTarget * arith_uint256(tipdiff * zawy_exponential_val360000(tipdiff) / 2) / arith_uint256(360000);
+            C = bnTarget * arith_uint256(T * tipdiff * zawy_exponential_val360000(tipdiff) / 2) / arith_uint256(360000);
+            bnTarget = (A + B - C) * arith_uint256(K);
+```";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:14 PM";"my equation is correct, so implementation must be it";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:15 PM";"this";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:15 PM";"zawy_exponential_val360000(tipdiff) / 2";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:15 PM";"should be exp( st/ 2)";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:15 PM";"for both?";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:15 PM";"yes";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:15 PM";"ok fixing";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:16 PM";"it turns the  3^x into 1.73^x";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:17 PM";"i have it setup so it can toggle between RST and TSA via launch parameters";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:19 PM";"for some reason it's crapping out on me even with 50x attacks, and it greatly overshoots the attack";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:19 PM";"but I'm not using tipdiff, so you might see thing a LOT better";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:20 PM";"in 3 minutes we will see the initial diffs";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:21 PM";"I first thouht about TSA's EMA replacing RST, but it did nto rise fast enough";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:22 PM";"it can only do 2x per block where RST can do 600";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:24 PM";"If RST has five 1-scond solves in a row, it will be 2E6 higher....but only if you have > 600x on 1st 4 blocks and 2E6 on 5th block";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:24 PM";"That's how powerful it is";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:25 PM";"even with tipdiff/2 it is not really adjusting";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:26 PM";"i will go back to RST and make sure i didnt break it with the latest fine tunings";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:26 PM";"arith_uint256(360000);  ?";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:27 PM";"the 3^x divided by 360000 and then multiplied by the A*B value";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:27 PM";"the new function just returns the raw A*B value";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:28 PM";"this";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:28 PM";"C = bnTarget * arith_uint256(T * tipdiff * zawy_exponential_val360000(tipdiff) / 2) / arith_uint256(360000);";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:29 PM";"latest code is:";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:29 PM";"```            bnTarget = ct[0] / arith_uint256(K);
+            A = bnTarget * arith_uint256(T);
+            B = bnTarget * arith_uint256(tipdiff * zawy_exponential_val360000(tipdiff/2)) / arith_uint256(360000);
+            C = bnTarget * arith_uint256(T * tipdiff * zawy_exponential_val360000(tipdiff/2)) / arith_uint256(360000);
+            bnTarget = (A + B - C) * arith_uint256(K);
+```";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:29 PM";"tipdiff does not belong next to T in C";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:30 PM";"oh wait, 360000 * T will overflow 1 million";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:30 PM";"```prevT*T*zexp(max(2, st))/2```";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:30 PM";"there is a final divison by tipdiff needed";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:30 PM";"aha! no tipdiff";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:30 PM";"``` bnTarget = (A + B - C) * arith_uint256(K) / tipdiff  ```";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:32 PM";"sorry, so many mistakes i made";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:32 PM";"testing fix";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:32 PM";"it's late in the day.";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:34 PM";"```            bnTarget = ct[0] / arith_uint256(K*T);
+            A = bnTarget * arith_uint256(T);
+            B = bnTarget * arith_uint256(tipdiff * zawy_exponential_val360000(tipdiff/2)) / arith_uint256(360000);
+            C = bnTarget * arith_uint256(T * zawy_exponential_val360000(tipdiff/2)) / arith_uint256(360000);
+            bnTarget = (A + B - C) * arith_uint256(K*T) / arith_uint256(tipdiff);
+```";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:34 PM";"i scale by K*T so C wont overflow";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:39 PM";"diff is going up this time, but compared to RST... slowish";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:40 PM";"maybe can remove the averaging";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:40 PM";"```            bnTarget = (bnTarget + ct[0] + ct[1] + ct[2]) / arith_uint256(4);```";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:40 PM";"that probably slows it way down";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:40 PM";"Instead of this EMA, I'm going to work on e^x straght without the rest of it.  I think there might be a lot to gain by replacing RST with  an e^x";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:41 PM";"64,1565210268,200339b0,0339b000000000000000000000000000,00000000000000000000000000000000,4.7,4.4,2
+65,1565210270,20030678,03067800000000000000000000000000,00000000000000000000000000000000,5.0,4.5,2
+66,1565210276,2002d818,02d81800000000000000000000000000,00000000000000000000000000000000,5.3,4.7,6
+67,1565210280,20029cf0,029cf000000000000000000000000000,00000000000000000000000000000000,5.8,4.9,4
+68,1565210299,200285b0,0285b000000000000000000000000000,00000000000000000000000000000000,6.0,5.1,19
+69,1565210340,20027fac,027fac00000000000000000000000000,00000000000000000000000000000000,6.0,5.3,41
+70,1565210344,200234e8,0234e800000000000000000000000000,00000000000000000000000000000000,6.8,5.5,4
+71,1565210347,20022a24,022a2400000000000000000000000000,00000000000000000000000000000000,7.0,5.7,3
+72,1565210351,2001f9cc,01f9cc00000000000000000000000000,00000000000000000000000000000000,7.6,6.0,4
+73,1565210357,2001d45c,01d45c00000000000000000000000000,00000000000000000000000000000000,8.2,6.3,6
+74,1565210371,2001bea4,01bea400000000000000000000000000,00000000000000000000000000000000,8.6,6.5,14
+75,1565210377,20019a14,019a1400000000000000000000000000,00000000000000000000000000000000,9.4,6.9,6
+76,1565210390,200186c8,0186c800000000000000000000000000,00000000000000000000000000000000,9.9,7.3,13
+77,1565210414,200175d0,0175d000000000000000000000000000,00000000000000000000000000000000,10.3,7.7,24
+78,1565210420,20015398,01539800000000000000000000000000,00000000000000000000000000000000,11.4,8.2,6
+79,1565210434,200142dc,0142dc00000000000000000000000000,00000000000000000000000000000000,11.9,8.7,14
+80,1565210436,20012878,01287800000000000000000000000000,00000000000000000000000000000000,13.0,9.3,2";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:41 PM";"diff constantly rising, so that is a good behavior";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:44 PM";"but we are getting spoiled, just decent performance is nowhere near good enough";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:52 PM";"this is unreal!";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:52 PM";"59,1565210897,20040ac4,040ac400000000000000000000000000,00000000000000000000000000000000,3.7,3.8,5
+60,1565210900,2003ef7c,03ef7c00000000000000000000000000,00000000000000000000000000000000,3.8,3.9,3
+61,1565210904,2003d150,03d15000000000000000000000000000,00000000000000000000000000000000,3.9,4.1,4
+62,1565210909,2003b62c,03b62c00000000000000000000000000,00000000000000000000000000000000,4.1,4.2,5
+63,1565210921,20039bd4,039bd400000000000000000000000000,00000000000000000000000000000000,4.2,4.3,12
+64,1565210925,2001b8f8,01b8f800000000000000000000000000,00000000000000000000000000000000,8.7,4.5,4
+65,1565210946,2001152c,01152c00000000000000000000000000,00000000000000000000000000000000,13.9,4.8,21
+66,1565210968,2000aaf8,00aaf800000000000000000000000000,00000000000000000000000000000000,22.5,5.2,22
+67,1565210987,1f691d40,00691d40000000000000000000000000,00000000000000000000000000000000,36.7,5.6,19
+68,1565211054,1f71c06c,0071c06c000000000000000000000000,00000000000000000000000000000000,33.9,6.0,67
+69,1565211107,1f68e5c8,0068e5c8000000000000000000000000,00000000000000000000000000000000,36.8,6.6,53";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:52 PM";"fastest i have seen!";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:52 PM";"What do you like about it so much?";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:53 PM";"the diff is adjusting very fast";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:53 PM";"62 diff at 71";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:53 PM";"RST wasn't faster?";"";"";
+"352488299077566475";"zawy#5864";"07-Aug-19 08:54 PM";"or did you not fully test it with the 2.72?";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:54 PM";"RST was bouncing all around so 500 diff and 20 diff";"";"";
+"455741312273219595";"jl777c#5810";"07-Aug-19 08:54 PM";"TSA has much smoother response and this is without averaging";"";"";

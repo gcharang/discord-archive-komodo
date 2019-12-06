@@ -1,0 +1,149 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"424224648889106444";"Mihailo#5902";"04-Dec-18 10:53 AM";"So I was able to reproduce with jl FSM";"";"";
+"272003866906722306";"TonyL#3577";"04-Dec-18 10:55 AM";"You can ensure if sapling activated by `./komodo-cli -ac_name=%ac_name% getblock 62` and then `./komodo-cli -ac_name=%ac_name% getrawtransaction tx^^ 1` - version should be 4";"";"";
+"232679450301431808";"blackjok3r#3181";"04-Dec-18 11:52 AM";"sorry if what I wrote was confusing... I think it must be a sapling thing though... If you need any help to test this I have some time also.";"";"";
+"272003866906722306";"TonyL#3577";"04-Dec-18 12:06 PM";"Oh all this test seems to be confusing @blackjok3r I think clue was in some locally saved / cached files or something like this since codebase for both executables is the same
+
+@Mihailo Do you need more help with problem isolating?";"";"";
+"424224648889106444";"Mihailo#5902";"04-Dec-18 12:07 PM";"@TonyL Not right now. I'm trying to determine if sapling broke this and then I'll locate the problem.";"";"🙌 (2),👍 (2)";
+"424224648889106444";"Mihailo#5902";"04-Dec-18 12:54 PM";"Ok, so it seems that if I do one register on chain which has sapling activated oraclesdata works. But if I do 2 registers (to same publisher with same fee for now) I get
+```
+cc_verify error C
+ERROR: CScriptCheck(): aeb63e8d8efd284c870581cd8ec97f3c479d689c2b4b9ea2cbab23aa786a4012:1 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+ERROR: AcceptToMemoryPool: ConnectInputs failed aeb63e8d8efd284c870581cd8ec97f3c479d689c2b4b9ea2cbab23aa786a4012
+```";"";"";
+"424224648889106444";"Mihailo#5902";"04-Dec-18 12:54 PM";"So I'll check this one first as it seems I found the case when it breaks.";"";"";
+"272003866906722306";"TonyL#3577";"04-Dec-18 01:13 PM";"@Mihailo Please note that two `oraclesregister` creating two publishers with same pubkey and datafee in `oraclesinfo` - maybe this info can help somehow in debug";"";"";
+"424224648889106444";"Mihailo#5902";"04-Dec-18 01:20 PM";"Yes I know. And the error seems to be about spending the 2nd baton, but have not seen this error by now.";"";"";
+"232679450301431808";"blackjok3r#3181";"04-Dec-18 01:33 PM";"Alright said it was spending the baton ... Glad you have been able to reeporduce this 😃";"";"";
+"365714438864633856";"dukeleto#7326";"04-Dec-18 04:31 PM";"@TonyL like i said, use an env variable";"";"";
+"365714438864633856";"dukeleto#7326";"04-Dec-18 04:31 PM";"@TonyL giving an argument to the script is making it run all tests, and ignore the single test file argument you gave. It's a bug in the shitty (I mean awesome) test code we inherited";"";"";
+"272003866906722306";"TonyL#3577";"04-Dec-18 04:37 PM";"Hmm but it's worked as expected for me (give an argument and run single script)
+@dukeleto I've made custom connect node https://github.com/tonymorony/komodo/blob/unit_tests/qa/rpc-tests/test_framework/util.py#L242
+In case of https://github.com/tonymorony/komodo/blob/unit_tests/qa/rpc-tests/test_framework/test_framework.py#L102 And re-arranged code blocks a little bit in `test_framework.py`";"";"";
+"272003866906722306";"TonyL#3577";"04-Dec-18 04:37 PM";"@dukeleto  But i've declared strict in test code what it should do in case of this arg https://github.com/tonymorony/komodo/blob/unit_tests/qa/rpc-tests/cryptoconditions_dice.py#L23";"";"";
+"272003866906722306";"TonyL#3577";"04-Dec-18 04:37 PM";"It's a prototype so far";"";"";
+"365714438864633856";"dukeleto#7326";"04-Dec-18 04:42 PM";"@TonyL have you tried giving the argument `--remoteserver` before the filename? Order really matters";"";"";
+"272003866906722306";"TonyL#3577";"04-Dec-18 04:42 PM";"So my idea now is to make custom `generate(numblocks)` and call it like a `see_next_block(numblocks)` so in regtest it'll generate numblocks blocks and in case of non regtest chain it'll just wait numblocks";"";"";
+"365714438864633856";"dukeleto#7326";"04-Dec-18 04:42 PM";"i can never remember how the test suite arguments work, they are not intuitive";"";"";
+"272003866906722306";"TonyL#3577";"04-Dec-18 04:43 PM";"@dukeleto It's worked fine this way: `PYTHON_DEBUG=1  qa/pull-tester/rpc-tests.sh cryptoconditions_dice --remoteserver`";"";"";
+"365714438864633856";"dukeleto#7326";"04-Dec-18 04:43 PM";"i am confused. You said it doesn't. Now it does? :abusedsmily:";"";"";
+"272003866906722306";"TonyL#3577";"04-Dec-18 04:43 PM";"Hmm I wrote before `but it's worked as expected`";"";"";
+"365714438864633856";"dukeleto#7326";"04-Dec-18 04:44 PM";"@TonyL i misunderstood you. I should probably drink some ☕";"";"☕ (1)";
+"272003866906722306";"TonyL#3577";"04-Dec-18 04:44 PM";"@dukeleto Oh  most probably it's just my poor english 😃";"";"";
+"365714438864633856";"dukeleto#7326";"04-Dec-18 04:45 PM";"i just woke up, was up late last night learning about FPGA miners 😴";"";"";
+"272003866906722306";"TonyL#3577";"04-Dec-18 04:48 PM";"Hmm FPGA seems like an interesting tech but too costly to be profitable";"";"";
+"365714438864633856";"dukeleto#7326";"04-Dec-18 04:50 PM";"huh?";"";"";
+"365714438864633856";"dukeleto#7326";"04-Dec-18 04:51 PM";"@TonyL VRSC fpga's just jumped on the network, a $2500 fpga can mine around 80 VRSC per day. their price is coming down very fast";"";"";
+"365714438864633856";"dukeleto#7326";"04-Dec-18 04:51 PM";"and these look like asics, standalone, plug it in a PSU, mine. No more soldering and madness like that";"";"";
+"272003866906722306";"TonyL#3577";"04-Dec-18 04:51 PM";"Ahh VRSC";"";"";
+"272003866906722306";"TonyL#3577";"04-Dec-18 04:51 PM";"I see now 😃";"";"";
+"365714438864633856";"dukeleto#7326";"04-Dec-18 04:52 PM";"but this is the CC channel, so I will be quiet 😃";"";"🕶 (1),🕵 (1)";
+"272003866906722306";"TonyL#3577";"05-Dec-18 10:09 AM";"There is no validation on `oraclessubscribe` at the moment: possible to broadcast `oraclessubscribe` even there is no `oraclesregister` (no publishers) for this oracle, possible to broadcast with any random text as a publisher id, possible to subscribe with 0 datafee (not sure if it feature).
+```./komodo-cli -ac_name=SPLTEST oraclessubscribe dingdong dong 10000
+{
+  ""result"": ""success"",
+  ""hex"": ""0400008085202f89010b02157434792d7806e4798b88f4b5eaefb8b2d5131b80ae087987c5884b52c90200000048473044022010e4b78d2a3eaa900c6ea738fadf9e463371cc46f08f66be9acf1223399d59500220395bab0cce92a23095b630071ad7008488eb5c85aab0fbf347b3e68b882f656a01ffffffff040010a5d4e8000000302ea22c8020a1f2a7cbd0f90ea34c11dcbeebfdaa126ea32c30881450eb608898f952b906038103120c008203000401cc10270000000000002321020000000000000000000000000000000000000000000000000000000000000000ac703bf2612f080000232102a3cf299910078222c5f6c3a4f45261c2c900af54dd090e955865c41fd7060047ac00000000000000004f6a4c4cec5300000000000000000000000000000000000000000000000000000000000000002102a3cf299910078222c5f6c3a4f45261c2c900af54dd090e955865c41fd70600470010a5d4e8000000000000001e3200000000000000000000000000""
+}
+```
+```./komodo-cli -ac_name=SPLTEST sendrawtransaction hex^^
+8799de2b51515f8ab257a86ef307a7c5976dde2aa304559937ba86b64ba3e0af```";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 10:10 AM";"Also imports are broken on FSM branch";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 10:10 AM";"At least I think they are";"";"";
+"272003866906722306";"TonyL#3577";"05-Dec-18 10:10 AM";"And on ` ./komodo-cli -ac_name=SPLTEST oraclesregister a 100000` oraclesregister as well 
+```
+{
+  ""result"": ""success"",
+  ""hex"": ""0400008085202f890164ae3d1d8841f030d67a59fc163e68b6eae0cd6abe60435a45408687ff25fc4f0200000049483045022100c1af685b32694111344a5e0a44733746090ab4deba9e8d44f228e19cdfbfe94c02205683ea1eaccaf5a1e660206ff6b848ee00acad56ff05d0a6d105a0c6d58a7f6801ffffffff0410270000000000002321020000000000000000000000000000000000000000000000000000000000000000ac1027000000000000302ea22c8020ad90a9dfbe18df939588358376c64a76de4cfbdc4805d9932b509216bed1c3a18103120c008203000401cc9099973618090000232102a3cf299910078222c5f6c3a4f45261c2c900af54dd090e955865c41fd7060047ac00000000000000004f6a4c4cec5200000000000000000000000000000000000000000000000000000000000000002102a3cf299910078222c5f6c3a4f45261c2c900af54dd090e955865c41fd7060047a086010000000000000000001c3200000000000000000000000000""
+}```";"";"";
+"272003866906722306";"TonyL#3577";"05-Dec-18 10:10 AM";"```./komodo-cli -ac_name=SPLTEST sendrawtransaction 0400008085202f890164ae3d1d8841f030d67a59fc163e68b6eae0cd6abe60435a45408687ff25fc4f0200000049483045022100c1af685b32694111344a5e0a44733746090ab4deba9e8d44f228e19cdfbfe94c02205683ea1eaccaf5a1e660206ff6b848ee00acad56ff05d0a6d105a0c6d58a7f6801ffffffff0410270000000000002321020000000000000000000000000000000000000000000000000000000000000000ac1027000000000000302ea22c8020ad90a9dfbe18df939588358376c64a76de4cfbdc4805d9932b509216bed1c3a18103120c008203000401cc9099973618090000232102a3cf299910078222c5f6c3a4f45261c2c900af54dd090e955865c41fd7060047ac00000000000000004f6a4c4cec5200000000000000000000000000000000000000000000000000000000000000002102a3cf299910078222c5f6c3a4f45261c2c900af54dd090e955865c41fd7060047a086010000000000000000001c3200000000000000000000000000
+c9524b88c5877908ae801b13d5b2b8efeab5f4888b79e406782d79347415020b```";"";"";
+"272003866906722306";"TonyL#3577";"05-Dec-18 10:10 AM";"There is no oracle with txid `a`. I think these validations might be a root of further problems like we had few days ago";"";"";
+"272003866906722306";"TonyL#3577";"05-Dec-18 10:12 AM";"@blackjok3r Imports of wallets or?";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 10:12 AM";"coin imports MoMoM transfers";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 10:13 AM";"at least a node on FSM before the verus merge, is incompatible with a version that is after the merge";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 10:13 AM";"regardless if sapling is active yet or not";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 10:13 AM";"I am trying a migrate from sapling merge to sapling merge nodes with sapling merge miners right now 🤞";"";"🤕 (1)";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 10:14 AM";"if this fixes it ... we will just delay launch until sapling activates";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 10:14 AM";"so we dont have to fix it 😄";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 10:33 AM";"@Mihailo this is another clue about sapling issues with CC:
+CC Eval EVAL_IMPORTCOIN Invalid: invalid-code, dont forget to add EVAL_NEWCC to Eval::Dispatch spending tx bc577596ae240904b6b87b24569571cf10491632049027516f0f5cb5887d8748
+All imports are failing on sapling merge with this error ... dont really understand what could be causing it.";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 10:33 AM";"that indicates that the evalcode is not being extracted properly. so somehow a sapling tx is making CC vout parsing broken (in some cases)";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 10:49 AM";"@jl777c to be clear ... I am on FSM equal branch ... but sapling i NOT avtive yet .. we are usng the default KMD timestamps";"";"";
+"424224648889106444";"Mihailo#5902";"05-Dec-18 10:50 AM";"I have another clue, that two registers do not have anything to do with cc verify error. Sometimes it happens sometimes not...";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 11:06 AM";"inconsistent behavior indicates it might be memory corruption or uninitialized variable";"";"";
+"272003866906722306";"TonyL#3577";"05-Dec-18 11:15 AM";"```CC Eval EVAL_ORACLES Invalid: mismatched datafee spending tx 8c791151a31c5391e30bc35da973a89d2d0665303c530586de71c62c8aa79b1f
+```
+Sometimes getting such printouts from daemon (when request oraclesdata for this ""spending tx"" baton let's say)";"";"";
+"272003866906722306";"TonyL#3577";"05-Dec-18 11:16 AM";"But all seems work correct in these cases";"";"";
+"272003866906722306";"TonyL#3577";"05-Dec-18 12:02 PM";"@jl777c @Mihailo 
+Binary (`d`) type oracle still work not as expected:
+```./komodo-cli -ac_name=SPLTEST oraclesdata c8b7e208f1518de4e0b72b33235e6b84826060e1e9e8d6d8c47de9f9a7e91e2f 0101```
+```./komodo-cli -ac_name=SPLTEST oraclessamples c8b7e208f1518de4e0b72b33235e6b84826060e1e9e8d6d8c47de9f9a7e91e2f 0b55e0e5f25ab5d8542697947aeaa9f1af55d9bc03d57c9ce3dcac0550b18322 1
+{
+  ""result"": ""success"",
+  ""samples"": [
+    [
+      ""0""
+    ]
+  ]
+}
+```
+Not sure why I'm getting 0 for such `oraclesdata`, for 0100 I'm getting ""0"" as well";"";"";
+"405011811511828481";"Alright#0419";"05-Dec-18 12:04 PM";"@TonyL can you try a few more oraclesdata please";"";"";
+"405011811511828481";"Alright#0419";"05-Dec-18 12:04 PM";"from my experience, it works 2 or 3 times on a fresh pubkey";"";"";
+"405011811511828481";"Alright#0419";"05-Dec-18 12:04 PM";"then stack element error every time after that";"";"";
+"272003866906722306";"TonyL#3577";"05-Dec-18 12:06 PM";"Hmm I've sent a lot of oraclesdata to same oracles these days - never have an issues if there is enough balance and entropy UTXOs";"";"";
+"272003866906722306";"TonyL#3577";"05-Dec-18 12:06 PM";"Let me try";"";"";
+"272003866906722306";"TonyL#3577";"05-Dec-18 12:10 PM";"@Alright Repeated it";"";"";
+"272003866906722306";"TonyL#3577";"05-Dec-18 12:10 PM";"Trowed an error on 4th `oraclesdata` broadcast";"";"";
+"272003866906722306";"TonyL#3577";"05-Dec-18 12:12 PM";"https://paste.ubuntu.com/p/bYwd9whc4n/ seems `oraclesdata` ded  at the moment";"";"";
+"424224648889106444";"Mihailo#5902";"05-Dec-18 12:30 PM";"@TonyL If you look at the daemon output you will see ""cc_verify error C""";"";"";
+"424224648889106444";"Mihailo#5902";"05-Dec-18 12:31 PM";"That is the issue with spending baton, but I can`t seem to find a cause why it happens. I thought it was sapling with two registers, but it is not...";"";"";
+"272003866906722306";"TonyL#3577";"05-Dec-18 12:32 PM";"I didn't do any cases with 2 same publishers and 2 subscribtions";"";"";
+"272003866906722306";"TonyL#3577";"05-Dec-18 12:32 PM";"Just registered once and subscribed once";"";"";
+"272003866906722306";"TonyL#3577";"05-Dec-18 12:32 PM";"Then broadcasted 1 oraclesdata per block";"";"";
+"424224648889106444";"Mihailo#5902";"05-Dec-18 12:32 PM";"Yep...";"";"";
+"424224648889106444";"Mihailo#5902";"05-Dec-18 12:33 PM";"In my case I think I was able to reproduce it on a fresh chain with first oracle I create and the after when I try it does not happen. But I think that was just a coincidence...";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 12:43 PM";"Its not because of sapling";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 12:44 PM";"I have CC_EVAL dead on a non sapling chain";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 12:44 PM";"Its FSM branch... without splaing activated";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 12:44 PM";"the entire KMDLABS cluster is now dead becasuse of it";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 12:44 PM";"lucky its s testnet";"";"";
+"424224648889106444";"Mihailo#5902";"05-Dec-18 12:44 PM";"Ok, but it could be the changes that are made on FSM recently for sapling.";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 12:44 PM";"its the verus merge";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 12:44 PM";"but not nessarily sapling";"";"";
+"424224648889106444";"Mihailo#5902";"05-Dec-18 12:44 PM";"👍";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 12:45 PM";"As eveyrthing worked the commit before that merge";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 12:45 PM";"and after it";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 12:45 PM";"its does not";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 12:45 PM";"I am going to have a look around but I'm pretty lost on this one... if I find anyhting I will let you know in here.";"";"";
+"424224648889106444";"Mihailo#5902";"05-Dec-18 12:50 PM";"Ok, I'll check also the commit if something looks phishy.";"";"";
+"424224648889106444";"Mihailo#5902";"05-Dec-18 12:51 PM";"@blackjok3r Can you point me to the exact commit after it stoped working?";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 12:51 PM";"maybe your issue is diffrent to mine../..";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 12:51 PM";"the verus merge has commented out the coinimport validation 😂";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 12:52 PM";"like what even 😄";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 12:52 PM";"this might be nothing";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 12:53 PM";"where is the coinimport that got commented out??";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 12:53 PM";"https://github.com/jl777/komodo/blob/master/src/cc/eval.cpp#L77
+In a verison from 3 months ago, this wan not commented out";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 12:54 PM";"I have not actually tracked our branches to check it yet";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 12:56 PM";"ok yep definatly seems to be commented out in the verus merge";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 12:56 PM";"I think htat gets LABS back up. testing now";"";"";
+"424224648889106444";"Mihailo#5902";"05-Dec-18 12:58 PM";"I was afraid that something else could be wrong when I found out that tokenconvert RPC was missing when changes from Verus were commited...";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 01:00 PM";"Theres a lot of strange things... the actual merge for me, wasnt that bad took about 5H";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 01:00 PM";"😂";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 01:01 PM";"still cant even fathom how Im supposed to test everything is still working...";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 01:23 PM";"```        default:
+            return(ProcessCC(cp,this, vparams, txTo, nIn));
+            // only support coinbase guard for now
+            if (ecode == EVAL_COINBASEGUARD)
+                return(ProcessCC(cp,this, vparams, txTo, nIn));
+            break;```
+From @miketout  commit that did this.... It might be related to your issues after all @Mihailo  
+""// only support coinbase guard for now""";"";"";
+"424224648889106444";"Mihailo#5902";"05-Dec-18 01:25 PM";"Where is this, cannot find it in my code...";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 01:25 PM";"src/cc/eval.cpp";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 01:25 PM";"everything was commented out";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 01:25 PM";"and disabled";"";"";

@@ -1,0 +1,349 @@
+==============================================================
+Guild: Komodo
+Channel: dev-nspv
+Topic: ./komodod -nSPV=1 -ac_reward=100000000  -ac_name=NSPV -ac_supply=10000000000 -ac_cc=2 -addressindex=1 -spentindex=1 -connect=5.9.102.210 &
+./komodod -nSPV=1 -addnode=5.9.253.195 &
+https://drive.google.com/drive/folders/1ZvzrhNBQgroejTKPl0kCOTJ8h7XMnO2M?usp=sharing
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[25-Jul-19 04:18 PM] jl777c#5810
+but not very friendly from a user api basis
+
+[25-Jul-19 04:18 PM] jl777c#5810
+notarizations is a good api call to make to find the right hash to use
+
+[25-Jul-19 04:18 PM] jl777c#5810
+if that is needed
+
+[25-Jul-19 04:19 PM] jl777c#5810
+updated my KMD, ILN and NSPV fullnodes with latest version
+
+{Reactions}
+👍 
+
+[25-Jul-19 04:33 PM] blackjok3r#3181
+I think we should move teh fetch of the headers to a seperate API in the daemon. This should make it reasonably easy.
+
+[25-Jul-19 04:34 PM] blackjok3r#3181
+Currently it only fetches between 2 notarizations so if you cant scan forwards because it doesnt exist yet. So the notarizations should just be returned then those 2 heights used to call a function for headers
+
+[25-Jul-19 04:35 PM] blackjok3r#3181
+That may change a bit much stuff though 🤔
+
+[25-Jul-19 04:36 PM] jl777c#5810
+getinfo has an optional hdrheight parameter
+
+[25-Jul-19 04:37 PM] jl777c#5810
+you can query for individual header
+
+[25-Jul-19 04:37 PM] jl777c#5810
+why not use that?
+
+[25-Jul-19 04:37 PM] jl777c#5810
+it is actually more efficient to do 10 smaller tx than one big one, due to packet switching characteristics
+
+[25-Jul-19 04:38 PM] jl777c#5810
+i think a single getinfo might actually fit into a single tcp/ip packet, but not sure
+
+[25-Jul-19 04:38 PM] blackjok3r#3181
+IUt will use lots of nodes aswell and spread it around
+
+[25-Jul-19 04:38 PM] jl777c#5810
+yes, it is better to request headers one at a time
+
+[25-Jul-19 04:42 PM] blackjok3r#3181
+Its constantly getting sent them by all nodes. So really in not much time of being online it has almost enough headers received, just doesnt save them anywhere
+
+[25-Jul-19 04:44 PM] blackjok3r#3181
+Should be enough to just check the previous header and save them back to he last notarizatrion
+
+[25-Jul-19 04:45 PM] jl777c#5810
+yes, just storing the most recent 100 headers will be enough in 99.9% of cases
+
+[25-Jul-19 04:45 PM] jl777c#5810
+just rotate the buffer and request any that are missing
+
+[25-Jul-19 04:45 PM] jl777c#5810
+any new block should just connect right up to the chain tip to become the new chaintip
+
+[25-Jul-19 04:46 PM] jl777c#5810
+in case of reorg, then might need to wait for notarization to resolve things, as longest chain will be fighting each other until we get a notarization
+
+[25-Jul-19 04:46 PM] blackjok3r#3181
+hmm yes, it currently wouldnt go backwards lol
+
+[25-Jul-19 04:47 PM] jl777c#5810
+yes, it is quite primitive
+
+[25-Jul-19 04:48 PM] blackjok3r#3181
+I mean as long as the chain is still moving, it would eventually be ok...
+
+[25-Jul-19 04:48 PM] jl777c#5810
+i guess maybe reorg handling would be good, ie. if a longer chain comes in, then need to request the missing headers until it connects to the notarized chain
+
+[25-Jul-19 04:48 PM] blackjok3r#3181
+but yes the  headers it has would then be wrong. and need to be checked
+
+[25-Jul-19 04:48 PM] jl777c#5810
+i think that is all that needs to be done. so if a new longer chain arrives that doesnt connect, then query the prior heights to fill in the missing headers
+
+[25-Jul-19 04:49 PM] jl777c#5810
+or can rely on reorgs being rare enough, to just clear the entire cache if it is detected
+
+[25-Jul-19 04:49 PM] jl777c#5810
+then scanning back to the notarization will automatically fill it with the valid headers
+
+[25-Jul-19 04:50 PM] blackjok3r#3181
+That might be a lot easier, not that the chain tip is that imporant, most utxos are actually notarised
+
+[25-Jul-19 04:51 PM] TonyL#3577
+https://github.com/jl777/libnspv/blob/master/src/tools/nSPV_rpc.h#L1206 as I understand so far - some specific windows case winsocket initialisation is needed here  (similar to this one https://stackoverflow.com/questions/28027937/cross-platform-sockets)
+
+{Embed}
+https://github.com/jl777/libnspv/blob/master/src/tools/nSPV_rpc.h
+jl777/libnspv
+Tiny Bitcoin Library written in C, with nSPV added - jl777/libnspv
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+{Embed}
+https://stackoverflow.com/questions/28027937/cross-platform-sockets)
+Cross-platform sockets
+I know, Windows doesn't use UNIX sockets while Mac OS does. Until this point my software was cross-platform without any code changes. But now I want it to do some network communication. I know about
+https://cdn.sstatic.net/Sites/stackoverflow/img/apple-touch-icon@2.png?v=73d79a89bded
+
+[25-Jul-19 04:53 PM] jl777c#5810
+aha! WSAStartup! ok, adding it
+
+[25-Jul-19 04:53 PM] TonyL#3577
+```getaddrinfo(0.0.0.0) returned error
+[warn] evsig_init_: socketpair: ╚ыш яЁшыюцхэшх эх т√чтрыю WSAStartup, шыш яЁюшчю°ыр ю°шсър т WSAStartup.```
+
+[25-Jul-19 04:54 PM] TonyL#3577
+yep, print which I'm getting on binary startup contains "WSAStartup" word and some abrakadabra 😃
+
+[25-Jul-19 04:55 PM] jl777c#5810
+updated
+
+[25-Jul-19 04:56 PM] jl777c#5810
+hope it builds
+
+[25-Jul-19 05:00 PM] TonyL#3577
+I'm connected!
+
+{Attachments}
+https://cdn.discordapp.com/attachments/594906735467036682/603995116239060997/unknown.png
+
+[25-Jul-19 05:03 PM] jl777c#5810
+wow! can you open the browser to http://127.0.0.1:7771
+
+[25-Jul-19 05:04 PM] TonyL#3577
+
+{Attachments}
+https://cdn.discordapp.com/attachments/594906735467036682/603995942353633286/unknown.png
+
+[25-Jul-19 05:04 PM] TonyL#3577
+In browser "cant find index.html" should I put it to the same dir with binary?
+
+[25-Jul-19 05:05 PM] jl777c#5810
+yes, it needs to be run from ~/libnspv
+
+[25-Jul-19 05:05 PM] TonyL#3577
+on windows PC have only binary - will test a little bit later
+
+[25-Jul-19 05:05 PM] TonyL#3577
+but curl calls works
+
+[25-Jul-19 05:06 PM] jl777c#5810
+you need to make html dir with those files
+
+[25-Jul-19 05:06 PM] jl777c#5810
+can do the same browser test in unix
+
+[25-Jul-19 05:06 PM] jl777c#5810
+it doesnt work yet, so dont get too excited
+
+{Reactions}
+👍 
+
+[25-Jul-19 05:07 PM] jl777c#5810
+but it looks pretty good on osx
+
+[25-Jul-19 05:08 PM] jl777c#5810
+but if windows can do spend, that means we are already cross platform
+
+[25-Jul-19 05:08 PM] jl777c#5810
+for installing, all that is needed is to launch the executable and open the browser to the 127.0.0.1 page
+
+[25-Jul-19 05:10 PM] TonyL#3577
+on windows
+
+{Attachments}
+https://cdn.discordapp.com/attachments/594906735467036682/603997468593487879/unknown.png
+
+[25-Jul-19 05:10 PM] TonyL#3577
+is it some stub?
+
+[25-Jul-19 05:11 PM] jl777c#5810
+yes, do you have the css file in the html dir?
+
+[25-Jul-19 05:12 PM] TonyL#3577
+yes
+
+[25-Jul-19 05:12 PM] TonyL#3577
+
+{Attachments}
+https://cdn.discordapp.com/attachments/594906735467036682/603997950695309407/unknown.png
+
+[25-Jul-19 05:12 PM] jl777c#5810
+so the bootstrap.min.css file is there?
+
+[25-Jul-19 05:13 PM] TonyL#3577
+yes, both bootstrap and favicon
+
+[25-Jul-19 05:13 PM] jl777c#5810
+what about unix?
+
+[25-Jul-19 05:15 PM] TonyL#3577
+
+{Attachments}
+https://cdn.discordapp.com/attachments/594906735467036682/603998792353579141/unknown.png
+
+[25-Jul-19 05:15 PM] TonyL#3577
+on unix it looks cool
+
+[25-Jul-19 05:16 PM] jl777c#5810
+yes,the same for osx
+
+[25-Jul-19 05:16 PM] jl777c#5810
+seems windows is the blacksheep again
+
+[25-Jul-19 05:16 PM] jl777c#5810
+what browser did you use in windows?
+
+[25-Jul-19 05:16 PM] TonyL#3577
+chrome
+
+[25-Jul-19 05:16 PM] jl777c#5810
+maybe it is browser specific
+
+[25-Jul-19 05:17 PM] TonyL#3577
+and chrome on unix too
+
+[25-Jul-19 05:17 PM] TonyL#3577
+maybe something is on my side, checking
+
+[25-Jul-19 05:20 PM] TonyL#3577
+it seems like a pathes windows specific issue
+
+[25-Jul-19 05:21 PM] TonyL#3577
+on windows it showing this not pretty html only when html page files and binary locating in same directory
+
+[25-Jul-19 05:21 PM] jl777c#5810
+but it is finding the index.html
+
+[25-Jul-19 05:21 PM] jl777c#5810
+so it should be finding the .css file too
+
+[25-Jul-19 05:22 PM] TonyL#3577
+yes, thats strange
+
+[25-Jul-19 05:24 PM] jl777c#5810
+a mystery for some windows browser familiar person to help fix
+
+[25-Jul-19 05:27 PM] jl777c#5810
+what if you try 127.0.0.1:7771/bootstrap.min.css
+
+[25-Jul-19 05:27 PM] jl777c#5810
+it should direcly load the css file
+
+[25-Jul-19 05:27 PM] jl777c#5810
+unix vs win would show if it is a file not found issue or something else
+
+[25-Jul-19 05:28 PM] TonyL#3577
+http://127.0.0.1:7771/bootstrap.min.css returns ERR_INVALID_HTTP_RESPONSE so it's on server (nspv binary) side I wonder
+
+[25-Jul-19 05:28 PM] TonyL#3577
+but no prints in nspv console
+
+[25-Jul-19 05:28 PM] TonyL#3577
+ah, it static html it seems nvm 😃
+
+[25-Jul-19 05:29 PM] jl777c#5810
+what happens on unix
+
+[25-Jul-19 05:30 PM] TonyL#3577
+on unix website working fine
+
+[25-Jul-19 05:30 PM] jl777c#5810
+it loads the css data?
+
+[25-Jul-19 05:30 PM] TonyL#3577
+yes
+
+[25-Jul-19 05:31 PM] TonyL#3577
+beauty screenshot above it's from unix
+
+[25-Jul-19 05:31 PM] jl777c#5810
+http://127.0.0.1:7771/bootstrap.min.css  should just return a bunch of html
+
+[25-Jul-19 05:31 PM] jl777c#5810
+not graphics
+
+[25-Jul-19 05:33 PM] TonyL#3577
+ah, you've asked about css request
+
+[25-Jul-19 05:33 PM] TonyL#3577
+yes, it return file
+
+{Attachments}
+https://cdn.discordapp.com/attachments/594906735467036682/604003311129067540/unknown.png
+
+[25-Jul-19 05:34 PM] TonyL#3577
+it should be a problem somewhere on my side I think because it's super strange, but not sure yet where there might be a problem
+
+[25-Jul-19 05:35 PM] jl777c#5810
+i think i know the problem
+
+[25-Jul-19 05:35 PM] jl777c#5810
+it needs a MIME type
+
+[25-Jul-19 05:36 PM] TonyL#3577
+`type="text/css"` I've tried to set it
+
+[25-Jul-19 05:39 PM] jl777c#5810
+pushed fix
+
+[25-Jul-19 05:43 PM] TonyL#3577
+ok, it's time to move from master to jl777 branch as I understand
+
+[25-Jul-19 05:43 PM] jl777c#5810
+yes
+
+[25-Jul-19 05:44 PM] TonyL#3577
+https://github.com/jl777/libnspv/pull/24/files opened PR to build jl777 branch for windows
+
+{Embed}
+https://github.com/jl777/libnspv/pull/24/files
+Windows build script by tonymorony · Pull Request #24 · jl777/li...
+https://avatars1.githubusercontent.com/u/24797699?s=400&v=4
+
+[25-Jul-19 05:51 PM] TonyL#3577
+unfortunately its the same on my side now
+
+[25-Jul-19 05:53 PM] jl777c#5810
+merged and got it working on osx
+
+[25-Jul-19 05:53 PM] jl777c#5810
+i think it should build in windows
+
+[25-Jul-19 05:54 PM] TonyL#3577
+it's building but css not working still
+
+[25-Jul-19 05:54 PM] jl777c#5810
+any errors
+
+[25-Jul-19 05:54 PM] jl777c#5810
+i had to fiddle with the ifdefs
+

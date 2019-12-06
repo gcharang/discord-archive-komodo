@@ -1,0 +1,418 @@
+==============================================================
+Guild: Komodo
+Channel: cc-rogue
+Topic: use FSM branch AND then build as normal
+ 
+./komodod -ac_name=ROGUE -ac_supply=1000000 -pubkey=<yourpubkey> -addnode=5.9.102.210  -ac_cclib=rogue -ac_perc=10000000 -ac_reward=100000000 -ac_cc=60001 -ac_script=2ea22c80203d1579313abe7d8ea85f48c65ea66fc512c878c0d0e6f6d54036669de940febf8103120c008203000401cc -daemon
+Guide here: https://github.com/KomodoPlatform/komodo/wiki/Get-Started-with-Rogue-Game
+Explorer: http://rogue.explorer.dexstats.info/
+Player's Handbook: https://github.com/jl777/komodo/blob/jl777/src/cc/rogue/rogue.doc
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[17-Feb-19 03:17 PM] TonyL#3577
+``` ./komodo-cli -ac_name=ROGUE tokeninfo 70f1220700fce6087233936e69b9bdf69360930971a8cbf5fa4b3eab529972a1
+{
+  "result": "error",
+  "error": "tokenid isnt token creation txid",
+  "result": "success",
+  "tokenid": "70f1220700fce6087233936e69b9bdf69360930971a8cbf5fa4b3eab529972a1",
+  "owner": "",
+  "name": "",
+  "supply": 990000,
+  "description": ""
+}
+```
+
+[17-Feb-19 03:17 PM] TonyL#3577
+If use as tokenid baton of game which I didn't start yet (only registered)
+
+[17-Feb-19 03:17 PM] TonyL#3577
+For non-existing tokenid there is other error:
+```{
+  "result": "error",
+  "error": "cant find tokenid"
+}```
+
+[17-Feb-19 03:21 PM] TonyL#3577
+In general I think 10000 supply token creating somehow when `newgame` (since only newgame have 10000 sat vouts) and then 1 token sending to player on register
+
+[17-Feb-19 03:21 PM] TonyL#3577
+Thats why `tokenbalance` is 1 but `tokensupply` is 10000
+If create token with 1 supply manually it have 1 supply
+
+[17-Feb-19 03:31 PM] jl777c#5810
+register spends token, bailout creates
+
+[17-Feb-19 03:32 PM] jl777c#5810
+i think tokeninfo is assuming specific vout, seems it might need to scan for valid CCvout
+
+[17-Feb-19 03:34 PM] TonyL#3577
+@jl777c vouts of bailout of first game are 10000 sat as well, there is no output of 1 satoshie
+
+[17-Feb-19 03:34 PM] TonyL#3577
+``` ./komodo-cli -ac_name=ROGUE getrawtransaction 12354a32af8f782735c1059767c72ce510e1d560dad56be29a3ef48c8c2474f1 1```
+
+[17-Feb-19 03:36 PM] jl777c#5810
+mtx.vout.push_back(MakeCC1vout(EVAL_TOKENS, txfee, GetUnspendable(cpTokens,NULL)));            // marker to token cc addr, burnable and validated
+                            mtx.vout.push_back(MakeTokensCC1vout(cp->evalcode,1,mypk));
+
+[17-Feb-19 03:37 PM] TonyL#3577
+Ouch I've misslicked when copied txid
+
+[17-Feb-19 03:37 PM] TonyL#3577
+```    {
+      "value": 0.00010000,
+      "valueSat": 10000,
+      "n": 0,
+      "scriptPubKey": {
+        "asm": "a22c8020432de388aabcb6b4e3326351d1d815cee8be9a8d37b055cd1c0cf8782e5c50c08103120c008203000401 OP_CHECKCRYPTOCONDITION",
+        "hex": "2ea22c8020432de388aabcb6b4e3326351d1d815cee8be9a8d37b055cd1c0cf8782e5c50c08103120c008203000401cc",
+        "reqSigs": 1,
+        "type": "cryptocondition",
+        "addresses": [
+          "RAMvUfoyURBRxAdVeTMHxn3giJZCFWeha2"
+        ]
+      }
+    },
+    {
+      "value": 0.00000001,
+      "valueSat": 1,
+      "n": 1,
+      "scriptPubKey": {
+        "asm": "a22c8020f29dbf12dea61586c1c7a8c6fe99eaa82a32298686bac7d0f698e91e896f48d481032210008203000401 OP_CHECKCRYPTOCONDITION",
+        "hex": "2ea22c8020f29dbf12dea61586c1c7a8c6fe99eaa82a32298686bac7d0f698e91e896f48d481032210008203000401cc",
+        "reqSigs": 1,
+        "type": "cryptocondition",
+        "addresses": [
+          "RKx4TjCgfQmCU9BhiqNuWrHqnreAstdTPn"
+        ]
+      },```
+
+[17-Feb-19 03:37 PM] TonyL#3577
+Bailout have 1 sat output
+
+[17-Feb-19 03:37 PM] jl777c#5810
+so where is the 10000 output from? and is it the token output?
+
+[17-Feb-19 03:38 PM] TonyL#3577
+And 10000 sat output to  "addresses": "RAMvUfoyURBRxAdVeTMHxn3giJZCFWeha2"
+
+[17-Feb-19 03:38 PM] TonyL#3577
+```./komodo-cli -ac_name=ROGUE tokenaddress
+{
+  "result": "success",
+  "TokensCCAddress": "RAMvUfoyURBRxAdVeTMHxn3giJZCFWeha2",
+  "CCbalance": 0.01180000,
+  "TokensNormalAddress": "RCNgAngYAdrfzujYyPgfbjCGNVQZzCgTad",
+  "myAddress": "RMmHb7wKPkvwbin9YowDyFaM5yiLrVAG2m",
+  "myCCAddress(Tokens)": "RCn7znfhepb3PVcBnaztFvUQUKREjoBPp3",
+  "myCCaddress": "RCn7znfhepb3PVcBnaztFvUQUKREjoBPp3",
+  "myCCbalance": 1.99999911,
+  "myaddress": "RMmHb7wKPkvwbin9YowDyFaM5yiLrVAG2m",
+  "mybalance": 672.99174913
+}
+```
+
+[17-Feb-19 03:38 PM] TonyL#3577
+Which is "TokensCCAddress": "RAMvUfoyURBRxAdVeTMHxn3giJZCFWeha2",
+
+[17-Feb-19 03:38 PM] jl777c#5810
+that is a markeraddress for tokenlist to see it
+
+[17-Feb-19 03:39 PM] TonyL#3577
+So I wonder tokeinfo is confused by this output
+
+[17-Feb-19 03:39 PM] TonyL#3577
+And maybe thats why burned tokens still appears in tokenlist
+
+[17-Feb-19 03:43 PM] jl777c#5810
+we need to ask @dimxy
+
+{Reactions}
+👌 
+
+[17-Feb-19 03:43 PM] jl777c#5810
+when I checked last after register burned the token it didnt appear in tokenlist
+
+[17-Feb-19 03:43 PM] jl777c#5810
+maybe tokenlist needs to do a check against the burn address
+
+[17-Feb-19 03:44 PM] TonyL#3577
+``` bailout: must be within ROGUE_MAXKEYSTROKESGAP blocks of last keystrokes
+ vin0 -> keystrokes baton of completed game with Q
+ vout0 -> 1% ingame gold```
+By description in github bailout have 1 vout but I have 6 vouts so confused very much 😃
+
+[17-Feb-19 03:45 PM] jl777c#5810
+docs are way out of date
+
+{Reactions}
+👌 
+
+[17-Feb-19 03:46 PM] TonyL#3577
+Ok, will test refreshed rogue GUI better so
+
+[17-Feb-19 03:49 PM] jl777c#5810
+let me know of anything wonky with new cursesd, bugs will exhibit as playerdata not the same due to game replay not the same
+
+{Reactions}
+👌 
+
+[17-Feb-19 03:49 PM] TonyL#3577
+Are old warriors compatible with update?
+
+[17-Feb-19 03:51 PM] TonyL#3577
+Ok, old are in players list - let's try 😃
+
+[17-Feb-19 03:54 PM] TonyL#3577
+Bug with strength not persists anymore
+
+[17-Feb-19 03:55 PM] jl777c#5810
+should be compatibnle
+
+[17-Feb-19 04:03 PM] TonyL#3577
+Interface seems to work smooth
+
+[17-Feb-19 04:04 PM] Cryptofist#7504
+@jl777c  I think I did drink a brown potion, it said some thing like "everything feels cosmic"  then I assume it had no effects i could see at the moment.  When I got a couple of rooms over things got weird.     At that point  I thought it was just the game.   
+
+Later I thought it could be the potion, I looked it up online for a while,  the reaction text was hard to find anywhere, not in any game item guides online.   I DID find it in github with an "LSD" effect near it in the code..... but thats not something I understand well,  maybe you can look and see.    
+
+ I DID get a lot of gold and treasure rooms, not actual teleporting though, character didn't jump around.  The items I got were high level, plate mail was one.
+
+[17-Feb-19 04:04 PM] TonyL#3577
+Supriiise
+
+{Attachments}
+https://cdn.discordapp.com/attachments/542758401516634112/546723566591279125/unknown.png
+
+[17-Feb-19 04:04 PM] Cryptofist#7504
+Oh no! the dreaded HILSO
+
+[17-Feb-19 04:05 PM] TonyL#3577
+First treasure room I found for a few days
+
+[17-Feb-19 04:05 PM] TonyL#3577
+Killed em all :troll_thuglife:
+
+[17-Feb-19 04:05 PM] CryptoNinjaa#5350
+Ive drank the cosmic potion before and shit got weird real fast 😂
+
+[17-Feb-19 04:05 PM] Cryptofist#7504
+I have gotten two since super ASCII LSD PARTY TIME
+
+[17-Feb-19 04:05 PM] jl777c#5810
+wear a teleport ring and dring LSD
+
+[17-Feb-19 04:05 PM] Cryptofist#7504
+Did the mosters and items change on every move @CryptoNinjaa  ?
+
+[17-Feb-19 04:06 PM] CryptoNinjaa#5350
+Yeah
+
+[17-Feb-19 04:06 PM] Cryptofist#7504
+Ok so it IS that, sweet.
+
+[17-Feb-19 04:06 PM] Cryptofist#7504
+brown potion i think
+
+[17-Feb-19 04:06 PM] jl777c#5810
+and you should be in tune with the universe and find a lot more than usual treasure rooms
+
+[17-Feb-19 04:06 PM] CryptoNinjaa#5350
+Yeah pretty sure its the potion
+
+[17-Feb-19 04:06 PM] jl777c#5810
+color is different each game
+
+[17-Feb-19 04:06 PM] Cryptofist#7504
+Ah
+
+[17-Feb-19 04:06 PM] jl777c#5810
+as is the "latin" words for scrolls
+
+[17-Feb-19 04:06 PM] CryptoNinjaa#5350
+Had one that reverses key strokes aswell
+
+[17-Feb-19 04:08 PM] CryptoNinjaa#5350
+Grabbed my mums old lappy she doesnt use anymore and installing ubuntu so i have a dedicated rogue machine now 🤪
+
+[17-Feb-19 04:08 PM] Cryptofist#7504
+How is the pack size calculated?  It seems at some point i dropped a piece of armor after it being full, then could pick up 2 more things?  I played with it for a bit, didnt figure it out.
+
+[17-Feb-19 04:08 PM] jl777c#5810
+some dual items take up more than one spot in the pack
+
+[17-Feb-19 04:09 PM] jl777c#5810
+maybe you ate some slime molds?
+
+[17-Feb-19 04:11 PM] SHossain#0007
+slime molds are not to eat?
+
+[17-Feb-19 04:12 PM] jl777c#5810
+it is your favorite food, unless you changed it
+
+[17-Feb-19 04:12 PM] jl777c#5810
+talking about using up spots in the pack
+
+[17-Feb-19 04:16 PM] jl777c#5810
+i guess multiplayer mode is the next frontier
+
+[17-Feb-19 04:21 PM] Cryptofist#7504
+Maybe.... Do they show up as food or slime mold automatically?
+
+[17-Feb-19 04:21 PM] jl777c#5810
+:
+
+[17-Feb-19 04:21 PM] jl777c#5810
+that is food
+
+[17-Feb-19 04:21 PM] jl777c#5810
+you can name it whatever, default is slime mold
+
+[17-Feb-19 04:22 PM] jl777c#5810
+sounds slimey and moldy, but it works as food, regardless of what it is called. without it you faint and eventually die
+
+[17-Feb-19 04:27 PM] Cryptofist#7504
+Yeah did that a few times early on.
+
+[17-Feb-19 04:27 PM] Cryptofist#7504
+My son was playing LoZ Breath of the wild and I explained to him that Rogue is the first digital version of that game type.  " Rogue? You mean the letter game?? How?" Que Zelda game history over view. 😀  Man, 2 was hard.
+
+[17-Feb-19 04:30 PM] TonyL#3577
+Staring to worry about game progress saving 😃
+
+{Attachments}
+https://cdn.discordapp.com/attachments/542758401516634112/546730251330519070/unknown.png
+
+[17-Feb-19 04:31 PM] SHossain#0007
+
+{Attachments}
+https://cdn.discordapp.com/attachments/542758401516634112/546730491051507743/Screenshot_from_2019-02-17_16-31-33.png
+
+[17-Feb-19 04:31 PM] SHossain#0007
+so, 2 different types of food in pack
+
+[17-Feb-19 04:32 PM] Cryptofist#7504
+Thats why I asked ^
+
+[17-Feb-19 04:32 PM] Cryptofist#7504
+@TonyL dont turn your game off. lol
+
+[17-Feb-19 04:32 PM] SHossain#0007
+i'm also noob playing this game. :abusedsmily:
+
+[17-Feb-19 04:32 PM] Cryptofist#7504
+Same, its been less than 24 hours for me.
+
+[17-Feb-19 04:33 PM] jl777c#5810
+oh, maybe slime mold works better than normal food
+
+[17-Feb-19 04:33 PM] Cryptofist#7504
+but ya know.... I dived in hard.
+
+[17-Feb-19 04:33 PM] Cryptofist#7504
+How do we check that?
+
+[17-Feb-19 04:33 PM] Cryptofist#7504
+Duration?
+
+[17-Feb-19 04:33 PM] jl777c#5810
+source code
+
+[17-Feb-19 04:33 PM] TonyL#3577
+After slime mold you should be not hungry for a longer time
+
+{Reactions}
+👍🏽 🍵 
+
+[17-Feb-19 04:33 PM] SHossain#0007
+better food package
+
+[17-Feb-19 04:34 PM] SHossain#0007
+nutrious
+
+[17-Feb-19 04:39 PM] TonyL#3577
+lvl15, hope end is soon 😃
+
+[17-Feb-19 04:39 PM] Cryptofist#7504
+26 down 25 up @TonyL
+
+[17-Feb-19 04:39 PM] Cryptofist#7504
+52 is outside/end of game
+
+[17-Feb-19 04:40 PM] Cryptofist#7504
+As far as what I read online about the game anyway.
+
+[17-Feb-19 04:40 PM] jl777c#5810
+some rings make food last longer,most use up food a lot faster
+
+[17-Feb-19 04:40 PM] Cryptofist#7504
+Seems there are surprises beyond the guides I have read, which is awesome
+
+[17-Feb-19 04:40 PM] TonyL#3577
+Oh thats why there are scrolls of monster detection
+
+[17-Feb-19 04:40 PM] jl777c#5810
+it is amazingly complex game
+
+[17-Feb-19 04:40 PM] TonyL#3577
+Invisible monsters here
+
+[17-Feb-19 04:40 PM] jl777c#5810
+there is a chameleon monster
+
+[17-Feb-19 04:40 PM] TonyL#3577
+Ring of protection is allows to eat less as I remember
+
+[17-Feb-19 04:41 PM] TonyL#3577
+And few others
+
+[17-Feb-19 04:41 PM] TonyL#3577
+```Top Ten Scores:
+   Score Name
+ 1  3869 Leeroy Jenkins: quit on level 15.```
+
+[17-Feb-19 04:42 PM] TonyL#3577
+Troll hit me 30hp, I've healed by big healing potion - he hit me again on 40 hp
+
+[17-Feb-19 04:42 PM] Cryptofist#7504
+wow
+
+[17-Feb-19 04:42 PM] jl777c#5810
+did the game replay properly?
+
+[17-Feb-19 04:42 PM] jl777c#5810
+/*
+ * ring_eat:
+ *    How much food does this ring use up?
+ */
+int
+ring_eat(int hand)
+{
+    THING *ring;
+    int eat;
+    static int uses[] = {
+     1,    /* R_PROTECT */         1,    /* R_ADDSTR */
+     1,    /* R_SUSTSTR */        -3,    /* R_SEARCH */
+    -5,    /* R_SEEINVIS */     0,    /* R_NOP */
+     0,    /* R_AGGR */        -3,    /* R_ADDHIT */
+    -3,    /* R_ADDDAM */         2,    /* R_REGEN */
+    -2,    /* R_DIGEST */         0,    /* R_TELEPORT */
+     1,    /* R_STEALTH */         1    /* R_SUSTARM */
+    };
+
+[17-Feb-19 04:42 PM] Cryptofist#7504
+You do have to farm XP in the begining I suppose
+
+[17-Feb-19 04:42 PM] TonyL#3577
+```(Leeroy Jenkins) found baton f4e05cd329b949b14f50cc10a678eea8d50018adfe0cd9496f4075c265205ce1 numkeys.9381 seed.1403759076619874603 playerdata.1228
+replay finished but readchar called
+
+extracted $$$gold.61 hp.39 strength.17 level.7 exp.448 dl.1 n.1 size.1228```
+
+[17-Feb-19 04:42 PM] TonyL#3577
+Whaaat
+

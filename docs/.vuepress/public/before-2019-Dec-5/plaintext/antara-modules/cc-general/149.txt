@@ -1,0 +1,549 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[20-Dec-18 03:02 PM] jl777c#5810
+unless it doesnt due to bugs 😃
+
+{Reactions}
+😂 
+
+[20-Dec-18 03:03 PM] jl777c#5810
+i guess the danger is if it passes when it shouldnt that one time it is checked...
+
+[20-Dec-18 03:04 PM] blackjok3r#3181
+every transaction passes the mempoolhceck to be added at least once, except if a block is received with a transaction that is not in the local mempool, in this case it is added without being checked as the block validation checks all the transactions have inputs already.
+
+[20-Dec-18 03:05 PM] blackjok3r#3181
+but someone should try to break it
+
+[20-Dec-18 03:07 PM] blackjok3r#3181
+I am more confident of th changes to the staker, those are definatly safe as no consensus things are change there.
+
+[20-Dec-18 05:30 PM] ComputerGenie 👴🏼📢#7004
+```diff
+-    
++
+```
+I love these 🙄
+
+{Reactions}
+abusedsmily 
+
+[20-Dec-18 05:56 PM] dukeleto#7326
+@blackjok3r you sure do like whitespace changes 😃
+
+{Reactions}
+😆 
+
+[21-Dec-18 01:26 AM] blackjok3r#3181
+its the atmo text editor I dont know how to turn that shit off
+
+[21-Dec-18 01:30 AM] blackjok3r#3181
+@ComputerGenie 👴🏼📢  What exactly is wrong wqith CFEK ? I am leaving to go away and wont really bve avalible for a fair while.. around for a few hours to fix anything that might be broken.
+
+[21-Dec-18 06:03 AM] dukeleto#7326
+@blackjok3r i have never used that editor, but it's probably called something like "strip trailing whitespace"
+
+[21-Dec-18 06:05 AM] dukeleto#7326
+also, you can append `?w=1` to ignore whitespace in diffs in Github: https://github.com/jl777/komodo/pull/1119/files?w=1
+
+{Embed}
+https://github.com/jl777/komodo/pull/1119/files?w=1
+Fix mempool and staker by blackjok3rtt · Pull Request #1119 · jl...
+This is doing 2 things:
+Mempool fix in main.cpp.
+It now only checks all transactions and puts them into the mempool once using the fCheckPow flag, which is only called once on each block.
+The accep...
+https://avatars3.githubusercontent.com/u/30971146?s=400&v=4
+
+{Reactions}
+👍 
+
+[21-Dec-18 06:05 AM] dukeleto#7326
+equivalent to ```     -w, --ignore-all-space
+           Ignore whitespace when comparing lines. This ignores differences even if one line has whitespace where the other line has none.
+```
+
+[22-Dec-18 05:58 PM] TonyL#3577
+@Mihailo Seems I've faced bug in ChannelsCC: https://paste.ubuntu.com/p/hc7zQxtp8w/
+When sending payment which covers channel capacity fully throwing an error: ```CC Eval EVAL_CHANNELS Invalid: vout.0 is CC for channelPayment! spending tx 1c05abb9e5c892c8bd2e8dee9f35f27e6ddc7fc4d61e6f94b455a0c84ac75247
+error code: -26
+error message:
+16: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)```
+
+So let's say if open a channel of 10 payments max with 100000 sat denomination you'll able to send 9 payments of 100000 sat but will get an error on 10th
+
+Or send 100000, 800000 and get an error when sending last 100000 and so on
+
+[22-Dec-18 06:00 PM] Mihailo#5902
+Ok, will take a look as soon as I'm back (I'll get back on Tuseday)
+
+{Reactions}
+👍 
+
+[22-Dec-18 06:03 PM] TonyL#3577
+@Mihailo I'll left it as an issue to your to-do list just to not forget about this edge case
+
+[22-Dec-18 06:03 PM] Mihailo#5902
+Great, thnx!
+
+{Reactions}
+👍 
+
+[25-Dec-18 11:01 AM] Mihailo#5902
+@TonyL I'm trying to reproduce the bug, but I don't seem to be able. I've opened the channel with 3 payments of 100k sat and then made 1 payment 100k, and then made another payment of 200k sat and that is total amount. Everything went through.
+
+[25-Dec-18 11:03 AM] Mihailo#5902
+Even tried your example, 100000-800000-100000
+
+[25-Dec-18 12:35 PM] TonyL#3577
+@Mihailo Hmm strange, still reproducible on my side. Are you trying to broadcast this last transaction? (I'm getting error on broadcasting)
+
+[25-Dec-18 12:35 PM] Mihailo#5902
+Yes, I broadcasted it.
+
+[25-Dec-18 12:36 PM] Mihailo#5902
+So I'm left with a channel that has 0 payments left.
+
+[25-Dec-18 12:36 PM] TonyL#3577
+```./komodo-cli -ac_name=TONY7 channelsinfo 2115322e9b5ace609b1bdd42311642d71b30d21f8efcc77ff63a5d48eb487ddb
+{
+  "result": "success",
+  "Channel CC address": "RMujp22fhF3CQh9Nz375VFNWNfdqSLKsQS",
+  "Destination address": "RNfviykgepoYjRL9ePcuHHuHJwxBGGVcgh",
+  "Number of payments": 5,
+  "Denomination": 1000000,
+  "Amount": "5000000 satoshi",
+  "Transactions": [
+    {
+      "Open": "2115322e9b5ace609b1bdd42311642d71b30d21f8efcc77ff63a5d48eb487ddb"
+    },
+    {
+      "Payment": "f72175537f1452a862d8c7a7e72182ce8fb945e6350d37ca7664e9c0c7d6b8b7",
+      "Number": 1,
+      "Amount": 1000000,
+      "Destination": "RNfviykgepoYjRL9ePcuHHuHJwxBGGVcgh",
+      "Secret": "6b17d06d26b36f955d5b079aaf78f7d7c8d6d47b8710cc4b6227bd3ab623e5aa"
+    },
+    {
+      "Payment": "5286e0bfa0c9b2647cf4b5ecc5faccaede556c9cb2c56bc3b065adcbe8fabcd2",
+      "Number": 1,
+      "Amount": 1000000,
+      "Destination": "RNfviykgepoYjRL9ePcuHHuHJwxBGGVcgh",
+      "Secret": "0c43345b1fa1e00888f3c11f3ac6eee32006ecd2fc6b79fe5c2949ddd1706f28"
+    },
+    {
+      "Payment": "785d0f776226a2a648469dd50db7d52801b6a3a2c8665b1bb6b1ee20a3695579",
+      "Number": 1,
+      "Amount": 1000000,
+      "Destination": "RNfviykgepoYjRL9ePcuHHuHJwxBGGVcgh",
+      "Secret": "f8d80ddbefe91d445da3a31c863a6b5078057937d4118980693b5b05c7798ccf"
+    },
+    {
+      "Payment": "1c05abb9e5c892c8bd2e8dee9f35f27e6ddc7fc4d61e6f94b455a0c84ac75247",
+      "Number": 1,
+      "Amount": 1000000,
+      "Destination": "RNfviykgepoYjRL9ePcuHHuHJwxBGGVcgh",
+      "Secret": "033d7b6573cc4326d07de6350e51e7dc85d5da2c086501dd2793749c5a0fcfe8"
+    }
+  ]
+}
+```
+
+[25-Dec-18 12:36 PM] TonyL#3577
+```./komodo-cli -ac_name=TONY7 channelspayment 2115322e9b5ace609b1bdd42311642d71b30d21f8efcc77ff63a5d48eb487ddb 1000000
+{
+  "result": "success",
+  "hex": "hex"
+}
+```
+
+[25-Dec-18 12:37 PM] TonyL#3577
+```./komodo-cli -ac_name=TONY7 sendrawtransaction hex ^^
+CC Eval EVAL_CHANNELS Invalid: vout.0 is CC for channelPayment! spending tx 1c05abb9e5c892c8bd2e8dee9f35f27e6ddc7fc4d61e6f94b455a0c84ac75247
+error code: -26
+error message:
+16: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)
+```
+
+[25-Dec-18 12:37 PM] TonyL#3577
+And have same for all channels which creating
+
+[25-Dec-18 12:38 PM] Mihailo#5902
+Hmmm, it seems I was working on older channels... But strange as I tried latest FSM....
+
+[25-Dec-18 12:38 PM] Mihailo#5902
+I'll check it again!
+
+[25-Dec-18 12:38 PM] TonyL#3577
+```git log -1
+commit 8ee384869f70c62160564fa5b6178b53e776ddaa (HEAD -> FSM, origin/FSM)
+Merge: e89d25e4a 5bcdcf0a7
+Author: jl777 <jl777@users.noreply.github.com>
+Date:   Thu Dec 20 03:46:09 2018 -1100
+
+    Merge pull request #1119 from blackjok3rtt/FSM
+    
+    Fix mempool and staker```
+
+[25-Dec-18 12:38 PM] TonyL#3577
+I'm on this commit
+
+[25-Dec-18 12:39 PM] TonyL#3577
+Yeah, next time will include to report repo/branch/commit - my bad
+
+[25-Dec-18 12:42 PM] Mihailo#5902
+No problem, it seems I didn't complie the client when switched to FSM 😲
+
+{Reactions}
+👍 
+
+[25-Dec-18 03:20 PM] Mihailo#5902
+@TonyL figured out what is the problem with channels.
+
+{Reactions}
+👌 
+
+[26-Dec-18 09:31 AM] Mihailo#5902
+@TonyL The fix for channels is merged in latest FSM 😉
+
+[26-Dec-18 10:18 AM] TonyL#3577
+@Mihailo Great! Let me check on my side
+
+[26-Dec-18 10:25 AM] TonyL#3577
+@Mihailo last payment worked smooth on my side this time
+`"Payments left": 0` This new param is very useful btw
+
+[26-Dec-18 10:25 AM] TonyL#3577
+```    {
+      "Payment": "f72175537f1452a862d8c7a7e72182ce8fb945e6350d37ca7664e9c0c7d6b8b7",
+      "Number of payments": 1,
+      "Amount": 1000000,
+      "Destination": "RNfviykgepoYjRL9ePcuHHuHJwxBGGVcgh",
+      "Secret": "6b17d06d26b36f955d5b079aaf78f7d7c8d6d47b8710cc4b6227bd3ab623e5aa",
+      "Payments left": 4
+    },
+    {
+      "Payment": "5286e0bfa0c9b2647cf4b5ecc5faccaede556c9cb2c56bc3b065adcbe8fabcd2",
+      "Number of payments": 1,
+      "Amount": 1000000,
+      "Destination": "RNfviykgepoYjRL9ePcuHHuHJwxBGGVcgh",
+      "Secret": "0c43345b1fa1e00888f3c11f3ac6eee32006ecd2fc6b79fe5c2949ddd1706f28",
+      "Payments left": 3
+    },
+    {
+      "Payment": "785d0f776226a2a648469dd50db7d52801b6a3a2c8665b1bb6b1ee20a3695579",
+      "Number of payments": 1,
+      "Amount": 1000000,
+      "Destination": "RNfviykgepoYjRL9ePcuHHuHJwxBGGVcgh",
+      "Secret": "f8d80ddbefe91d445da3a31c863a6b5078057937d4118980693b5b05c7798ccf",
+      "Payments left": 2
+    },
+    {
+      "Payment": "1c05abb9e5c892c8bd2e8dee9f35f27e6ddc7fc4d61e6f94b455a0c84ac75247",
+      "Number of payments": 1,
+      "Amount": 1000000,
+      "Destination": "RNfviykgepoYjRL9ePcuHHuHJwxBGGVcgh",
+      "Secret": "033d7b6573cc4326d07de6350e51e7dc85d5da2c086501dd2793749c5a0fcfe8",
+      "Payments left": 1
+    },
+    {
+      "Payment": "f0b5257c4f13c2719b20d43bc7a0aab7656fcdca197e0359ad0671fe1848a1c6",
+      "Number of payments": 1,
+      "Amount": 1000000,
+      "Destination": "RNfviykgepoYjRL9ePcuHHuHJwxBGGVcgh",
+      "Secret": "833b28385abc37736b192d542208184571c06528c32e5b577488a3c14ad29838",
+      "Payments left": 0
+    }
+  ]```
+
+[26-Dec-18 10:25 AM] TonyL#3577
+Should `Number of payments` be different?
+
+[26-Dec-18 10:26 AM] Mihailo#5902
+That is the number of payments in that payment. All of this were 1 payment (1000000)
+
+[26-Dec-18 10:26 AM] TonyL#3577
+Oh I see
+
+[26-Dec-18 10:27 AM] Mihailo#5902
+If you had 2000000 payment then it would be 2 payments
+
+[26-Dec-18 10:31 AM] TonyL#3577
+Aha: payment `amount` / channel `denomination`
+
+[26-Dec-18 10:33 AM] Mihailo#5902
+You can calculate like that 😉
+
+[26-Dec-18 10:33 AM] TonyL#3577
+Just an illustration for other readers 😃
+
+[26-Dec-18 10:33 AM] Mihailo#5902
+I can remove that info if it is confusing. There is anyway payment left.
+
+[26-Dec-18 10:35 AM] TonyL#3577
+Hmm, current naming might be a little bit confusing for understanding: by number of payments you can assume a separate transaction, not amount of denominations
+
+[26-Dec-18 10:36 AM] TonyL#3577
+I found useful for myself made abstraction as "capacity total", "capacity left"
+
+[26-Dec-18 10:37 AM] Mihailo#5902
+For me the number of payment could be the order number of payment, but number of payments is in plural 😛
+
+[26-Dec-18 10:39 AM] TonyL#3577
+Oh, you've added `satoshi` disclaimer to `Denomination` field also (broke my app 😂 )
+
+[26-Dec-18 10:40 AM] Mihailo#5902
+Yeah. I thought it could break something but as this info should be human readable I added "satoshi".
+
+[26-Dec-18 10:44 AM] TonyL#3577
+Just as a suggestion - maybe put additional information to keys?
+Like a:
+"Denomination (satoshi)": 100000
+Instead of current:
+"Denomination": "100000 satoshi"
+
+[26-Dec-18 10:46 AM] TonyL#3577
+And totally agree that this disclaimer is an important here and will make understanding easier
+
+[26-Dec-18 10:46 AM] Mihailo#5902
+Ah, didn't think of that. Great, I'll change it in future.
+
+{Reactions}
+🔥 
+
+[27-Dec-18 04:25 PM] gzezo#2697
+Hi guys can someone tell me what are timelocks ?
+
+[27-Dec-18 05:28 PM] dukeleto#7326
+@gzezo https://en.bitcoin.it/wiki/NLockTime
+
+{Embed}
+https://en.bitcoin.it/wiki/NLockTime
+NLockTime
+
+[27-Dec-18 05:29 PM] dukeleto#7326
+also https://en.bitcoin.it/wiki/Hashed_Timelock_Contracts
+
+{Embed}
+https://en.bitcoin.it/wiki/Hashed_Timelock_Contracts
+Hashed Timelock Contracts
+
+[27-Dec-18 06:25 PM] gzezo#2697
+Thanks for link, gonna go through it
+
+[03-Jan-19 01:17 PM] Mihailo#5902
+I just made an RPC helper function to decode OP_RETURN data from getrawtransaction for example, to see which CC and function is OP_RETURN for. Just supply txid and it will return the info about opret:
+```
+{
+  "result": "success",
+  "eval_code": "EVAL_ORACLES",
+  "funciton": "D"
+}
+```
+I had a need when debugging transactions to see if some tx is the one I'm looking for and this will help a lot.
+
+{Reactions}
+3040_kingpeepo 
+
+[03-Jan-19 03:50 PM] dukeleto#7326
+@Mihailo that looks cool, what is the RPC called?
+
+[03-Jan-19 03:57 PM] Mihailo#5902
+Decodeccopret, did not yet make PR, will do it soon
+
+{Reactions}
+👍 
+
+[03-Jan-19 06:18 PM] Mihailo#5902
+Merged into FSM. Didn't try with non CC opret but i think it will not crash...
+
+[03-Jan-19 06:38 PM] jl777c#5810
+"funciton": "D"
+
+[03-Jan-19 08:58 PM] Mihailo#5902
+I renamed it to "function" 😛 And D for oracledata 😉
+
+[03-Jan-19 09:00 PM] Mihailo#5902
+Or should I write "funcid"...
+
+[04-Jan-19 02:46 AM] Mylo#8306
+"fun kid"  :trollface: 
+now get off my lawn 😄
+
+[07-Jan-19 05:00 PM] grewalsatinder#9653
+trying out lib crypto conditions library
+
+[07-Jan-19 05:01 PM] grewalsatinder#9653
+compiled this on linux
+
+[07-Jan-19 05:01 PM] grewalsatinder#9653
+https://github.com/libscott/libcryptoconditions
+
+{Embed}
+https://github.com/libscott/libcryptoconditions
+libscott/libcryptoconditions
+Interledger crypto-conditions implemented in C, including simple JSON api - libscott/libcryptoconditions
+https://avatars3.githubusercontent.com/u/125019?s=400&v=4
+
+[07-Jan-19 05:01 PM] grewalsatinder#9653
+master branch
+
+[07-Jan-19 05:01 PM] grewalsatinder#9653
+edited the .py file with .so file and also tried .a file
+
+[07-Jan-19 05:01 PM] grewalsatinder#9653
+getting these errors
+
+[07-Jan-19 05:02 PM] grewalsatinder#9653
+```satinder@satinder-vm:~/libscott/libcryptoconditions$ ./cryptoconditions.py 
+Traceback (most recent call last):
+  File "./cryptoconditions.py", line 13, in <module>
+    so.jsonRPC.restype = c_char_p
+  File "/usr/lib/python2.7/ctypes/__init__.py", line 379, in __getattr__
+    func = self.__getitem__(name)
+  File "/usr/lib/python2.7/ctypes/__init__.py", line 384, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: /usr/local/lib/libcryptoconditions.so: undefined symbol: jsonRPC```
+
+[07-Jan-19 05:02 PM] grewalsatinder#9653
+```satinder@satinder-vm:~/libscott/libcryptoconditions$ ./cryptoconditions.py -h
+Traceback (most recent call last):
+  File "./cryptoconditions.py", line 12, in <module>
+    so = cdll.LoadLibrary('/usr/local/lib/libcryptoconditions.a')
+  File "/usr/lib/python2.7/ctypes/__init__.py", line 444, in LoadLibrary
+    return self._dlltype(name)
+  File "/usr/lib/python2.7/ctypes/__init__.py", line 366, in __init__
+    self._handle = _dlopen(self._name, mode)
+OSError: /usr/local/lib/libcryptoconditions.a: invalid ELF header```
+
+[07-Jan-19 05:02 PM] grewalsatinder#9653
+`ldd` doesn't seems wrong as I see 🤔
+
+[07-Jan-19 05:02 PM] grewalsatinder#9653
+```satinder@satinder-vm:~/libscott/libcryptoconditions$ ldd /usr/local/lib/libcryptoconditions.*
+/usr/local/lib/libcryptoconditions.a:
+    not a dynamic executable
+/usr/local/lib/libcryptoconditions.la:
+    not a dynamic executable
+/usr/local/lib/libcryptoconditions.so:
+    linux-vdso.so.1 (0x00007ffe40ad7000)
+    libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007ff5c76a0000)
+    /lib64/ld-linux-x86-64.so.2 (0x00007ff5c7ccf000)
+/usr/local/lib/libcryptoconditions.so.0:
+    linux-vdso.so.1 (0x00007ffea21e3000)
+    libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f12650c2000)
+    /lib64/ld-linux-x86-64.so.2 (0x00007f12656f1000)
+/usr/local/lib/libcryptoconditions.so.0.0.0:
+    linux-vdso.so.1 (0x00007ffe999be000)
+    libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f8f2c1ec000)
+    /lib64/ld-linux-x86-64.so.2 (0x00007f8f2c81b000)```
+
+[07-Jan-19 05:02 PM] grewalsatinder#9653
+I don't know python
+
+[07-Jan-19 05:03 PM] grewalsatinder#9653
+just want to get the output of `./cryptoconditions.py -h`
+
+[07-Jan-19 05:03 PM] grewalsatinder#9653
+can someone plz help 🙂
+
+[07-Jan-19 05:08 PM] TonyL#3577
+try to run it as `python cryptoconditions.py`
+
+[07-Jan-19 05:09 PM] grewalsatinder#9653
+ok
+
+[07-Jan-19 05:09 PM] grewalsatinder#9653
+```satinder@satinder-vm:~/libscott/libcryptoconditions$ python cryptoconditions.py -h
+Traceback (most recent call last):
+  File "cryptoconditions.py", line 13, in <module>
+    so.jsonRPC.restype = c_char_p
+  File "/usr/lib/python2.7/ctypes/__init__.py", line 379, in __getattr__
+    func = self.__getitem__(name)
+  File "/usr/lib/python2.7/ctypes/__init__.py", line 384, in __getitem__
+    func = self._FuncPtr((name_or_ordinal, self))
+AttributeError: /usr/local/lib/libcryptoconditions.so: undefined symbol: jsonRPC
+```
+
+[07-Jan-19 05:09 PM] grewalsatinder#9653
+same
+
+[07-Jan-19 05:13 PM] TonyL#3577
+Hmm seems this `jsonRPC` not defined in `/usr/local/lib/libcryptoconditions.so`
+
+[07-Jan-19 05:13 PM] TonyL#3577
+Never worked with this lib - have to try on my side for resolution
+
+[07-Jan-19 05:13 PM] grewalsatinder#9653
+that would help mate if solves
+
+[07-Jan-19 05:13 PM] grewalsatinder#9653
+I want to try using this lib in my go lang code
+
+[07-Jan-19 05:14 PM] grewalsatinder#9653
+also have issues compiling it on osx
+
+[07-Jan-19 05:14 PM] grewalsatinder#9653
+will make issues on the repo
+
+[07-Jan-19 05:23 PM] TonyL#3577
+Maybe lib is building for different architecture
+
+[07-Jan-19 05:30 PM] TonyL#3577
+Oh seems fixed it @grewalsatinder
+
+[07-Jan-19 05:30 PM] TonyL#3577
+```so.cc_jsonRPC.restype = c_char_p```
+
+[07-Jan-19 05:30 PM] grewalsatinder#9653
+nice! 🙂
+
+[07-Jan-19 05:30 PM] grewalsatinder#9653
+let me try
+
+[07-Jan-19 05:30 PM] TonyL#3577
+```./cryptoconditions.py --help
+cryptoconditions [-h] {method} {request_json}
+
+methods:
+    encodeCondition: Encode a JSON condition to binary
+    decodeCondition: Decode a binary condition
+    encodeFulfillment: Encode a JSON condition to a fulfillment
+    decodeFulfillment: Decode a binary fulfillment
+    verifyFulfillment: Verify a fulfillment
+    signTreeEd25519: Sign ed25519 condition nodes
+    signTreeSecp256k1: Sign secp256k1 condition nodes
+    listMethods: List available methods
+
+optional arguments:
+  -h, --help            show this help message and exit```
+
+[07-Jan-19 05:31 PM] TonyL#3577
+There is no `jsonRPC` in lib but `cc_jsonRPC`
+
+[07-Jan-19 05:31 PM] grewalsatinder#9653
+yes!!
+
+[07-Jan-19 05:31 PM] grewalsatinder#9653
+it fixed it!!
+
+[07-Jan-19 05:31 PM] TonyL#3577
+So it should be just a typo
+
+[07-Jan-19 05:31 PM] grewalsatinder#9653
+woohoo!! 🎉
+
+[07-Jan-19 05:31 PM] grewalsatinder#9653
+thanks @TonyL 😃
+
+[07-Jan-19 05:31 PM] grewalsatinder#9653
+can you also take a look at .a file?
+
