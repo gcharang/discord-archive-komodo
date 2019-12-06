@@ -1,4 +1,48 @@
 module.exports = {
+  head: [
+    [
+      "link",
+      {
+        rel: "icon",
+        href: "KMD_Mark_Black.png"
+      }
+    ],
+    [
+      "meta",
+      {
+        name: "twitter:card",
+        content: "summary_large_image"
+      }
+    ],
+    [
+      "meta",
+      {
+        name: "twitter:card",
+        content: "summary_large_image"
+      }
+    ],
+    [
+      "meta",
+      {
+        name: "twitter:site",
+        content: "@komodoplatform"
+      }
+    ],
+    [
+      "meta",
+      {
+        name: "twitter:title",
+        content: "Komodo Discord Archive"
+      }
+    ],
+    [
+      "meta",
+      {
+        name: "twitter:description",
+        content: "Archive of the Komodo Discord server's public channels"
+      }
+    ]
+  ],
   title: "Komodo Discord Archive",
   base: "/",
   description: "Archive of the Komodo Discord server's public channels",
