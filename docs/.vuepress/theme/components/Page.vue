@@ -1,69 +1,82 @@
 <template>
-  <main class="page">
-    <slot name="top" />
+  <v-app>
+    <main class="page">
+      <slot name="top" />
 
-    <Content class="theme-default-content" />
-
-    <div v-if="formatPage" class="theme-default-content">
-      <select
-        name="Period"
-        @change="periodDirOnchange()"
-        v-model="selectedPeriodDirName"
-      >
-        <option disabled value>Please select the period</option>
-        <option v-for="dir in periodDirNames">{{ dir }}</option>
-      </select>
-
-      <div v-if="displayDate">
-        <select
-          name="Date"
-          @change="dateDirOnchange()"
-          v-model="selectedDateDirName"
-        >
-          <option disabled value>Please select the date</option>
-          <option v-for="dir in dateDirNames">{{ dir }}</option>
-        </select>
-      </div>
-      <div v-if="categoryDirs && categoryDirs.length !== 0">
-        <select
-          name="Category"
-          @change="categoryDirOnchange()"
-          v-model="selectedCategoryDirName"
-        >
-          <option disabled value>Please select the category</option>
-          <option v-for="dir in categoryDirNames">{{ dir }}</option>
-        </select>
-      </div>
-      <div v-if="channelDirs && channelDirs.length !== 0">
-        <select
-          name="Channel"
-          @change="channelOnchange()"
-          v-model="selectedChannelDirName"
-        >
-          <option disabled value>Please select the channel</option>
-          <option v-for="dir in channelDirNames">{{ dir }}</option>
-        </select>
-      </div>
-
-      <div v-for="displayPath in displayPaths">
-        <ul>
-          <li>
-            <a
-              class="theme-default-content"
-              v-bind:href="displayPath"
-              target="_blank"
-              >{{ displayPath }}</a
+      <Content class="theme-default-content" />
+      <v-container fluid v-if="formatPage" class="theme-default-content">
+        <v-row align="center">
+          <v-col class="d-flex" cols="12" sm="6">
+            <v-select
+              :items="periodDirNames"
+              label="Please select the period"
+              @change="periodDirOnchange()"
+              v-model="selectedPeriodDirName"
             >
-          </li>
-        </ul>
+            </v-select>
+          </v-col>
+
+          <v-col v-if="displayDate" class="d-flex" cols="12" sm="6">
+            <v-select
+              :items="dateDirNames"
+              label="Please select the date"
+              @change="dateDirOnchange()"
+              v-model="selectedDateDirName"
+            >
+            </v-select>
+          </v-col>
+          <v-col
+            v-if="categoryDirs && categoryDirs.length !== 0"
+            class="d-flex"
+            cols="12"
+            sm="6"
+          >
+            <v-select
+              :items="categoryDirNames"
+              label="Please select the category"
+              @change="categoryDirOnchange()"
+              v-model="selectedCategoryDirName"
+            >
+            </v-select>
+          </v-col>
+          <v-col
+            v-if="channelDirs && channelDirs.length !== 0"
+            class="d-flex"
+            cols="12"
+            sm="6"
+          >
+            <v-select
+              :items="channelDirNames"
+              label="Please select the channel"
+              @change="channelOnchange()"
+              v-model="selectedChannelDirName"
+            >
+            </v-select>
+          </v-col>
+        </v-row>
+      </v-container>
+
+      <div v-if="formatPage" class="theme-default-content">
+        <div v-for="displayPath in displayPaths">
+          <ul>
+            <li>
+              <a
+                class="theme-default-content"
+                v-bind:href="displayPath"
+                target="_blank"
+                >{{ displayPath }}</a
+              >
+            </li>
+          </ul>
+        </div>
       </div>
-    </div>
 
-    <PageEdit />
-    <PageNav v-bind="{ sidebarItems }" />
+      <PageEdit />
+      <PageNav v-bind="{ sidebarItems }" />
 
-    <slot name="bottom" />
-  </main>
+      <slot name="bottom" />
+    </main>
+  </v-app>
 </template>
 
 <script>
