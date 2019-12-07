@@ -5,29 +5,45 @@
     <Content class="theme-default-content" />
 
     <div v-if="formatPage">
-      <select name="Period" @change="periodDirOnchange()" v-model="selectedPeriodDirName">
+      <select
+        name="Period"
+        @change="periodDirOnchange()"
+        v-model="selectedPeriodDirName"
+      >
         <option disabled value>Please select the period</option>
-        <option v-for="dir in periodDirNames">{{dir}}</option>
+        <option v-for="dir in periodDirNames">{{ dir }}</option>
       </select>
       <span>Selected: {{ selectedPeriodDirName }}</span>
       <div v-if="displayDate">
-        <select name="Date" @change="dateDirOnchange()" v-model="selectedDateDirName">
+        <select
+          name="Date"
+          @change="dateDirOnchange()"
+          v-model="selectedDateDirName"
+        >
           <option disabled value>Please select the date</option>
-          <option v-for="dir in dateDirNames">{{dir}}</option>
+          <option v-for="dir in dateDirNames">{{ dir }}</option>
         </select>
         <span>Selected: {{ selectedDateDirName }}</span>
       </div>
       <div v-if="categoryDirs && categoryDirs.length !== 0">
-        <select name="Category" @change="categoryDirOnchange()" v-model="selectedCategoryDirName">
+        <select
+          name="Category"
+          @change="categoryDirOnchange()"
+          v-model="selectedCategoryDirName"
+        >
           <option disabled value>Please select the category</option>
-          <option v-for="dir in categoryDirNames">{{dir}}</option>
+          <option v-for="dir in categoryDirNames">{{ dir }}</option>
         </select>
         <span>Selected: {{ selectedCategoryDirName }}</span>
       </div>
       <div v-if="channelDirs && channelDirs.length !== 0">
-        <select name="Channel" @change="channelOnchange()" v-model="selectedChannelDirName">
+        <select
+          name="Channel"
+          @change="channelOnchange()"
+          v-model="selectedChannelDirName"
+        >
           <option disabled value>Please select the channel</option>
-          <option v-for="dir in channelDirNames">{{dir}}</option>
+          <option v-for="dir in channelDirNames">{{ dir }}</option>
         </select>
         <span>Selected: {{ selectedChannelDirName }}</span>
       </div>
@@ -37,7 +53,8 @@
           v-bind:href="displayPath"
           target="_blank"
           v-for="displayPath in displayPaths"
-        >{{displayPath}}</a>
+          >{{ displayPath }}</a
+        >
       </div>
     </div>
 
@@ -198,10 +215,6 @@ export default {
       )[0];
       this.displayFiles = this.selectedChannelDir.children;
       this.displayPaths = this.displayFiles.map(function(file) {
-        /*let dirPath = vm.selectedChannelDir.path
-          .split("/")
-          .slice(4)
-          .join("/");*/
         let dirPathArr = vm.selectedChannelDir.path.split("/").slice(4);
         let toReplace = dirPathArr.indexOf("htmldark");
         dirPathArr[toReplace] = vm.format;
