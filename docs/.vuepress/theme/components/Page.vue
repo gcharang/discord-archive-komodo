@@ -54,22 +54,17 @@
             </v-select>
           </v-col>
         </v-row>
-      </v-container>
-
-      <div v-if="formatPage" class="theme-default-content">
         <div v-for="displayPath in displayPaths">
-          <ul>
-            <li>
-              <a
-                class="theme-default-content"
-                v-bind:href="displayPath"
-                target="_blank"
-                >{{ displayPath }}</a
-              >
-            </li>
-          </ul>
+          <v-btn
+            block
+            color="secondary"
+            dark
+            @click="onLinkButtonClick(displayPath)"
+          >
+            {{ displayPath }}
+          </v-btn>
         </div>
-      </div>
+      </v-container>
 
       <PageEdit />
       <PageNav v-bind="{ sidebarItems }" />
@@ -248,6 +243,9 @@ export default {
             .split(".")[0]
         );
       });
+    },
+    onLinkButtonClick: function(param) {
+      window.open(param, "_blank");
     }
   }
 };
