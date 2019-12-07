@@ -10,7 +10,7 @@
         <option v-for="dir in periodDirNames">{{dir}}</option>
       </select>
       <span>Selected: {{ selectedPeriodDirName }}</span>
-      <div v-if="dateDirs && dateDirs.length !== 0">
+      <div v-if="displayDate">
         <select name="Date" @change="dateDirOnchange()" v-model="selectedDateDirName">
           <option disabled value>Please select the date</option>
           <option v-for="dir in dateDirNames">{{dir}}</option>
@@ -32,13 +32,15 @@
         <span>Selected: {{ selectedChannelDirName }}</span>
       </div>
       <p class="theme-default-content">{{selectedCategoryDirName}}</p>
-      <p class="theme-default-content">{{displayPaths}}</p>
-      <a
-        class="theme-default-content"
-        v-bind:href="displayPath"
-        target="_blank"
-        v-for="displayPath in displayPaths"
-      >{{displayPath}}</a>
+      <p class="theme-default-content">{{displayFiles}}</p>
+      <div>
+        <a
+          class="theme-default-content"
+          v-bind:href="displayPath"
+          target="_blank"
+          v-for="displayPath in displayPaths"
+        >{{displayPath}}</a>
+      </div>
     </div>
 
     <PageEdit />
@@ -100,6 +102,13 @@ export default {
       let vm = this;
       let formats = ["htmldark", "htmllight", "plaintext", "csv"];
       return formats.indexOf(vm.frontmatter.type) > -1;
+    },
+    displayDate: function() {
+      return (
+        this.dateDirs &&
+        this.dateDirs.length !== 0 &&
+        this.selectedPeriodDirName.startsWith("after")
+      );
     }
   },
   methods: {
@@ -166,16 +175,19 @@ export default {
     },
     channelOnchange: function() {
       let vm = this;
-      this.selectedChannelDir = vm.channelDirs.filter(function(dir) {
-        return (dir.name = vm.selectedChannelDirName);
-      })[0];
+
+      this.selectedChannelDir = this.selectedCategoryDir.children.filter(
+        function(dir) {
+          return dir.name == vm.selectedChannelDirName;
+        }
+      )[0];
       this.displayFiles = this.selectedChannelDir.children;
-      this.displayPaths = this.displayFiles.map(function(dir) {
+      this.displayPaths = this.displayFiles.map(function(file) {
         let dirPath = vm.selectedChannelDir.path
           .split("/")
           .slice(4)
           .join("/");
-        return "/" + dirPath + "/" + dir.name;
+        return "/" + dirPath + "/" + file.name;
       });
     }
   }
