@@ -31,7 +31,7 @@
         </select>
         <span>Selected: {{ selectedChannelDirName }}</span>
       </div>
-      <p class="theme-default-content">{{selectedCategoryDirName}}</p>
+      <p class="theme-default-content">{{categoryDirs}}</p>
       <p class="theme-default-content">{{displayFiles}}</p>
       <div>
         <a
@@ -101,7 +101,7 @@ export default {
     formatPage: function() {
       let vm = this;
       let formats = ["htmldark", "htmllight", "plaintext", "csv"];
-      return formats.indexOf(vm.frontmatter.type) > -1;
+      return formats.indexOf(vm.format) > -1;
     },
     displayDate: function() {
       return (
@@ -114,7 +114,6 @@ export default {
   methods: {
     periodDirOnchange: function() {
       let vm = this;
-      let formatType = this.frontmatter.type;
       this.selectedPeriodDir = this.periodDirs.filter(function(dir) {
         return dir.name == vm.selectedPeriodDirName;
       })[0];
