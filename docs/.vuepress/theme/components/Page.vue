@@ -31,8 +31,6 @@
         </select>
         <span>Selected: {{ selectedChannelDirName }}</span>
       </div>
-      <p class="theme-default-content">{{categoryDirs}}</p>
-      <p class="theme-default-content">{{displayFiles}}</p>
       <div>
         <a
           class="theme-default-content"
@@ -59,7 +57,7 @@ export default {
   props: ["sidebarItems", "staticFileStructure"],
   data: function() {
     return {
-      // staticFileStructure: this.staticFileStructure,
+      staticFileStructure: this.staticFileStructure,
       selectedPeriodDirName: "",
       selectedPeriodDir: {},
       dateDirs: [],
@@ -84,6 +82,24 @@ export default {
     },
     format: function() {
       return this.$page.frontmatter.type;
+    },
+    fileType: function() {
+      switch (this.format) {
+        case "darkhtml":
+          return "html";
+          break;
+        case "lighthtml":
+          return "html";
+          break;
+        case "plaintext":
+          return "txt";
+          break;
+        case "csv":
+          return "csv";
+          break;
+        default:
+          return "html";
+      }
     },
     periodDirs: function() {
       return this.staticFileStructure.children.filter(function(dir) {
@@ -182,11 +198,16 @@ export default {
       )[0];
       this.displayFiles = this.selectedChannelDir.children;
       this.displayPaths = this.displayFiles.map(function(file) {
-        let dirPath = vm.selectedChannelDir.path
+        /*let dirPath = vm.selectedChannelDir.path
           .split("/")
           .slice(4)
-          .join("/");
-        return "/" + dirPath + "/" + file.name;
+          .join("/");*/
+        let dirPathArr = vm.selectedChannelDir.path.split("/").slice(4);
+        let toReplace = dirPathArr.indexOf("htmldark");
+        dirPathArr[toReplace] = vm.format;
+        let dirPath = dirPathArr.join("/");
+        let fileName = file.name.split(".")[0] + "." + vm.fileType;
+        return "/" + dirPath + "/" + fileName;
       });
     }
   }
