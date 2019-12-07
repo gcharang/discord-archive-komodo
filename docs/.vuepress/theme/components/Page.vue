@@ -209,6 +209,18 @@ export default {
         let fileName = file.name.split(".")[0] + "." + vm.fileType;
         return "/" + dirPath + "/" + fileName;
       });
+      this.displayPaths.sort(function(a, b) {
+        return (
+          a
+            .split("/")
+            .pop()
+            .split(".")[0] -
+          b
+            .split("/")
+            .pop()
+            .split(".")[0]
+        );
+      });
     }
   }
 };
