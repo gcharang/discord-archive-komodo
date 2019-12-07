@@ -10,12 +10,19 @@
         href="/before-2019-Dec-05/plaintext/ama-archive/antara-ama-july2019/1.txt"
         target="_blank"
       >/before-2019-Dec-05/plaintext/ama-archive/antara-ama-july2019/1.txt</a>
-      <p class="theme-default-content">{{timeDirNames}}</p>
+      <p class="theme-default-content">{{timeDirChildren}}</p>
       <select name="LeaveType" @change="timeDirOnchange()" v-model="selectedTimeDir">
         <option disabled value>Please select one</option>
         <option v-for="dir in timeDirNames">{{dir}}</option>
       </select>
       <span>Selected: {{ selectedTimeDir }}</span>
+      <div v-if="timeDirChildren.length !== 0">
+        <select name="LeaveType" @change="timeDirChildOnchange()" v-model="selectedTimeDirChild">
+          <option disabled value>Please select one</option>
+          <option v-for="dir in timeDirChildren">{{dir}}</option>
+        </select>
+        <span>Selected: {{ selectedTimeDirChild }}</span>
+      </div>
     </div>
     <PageEdit />
     <PageNav v-bind="{ sidebarItems }" />
@@ -34,7 +41,9 @@ export default {
   data: function() {
     return {
       staticFileStructure: this.staticFileStructure,
-      selectedTimeDir: ""
+      selectedTimeDir: "",
+      selectedTimeDirChild: "",
+      timeDirChildren: []
     };
   },
   computed: {
@@ -54,10 +63,16 @@ export default {
   },
   methods: {
     timeDirOnchange: function() {
-      this.timeDirs[this.selectedTimeDir].children.map(function(dir) {
-        return dir.name;
-      });
-    }
+      let vm = this;
+      this.timeDirChildren = this.timeDirs
+        .filter(function(dir) {
+          return dir.name == vm.selectedTimeDir;
+        })[0]
+        .children.map(function(dir) {
+          return dir.name;
+        });
+    },
+    timeDirChildOnchange: function() {}
   }
 };
 </script>

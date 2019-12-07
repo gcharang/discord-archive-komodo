@@ -6,13 +6,16 @@ import sys
 import json
 import subprocess
 from subprocess import Popen, PIPE, check_output, CalledProcessError
-from datetime import datetime, timezone
+from datetime import datetime, date, timezone, timedelta
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 # utc_now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 # "%d %b, %Y"
 utc_now = datetime.now(timezone.utc).strftime("%Y-%b-%d")
 outFormats = ['HtmlDark', 'HtmlLight', 'PlainText', 'Csv']
+with open('dateOfFirstBefore', 'r') as p:
+    dateOfFirstBefore = p.readline.strip()
+    firstDir = './docs/.vuepress/public/before-' + dateOfFirstBefore
 
 
 def firstPull(channelId, path, dateNow, outFormat, token):
@@ -20,6 +23,19 @@ def firstPull(channelId, path, dateNow, outFormat, token):
         cmd = 'docker run --rm -v $(pwd):/app/out -u $(id -u):$(id -g) tyrrrz/discordchatexporter export -t "' + \
             token + '" -b -c ' + channelId + ' -f ' + \
             outFormat + ' --before ' + dateNow + ' -o "' + path + '" -p 100'
+        p = Popen(cmd, shell=True, universal_newlines=True,
+                  executable="/bin/bash")
+        p.wait()
+    except:
+        print("An exception occurred")
+
+
+def normalPull(channelId, path, dateOfBefore, dateOfAfter, outFormat, token):
+    try:
+        cmd = 'docker run --rm -v $(pwd):/app/out -u $(id -u):$(id -g) tyrrrz/discordchatexporter export -t "' + \
+            token + '" -b -c ' + channelId + ' -f ' + \
+            outFormat + ' --before ' + dateOfBefore + ' --after ' + \
+            dateOfAfter + ' -o "' + path + '" -p 100'
         p = Popen(cmd, shell=True, universal_newlines=True,
                   executable="/bin/bash")
         p.wait()
@@ -65,14 +81,29 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
     textChannels = json.load(f)
     for outFormat in outFormats:
         for categoryId, category in textChannels.items():
-            dirPathCreate = os.path.join('./docs/.vuepress/public',
-                                         'before-'+utc_now, outFormat.lower(), cleanName(category['name']))
+            if not os.path.isdir(firstDir):
+                dirPathCreate = os.path.join('./docs/.vuepress/public',
+                                             'before-'+utc_now, outFormat.lower(), cleanName(category['name']))
+            else:
+                dirPathCreate = os.path.join('./docs/.vuepress/public',
+                                             'after-'+dateOfFirstBefore, utc_now, outFormat.lower(), cleanName(category['name']))
             for channelId, channelName in category['channels'].items():
                 exportPath = os.path.join(
                     dirPathCreate, cleanName(channelName))
                 print(exportPath)
-                firstPull(channelId,
-                          exportPath, utc_now, outFormat, token)
+                if not os.path.isdir(firstDir):
+                    firstPull(channelId,
+                              exportPath, utc_now, outFormat, token)
+                    with open('dateOfFirstBefore', 'w+') as q:
+                        q.write(utc_now)
+                else:
+                    delta = date(dateOfFirstBefore) - date(utc_now)
+                    for i in range(delta.days + 1):
+                        day = date(dateOfFirstBefore) + timedelta(days=i)
+                        print(day)
+
+                    normalPull(channelId, exportPath, utc_now,
+                               dateOfAfter, outFormat, token)
                 files = os.listdir(exportPath)
                 for index, file in enumerate(files):
                     if outFormat == 'PlainText':
@@ -97,7 +128,10 @@ with open('./docs/.vuepress/theme/dirStructure.js', 'w+') as outfile:
     json.dump(path_to_dict('./docs/.vuepress/public'), outfile)
     outfile.write(";")
 
-
+with open('./docs/.vuepress/public/dirStructure.js', 'w+') as outfile:
+    outfile.write("export default ")
+    json.dump(path_to_dict('./docs/.vuepress/public'), outfile)
+    outfile.write(";")
 '''
 
 For anyone else looking at the wget solution, I had to add a couple more flags (cygwin version, Windows) to get attached images to download:
