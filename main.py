@@ -135,29 +135,30 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
                             print(exportPath)
                             normalPull(channelId, exportPath, currDate,
                                        dateOfAfter, outFormat, token)
+                            files = os.listdir(exportPath)
+                            for index, file in enumerate(files):
+                                if outFormat == 'PlainText':
+                                    fileArr = re.findall(r"\[(.*?)\]", file)
+                                    newFile = fileArr[len(
+                                        fileArr)-1].split()[0]+'.txt'
+                                elif outFormat == 'HtmlDark':
+                                    fileArr = re.findall(r"\[(.*?)\]", file)
+                                    newFile = fileArr[len(
+                                        fileArr)-1].split()[0]+'.html'
+                                elif outFormat == 'HtmlLight':
+                                    fileArr = re.findall(r"\[(.*?)\]", file)
+                                    newFile = fileArr[len(
+                                        fileArr)-1].split()[0]+'.html'
+                                elif outFormat == 'Csv':
+                                    fileArr = re.findall(r"\[(.*?)\]", file)
+                                    newFile = fileArr[len(
+                                        fileArr)-1].split()[0]+'.csv'
+                                os.rename(os.path.join(exportPath, file),
+                                          os.path.join(exportPath, newFile))
                         else:
                             pass
                         dateOfAfter = currDate
-                        files = os.listdir(exportPath)
-                        for index, file in enumerate(files):
-                            if outFormat == 'PlainText':
-                                fileArr = re.findall(r"\[(.*?)\]", file)
-                                newFile = fileArr[len(
-                                    fileArr)-1].split()[0]+'.txt'
-                            elif outFormat == 'HtmlDark':
-                                fileArr = re.findall(r"\[(.*?)\]", file)
-                                newFile = fileArr[len(
-                                    fileArr)-1].split()[0]+'.html'
-                            elif outFormat == 'HtmlLight':
-                                fileArr = re.findall(r"\[(.*?)\]", file)
-                                newFile = fileArr[len(
-                                    fileArr)-1].split()[0]+'.html'
-                            elif outFormat == 'Csv':
-                                fileArr = re.findall(r"\[(.*?)\]", file)
-                                newFile = fileArr[len(
-                                    fileArr)-1].split()[0]+'.csv'
-                            os.rename(os.path.join(exportPath, file),
-                                      os.path.join(exportPath, newFile))
+
 
 clean_file_names('./docs/.vuepress/public')
 
