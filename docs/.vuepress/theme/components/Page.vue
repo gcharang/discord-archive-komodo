@@ -5,46 +5,44 @@
     <Content class="theme-default-content" />
 
     <div v-if="formatPage" class="theme-default-content">
-      <div>
-        <select
-          name="Period"
-          @change="periodDirOnchange()"
-          v-model="selectedPeriodDirName"
-        >
-          <option disabled value>Please select the period</option>
-          <option v-for="dir in periodDirNames">{{ dir }}</option>
-        </select>
+      <select
+        name="Period"
+        @change="periodDirOnchange()"
+        v-model="selectedPeriodDirName"
+      >
+        <option disabled value>Please select the period</option>
+        <option v-for="dir in periodDirNames">{{ dir }}</option>
+      </select>
 
-        <div v-if="displayDate">
-          <select
-            name="Date"
-            @change="dateDirOnchange()"
-            v-model="selectedDateDirName"
-          >
-            <option disabled value>Please select the date</option>
-            <option v-for="dir in dateDirNames">{{ dir }}</option>
-          </select>
-        </div>
-        <div v-if="categoryDirs && categoryDirs.length !== 0">
-          <select
-            name="Category"
-            @change="categoryDirOnchange()"
-            v-model="selectedCategoryDirName"
-          >
-            <option disabled value>Please select the category</option>
-            <option v-for="dir in categoryDirNames">{{ dir }}</option>
-          </select>
-        </div>
-        <div v-if="channelDirs && channelDirs.length !== 0">
-          <select
-            name="Channel"
-            @change="channelOnchange()"
-            v-model="selectedChannelDirName"
-          >
-            <option disabled value>Please select the channel</option>
-            <option v-for="dir in channelDirNames">{{ dir }}</option>
-          </select>
-        </div>
+      <div v-if="displayDate">
+        <select
+          name="Date"
+          @change="dateDirOnchange()"
+          v-model="selectedDateDirName"
+        >
+          <option disabled value>Please select the date</option>
+          <option v-for="dir in dateDirNames">{{ dir }}</option>
+        </select>
+      </div>
+      <div v-if="categoryDirs && categoryDirs.length !== 0">
+        <select
+          name="Category"
+          @change="categoryDirOnchange()"
+          v-model="selectedCategoryDirName"
+        >
+          <option disabled value>Please select the category</option>
+          <option v-for="dir in categoryDirNames">{{ dir }}</option>
+        </select>
+      </div>
+      <div v-if="channelDirs && channelDirs.length !== 0">
+        <select
+          name="Channel"
+          @change="channelOnchange()"
+          v-model="selectedChannelDirName"
+        >
+          <option disabled value>Please select the channel</option>
+          <option v-for="dir in channelDirNames">{{ dir }}</option>
+        </select>
       </div>
 
       <div v-for="displayPath in displayPaths">

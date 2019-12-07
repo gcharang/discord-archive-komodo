@@ -1,26 +1,24 @@
-<template>  
-  <div >
-    <button @click="$router.push(vLink)">{{ vTitle }}</button>    
+<template>
+  <div>
+    <button @click="$router.push(vLink)">{{ vTitle }}</button>
   </div>
 </template>
 
 <script>
+export default {
+  props: ["title", "link"],
 
-  export default {
-    props: ['title','link'],
-
-    data() {
-      return {
-        vTitle: this.title,
-        vLink: this.link
-      };
-    }
+  data() {
+    return {
+      vTitle: this.title,
+      vLink: this.link
+    };
   }
-
+};
 </script>
 
 <style lang="stylus">
-button 
+button
    display inline-block
    font-size 0.9em
    color #fff
