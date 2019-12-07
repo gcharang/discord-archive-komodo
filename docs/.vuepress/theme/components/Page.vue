@@ -4,7 +4,7 @@
 
     <Content class="theme-default-content" />
 
-    <div v-if="frontmatter.type == 'plaintext'">
+    <div v-if="formatPage">
       <a
         class="theme-default-content"
         href="/before-2019-Dec-05/plaintext/ama-archive/antara-ama-july2019/1.txt"
@@ -59,6 +59,15 @@ export default {
       return this.timeDirs.map(function(dir) {
         return dir.name;
       });
+    },
+    timeDirNames: function() {
+      return this.timeDirs.map(function(dir) {
+        return dir.name;
+      });
+    },
+    formatPage: function() {
+      let formats = ["htmldark", "htmllight", "plaintext", "csv"];
+      return formats.indexOf(this.frontmatter.type) > -1;
     }
   },
   methods: {
