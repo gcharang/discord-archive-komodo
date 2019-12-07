@@ -9,12 +9,13 @@ from subprocess import Popen, PIPE, check_output, CalledProcessError
 from datetime import datetime, date, timezone, timedelta
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
-# utc_now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-# "%d %b, %Y"
+
 utc_now = datetime.now(timezone.utc).strftime("%Y-%b-%d")
+
 outFormats = ['HtmlDark', 'HtmlLight', 'PlainText', 'Csv']
+
 with open('dateOfFirstBefore', 'r') as p:
-    dateOfFirstBefore = p.readline.strip()
+    dateOfFirstBefore = p.readline().strip()
     firstDir = './docs/.vuepress/public/before-' + dateOfFirstBefore
 
 
@@ -55,6 +56,7 @@ def path_to_dict(path):
     d = {'name': os.path.basename(path)}
     if os.path.isdir(path):
         d['type'] = "directory"
+#        d['path'] = path
         d['children'] = [path_to_dict(os.path.join(path, x))
                          for x in os.listdir(path)]
     else:
@@ -81,29 +83,41 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
     textChannels = json.load(f)
     for outFormat in outFormats:
         for categoryId, category in textChannels.items():
-            if not os.path.isdir(firstDir):
-                dirPathCreate = os.path.join('./docs/.vuepress/public',
-                                             'before-'+utc_now, outFormat.lower(), cleanName(category['name']))
-            else:
-                dirPathCreate = os.path.join('./docs/.vuepress/public',
-                                             'after-'+dateOfFirstBefore, utc_now, outFormat.lower(), cleanName(category['name']))
+
             for channelId, channelName in category['channels'].items():
-                exportPath = os.path.join(
-                    dirPathCreate, cleanName(channelName))
-                print(exportPath)
+
                 if not os.path.isdir(firstDir):
+                    dirPathCreate = os.path.join('./docs/.vuepress/public',
+                                                 'before-'+utc_now, outFormat.lower(), cleanName(category['name']))
+                    exportPath = os.path.join(
+                        dirPathCreate, cleanName(channelName))
+                    print(exportPath)
                     firstPull(channelId,
                               exportPath, utc_now, outFormat, token)
                     with open('dateOfFirstBefore', 'w+') as q:
                         q.write(utc_now)
                 else:
-                    delta = date(dateOfFirstBefore) - date(utc_now)
+                    delta = datetime.now(timezone.utc) - datetime.strptime(
+                        dateOfFirstBefore+'-+0000', '%Y-%b-%d-%z')
+                    dateOfAfter = dateOfFirstBefore
                     for i in range(delta.days + 1):
-                        day = date(dateOfFirstBefore) + timedelta(days=i)
-                        print(day)
+                        day = datetime.strptime(
+                            dateOfFirstBefore+'-+0000', '%Y-%b-%d-%z') + timedelta(days=i)
+                        currDate = day.strftime("%Y-%b-%d")
 
-                    normalPull(channelId, exportPath, utc_now,
-                               dateOfAfter, outFormat, token)
+                        dirPathCreate = os.path.join('./docs/.vuepress/public',
+                                                     'after-'+dateOfFirstBefore, currDate, outFormat.lower(), cleanName(category['name']))
+                        exportPath = os.path.join(
+                            dirPathCreate, cleanName(channelName))
+
+                        if not currDate == dateOfFirstBefore and not os.path.isdir(exportPath):
+                            print(exportPath)
+                            normalPull(channelId, exportPath, currDate,
+                                       dateOfAfter, outFormat, token)
+                        else:
+                            pass
+                        dateOfAfter = currDate
+
                 files = os.listdir(exportPath)
                 for index, file in enumerate(files):
                     if outFormat == 'PlainText':
@@ -132,6 +146,8 @@ with open('./docs/.vuepress/public/dirStructure.js', 'w+') as outfile:
     outfile.write("export default ")
     json.dump(path_to_dict('./docs/.vuepress/public'), outfile)
     outfile.write(";")
+
+
 '''
 
 For anyone else looking at the wget solution, I had to add a couple more flags (cygwin version, Windows) to get attached images to download:
