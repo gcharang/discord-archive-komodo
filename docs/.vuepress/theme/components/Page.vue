@@ -54,16 +54,20 @@
             </v-select>
           </v-col>
         </v-row>
-        <div v-for="displayPath in displayPaths">
-          <v-btn
-            block
-            color="secondary"
-            dark
-            @click="onLinkButtonClick(displayPath)"
-          >
-            {{ displayPath }}
-          </v-btn>
-        </div>
+      </v-container>
+      <v-container fluid class="pa-0">
+        <v-row align="center">
+          <div v-for="displayPath in displayPaths">
+            <v-btn
+              block
+              color="secondary"
+              dark
+              @click="onLinkButtonClick(displayPath)"
+            >
+              {{ displayPath }}
+            </v-btn>
+          </div>
+        </v-row>
       </v-container>
 
       <PageEdit />
