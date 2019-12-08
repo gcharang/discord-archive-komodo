@@ -5,6 +5,9 @@
 
       <Content class="theme-default-content" />
       <v-container fluid v-if="formatPage" class="theme-default-content">
+        <blockquote class="blockquote">
+          Select the options from the Dropdown menus to see the available links.
+        </blockquote>
         <v-row align="center">
           <v-col class="d-flex" cols="12" sm="6">
             <v-select
@@ -54,9 +57,12 @@
             </v-select>
           </v-col>
         </v-row>
-      </v-container>
-      <v-container fluid v-if="formatPage" class="theme-default-content">
-        <v-row no-gutters class="mb-auto" align="center">
+
+        <blockquote v-if="displayPaths.length != 0" class="blockquote">
+          Below is a list of files that satisfy the above selection.
+        </blockquote>
+
+        <v-row no-gutters class="mb-2" align="center">
           <v-col v-for="displayPath in displayPaths" cols="12">
             <v-btn
               block
@@ -64,6 +70,7 @@
               dark
               :href="displayPath"
               target="_blank"
+              class="mb-2"
             >
               {{ displayPath }}
             </v-btn>
