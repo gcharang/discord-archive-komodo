@@ -55,18 +55,19 @@
           </v-col>
         </v-row>
       </v-container>
-      <v-container fluid class="pa-0">
-        <v-row align="center">
-          <div v-for="displayPath in displayPaths">
+      <v-container fluid v-if="formatPage" class="theme-default-content">
+        <v-row no-gutters class="mb-auto" align="center">
+          <v-col v-for="displayPath in displayPaths" cols="12">
             <v-btn
               block
               color="secondary"
               dark
-              @click="onLinkButtonClick(displayPath)"
+              :href="displayPath"
+              target="_blank"
             >
               {{ displayPath }}
             </v-btn>
-          </div>
+          </v-col>
         </v-row>
       </v-container>
 
@@ -247,9 +248,6 @@ export default {
             .split(".")[0]
         );
       });
-    },
-    onLinkButtonClick: function(param) {
-      window.open(param, "_blank");
     }
   }
 };
@@ -258,6 +256,9 @@ export default {
 <style lang="stylus">
 @require '../styles/wrapper.styl';
 
+.v-btn {
+  text-transform:none !important;
+}
 .page {
   padding-bottom: 2rem;
   display: block;
