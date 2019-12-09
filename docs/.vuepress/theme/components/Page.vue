@@ -14,19 +14,12 @@
             v-model="selectedPeriodDirName"
           ></v-select>
         </v-col>
-        <v-col v-if="displayDate" class="d-flex" cols="12" sm="6">
-          <v-select
-            :items="dateDirNames"
-            label="Please select the date"
-            @change="dateDirOnchange()"
-            v-model="selectedDateDirName"
-          ></v-select>
-        </v-col>
+
         <v-col v-if="displayDate" class="d-flex" cols="12" sm="12">
           <v-date-picker
             :allowed-dates="allowedDates"
             @change="dateDirOnchange()"
-            v-model="selectedDateDirName"
+            v-model="selectedDate"
             :min="minDateInPicker"
             :max="maxDateInPicker"
             full-width
@@ -91,6 +84,7 @@ export default {
       selectedPeriodDir: {},
       dateDirs: [],
       dateDirNames: [],
+      selectedDate: "",
       selectedDateDirName: "",
       selectedDateDir: {},
       categoryDirs: [],
@@ -204,6 +198,52 @@ export default {
     },
     dateDirOnchange: function() {
       let vm = this;
+      let formatDate = function(date) {
+        let dateArr = date.split("-");
+        switch (dateArr[1]) {
+          case "1":
+            dateArr[1] = "Jan";
+            break;
+          case "2":
+            dateArr[1] = "Feb";
+            break;
+          case "3":
+            dateArr[1] = "Mar";
+            break;
+          case "4":
+            dateArr[1] = "Apr";
+            break;
+          case "5":
+            dateArr[1] = "May";
+            break;
+          case "6":
+            dateArr[1] = "Jun";
+            break;
+          case "7":
+            dateArr[1] = "Jul";
+            break;
+          case "8":
+            dateArr[1] = "Aug";
+            break;
+          case "9":
+            dateArr[1] = "Sep";
+            break;
+          case "10":
+            dateArr[1] = "Oct";
+            break;
+          case "11":
+            dateArr[1] = "Nov";
+            break;
+          case "12":
+            dateArr[1] = "Dec";
+            break;
+          default:
+            dateArr[1] = "Dec";
+        }
+        return dateArr.join("-");
+      };
+
+      this.selectedDateDirName = formatDate(this.selectedDate);
       this.selectedDateDir = this.selectedPeriodDir.children.filter(function(
         dir
       ) {
@@ -273,7 +313,6 @@ export default {
     },
     allowedDates: function(date) {
       let vm = this;
-      console.log(date);
       let dateObj = new Date(date + " UTC");
       let dateObjGetTime = dateObj.getTime();
       let dateDirdateObjGetTimeArr = vm.dateDirNames.map(function(item) {
