@@ -4,7 +4,7 @@
     <v-container fluid v-if="formatPage" class="theme-default-content">
       <blockquote
         class="blockquote"
-      >Select the options from the Dropdown menus to see the available links.</blockquote>
+      >Please make a selection using the menus below to see the available {{format.toUpperCase()}} archives.</blockquote>
       <v-row align="center">
         <v-col class="d-flex" cols="12" sm="6">
           <v-select

@@ -48,7 +48,7 @@ module.exports = {
   description: "Archive of the Komodo Discord server's public channels",
   themeConfig: {
     repo: "gcharang/discord-archive-komodo",
-    repoLabel: "Github",
+    repoLabel: "Contribute!",
     docsDir: "docs",
     editLinks: false,
     logo: "/KMD_Horiz_White.svg",
@@ -67,6 +67,12 @@ module.exports = {
       {
         text: "CSV",
         link: "/format/csv.md"
+      }, {
+        text: "Join Komodo Discord server",
+        link: "https://komodoplatform.com/discord"
+      }, {
+        text: "Komodo Website",
+        link: "https://komodoplatform.com"
       }
     ]
   }
