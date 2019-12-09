@@ -1,8 +1,6 @@
 <template>
   <main class="page">
     <slot name="top" />
-
-    <Content class="theme-default-content" />
     <v-container fluid v-if="formatPage" class="theme-default-content">
       <blockquote
         class="blockquote"
