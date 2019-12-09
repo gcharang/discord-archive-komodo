@@ -1,7 +1,7 @@
 ---
 home: true
-heroImage: /kmd-discord.png
-tagline: Archive of the Komodo Discord server's public channels
+heroImage: /KMD_Mark_Color.png
+tagline: Archive of the Komodo Discord server
 shortcuts:
   - title: HTML Light
     link: /format/htmllight.html
