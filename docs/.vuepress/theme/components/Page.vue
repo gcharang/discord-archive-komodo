@@ -22,6 +22,17 @@
             v-model="selectedDateDirName"
           ></v-select>
         </v-col>
+        <v-col v-if="displayDate" class="d-flex" cols="12" sm="12">
+          <v-date-picker
+            :allowed-dates="allowedDates"
+            @change="dateDirOnchange()"
+            v-model="selectedDateDirName"
+            :min="minDateInPicker"
+            :max="maxDateInPicker"
+            full-width
+            landscape
+          ></v-date-picker>
+        </v-col>
         <v-col v-if="categoryDirs && categoryDirs.length !== 0" class="d-flex" cols="12" sm="6">
           <v-select
             :items="categoryDirNames"
@@ -91,7 +102,9 @@ export default {
       selectedChannelDirName: "",
       selectedChannelDir: {},
       displayFiles: [],
-      displayPaths: []
+      displayPaths: [],
+      tempA: "",
+      tempB: ""
     };
   },
   computed: {
@@ -143,6 +156,24 @@ export default {
         this.dateDirs.length !== 0 &&
         this.selectedPeriodDirName.startsWith("after")
       );
+    },
+    minDateInPicker: function() {
+      let dateObj = new Date(this.dateDirNames[0]);
+      let dateString = new Date(
+        dateObj.getTime() - dateObj.getTimezoneOffset() * 60000
+      )
+        .toISOString()
+        .split("T")[0];
+      return dateString;
+    },
+    maxDateInPicker: function() {
+      let dateObj = new Date(this.dateDirNames[this.dateDirNames.length - 1]);
+      let dateString = new Date(
+        dateObj.getTime() - dateObj.getTimezoneOffset() * 60000
+      )
+        .toISOString()
+        .split("T")[0];
+      return dateString;
     }
   },
   methods: {
@@ -240,7 +271,25 @@ export default {
         );
       });
     },
-    allowedDates: function() {}
+    allowedDates: function(date) {
+      let vm = this;
+      console.log(date);
+      let dateObj = new Date(date + " UTC");
+      let dateObjGetTime = dateObj.getTime();
+      let dateDirdateObjGetTimeArr = vm.dateDirNames.map(function(item) {
+        return new Date(item + " UTC").getTime();
+      });
+      let truthiness = false;
+      for (let index = 0; index < dateDirdateObjGetTimeArr.length; index++) {
+        if (dateDirdateObjGetTimeArr[index] == dateObjGetTime) {
+          truthiness = true;
+          break;
+        } else {
+          truthiness = false;
+        }
+      }
+      return truthiness;
+    }
   }
 };
 </script>
