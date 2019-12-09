@@ -1,89 +1,72 @@
 <template>
-  <v-app>
-    <main class="page">
-      <slot name="top" />
+  <main class="page">
+    <slot name="top" />
 
-      <Content class="theme-default-content" />
-      <v-container fluid v-if="formatPage" class="theme-default-content">
-        <blockquote class="blockquote">
-          Select the options from the Dropdown menus to see the available links.
-        </blockquote>
-        <v-row align="center">
-          <v-col class="d-flex" cols="12" sm="6">
-            <v-select
-              :items="periodDirNames"
-              label="Please select the period"
-              @change="periodDirOnchange()"
-              v-model="selectedPeriodDirName"
-            >
-            </v-select>
-          </v-col>
+    <Content class="theme-default-content" />
+    <v-container fluid v-if="formatPage" class="theme-default-content">
+      <blockquote
+        class="blockquote"
+      >Select the options from the Dropdown menus to see the available links.</blockquote>
+      <v-row align="center">
+        <v-col class="d-flex" cols="12" sm="6">
+          <v-select
+            :items="periodDirNames"
+            label="Please select the period"
+            @change="periodDirOnchange()"
+            v-model="selectedPeriodDirName"
+          ></v-select>
+        </v-col>
 
-          <v-col v-if="displayDate" class="d-flex" cols="12" sm="6">
-            <v-select
-              :items="dateDirNames"
-              label="Please select the date"
-              @change="dateDirOnchange()"
-              v-model="selectedDateDirName"
-            >
-            </v-select>
-          </v-col>
-          <v-col
-            v-if="categoryDirs && categoryDirs.length !== 0"
-            class="d-flex"
-            cols="12"
-            sm="6"
-          >
-            <v-select
-              :items="categoryDirNames"
-              label="Please select the category"
-              @change="categoryDirOnchange()"
-              v-model="selectedCategoryDirName"
-            >
-            </v-select>
-          </v-col>
-          <v-col
-            v-if="channelDirs && channelDirs.length !== 0"
-            class="d-flex"
-            cols="12"
-            sm="6"
-          >
-            <v-select
-              :items="channelDirNames"
-              label="Please select the channel"
-              @change="channelOnchange()"
-              v-model="selectedChannelDirName"
-            >
-            </v-select>
-          </v-col>
-        </v-row>
+        <v-col v-if="displayDate" class="d-flex" cols="12" sm="6">
+          <v-select
+            :items="dateDirNames"
+            label="Please select the date"
+            @change="dateDirOnchange()"
+            v-model="selectedDateDirName"
+          ></v-select>
+        </v-col>
+        <v-col v-if="categoryDirs && categoryDirs.length !== 0" class="d-flex" cols="12" sm="6">
+          <v-select
+            :items="categoryDirNames"
+            label="Please select the category"
+            @change="categoryDirOnchange()"
+            v-model="selectedCategoryDirName"
+          ></v-select>
+        </v-col>
+        <v-col v-if="channelDirs && channelDirs.length !== 0" class="d-flex" cols="12" sm="6">
+          <v-select
+            :items="channelDirNames"
+            label="Please select the channel"
+            @change="channelOnchange()"
+            v-model="selectedChannelDirName"
+          ></v-select>
+        </v-col>
+      </v-row>
 
-        <blockquote v-if="displayPaths.length != 0" class="blockquote">
-          Below is a list of files that satisfy the above selection.
-        </blockquote>
+      <blockquote
+        v-if="displayPaths.length != 0"
+        class="blockquote"
+      >Below is a list of files that satisfy the above selection.</blockquote>
 
-        <v-row no-gutters class="mb-2" align="center">
-          <v-col v-for="displayPath in displayPaths" cols="12">
-            <v-btn
-              block
-              color="secondary"
-              dark
-              :href="displayPath"
-              target="_blank"
-              class="mb-2"
-            >
-              {{ displayPath }}
-            </v-btn>
-          </v-col>
-        </v-row>
-      </v-container>
+      <v-row no-gutters class="mb-2" align="center">
+        <v-col v-for="displayPath in displayPaths" cols="12">
+          <v-btn
+            block
+            color="secondary"
+            dark
+            :href="displayPath"
+            target="_blank"
+            class="mb-2"
+          >{{ displayPath }}</v-btn>
+        </v-col>
+      </v-row>
+    </v-container>
 
-      <PageEdit />
-      <PageNav v-bind="{ sidebarItems }" />
+    <PageEdit />
+    <PageNav v-bind="{ sidebarItems }" />
 
-      <slot name="bottom" />
-    </main>
-  </v-app>
+    <slot name="bottom" />
+  </main>
 </template>
 
 <script>
@@ -264,8 +247,9 @@ export default {
 @require '../styles/wrapper.styl';
 
 .v-btn {
-  text-transform:none !important;
+  text-transform: none !important;
 }
+
 .page {
   padding-bottom: 2rem;
   display: block;

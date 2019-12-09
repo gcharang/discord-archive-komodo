@@ -1,26 +1,28 @@
 <template>
-  <div
-    class="theme-container"
-    :class="pageClasses"
-    @touchstart="onTouchStart"
-    @touchend="onTouchEnd"
-  >
-    <Navbar v-if="shouldShowNavbar" @toggle-sidebar="toggleSidebar" />
+  <v-app>
+    <div
+      class="theme-container"
+      :class="pageClasses"
+      @touchstart="onTouchStart"
+      @touchend="onTouchEnd"
+    >
+      <Navbar v-if="shouldShowNavbar" @toggle-sidebar="toggleSidebar" />
 
-    <div class="sidebar-mask" @click="toggleSidebar(false)"></div>
+      <div class="sidebar-mask" @click="toggleSidebar(false)"></div>
 
-    <Sidebar :items="sidebarItems" @toggle-sidebar="toggleSidebar">
-      <slot name="sidebar-top" #top />
-      <slot name="sidebar-bottom" #bottom />
-    </Sidebar>
+      <Sidebar :items="sidebarItems" @toggle-sidebar="toggleSidebar">
+        <slot name="sidebar-top" #top />
+        <slot name="sidebar-bottom" #bottom />
+      </Sidebar>
 
-    <Home v-if="$page.frontmatter.home" />
+      <Home v-if="$page.frontmatter.home" />
 
-    <Page v-else :sidebar-items="sidebarItems" v-bind:staticFileStructure="directoryStructure">
-      <slot name="page-top" #top />
-      <slot name="page-bottom" #bottom />
-    </Page>
-  </div>
+      <Page v-else :sidebar-items="sidebarItems" v-bind:staticFileStructure="directoryStructure">
+        <slot name="page-top" #top />
+        <slot name="page-bottom" #bottom />
+      </Page>
+    </div>
+  </v-app>
 </template>
 
 <script>
