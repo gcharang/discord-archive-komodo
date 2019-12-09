@@ -67,11 +67,11 @@ def path_to_dict(path):
 def clean_file_names(path):
     for dirName, subdirList, fileList in os.walk(path):
         if (len(fileList) == 1):
-            print("renaming: "+fileList[0])
-            newFile = '1.' + fileList[0].split('.')[1]
-
-            os.rename(os.path.join(dirName, fileList[0]),
-                      os.path.join(dirName, newFile))
+            if fileList[0].split('.')[0] != "1":
+                newFile = '1.' + fileList[0].split('.')[1]
+                print("renaming: "+fileList[0])
+                os.rename(os.path.join(dirName, fileList[0]),
+                          os.path.join(dirName, newFile))
 
 
 with open(os.path.join(dir_path, 'config.json')) as g:
