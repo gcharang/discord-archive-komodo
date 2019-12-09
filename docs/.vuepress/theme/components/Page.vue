@@ -110,9 +110,7 @@ export default {
       selectedChannelDirName: "",
       selectedChannelDir: {},
       displayFiles: [],
-      displayPaths: [],
-      tempA: "",
-      tempB: ""
+      displayPaths: []
     };
   },
   computed: {
@@ -187,6 +185,10 @@ export default {
   methods: {
     periodDirOnchange: function() {
       let vm = this;
+      this.dateDirs = [];
+      this.categoryDirs = [];
+      this.channelDirs = [];
+      this.displayPaths = [];
       this.selectedPeriodDir = this.periodDirs.filter(function(dir) {
         return dir.name == vm.selectedPeriodDirName;
       })[0];
@@ -212,6 +214,9 @@ export default {
     },
     dateDirOnchange: function() {
       let vm = this;
+      this.categoryDirs = [];
+      this.channelDirs = [];
+      this.displayPaths = [];
       let formatDate = function(date) {
         let dateArr = date.split("-");
         switch (dateArr[1]) {
@@ -272,6 +277,8 @@ export default {
     },
     categoryDirOnchange: function() {
       let vm = this;
+      this.channelDirs = [];
+      this.displayPaths = [];
       if (vm.selectedPeriodDirName.startsWith("after")) {
         this.selectedCategoryDir = this.selectedDateDir.children
           .filter(function(dir) {
