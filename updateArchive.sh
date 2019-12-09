@@ -2,7 +2,7 @@
 
 cat << EOF > config.json
 {
-  "token": $DISCORD_TOKEN,
+  "token": "$DISCORD_TOKEN",
   "serverId": "412898016371015680"
 }
 
