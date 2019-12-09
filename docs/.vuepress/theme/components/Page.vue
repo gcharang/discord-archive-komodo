@@ -15,17 +15,31 @@
           ></v-select>
         </v-col>
 
-        <v-col v-if="displayDate" class="d-flex" cols="12" sm="12">
-          <v-date-picker
-            :allowed-dates="allowedDates"
-            @change="dateDirOnchange()"
-            v-model="selectedDate"
-            :min="minDateInPicker"
-            :max="maxDateInPicker"
-            full-width
-            landscape
-          ></v-date-picker>
+        <v-col v-if="displayDate" class="d-flex" cols="12" sm="6">
+          <v-menu
+            v-model="menu"
+            :close-on-content-click="false"
+            :nudge-right="40"
+            transition="scale-transition"
+            offset-y
+            min-width="290px"
+          >
+            <template v-slot:activator="{ on }">
+              <v-text-field v-model="selectedDate" label="Please select a Date" readonly v-on="on"></v-text-field>
+            </template>
+            <v-date-picker
+              no-title
+              :allowed-dates="allowedDates"
+              @change="dateDirOnchange()"
+              v-model="selectedDate"
+              :min="minDateInPicker"
+              :max="maxDateInPicker"
+              full-width
+              @input="menu = false"
+            ></v-date-picker>
+          </v-menu>
         </v-col>
+
         <v-col v-if="categoryDirs && categoryDirs.length !== 0" class="d-flex" cols="12" sm="6">
           <v-select
             :items="categoryDirNames"
@@ -79,6 +93,7 @@ export default {
   props: ["sidebarItems", "staticFileStructure"],
   data: function() {
     return {
+      menu: false,
       staticFileStructure: this.staticFileStructure,
       selectedPeriodDirName: "",
       selectedPeriodDir: {},
