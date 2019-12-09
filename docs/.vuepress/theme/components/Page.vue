@@ -94,7 +94,6 @@ export default {
   data: function() {
     return {
       menu: false,
-      staticFileStructure: this.staticFileStructure,
       selectedPeriodDirName: "",
       selectedPeriodDir: {},
       dateDirs: [],
@@ -344,7 +343,8 @@ export default {
       }
       return truthiness;
     }
-  }
+  },
+  watch: {}
 };
 </script>
 
