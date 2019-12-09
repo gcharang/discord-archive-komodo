@@ -1,0 +1,104 @@
+==============================================================
+Guild: Komodo
+Channel: dev-marketmaker
+Topic: Discussion about AtomiAPI and its market making tech.
+Messages: 12
+Range: 08-Dec-19 12:00 AM to 09-Dec-19 12:00 AM
+==============================================================
+
+[08-Dec-19 10:35 AM] Patrick Crypto#1546
+Is there some sort of hard limit on when a swap will timeout? I've had a taker order that has been at negotiated for a couple of days now
+
+[08-Dec-19 10:45 AM] Slyris#2880
+Hello i have a question concerning the `sync_status` object in the  `my_tx_history` sometimes inside this json object (in the additional info) we have :
+
+- Possibility to have an error: code + message (this is optional)
+- Possibility to have transaction left in case of success  (BTC/KMD coins...) (optional) 
+- Possbility to have blockleft (Ethereum coins) (optional)
+
+Am i right ?
+
+[08-Dec-19 10:54 AM] Slyris#2880
+Trying to design a c++ struct that fit the tx_history_answer:
+
+```cpp
+ struct sync_status_additional_error {
+        std::string message;
+        int code;
+    };
+
+    struct sync_status_eth_erc_20_coins {
+        std::size_t blocks_left;
+    };
+
+    struct sync_status_regular_coins {
+        std::size_t transactions_left;
+    };
+
+    struct sync_status_additional_infos {
+        std::optional<sync_status_additional_error> error; ///< in case of error
+        std::optional<sync_status_eth_erc_20_coins> erc_infos; ///< eth/erc20 related coins
+        std::optional<sync_status_regular_coins> regular_infos; ///< kmd/btc/utxo related coins
+    };
+
+    struct t_sync_status {
+        std::string state; ///< NotEnabled, NotStarted, InProgress, Error, Finished
+        sync_status_additional_infos additional_infos;
+    };
+
+    struct tx_history_answer_success {
+        std::string from_id;
+        std::size_t skipped;
+        std::size_t limit;
+        std::size_t current_block;
+        std::size_t total;
+        std::vector<transaction_data> transactions;
+        t_sync_status sync_status; 
+        std::string raw_result; ///< internal
+        int rpc_result_code; ///< internal
+    };
+
+    struct tx_history_answer {
+        std::optional<std::string> error;
+        std::optional<tx_history_answer_success> result;
+    };
+```
+
+am i right @artem.pikulin  or @artemciy_dice ?
+
+[08-Dec-19 10:55 AM] Slyris#2880
+Not sure, i based this on the current documentation answer example, may be there is case that doesn't appear here ?
+
+[08-Dec-19 03:09 PM] artemciy_dice#0049
+I compared it here and there with our sources and the c++ structure seems all right. Some possibly relevant pointers:
+https://github.com/KomodoPlatform/atomicDEX-API/blob/a900fc6f1dd6e2e4c8607ca3017190d4480a34ec/mm2src/coins/lp_coins.rs#L601
+https://github.com/KomodoPlatform/atomicDEX-API/blob/a900fc6f1dd6e2e4c8607ca3017190d4480a34ec/mm2src/coins/utxo.rs#L1530
+https://github.com/KomodoPlatform/atomicDEX-API/blob/a900fc6f1dd6e2e4c8607ca3017190d4480a34ec/mm2src/coins/eth.rs#L1317
+
+[08-Dec-19 03:37 PM] Slyris#2880
+Thank's a lot for the answer !
+
+@artemciy_dice Ok i have another question
+
+[08-Dec-19 03:37 PM] Slyris#2880
+How you know with my_tx_history
+
+If i'm the sender or the receiver ?
+
+[08-Dec-19 03:38 PM] Slyris#2880
+For the current transactions
+
+[08-Dec-19 03:40 PM] Slyris#2880
+We agree that if my_balance change start with a `-` means that i'm sender otherwise i receive
+
+[08-Dec-19 03:52 PM] artemciy_dice#0049
+We send `my_amount` with every swap and we receive `other_amount` in every swap.
+
+[08-Dec-19 04:05 PM] Slyris#2880
+i mean for a simple withdraw_money @artemciy_dice 
+
+i use tx_history for the portfolio part
+
+[08-Dec-19 04:06 PM] Slyris#2880
+i want to know through tx_history if i'm a sender or the receiver, but i guess my_balance_change is enough
+

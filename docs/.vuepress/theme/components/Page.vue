@@ -14,7 +14,6 @@
             v-model="selectedPeriodDirName"
           ></v-select>
         </v-col>
-
         <v-col v-if="displayDate" class="d-flex" cols="12" sm="6">
           <v-select
             :items="dateDirNames"
@@ -154,9 +153,13 @@ export default {
       })[0];
       if (vm.selectedPeriodDirName.startsWith("after")) {
         this.dateDirs = this.selectedPeriodDir.children;
-        this.dateDirNames = this.dateDirs.map(function(dir) {
-          return dir.name;
-        });
+        this.dateDirNames = this.dateDirs
+          .map(function(dir) {
+            return dir.name;
+          })
+          .sort(function(a, b) {
+            return new Date(a) - new Date(b);
+          });
       } else {
         this.categoryDirs = this.selectedPeriodDir.children.filter(function(
           dir
@@ -236,7 +239,8 @@ export default {
             .split(".")[0]
         );
       });
-    }
+    },
+    allowedDates: function() {}
   }
 };
 </script>
