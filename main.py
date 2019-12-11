@@ -44,37 +44,29 @@ def normalPull(channelId, path, dateOfBefore, dateOfAfter, outFormat, token):
         print("An exception occurred")
 
 
+def renameFn(filename, exportPath):
+    fileArr = re.findall(r"\[(.*?)\]", filename)
+    fileType = filename.split(".").pop()
+    newFile = fileArr.pop().split()[0]+"."+fileType
+    os.rename(os.path.join(exportPath, filename),
+              os.path.join(exportPath, newFile))
+    print("renaming: "+filename + " to " + newFile)
+
+
 def renameFiles(exportPath, outFormat):
     files = os.listdir(exportPath)
     if len(files) == 1:
         fileToRename = files[0]
         fileNameArr = files[0].split(".")
-        newName = "1"+fileNameArr[1]
+        newName = "1."+fileNameArr[1]
         os.rename(os.path.join(exportPath, fileToRename),
                   os.path.join(exportPath, newName))
-        print("renaming: "+fileToRename + " to" + newName)
+        print("renaming: "+fileToRename + " to " + newName)
     else:
         files.sort()
         print(files)
         for index, filename in enumerate(files):
-            if outFormat == 'PlainText':
-                fileArr = re.findall(r"\[(.*?)\]", filename)
-                newFile = fileArr[len(
-                    fileArr)-1].split()[0]+'.txt'
-            elif outFormat == 'HtmlDark':
-                fileArr = re.findall(r"\[(.*?)\]", filename)
-                newFile = fileArr[len(
-                    fileArr)-1].split()[0]+'.html'
-            elif outFormat == 'HtmlLight':
-                fileArr = re.findall(r"\[(.*?)\]", filename)
-                newFile = fileArr[len(
-                    fileArr)-1].split()[0]+'.html'
-            elif outFormat == 'Csv':
-                fileArr = re.findall(r"\[(.*?)\]", filename)
-                newFile = fileArr[len(
-                    fileArr)-1].split()[0]+'.csv'
-            os.rename(os.path.join(exportPath, filename),
-                      os.path.join(exportPath, newFile))
+            renameFn(filename, exportPath)
 
 
 def clean_file_names(path):
@@ -123,7 +115,7 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
                                                  'before-'+utc_now, outFormat.lower(), cleanName(category['name']))
                     exportPath = os.path.join(
                         dirPathCreate, cleanName(channelName))
-                    print(exportPath)
+                    print("exporting to: "+exportPath)
                     firstPull(channelId,
                               exportPath, utc_now, outFormat, token)
                     with open('dateOfFirstBefore', 'w+') as q:
