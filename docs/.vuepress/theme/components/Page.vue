@@ -384,7 +384,12 @@ export default {
       return truthiness;
     }
   },
-  watch: {}
+  watch: {
+    format: function(newFormat, oldFormat) {
+      this.selectedChannelDirName = "";
+      this.displayPaths = [];
+    }
+  }
 };
 </script>
 
