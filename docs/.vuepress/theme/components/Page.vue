@@ -122,10 +122,10 @@ export default {
     },
     fileType: function() {
       switch (this.format) {
-        case "darkhtml":
+        case "htmldark":
           return "html";
           break;
-        case "lighthtml":
+        case "htmllight":
           return "html";
           break;
         case "plaintext":
@@ -318,12 +318,39 @@ export default {
       )[0];
       this.displayFiles = this.selectedChannelDir.children;
       this.displayPaths = this.displayFiles.map(function(file) {
-        let dirPathArr = vm.selectedChannelDir.path.split("/").slice(4);
-        let toReplace = dirPathArr.indexOf("htmldark");
-        dirPathArr[toReplace] = vm.format;
-        let dirPath = dirPathArr.join("/");
-        let fileName = file.name.split(".")[0] + "." + vm.fileType;
-        return "/" + dirPath + "/" + fileName;
+        if (vm.selectedDateDirName) {
+          return (
+            "/" +
+            vm.selectedPeriodDirName +
+            "/" +
+            vm.selectedDateDirName +
+            "/" +
+            vm.format +
+            "/" +
+            vm.selectedCategoryDirName +
+            "/" +
+            vm.selectedChannelDirName +
+            "/" +
+            file.name.split(".")[0] +
+            "." +
+            vm.fileType
+          );
+        } else {
+          return (
+            "/" +
+            vm.selectedPeriodDirName +
+            "/" +
+            vm.format +
+            "/" +
+            vm.selectedCategoryDirName +
+            "/" +
+            vm.selectedChannelDirName +
+            "/" +
+            file.name.split(".")[0] +
+            "." +
+            vm.fileType
+          );
+        }
       });
       this.displayPaths.sort(function(a, b) {
         return (
