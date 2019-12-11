@@ -1,10 +1,10 @@
 <template>
   <main class="page">
     <slot name="top" />
+
     <v-container fluid v-if="formatPage" class="theme-default-content">
-      <blockquote
-        class="blockquote"
-      >Please make a selection using the menus below to see the available {{format.toUpperCase()}} archives.</blockquote>
+      <h1>Please make a selection using the menus below to see the available {{format}} archives.</h1>
+
       <v-row align="center">
         <v-col class="d-flex" cols="12" sm="6">
           <v-select

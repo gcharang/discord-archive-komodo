@@ -44,6 +44,49 @@ def normalPull(channelId, path, dateOfBefore, dateOfAfter, outFormat, token):
         print("An exception occurred")
 
 
+def renameFiles(exportPath, outFormat):
+    files = os.listdir(exportPath)
+    if len(files) == 1:
+        fileToRename = files[0]
+        fileNameArr = files[0].split(".")
+        newName = "1"+fileNameArr[1]
+        os.rename(os.path.join(exportPath, fileToRename),
+                  os.path.join(exportPath, newName))
+        print("renaming: "+fileToRename + " to" + newName)
+    else:
+        files.sort()
+        print(files)
+        for index, filename in enumerate(files):
+            if outFormat == 'PlainText':
+                fileArr = re.findall(r"\[(.*?)\]", filename)
+                newFile = fileArr[len(
+                    fileArr)-1].split()[0]+'.txt'
+            elif outFormat == 'HtmlDark':
+                fileArr = re.findall(r"\[(.*?)\]", filename)
+                newFile = fileArr[len(
+                    fileArr)-1].split()[0]+'.html'
+            elif outFormat == 'HtmlLight':
+                fileArr = re.findall(r"\[(.*?)\]", filename)
+                newFile = fileArr[len(
+                    fileArr)-1].split()[0]+'.html'
+            elif outFormat == 'Csv':
+                fileArr = re.findall(r"\[(.*?)\]", filename)
+                newFile = fileArr[len(
+                    fileArr)-1].split()[0]+'.csv'
+            os.rename(os.path.join(exportPath, filename),
+                      os.path.join(exportPath, newFile))
+
+
+def clean_file_names(path):
+    for dirName, subdirList, fileList in os.walk(path):
+        if (len(fileList) == 1):
+            if fileList[0].split('.')[0] != "1":
+                newFile = '1.' + fileList[0].split('.')[1]
+                print("renaming: "+fileList[0])
+                os.rename(os.path.join(dirName, fileList[0]),
+                          os.path.join(dirName, newFile))
+
+
 def cleanName(word):
     word = word.lower()
     word = re.sub('[^A-z0-9 -]', '', word).lower()
@@ -61,16 +104,6 @@ def path_to_dict(path):
     else:
         d['type'] = "file"
     return d
-
-
-def clean_file_names(path):
-    for dirName, subdirList, fileList in os.walk(path):
-        if (len(fileList) == 1):
-            if fileList[0].split('.')[0] != "1":
-                newFile = '1.' + fileList[0].split('.')[1]
-                print("renaming: "+fileList[0])
-                os.rename(os.path.join(dirName, fileList[0]),
-                          os.path.join(dirName, newFile))
 
 
 with open(os.path.join(dir_path, 'config.json')) as g:
@@ -95,27 +128,7 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
                               exportPath, utc_now, outFormat, token)
                     with open('dateOfFirstBefore', 'w+') as q:
                         q.write(utc_now)
-                    files = os.listdir(exportPath)
-                    for index, file in enumerate(files):
-                        if outFormat == 'PlainText':
-                            fileArr = re.findall(r"\[(.*?)\]", file)
-                            newFile = fileArr[len(
-                                fileArr)-1].split()[0]+'.txt'
-                        elif outFormat == 'HtmlDark':
-                            fileArr = re.findall(r"\[(.*?)\]", file)
-                            newFile = fileArr[len(
-                                fileArr)-1].split()[0]+'.html'
-                        elif outFormat == 'HtmlLight':
-                            fileArr = re.findall(r"\[(.*?)\]", file)
-                            newFile = fileArr[len(
-                                fileArr)-1].split()[0]+'.html'
-                        elif outFormat == 'Csv':
-                            fileArr = re.findall(r"\[(.*?)\]", file)
-                            newFile = fileArr[len(
-                                fileArr)-1].split()[0]+'.csv'
-                        os.rename(os.path.join(exportPath, file),
-                                  os.path.join(exportPath, newFile))
-
+                    renameFiles(exportPath, outFormat)
                 else:
                     delta = datetime.now(timezone.utc) - datetime.strptime(
                         dateOfFirstBefore+'-+0000', '%Y-%b-%d-%z')
@@ -134,32 +147,12 @@ with open(os.path.join(dir_path, 'channels.json')) as f:
                             print(exportPath)
                             normalPull(channelId, exportPath, currDate,
                                        dateOfAfter, outFormat, token)
-                            files = os.listdir(exportPath)
-                            for index, file in enumerate(files):
-                                if outFormat == 'PlainText':
-                                    fileArr = re.findall(r"\[(.*?)\]", file)
-                                    newFile = fileArr[len(
-                                        fileArr)-1].split()[0]+'.txt'
-                                elif outFormat == 'HtmlDark':
-                                    fileArr = re.findall(r"\[(.*?)\]", file)
-                                    newFile = fileArr[len(
-                                        fileArr)-1].split()[0]+'.html'
-                                elif outFormat == 'HtmlLight':
-                                    fileArr = re.findall(r"\[(.*?)\]", file)
-                                    newFile = fileArr[len(
-                                        fileArr)-1].split()[0]+'.html'
-                                elif outFormat == 'Csv':
-                                    fileArr = re.findall(r"\[(.*?)\]", file)
-                                    newFile = fileArr[len(
-                                        fileArr)-1].split()[0]+'.csv'
-                                os.rename(os.path.join(exportPath, file),
-                                          os.path.join(exportPath, newFile))
+                            renameFiles(exportPath, outFormat)
                         else:
                             pass
                         dateOfAfter = currDate
 
-
-clean_file_names('./docs/.vuepress/public')
+# clean_file_names('./docs/.vuepress/public')
 
 with open('./docs/.vuepress/theme/dirStructure.js', 'w+') as outfile:
     outfile.write("export default ")
