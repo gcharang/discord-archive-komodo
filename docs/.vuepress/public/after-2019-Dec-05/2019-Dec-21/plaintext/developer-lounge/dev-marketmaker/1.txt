@@ -1,0 +1,38 @@
+==============================================================
+Guild: Komodo
+Channel: dev-marketmaker
+Topic: Discussion about AtomiAPI and its market making tech.
+After: 20-Dec-19 12:00 AM
+Before: 21-Dec-19 12:00 AM
+==============================================================
+
+[20-Dec-19 04:01 AM] artem.pikulin#0794
+@Alright 
+`it was assuming that vout1 of dex fee transaction(step0) would always be spent in alice->b_addr (step2)`
+Hi, I think it's not reachable due to following reasons:
+1. MM2 was designed to be able to work even when address has single utxo. MM2 is actually eager to `merge` smaller UTXOs to bigger one to reduce the average generated transaction size and avoid MM1 common situations when address had dozens of "almost dust" UTXOs. So to fulfill the `vout1 would always be spent in alice->b_addr` in very common single UTXO case we need to virtually lock that single change output until the corresponding taker payment is sent. It may take a lot of time because after dexfee is sent it is validated first, maker payment is sent, it's confirmed (in case of BTC it may take hours) and only then taker payment is sent. It actually means that MM2 will be able to have only 1 concurrent swap per coin which is very inconvenient.
+2. Also if maker doesn't follow the protocol (not sending payment after dexfee) this dexfee change output will be 100% spent for some other purpose.
+3. Also there can be rare but still possible edge case when dexfee doesn't have change output at all when address has UTXO == dexfee.
+4. It might be solved by reimplementing UTXO split, but I would like to avoid it. Splitting means additional miner fees. Sometimes it might be hard to predict the correct split amount (in case of miner fee depends on tx size). And, overall, it won't have any value for UX (and even make it worse) since MM2 works fine with single UTXO now. Also it will take some time to implement and add complexity to UTXO handling code.
+
+[20-Dec-19 05:11 AM] jl777c#5810
+there is no point to do this, i told alright how his analysis can be done with the current data 100% via blockchain data
+
+{Reactions}
+👌
+
+[20-Dec-19 08:19 AM] jin1988#3498
+AtomicDEX is compatible with monero?
+
+[20-Dec-19 08:19 AM] Oszy#5734
+no
+
+[20-Dec-19 08:29 AM] webworker01#3884
+I just made some updates to my mmtools repo with a new swap history summary and a few other things https://github.com/webworker01/mmtools
+
+{Reactions}
+🍺 (2)
+
+[20-Dec-19 12:33 PM] Alright#0419
+@artem.pikulin I appreciate the response, thanks. Did a bit of brainstorming with jl and came up with a feasible method, no worries
+
