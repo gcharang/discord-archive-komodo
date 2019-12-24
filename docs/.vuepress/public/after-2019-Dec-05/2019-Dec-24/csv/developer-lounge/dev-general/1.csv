@@ -1,0 +1,43 @@
+AuthorID,Author,Date,Content,Attachments,Reactions
+"352577127494713345","phm87#7395","23-Dec-19 11:14 AM","I'm trying to use the opcode OP_CHECKLOCKTIMEVERIFY in KMD but when I perform ``decodescript`` on an example redeemscript that contains this opcode, it is decoded to ``OP_NOP2`` 
+Do you know if this opcode is implemented into KMD ?","",""
+"352577127494713345","phm87#7395","23-Dec-19 11:15 AM","I'm not sure because I read ``These are opcodes that might be redefined in the future, e.g., the OP_NOPX opcodes that have been used for soft forks in the past (OP_NOP1 became OP_CHECKLOCKTIMEVERIFY and OP_NOP2 became OP_CHECKSEQUENCEVERIFY).`` Source: <https://www.frontiersin.org/articles/10.3389/fbloc.2019.00007/full>","",""
+"352577127494713345","phm87#7395","23-Dec-19 11:20 AM","maybe OP_CHECKLOCKTIMEVERIFY is implemented into KMD but there is a small bug in the output of ``decodescript ``","",""
+"352577127494713345","phm87#7395","23-Dec-19 11:21 AM","```./komodo-cli decodescript a914e2ac8cb97af3d59b1c057db4b0c4f9aa12a9127387632103f8109578aae1e5cfc497e466cf6ae6625497cd31886e87b2f4f54f3f0f46b539670354df07b1752103ec0c1e45b709d708cd376a6f2daf19ac27be229647780d592e27d7fb7efb207a68ac
+{
+  ""asm"": ""OP_HASH160 e2ac8cb97af3d59b1c057db4b0c4f9aa12a91273 OP_EQUAL OP_IF 03f8109578aae1e5cfc497e466cf6ae6625497cd31886e87b2f4f54f3f0f46b539 OP_ELSE 515924 OP_NOP2 OP_DROP 03ec0c1e45b709d708cd376a6f2daf19ac27be229647780d592e27d7fb7efb207a OP_ENDIF OP_CHECKSIG"",
+  ""type"": ""nonstandard"",
+  ""p2sh"": ""bVyRQS5UFeQZrawYFDPo2SDhHeZhFV2Hde""
+}``` we read ``OP_ELSE 515924 OP_NOP2 OP_DROP`` but the correct output is ``OP_ELSE 515924 OP_CHECKLOCKTIMEVERIFY OP_DROP``","",""
+"474206298427097099","ComputerGenie 👴🏼📢#7004","23-Dec-19 11:51 AM","<https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki#detailed-specification>
+<https://github.com/bitcoin/bitcoin/commit/37d271d7cce44885f835292ffe99b54399b014d6>
+```
+    OP_NOP2 = 0xb1,
+OP_CHECKLOCKTIMEVERIFY = OP_NOP2,```
+vs
+```
+    OP_CHECKLOCKTIMEVERIFY = 0xb1,
+OP_NOP2 = OP_CHECKLOCKTIMEVERIFY,```
+as long as the rest follows, it's 2 varriations of the same thing, no?","",""
+"352577127494713345","phm87#7395","23-Dec-19 01:01 PM","I think that OP_CHECKLOCKTIMEVERIFY  replaced OP_NOP2 but I'm not sure. Yes, it is the same hexadecimal code. I don't know if decodescript is up to date.
+<https://github.com/matiu/bitcore-lib/blob/71b9160e37748b82bb2ca0212297f7e7ec33b295/lib/opcode.js#L199>
+checklocktimeverify seems to exist in KMD: <https://github.com/pbca26/electrum-komodo/blob/master/lib/transaction.py#L242>","",""
+"352577127494713345","phm87#7395","23-Dec-19 01:07 PM","To compare:
+```bitcoin-cli decodescript a914e2ac8cb97af3d59b1c057db4b0c4f9aa12a9127387632103f8109578aae1e5cfc497e466cf6ae6625497cd31886e87b2f4f54f3f0f46b539670354df07b1752103ec0c1e45b709d708cd376a6f2daf19ac27be229647780d592e27d7fb7efb207a68ac
+{
+  ""asm"": ""OP_HASH160 e2ac8cb97af3d59b1c057db4b0c4f9aa12a91273 OP_EQUAL OP_IF 03f8109578aae1e5cfc497e466cf6ae6625497cd31886e87b2f4f54f3f0f46b539 OP_ELSE 515924 OP_CHECKLOCKTIMEVERIFY OP_DROP 03ec0c1e45b709d708cd376a6f2daf19ac27be229647780d592e27d7fb7efb207a OP_ENDIF OP_CHECKSIG"",
+  ""type"": ""nonstandard"",
+  ""p2sh"": ""3JwAdkERTDLURuncHekJEQSkwHxEPAu7MK""
+}
+komodo-cli decodescript a914e2ac8cb97af3d59b1c057db4b0c4f9aa12a9127387632103f8109578aae1e5cfc497e466cf6ae6625497cd31886e87b2f4f54f3f0f46b539670354df07b1752103ec0c1e45b709d708cd376a6f2daf19ac27be229647780d592e27d7fb7efb207a68ac                                                                            {
+  ""asm"": ""OP_HASH160 e2ac8cb97af3d59b1c057db4b0c4f9aa12a91273 OP_EQUAL OP_IF 03f8109578aae1e5cfc497e466cf6ae6625497cd31886e87b2f4f54f3f0f46b539 OP_ELSE 515924 OP_NOP2 OP_DROP 03ec0c1e45b709d708cd376a6f2daf19ac27be229647780d592e27d7fb7efb207a OP_ENDIF OP_CHECKSIG"",
+  ""type"": ""nonstandard"",
+  ""p2sh"": ""bVyRQS5UFeQZrawYFDPo2SDhHeZhFV2Hde""
+}```
+I think that it is just a small display bug in decodescript","",""
+"455741312273219595","jl777c#5810","23-Dec-19 01:12 PM","yes","",""
+"352577127494713345","phm87#7395","23-Dec-19 05:04 PM","Thank you jl ^^ I created a small patch as reminder but it is untested. Should I create an issue on github ? (it is good for marketing)
+https://github.com/jl777/komodo/compare/jl777...phm87:patch-11","",""
+"455741312273219595","jl777c#5810","23-Dec-19 05:07 PM","i prefer just having the code fixed without worrying about what is good for marketing","",""
+"352577127494713345","phm87#7395","23-Dec-19 05:19 PM","I'll test my tiny change, I'll document the PR. Sorry to bother you about marketing","",""
+"455741312273219595","jl777c#5810","23-Dec-19 05:35 PM","i have nothing against marketing, just dont want to mix technical stuff with marketing stuff directly","",""
