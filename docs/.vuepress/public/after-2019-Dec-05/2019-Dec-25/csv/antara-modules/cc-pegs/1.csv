@@ -1,0 +1,48 @@
+AuthorID,Author,Date,Content,Attachments,Reactions
+"424224648889106444","Mihailo#5902","24-Dec-19 03:28 PM","@blackjok3r @jl777c I made the priority of tx with setting max priority to 1e16. But something seems to be chaning the priority of the tx. I put this priority on two places, in miner.cpp and in main.cpp AcceptToMemoeryPool (view.GetPriority()). Are there some other places where the priority of tx can be changed?","",""
+"424224648889106444","Mihailo#5902","24-Dec-19 03:29 PM","At some point I have priority to 1e16 but then it changes, sometimes some big number sometimes 0.","",""
+"424224648889106444","Mihailo#5902","24-Dec-19 03:30 PM","```""5cfee3a104ea00652680e1fadaaf1fd5da7e7d581b5a94f142244bb28e0e06fe"": {
+    ""size"": 975,
+    ""fee"": 0.00010000,
+    ""time"": 1577200960,
+    ""height"": 60,
+    ""startingpriority"": 0,
+    ""currentpriority"": 0,
+    ""depends"": [
+    ]
+  }
+```","",""
+"424224648889106444","Mihailo#5902","24-Dec-19 03:30 PM","```""d53392284ec7b241e1accecddbb4a97166f78adf8527bf4588f55f8eabc2c4a9"": {
+    ""size"": 974,
+    ""fee"": 0.00010000,
+    ""time"": 1577201351,
+    ""height"": 68,
+    ""startingpriority"": 1569506098.654709,
+    ""currentpriority"": 1569506098.654709,
+    ""depends"": [
+      ""0bb74e48e41964a4578de491bea6a2d8ca5724b2d14b80804333ef351799a41b""
+    ]
+  },
+```","",""
+"424224648889106444","Mihailo#5902","24-Dec-19 03:31 PM","I've put this in miner near the end of parsing a tx in block:
+```cpp
+// Priority is sum(valuein * age) / modified_txsize
+            unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+            dPriority = tx.ComputePriority(dPriority, nTxSize);
+
+            uint256 hash = tx.GetHash();
+            mempool.ApplyDeltas(hash, dPriority, nTotalIn);
+
+            CFeeRate feeRate(nTotalIn-tx.GetValueOut(), nTxSize);
+
+----->>>    if (tx.vout.size()>0 && tx.IsPriorityCC()) dPriority=1e16;```","",""
+"424224648889106444","Mihailo#5902","24-Dec-19 03:33 PM","And in GetPriority() called from main in AcceptToMemoryPool:
+```cpp
+if (tx.vjoinsplit.size() > 0 || tx.vShieldedSpend.size() > 0 || tx.vShieldedOutput.size() > 0 || tx.IsCoinImport() || tx.IsPegsImport() || tx.IsPriorityCC()) {
+        return MAX_PRIORITY;
+    }```","",""
+"424224648889106444","Mihailo#5902","24-Dec-19 04:31 PM","Ahh, I had a problem with extracting eval code from vout","",""
+"424224648889106444","Mihailo#5902","24-Dec-19 04:31 PM","Now they all have 1e16 priority","",""
+"424224648889106444","Mihailo#5902","24-Dec-19 04:32 PM","Hmmm, but when I start mining they switch to 0 priority","",""
+"424224648889106444","Mihailo#5902","24-Dec-19 04:43 PM","Hmmm it seems that only when I start mining it sets current txs in mempool to 0, then after adding new ones it stays on 1e16","",""
+"424224648889106444","Mihailo#5902","24-Dec-19 04:44 PM","No, at some point they go to 0","",""
