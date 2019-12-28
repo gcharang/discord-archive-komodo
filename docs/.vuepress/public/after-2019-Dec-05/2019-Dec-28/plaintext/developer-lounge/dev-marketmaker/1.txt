@@ -1,0 +1,132 @@
+==============================================================
+Guild: Komodo
+Channel: dev-marketmaker
+Topic: Discussion about AtomiAPI and its market making tech.
+After: 27-Dec-19 12:00 AM
+Before: 28-Dec-19 12:00 AM
+==============================================================
+
+[27-Dec-19 02:39 PM] Mische#6695
+Hey guys, my swap with atomic dex api always fails (step 2 / 3 ) and mm2 tells me the sender is banned.
+The error log:
+ "event": {
+          "data": {
+            "error": "maker_swap:387] utxo:1132] JsonRpcError { request: JsonRpcRequest { jsonrpc: \"2.0\", id: \"32\", method: \"blockchain.transaction.get\", params: [String(\"e0ecc7338b7662ad721c06d00d0e99589f35670ab11473e1dfa9dec9748c9854\"), Bool(false)] }, error: Response(Object({\"code\": Number(2), \"message\": String(\"daemon error: DaemonError({\\'code\\': -5, \\'message\\': \\'No information available about transaction\\'})\")})) }"
+          },
+          "type": "TakerFeeValidateFailed"
+
+Can someone explain this? I try to set an order with the atomic dex api and buy it from my mobile.
+
+[27-Dec-19 02:40 PM] Mische#6695
+It tells me :
+
+27 14:40:20, common:937] RPC error response: lp_ordermatch:852] sender pubkey 028b2e2d4a963657a1ba52b0c22410edb96fb0bad188e561766a8732843cb5d531 is banned
+
+[27-Dec-19 02:40 PM] Mische#6695
+but I restared the API and didn't cancel any orders beforehand so I'm wondering right now
+
+{Reactions}
+KMD
+
+[27-Dec-19 03:40 PM] kmdkrazy#8280
+Duplicate pubkey from 2 different devices maybe??
+
+[27-Dec-19 03:41 PM] kmdkrazy#8280
+Why attempt this trade?? For the fun of it??
+
+[27-Dec-19 03:41 PM] kmdkrazy#8280
+@Mische
+
+[27-Dec-19 03:42 PM] Mische#6695
+I am trying to trade with @PengPuffPow
+
+[27-Dec-19 03:42 PM] Mische#6695
+we want to setup a automated trading bot for the atomic dex
+
+[27-Dec-19 03:42 PM] Mische#6695
+but we can't finish the swaps
+
+[27-Dec-19 03:44 PM] cipi#4502
+`No information available about transaction` ... looks like your daemon is not in sync... it can't find the `TakerFee`tx on the blockchain
+
+[27-Dec-19 03:45 PM] PengPuffPow#8948
+@cipi hi and how do we sync it?
+
+[27-Dec-19 03:45 PM] kmdkrazy#8280
+Could be outdated daemon
+
+[27-Dec-19 03:45 PM] kmdkrazy#8280
+Could be tons of things
+
+[27-Dec-19 03:45 PM] kmdkrazy#8280
+Connections
+
+[27-Dec-19 03:46 PM] cipi#4502
+yes, indeed... could also be Taker not configured properly, tx is rejected and maker only sees `No information available about transaction`
+
+[27-Dec-19 03:46 PM] cipi#4502
+both logs (taker and maker) should be looked into
+
+[27-Dec-19 03:47 PM] PengPuffPow#8948
+we use rick and morty for this and just followed the atomic dex setup
+
+[27-Dec-19 03:48 PM] PengPuffPow#8948
+https://pastebin.com/QwxWkZrg
+
+{Embed}
+https://pastebin.com/QwxWkZrg
+{    "result": {      "error_events": [        "StartFailed",     ...
+https://pastebin.com/i/facebook.png
+
+[27-Dec-19 03:48 PM] PengPuffPow#8948
+this is the result if we check the swap status
+
+[27-Dec-19 03:48 PM] kmdkrazy#8280
+Its most likely a networking problem-- my best guess -- ports -- all guesses are wild ATM
+
+[27-Dec-19 03:49 PM] PengPuffPow#8948
+maybe a problem with linux subsystem for windows? 😂
+
+[27-Dec-19 03:49 PM] kmdkrazy#8280
+Dude
+
+[27-Dec-19 03:50 PM] kmdkrazy#8280
+Go to #Noob channel -
+
+{Reactions}
+🙂
+
+[27-Dec-19 03:51 PM] cipi#4502
+that was the log from the maker, which only says he can't find the tx (takerfee) on the blockchain... it doesn't tell why... this info could be in the logs from the taker
+
+[27-Dec-19 03:52 PM] PengPuffPow#8948
+@cipi is there a log folder on android?
+
+[27-Dec-19 03:53 PM] gcharang#6833
+settings -> share log
+
+[27-Dec-19 03:53 PM] cipi#4502
+i don't know where the folder is
+
+[27-Dec-19 03:54 PM] PengPuffPow#8948
+@gcharang & @cipi thanks! 🙂
+
+[27-Dec-19 03:57 PM] PengPuffPow#8948
+Got this:
+
+2019-12-27 15:29:05.202465 api_providers:68 :api getTradeFee {"result":{"amount":"0.0001","coin":"RICK"}}
+
+2019-12-27 15:29:05.205092 trade_page:275 :FormatException: Invalid double
+
+[27-Dec-19 04:07 PM] PengPuffPow#8948
+on Taker:
+
+2019-12-27 16:35:12.913626 music_service:64 :pickMode] swap 02f8 status: Status.SWAP_ONGOING, MusicMode.ACTIVE
+
+2019-12-27 16:35:14.820868 market_maker_service:292 :· 2019-12-27 16:35:14 +0100 [swap uuid=02f815cf-6578-422d-b7a2-c39268bd6f54] Finished
+
+2019-12-27 16:41:34.390202 market_maker_service:292 :27 15:41:33, rpc_clients:1284] V4(195.201.83.86:10000) error Os { code: 103, kind: ConnectionAborted, message: "Software caused connection abort" }
+
+[27-Dec-19 04:20 PM] PengPuffPow#8948
+Okay... swap was succesful. Haven't changed anything 😅
+
