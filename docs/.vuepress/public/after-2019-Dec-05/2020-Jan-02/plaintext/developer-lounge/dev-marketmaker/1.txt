@@ -1,0 +1,174 @@
+==============================================================
+Guild: Komodo
+Channel: dev-marketmaker
+Topic: Discussion about AtomiAPI and its market making tech.
+After: 01-Jan-20 12:00 AM
+Before: 02-Jan-20 12:00 AM
+==============================================================
+
+[01-Jan-20 11:20 AM] artem.pikulin#0794
+@Oszy Hi, it looks like a problem with OOT chain. I've seen similar with test assetchains (at least BEER). Sometimes if unconfirmed output is reused the entire transaction chain gets stuck unconfirmed for long time. The b address is empty because MM2 refunded the payment in this tx: https://explorer.utrum.io/tx/90c9d04f6209825e2d42973e894d976cae0936514fd44cedd37fefac2359a449 The protocol failed because payment was unconfirmed, so refund has been issued after locktime expiration.
+@smk762 @TonyL 
+Have you experienced similar with unconfirmed transactions? Is there a way to workaround it?
+
+[01-Jan-20 11:53 AM] ComputerGenie 👴🏼📢#7004
+a spend of a spend of an unconfirmed spend does tend to be an issue now and then
+
+[01-Jan-20 11:57 AM] ComputerGenie 👴🏼📢#7004
+```json
+genie@NA_NN:~$ komodo-cli -ac_name=OOT getmempoolinfo
+{
+  "size": 0,
+  "bytes": 0,
+  "usage": 0
+}
+```
+doesn't help either
+
+[01-Jan-20 11:58 AM] ComputerGenie 👴🏼📢#7004
+if 75 peers (including most miners) don't see the tx (or any of them) then they aren't going into a block
+
+[01-Jan-20 11:58 AM] artem.pikulin#0794
+This problem affects DEX UX badly. MM2 is designed to work with single UTXO without splits so it gets reused even unconfirmed to allow several concurrent swaps for the coin. If MM2 has to wait for confirmation every time it has to reuse the UTXO only 1 concurrent swap will be actually possible for a coin I think.
+
+[01-Jan-20 11:59 AM] artem.pikulin#0794
+And yes, the problem is that mempool is not synced, I've seen this with BEER too. I've tried to run the mining node to find a block including these stuck transactions, but it didn't sync the mempool with other nodes.
+
+[01-Jan-20 12:00 PM] smk762#7640
+I've not seen it before.
+
+[01-Jan-20 12:00 PM] artem.pikulin#0794
+So actually the node that has these transactions in mempool should mine them, it won't work otherwise.
+
+[01-Jan-20 12:01 PM] ComputerGenie 👴🏼📢#7004
+or broadcast it to other miners/nodes
+
+[01-Jan-20 12:01 PM] artem.pikulin#0794
+Yes, this too.
+
+[01-Jan-20 12:03 PM] artem.pikulin#0794
+So as of now we should reimport these transactions to OOT mining node.
+
+[01-Jan-20 12:04 PM] ComputerGenie 👴🏼📢#7004
+no need to "import", just send it out to the network
+
+[01-Jan-20 12:05 PM] ComputerGenie 👴🏼📢#7004
+the more people that know about a tx is the more likely it is to be processed
+
+[01-Jan-20 12:08 PM] artem.pikulin#0794
+Hmm, `electrum2.utrum.io:10088` is not aware about these transactions. I'm going to rebroadcast them to it now.
+
+[01-Jan-20 12:09 PM] ComputerGenie 👴🏼📢#7004
+`electrum2.utrum.io:10088 is not aware about these transactions`
+neither is the main block producer
+
+[01-Jan-20 12:11 PM] artem.pikulin#0794
+Done, let's see if this works out.
+
+{Attachments}
+https://cdn.discordapp.com/attachments/449950331577565194/661904285189144576/unknown.png
+
+[01-Jan-20 12:12 PM] ComputerGenie 👴🏼📢#7004
+2 of the 3 are now in a block
+
+[01-Jan-20 12:14 PM] artem.pikulin#0794
+`90c9d04f6209825e2d42973e894d976cae0936514fd44cedd37fefac2359a449` has to be rebroadcasted too, done.
+
+{Attachments}
+https://cdn.discordapp.com/attachments/449950331577565194/661905030596526091/unknown.png
+
+[01-Jan-20 12:14 PM] artem.pikulin#0794
+And confirmed.
+
+{Reactions}
+👍🏽 rum
+
+[01-Jan-20 12:15 PM] artem.pikulin#0794
+@ComputerGenie 👴🏼📢 Thanks for help 🙂
+
+[01-Jan-20 12:16 PM] ComputerGenie 👴🏼📢#7004
+np
+
+[01-Jan-20 12:18 PM] ComputerGenie 👴🏼📢#7004
+not sure how to solve the underlying problem of it not being broadcast, but that is the issue: it either needs to be sent out to the network or mined by the tx creator
+
+[01-Jan-20 12:23 PM] ComputerGenie 👴🏼📢#7004
+the 1st option seems more feasible using electrum
+
+[01-Jan-20 12:23 PM] jl777c#5810
+connect to any NN, and sendrawtransaction
+
+[01-Jan-20 12:23 PM] jl777c#5810
+that should get a very good network coverage
+
+[01-Jan-20 12:25 PM] artem.pikulin#0794
+@Oszy I've rebroadcasted your transactions to OOT chain and they are now mined. Your address is usable again.
+
+[01-Jan-20 12:26 PM] artem.pikulin#0794
+Rebroadcasting is ok, but is it possible to avoid such situation by applying some fix to komodod? I've created the issue ref. this: https://github.com/jl777/komodo/issues/1790
+
+{Embed}
+https://github.com/jl777/komodo/issues/1790
+Transactions are stuck in mempool if unconfirmed output is reused ...
+Can you reliably reproduce the issue? If so, please list the steps to reproduce below: Send the transaction. Reuse it&#39;s unconfirmed output in another transaction. Expected behaviour All tra...
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[01-Jan-20 12:28 PM] ComputerGenie 👴🏼📢#7004
+`but is it possible to avoid such situation by applying some fix to komodod`
+I'm not sure there's anything *to* "fix", other than what jl wrote
+
+[01-Jan-20 12:28 PM] jl777c#5810
+mempool is not guaranteed to be consistent across all nodes
+
+[01-Jan-20 12:31 PM] artem.pikulin#0794
+Ok, but when transaction is in mempool for days, maybe there's a way to rebroadcast it to other peers automatically if possible?
+
+[01-Jan-20 12:33 PM] jl777c#5810
+yes, this would be possible, but would be too slow. i guess monitoring how long a tx is in the mempool and rebroadcasting if it is over 10 minutes, might be a good idea. but if the node is sparsely connected, it might not solve the problem
+
+[01-Jan-20 12:34 PM] ComputerGenie 👴🏼📢#7004
+whatever the electrum equivalent of
+`komodo-cli -ac_name=${chain} sendrawtransaction $(komodo-cli -ac_name=${chain} getrawtransaction ${tx})`
+is, I imagine
+
+[01-Jan-20 12:38 PM] artem.pikulin#0794
+`yes, this would be possible, but would be too slow. i guess monitoring how long a tx is in the mempool and rebroadcasting if it is over 10 minutes, might be a good idea. but if the node is sparsely connected, it might not solve the problem`
+I see, maybe we should just wait and check how likely it will happen in the near future. If it happens rarely we can handle it manually, will not take much time for tech team. But if happens frequently we will need the workaround from komodod that will at least reduce the occurrence of such situation.
+
+[01-Jan-20 12:38 PM] jl777c#5810
+caretaker nodes can just make sure all tx that have been broadcast confirm, i responded to issue with the idea
+
+[01-Jan-20 12:51 PM] Oszy#5734
+thanks guys
+
+[01-Jan-20 10:57 PM] phm87#7395
+Do you have a documentation about how to redeem coins from a P2SH address? I read about scripts and P2SH addresses ( * ), I'm able to write some scripts that decode fine with decodescript rpc call but I'm still strugelling to redeem coins sent to the P2SH address. (I'm not talking about mm2 that works fine)
+( * ) <https://zcash-rpc.github.io/signrawtransaction.html>
+<https://medium.com/@bitaps.com/exploring-bitcoin-signing-p2sh-input-2dde869c5f5c>
+<https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch04.asciidoc#p2sh>
+<https://en.bitcoin.it/wiki/Script>
+
+[01-Jan-20 11:00 PM] jl777c#5810
+http://www.righto.com/2014/02/bitcoins-hard-way-using-raw-bitcoin.html
+
+{Embed}
+http://www.righto.com/2014/02/bitcoins-hard-way-using-raw-bitcoin.html
+Bitcoins the hard way: Using the raw Bitcoin protocol
+All the recent media attention on Bitcoin inspired me to learn how Bitcoin really works, right down to the bytes flowing through the netwo...
+https://lh3.googleusercontent.com/proxy/ibS_PB8fJVTG__AiCwwwbIt-HiWoE0ZvS0bJikAamJo9ohWytKe-m7IgoeM7CC0bab_LBZVy1XL7CkPnAOf4FD9Z-zGanHERLzpvVGD7h_ZxjTI=w1200-h630-p-k-no-nu
+
+[01-Jan-20 11:01 PM] jl777c#5810
+that should have all the details you need
+
+[01-Jan-20 11:04 PM] phm87#7395
+thank you
+
+[01-Jan-20 11:07 PM] phm87#7395
+I found other examples where they do a rawtx in hex with scriptSig (what I need to redeem from P2SH) but I'm still dreaming that I can use easy to use rpc calls and avoid to write the hex. I'll read details of the article you shared
+
+[01-Jan-20 11:11 PM] phm87#7395
+But maybe that only multisig have proper rpc calls and all other p2sh tx need to craft redeem tx in hex (I'm young, I'm still hoping that I can call signrawtransaction with the correct keys and redeem script and avoid to write that whole thing in hex)
+
+[01-Jan-20 11:57 PM] phm87#7395
+```You cannot use Bitcoin Core to create your transaction because it does not know what to do with non-standard inputs. There is no need to use signrawtransaction because you are not signing anything. In order to make your transaction spendable, you will need to do it manually by inserting the scriptSig that you figured out yourself.``` <https://bitcoin.stackexchange.com/questions/72706/bitcoin-tx-sign-redeem-p2sh-transaction-unable-to-sign-input-invalid-stack-siz> Now I understand why you pointed raw tx
+

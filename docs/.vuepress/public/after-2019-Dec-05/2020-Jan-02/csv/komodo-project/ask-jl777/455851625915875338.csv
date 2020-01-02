@@ -1,0 +1,212 @@
+AuthorID,Author,Date,Content,Attachments,Reactions
+"412482228359266328","CrisF#3405","01-Jan-20 02:07 AM","Happy New Year jl777 and Komodo!
+Look forward to seeing Komodo advancing towards your vision for it and the world 🥳
+:KMD:","",""
+"371114647052615681","Mylo#8306","01-Jan-20 05:39 AM","Ok re caretaker nodes thanks.
+
+Now, I’ve read more of the ticket but not all, I have a question about the p2p orderbook and the order matching as separate items.
+
+1) from my understanding that the orderbook data structure is an array that can be used by front ends, is the orderbook data structure (essentially a look up directory) re-usable in other real-time P2P data applications that are not orderbooks.  Can this be put on the roadmap?
+
+2) the ordermatching is two parties agreeing to execute “something”.  In the Dex app, a trade.  However in another P2P app it could execute another something, eg signal to open a comms channel with other software like VoIP - is the execution some data structure/protocol  instruction, eg json ?
+
+3) going back to orderbook network, can a node connect to specific caretaker nodes like with -addnode or -connect?  This question is more related to (2) for uses in other apps rather than trading, but maybe it’s already doable with nSPV in the coins.json file?","",""
+"412482228359266328","CrisF#3405","01-Jan-20 06:02 AM","Would this have  have any use for a lightweight block explorer?
+Something to ```circumvent the issue of having a single point of view (a single full node) to view the chain``` as mentioned in this article `https://medium.com/the-arcadia-media-group/building-lightweight-block-explorers-using-pokt-46baf668625e`?","",""
+"455741312273219595","jl777c#5810","01-Jan-20 06:41 AM","1) there is no orderbook data structure. it is arbitrary data that is propagated to all nodes quickly, but with minimum wasted bandwidth. you can make it a general chat ""room"", where each datablob is a message. by adding qualifiers to it, you can create ""channels"". really, it can do whatever you can make arbitrary data do.","",""
+"455741312273219595","jl777c#5810","01-Jan-20 06:43 AM","2) the datablob is a blob of data, its purpose can be anything. think of it as a global broadcast into RAM, for temporary things. of course, you can add logging to a node and make it permanent, but that is not its focus. the goal is a realtime feed that is 99.9% the same to 99.9% of the nodes 99.9% of the time, created by a fully decentralized p2p network","",""
+"455741312273219595","jl777c#5810","01-Jan-20 06:44 AM","3) you can, but each DEX network will sync globally to all the data (for the past hour). i imagine there can be hundreds of different DEX networks, each with a different purpose","",""
+"455741312273219595","jl777c#5810","01-Jan-20 06:47 AM","@CrisF if there is a node that has the data and is submitting it to the DEX network, then yes, but explorers are more for long term and this is designed for realtime. a realtime streaming would be more suited. at first i didnt worry about throughput so much, so it is limited to 20 tx/second sustained, but after i finished the optimizations, it should be able to handle 1000 tx/second or more","","👍 (1)"
+"455741312273219595","jl777c#5810","01-Jan-20 06:48 AM","overnight the small scale stress test did over a million tx. i had to slow it down due to some race conditions","","👀 (1),🎖️ (1),🪐 (1)"
+"371114647052615681","Mylo#8306","01-Jan-20 08:40 AM","Great thanks for taking it back to data blob, that rocks","",""
+"371114647052615681","Mylo#8306","01-Jan-20 08:41 AM","Yep keen to enquire more about (3) in the future for exchange of other data, cheers","",""
+"206445134122844170","Slyris#2880","01-Jan-20 08:54 AM","When you say race conditions you speak about multithreading @jl777c ?
+
+What is your current threading model ?","",""
+"455741312273219595","jl777c#5810","01-Jan-20 10:15 AM","i fixed the bug","",""
+"455741312273219595","jl777c#5810","01-Jan-20 10:15 AM","i piggy back on top of the bitcoin message handling","",""
+"455741312273219595","jl777c#5810","01-Jan-20 10:16 AM","things are now a realtime rotating buffer, should be much more efficient. have to debug it next","","💯 (2),KMD (6),2561_feelsevilman (2)"
+"412323938782150658","SHossain#0007","01-Jan-20 07:25 PM","compiling latest","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:30 PM","new chains showing `nMaxConnections 16`","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:31 PM","while launching","",""
+"455741312273219595","jl777c#5810","01-Jan-20 07:31 PM","yes","",""
+"455741312273219595","jl777c#5810","01-Jan-20 07:32 PM","hopefully it will connect to peers","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:33 PM","just launched all chains with fresh data dir. 0 peers now. maybe need to wait a bit before they get connected.","",""
+"455741312273219595","jl777c#5810","01-Jan-20 07:35 PM","yes, some specific addnodes to get connections going is a good idea","",""
+"455741312273219595","jl777c#5810","01-Jan-20 07:36 PM","after the peers.dat finds the relevant peers, it will do it automatically on restart but when bootstrapping a network, it is often a bit of a pain","",""
+"455741312273219595","jl777c#5810","01-Jan-20 07:36 PM","you also want each node to have random peers","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:37 PM","i have 2 `addnode=xx.xx.x.x` entries in each conf file","",""
+"455741312273219595","jl777c#5810","01-Jan-20 07:37 PM","that should trickle out the peers","",""
+"455741312273219595","jl777c#5810","01-Jan-20 07:38 PM","check how many connections in each peer","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:38 PM","0 connections in all instances","",""
+"455741312273219595","jl777c#5810","01-Jan-20 07:39 PM","you got rid of the -maxconnections=","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:39 PM","```
+./komodo-cli -datadir=$HOME/.komodo_21/DEXRDO -ac_name=DEXRDO getinfo
+{
+  ""version"": 3000000,
+  ""protocolversion"": 170008,
+  ""KMDversion"": ""0.5.1"",
+  ""synced"": false,
+  ""notarized"": 0,
+  ""prevMoMheight"": 0,
+  ""notarizedhash"": ""0000000000000000000000000000000000000000000000000000000000000000"",
+  ""notarizedtxid"": ""0000000000000000000000000000000000000000000000000000000000000000"",
+  ""notarizedtxid_height"": ""mempool"",
+  ""KMDnotarized_height"": 0,
+  ""notarized_confirms"": 0,
+  ""walletversion"": 60000,
+  ""balance"": 0.00000000,
+  ""blocks"": 0,
+  ""longestchain"": 0,
+  ""tiptime"": 1231006505,
+  ""difficulty"": 1,
+  ""keypoololdest"": 1577907052,
+  ""keypoolsize"": 101,
+  ""paytxfee"": 0.00000000,
+  ""sapling"": -1,
+  ""timeoffset"": 0,
+  ""connections"": 0,
+  ""proxy"": """",
+  ""testnet"": false,
+  ""relayfee"": 0.00000100,
+  ""errors"": """",
+  ""name"": ""DEXRDO"",
+  ""p2pport"": 13995,
+  ""rpcport"": 14018,
+  ""magic"": -1802393916,
+  ""premine"": 999999
+}
+```","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:39 PM","yes, i got rid of maxconnections=8","",""
+"455741312273219595","jl777c#5810","01-Jan-20 07:40 PM","anything in debug.log","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:41 PM","```
+2020-01-01 19:31:44 Loading addresses from DNS seeds (could take a while)
+2020-01-01 19:31:44 net thread start
+2020-01-01 19:31:44 opencon thread start
+2020-01-01 19:31:44 addcon thread start
+2020-01-01 19:31:44 msghand thread start
+2020-01-01 19:31:44 init message: Done loading
+2020-01-01 19:31:44 17 addresses found from DNS seeds
+2020-01-01 19:31:44 dnsseed thread exit
+2020-01-01 19:32:08 connect() to 66.70.180.46:13995 failed after select(): Connection refused (111)
+2020-01-01 19:32:20 connect() to 159.65.134.48:13995 failed after select(): Connection refused (111)
+2020-01-01 19:32:21 connect() to 82.202.193.100:13995 failed after select(): Connection refused (111)
+2020-01-01 19:32:25 connect() to 159.69.11.56:13995 failed after select(): Connection refused (111)
+2020-01-01 19:32:26 connect() to 78.47.196.146:13995 failed after select(): Connection refused (111)
+2020-01-01 19:32:34 connect() to 139.99.121.200:13995 failed after select(): Connection refused (111)
+2020-01-01 19:32:37 connect() to 95.213.238.98:13995 failed after select(): Connection refused (111)
+2020-01-01 19:32:52 Adding fixed seed nodes.
+2020-01-01 19:32:59 connect() to 88.99.251.101:13995 failed after select(): Connection refused (111)
+2020-01-01 19:34:17 connect() to 159.69.11.56:13995 failed after select(): Connection refused (111)
+2020-01-01 19:37:54 connect() to 82.202.193.100:13995 failed after select(): Connection refused (111)
+2020-01-01 19:39:13 connect() to 66.70.180.46:13995 failed after select(): Connection refused (111)
+```","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:41 PM","nothing out of the ordinary","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:42 PM","daemons within same servers should find peers easily","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:43 PM","in addition to addnode= in conf file, there is one `-addnode=` param in the chain start command","",""
+"455741312273219595","jl777c#5810","01-Jan-20 07:44 PM","does that node see any peers?","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:44 PM","nope","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:45 PM","stopping all instances and will start only 2","",""
+"474206298427097099","ComputerGenie 👴🏼📢#7004","01-Jan-20 07:45 PM","are the peers using the same ports?","",""
+"474206298427097099","ComputerGenie 👴🏼📢#7004","01-Jan-20 07:46 PM","`66.70.180.46:13995 failed after select()`
+66.70.180.46 will fail like that if it's not using 13995","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:47 PM","there are 32+32 nodes on 2 servers. on a single server all daemons using different port + different rpcport that matches on the 2nd server","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:48 PM","it worked before and i had many peers on single daemon. i.e.: 24, 32","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:48 PM","i used your script to generate those custom datadir for all instances","",""
+"455741312273219595","jl777c#5810","01-Jan-20 07:50 PM","anyway, try the latest, we can just ignore that it will have many peers","",""
+"474206298427097099","ComputerGenie 👴🏼📢#7004","01-Jan-20 07:50 PM","I never tried to connect them, I just made it start up 😛","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:52 PM","compiling latest","",""
+"455741312273219595","jl777c#5810","01-Jan-20 07:52 PM","dont launch more than 60 nodes","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:53 PM","ok","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:56 PM","now, i'm getting connections","",""
+"455741312273219595","jl777c#5810","01-Jan-20 07:56 PM","the bitcoin peering code has a mind of its own and it seems hard to give it a specific target of peers...","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:57 PM","when i launched with latest, it just found all","",""
+"455741312273219595","jl777c#5810","01-Jan-20 07:57 PM","once all the peers are connected to the network, the DEX_broadcast should cause a print in all nodes","",""
+"455741312273219595","jl777c#5810","01-Jan-20 07:57 PM","so each node has 60 peers?","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:57 PM","27 actually","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:57 PM","out of 32","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:58 PM","from another server","",""
+"455741312273219595","jl777c#5810","01-Jan-20 07:58 PM","so 32 nodes total?","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:58 PM","in a single server, yes. on the other server, i didn't yet launch all chains","",""
+"412323938782150658","SHossain#0007","01-Jan-20 07:58 PM","now, i'll have max 60","",""
+"455741312273219595","jl777c#5810","01-Jan-20 07:58 PM","ok","",""
+"455741312273219595","jl777c#5810","01-Jan-20 07:59 PM","one idea is that after the network is up and running, restarting a single node with -maxconnections=8","",""
+"455741312273219595","jl777c#5810","01-Jan-20 07:59 PM","then make sure it starts up with 8 peers","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:00 PM","if that works, then iterate through the other peers. at some point it wont be able to get a full 8 peers, but maybe it can work to reduce the connectivity in this way","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:00 PM","but before doing that, lets make sure the DEX_broadcast works","",""
+"412323938782150658","SHossain#0007","01-Jan-20 08:02 PM","```
+DEXpurge.119 for t.1577905319 -> n.0, total.1 e5988e35 R.0 S.27 A.1 duplicates.0 | L.0 A.0 coll.0 
+                                                                                                  DEXpurge.133 for t.1577905333 -> n.0, total.1 e5988e35 R.1 S.0 A.1 duplicates.0 | L.2 A.1 coll.0 
+DEXpurge.133 for t.1577905333 -> n.0, total.1 e5988e35 R.1 S.0 A.1 duplicates.0 | L.2 A.1 coll.0 
+DEXpurge.133 for t.1577905333 -> n.0, total.1 e5988e35 R.1 S.0 A.1 duplicates.0 | L.2 A.1 coll.0 
+DEXpurge.133 for t.1577905333 -> n.0, total.1 e5988e35 R.1 S.0 A.1 duplicates.0 | L.2 A.1 coll.0 
+DEXpurge.133 for t.1577905333 -> n.0, total.1 e5988e35 R.1 S.0 A.1 duplicates.0 | L.2 A.1 coll.0 
+DEXpurge.133 for t.1577905333 -> n.0, total.1 e5988e35 R.1 S.0 A.1 duplicates.0 | L.2 A.1 coll.0 
+DEXpurge.133 for t.1577905333 -> n.0, total.1 e5988e35 R.1 S.0 A.1 duplicates.0 | L.2 A.1 coll.0 
+DEXpurge.135 for t.1577905335 -> n.0, total.1 e5988e35 R.1 S.0 A.1 duplicates.0 | L.2 A.1 coll.0 
+DEXpurge.142 for t.1577905342 -> n.0, total.1 e5988e35 R.1 S.0 A.1 duplicates.0 | L.2 A.1 coll.0 
+DEXpurge.145 for t.1577905345 -> n.0, total.1 e5988e35 R.1 S.0 A.1 duplicates.0 | L.8 A.1 coll.0
+```","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:02 PM","great!","",""
+"412323938782150658","SHossain#0007","01-Jan-20 08:02 PM","issued a single broadcast. seems to be working","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:02 PM","this print has 3 parts","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:02 PM","DEXpurge.145 for t.xxx -> n.0","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:03 PM","that means for timeslot 145 at the unixtimestamp, it purged 0 packets","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:03 PM","this makes sense as you need to run 59 minutes before anything will be purged.","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:04 PM","the rightmost part of L.8 A.1 coll.0 is the performance stats of the internal hashtable for recent requests. L is the number of lookups, A.1 is the number of additions to the hashtable and coll is the number of collisions","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:05 PM","each collision will likely create a bit of redundant data transmission, that is why this is being tracked. my results show about a 0.1% collision rate, which is small enough to not matter as the goal is less than 20% redundant packets","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:05 PM","now the middle part is what has the most important data","",""
+"412323938782150658","SHossain#0007","01-Jan-20 08:05 PM","i guess the `total.x` is the  number of request","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:05 PM","total.1 is the total number of packets that are in the RAM (sum of all timeslots)","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:06 PM","the e59... is a combination of all the shorthashes (least 32 bits of actual hash XOR), given N packets, if it generates the same combination of shorthashes, odds are very good that the data is 100% in sync","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:06 PM","R.1 S.0 A.1 duplicates.0","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:07 PM","R.1 is the number of packets received","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:07 PM","S.0 is the number of packets sent","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:07 PM","A.1 is the number of packets added to the RAM. until purging starts, this should match the earlier total","",""
+"412323938782150658","SHossain#0007","01-Jan-20 08:08 PM","yep. that's matching","",""
+"412323938782150658","SHossain#0007","01-Jan-20 08:08 PM","```
+DEXpurge.387 for t.1577905587 -> n.0, total.2 249358eb R.2 S.0 A.2 duplicates.0 | L.4 A.2 coll.0 
+DEXpurge.387 for t.1577905587 -> n.0, total.2 249358eb R.2 S.0 A.2 duplicates.0 | L.4 A.2 coll.0 
+DEXpurge.387 for t.1577905587 -> n.0, total.2 249358eb R.2 S.0 A.2 duplicates.0 | L.10 A.2 coll.0 
+DEXpurge.387 for t.1577905587 -> n.0, total.2 249358eb R.2 S.0 A.2 duplicates.0 | L.4 A.2 coll.0 
+DEXpurge.387 for t.1577905587 -> n.0, total.2 249358eb R.2 S.0 A.2 duplicates.0 | L.4 A.2 coll.0 
+DEXpurge.387 for t.1577905587 -> n.0, total.2 249358eb R.2 S.0 A.2 duplicates.0 | L.4 A.2 coll.0 
+DEXpurge.387 for t.1577905587 -> n.0, total.2 249358eb R.2 S.0 A.2 duplicates.0 | L.4 A.2 coll.0 
+DEXpurge.387 for t.1577905587 -> n.0, total.2 249358eb R.2 S.0 A.2 duplicates.0 | L.4 A.2 coll.0 
+DEXpurge.387 for t.1577905587 -> n.0, total.1 c10bd6de R.1 S.0 A.1 duplicates.0 | L.2 A.1 coll.0 
+DEXpurge.387 for t.1577905587 -> n.0, total.2 249358eb R.2 S.0 A.2 duplicates.0 | L.4 A.2 coll.0 
+
+```","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:08 PM","and the duplicates.0 is the number of duplicate packets received. this is what needs to be below 20%. the higher the connectivity in a network, the higher the duplicates percentage will be","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:08 PM","sometimes a packet will take a few seconds to arrive, usually it is pretty fast","",""
+"412323938782150658","SHossain#0007","01-Jan-20 08:09 PM","i'm running all chains in a `screen` except one with `gdb` and another one normally. screen session shows a lot of print as there are about 29 chains running","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:09 PM","start the while true loop on one node","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:10 PM","i see an occasional crash on nodes that are running the blaster loop, but never on nodes that dont run it, so that is the likely cause of the crashing","",""
+"412323938782150658","SHossain#0007","01-Jan-20 08:10 PM","@gcharang @Bryan_Beus please check above for the explanation of `DEX_broadcast` call output. you will find it interesting and important to document.","",""
+"412323938782150658","SHossain#0007","01-Jan-20 08:11 PM","starting the loop","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:11 PM","this will likely change a lot though","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:11 PM","currently it is just making random data packets and is for throughput validation","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:12 PM","once we can verify that it can indeed handle 8192 tx/sec, then i can enable the txpow. for now a small number of nodes can simulate 100000x the nodes when txpow is active","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:12 PM","well, maybe the leverage is only 10,000x","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:13 PM","on my low powered nodes it is only a 1000x leverage, but on a faster system, the fixed overhead will be much smaller","",""
+"412323938782150658","SHossain#0007","01-Jan-20 08:14 PM","started spamming
+```
+DEXpurge.909 for t.1577906109 -> n.0, total.3694 e3a15fac R.3694 S.46546 A.3694 duplicates.0 | L.7385 A.3691 coll.0
+```","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:14 PM","after we get the high performance stable, i will add rpc calls, which is when we can start documenting it","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:14 PM","how many tx/sec?","",""
+"412323938782150658","SHossain#0007","01-Jan-20 08:15 PM","```
+DEXpurge.953 for t.1577906153 -> n.0, total.11644 1099813e R.11644 S.157902 A.11644 duplicates.0 | L.23273 A.11629 coll.8 
+DEXpurge.955 for t.1577906155 -> n.0, total.11981 248dc4b6 R.11981 S.163012 A.11981 duplicates.0 | L.23947 A.11966 coll.8 
+DEXpurge.957 for t.1577906157 -> n.0, total.12349 93c53ae8 R.12349 S.167730 A.12349 duplicates.0 | L.24682 A.12333 coll.10 
+DEXpurge.959 for t.1577906159 -> n.0, total.12718 d12478f0 R.12718 S.172882 A.12718 duplicates.0 | L.25419 A.12701 coll.10 
+DEXpurge.961 for t.1577906161 -> n.0, total.13063 56c57a54 R.13063 S.178048 A.13063 duplicates.0 | L.26108 A.13045 coll.12 
+DEXpurge.963 for t.1577906163 -> n.0, total.13419 c3d7aa29 R.13419 S.182878 A.13419 duplicates.0 | L.26820 A.13401 coll.12 
+DEXpurge.965 for t.1577906165 -> n.0, total.13777 979a9eae R.13777 S.187862 A.13777 duplicates.0 | L.27535 A.13758 coll.14 
+DEXpurge.967 for t.1577906167 -> n.0, total.14128 9a307f0d R.14128 S.192874 A.14128 duplicates.0 | L.28237 A.14109 coll.16 
+DEXpurge.969 for t.1577906169 -> n.0, total.14498 42fd2627 R.14498 S.197788 A.14498 duplicates.0 | L.28976 A.14478 coll.16 
+DEXpurge.971 for t.1577906171 -> n.0, total.14845 d6b04d23 R.14845 S.202968 A.14845 duplicates.0 | L.29670 A.14825 coll.16 
+DEXpurge.973 for t.1577906173 -> n.0, total.15217 efacec1c R.15217 S.207826 A.15217 duplicates.0 | L.30413 A.15196 coll.16 
+DEXpurge.975 for t.1577906175 -> n.0, total.15564 dfe3e47c R.15564 S.213034 A.15564 duplicates.0 | L.31107 A.15543 coll.16
+```","",""
+"455741312273219595","jl777c#5810","01-Jan-20 08:15 PM","the difference in totals per second will show this, when purging starts the n.xxx will show how many that timeslot (second) had","",""
