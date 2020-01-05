@@ -1,0 +1,125 @@
+==============================================================
+Guild: Komodo
+Channel: dev-marketmaker
+Topic: Discussion about AtomiAPI and its market making tech.
+After: 04-Jan-20 12:00 AM
+Before: 05-Jan-20 12:00 AM
+==============================================================
+
+[04-Jan-20 06:08 AM] Mylo#8306
+Having the same trouble as others in recent weeks with rust build.  no clippy or rustfmt-preview for the current nightly.
+
+[04-Jan-20 06:20 AM] Mylo#8306
+no biggie.  not urgent.
+
+[04-Jan-20 09:16 PM] zatJUM#9924
+```utxo:1909] Electrum servers [ElectrumRpcRequest { url: "electrum3.cipig.net:10000", protocol: TCP, disable_cert_verification: false }, ElectrumRpcRequest { url: "electrum2.cipig.net:10000", protocol: TCP, disable_cert_verification: false }] ping error JsonRpcError { request: JsonRpcRequest { jsonrpc: "2.0", id: "6", method: "server.ping", params: [] }, error: Response(Object({"code": Number(-101), "message": String("excessive resource usage")})) }```
+
+[04-Jan-20 09:17 PM] Oszy#5734
+https://github.com/jl777/coins/blob/master/electrums/VRSC
+
+{Embed}
+https://github.com/jl777/coins/blob/master/electrums/VRSC
+jl777/coins
+coin parameters and all files needed for GUI support - jl777/coins
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[04-Jan-20 09:18 PM] zatJUM#9924
+I haven't activated VRSC
+
+[04-Jan-20 09:18 PM] Oszy#5734
+I am hallucinating excuse me
+
+{Reactions}
+😁
+
+[04-Jan-20 09:19 PM] zatJUM#9924
+```[broadcast_my_maker_orders ZEXO KMD] failed to get balance of base coin: utxo:1290] JsonRpcError { request: JsonRpcRequest { jsonrpc: "2.0", id: "35", method: "blockchain.scripthash.get_balance", params: [String("12938ebbe24d9ce91cc2a1e9a4b16f623bd3de6fa99400480be5a150adcd11d9")] }, error: Response(Object({"code": Number(-101), "message": String("excessive resource usage")})) }```
+
+[04-Jan-20 09:21 PM] Oszy#5734
+@cipi electrum related?
+
+[04-Jan-20 09:22 PM] zatJUM#9924
+And what about <https://discordapp.com/channels/412898016371015680/449950331577565194/662344092776398850>?
+I still have it with freshly compiled mm2 from `git clone`
+
+[04-Jan-20 09:25 PM] phm87#7395
+if there are no zexo electrum servers anymore, maybe you can use a local zexo node. I think that @jorian tried to run mm2 with a local node, I don't remember details but it should be possible
+
+[04-Jan-20 09:27 PM] zatJUM#9924
+```curl -s --url "http://127.0.0.1:7783" --data "{\"userpass\":\"$userpass\",\"method\":\"electrum\",\"coin\":\"ZEXO\",\"servers\":[{\"url\":\"electrum1.cipig.net:10035\"},{\"url\":\"electrum2.cipig.net:10035\"}],\"mm2\":1}" | jq
+{
+  "address": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "balance": "yyyyyyyyyyyy",
+  "coin": "ZEXO",
+  "locked_by_swaps": "0",
+  "required_confirmations": 2,
+  "result": "success"
+}```doesn't mean there *are* electrum servers?
+
+[04-Jan-20 09:29 PM] phm87#7395
+I'm surprised, I though that all were down. You can create an order but maybe we should check orderbook before. No ZEXO order as I can see <https://oracle.earth/mm2_orderbook/>
+
+[04-Jan-20 09:31 PM] zatJUM#9924
+I've canceled mine as `String("excessive resource usage")`
+
+[04-Jan-20 09:31 PM] zatJUM#9924
+Do you want me to put it back?
+
+[04-Jan-20 09:32 PM] phm87#7395
+I don't know, I have no interest in zexo sorry but I have loads of commod to sell
+
+[04-Jan-20 09:32 PM] phm87#7395
+One day, I'll open a museum
+
+{Reactions}
+😁
+
+[04-Jan-20 09:33 PM] zatJUM#9924
+I have no interest in commod either 😉
+
+[04-Jan-20 09:34 PM] zatJUM#9924
+But if the one's who can create several orders do it, it makes some activity on mm2
+
+[04-Jan-20 09:37 PM] cipi#4502
+@zatJUM what mm2 are you using? any special stuff that queries electrums like crazy?
+
+[04-Jan-20 09:39 PM] cipi#4502
+can you send me your IP, so i can look what the electrums are telling?
+
+[04-Jan-20 09:39 PM] cipi#4502
+and please use all 3 electrums, not just 2, so the load is spread
+
+[04-Jan-20 09:44 PM] cipi#4502
+have you set `tx_history` to `true`somewhere? (coins-file or electrum/enable-call)
+
+[04-Jan-20 09:46 PM] cipi#4502
+and yes, ZEXO electrums are still up
+
+[04-Jan-20 10:03 PM] cipi#4502
+i looked for the string `excessive resource usage` in the electrumx code and can't find it... so the error ddoes not come from the electrums... also not in the mm2 code... no idea where the error comes from
+
+[04-Jan-20 10:05 PM] phm87#7395
+sometimes I have to grep the whole disk to find if there is a hidden log (log of a firewall or something else)
+
+[04-Jan-20 10:11 PM] cipi#4502
+found it... `/usr/local/lib/python3.7/dist-packages/aiorpcx/session.py` a module the electrumx server is using
+
+[04-Jan-20 10:12 PM] zatJUM#9924
+@cipi fresh compiled one from `git clone` and only 5 coins activated via electrum, 3 active orders only.
+I will use 3 servers, sorry!
+No tx_history set.
+
+[04-Jan-20 10:14 PM] cipi#4502
+hmmm... so nothing unusual... will look into this https://github.com/kyuupichan/aiorpcX stuff, maybe i can update it
+i see there is a slightly newer version
+
+{Embed}
+https://github.com/kyuupichan/aiorpcX
+kyuupichan/aiorpcX
+Generic async RPC implementation, including JSON-RPC - kyuupichan/aiorpcX
+https://avatars2.githubusercontent.com/u/3319176?s=400&v=4
+
+[04-Jan-20 10:19 PM] cipi#4502
+the changelog does not look promising... i think i know though what the problem might be... aiorpc has problems with many connection-requests... i think the above "excessive resource usage" is actually from KMD electrums, not ZEXO
+
