@@ -1,0 +1,208 @@
+==============================================================
+Guild: Komodo
+Channel: ask-jl777
+Topic: Ask questions about the core tech here, but not questions about prices or personal questions or GUI and  please don't DM JL777.
+https://dexstats.info/richlistlookup.php?address=RLVzC4tr9cNKvuw2z4m8KuMfZURwCehx55
+https://medium.com/@jameslee777
+After: 05-Jan-20 12:00 AM
+Before: 06-Jan-20 12:00 AM
+==============================================================
+
+[05-Jan-20 01:58 AM] kmdkrazy#8280
+cruising  NO  BLASTER  1 hour  +
+
+[05-Jan-20 01:58 AM] kmdkrazy#8280
+DEXpurge.3573 for t.1578185973 -> n.651 89cfd78d, total.2343752 1d80c545 R.7138186 S.3299029 A.7128209 duplicates.9977 | L.21239957 A.7133798 coll.30182 | avelag P 15.3, T 4.7 errlag.50 pend.16168 | 132/sec
+
+[05-Jan-20 01:59 AM] kmdkrazy#8280
+4.2 GiB  MEM
+
+[05-Jan-20 01:59 AM] kmdkrazy#8280
+Virtual  5.0  GB
+
+[05-Jan-20 02:00 AM] kmdkrazy#8280
+turning  on blaster
+
+[05-Jan-20 03:12 AM] kmdkrazy#8280
+Crashed at almost 1 hour exactly
+
+[05-Jan-20 03:12 AM] kmdkrazy#8280
+4.9 GB Mem
+
+[05-Jan-20 06:23 AM] jl777c#5810
+backtrace for crashes, otherwise cant do much
+
+[05-Jan-20 06:23 AM] jl777c#5810
+my testnet did 120 millionm sustained 3k+/sec and all nodes are in sync
+
+[05-Jan-20 08:25 AM] Mark81#4505
+"reject packet from future" outputs?
+
+[05-Jan-20 10:02 AM] jl777c#5810
+very strict system clock sync required. ntp node
+
+[05-Jan-20 10:57 AM] hyperDEX#6586
+@jl777c could this new tech be used to make  CHIPS networking/communication more reliable?
+
+[05-Jan-20 11:00 AM] jl777c#5810
+it isnt a lossless protocol, but if a reliability layer is added on top of it, maybe it can. also there isnt a large amount of privacy with the dexp2p, so it would need to be carefully analyzed to see if point to point encryption will be sufficient
+
+[05-Jan-20 11:01 AM] jl777c#5810
+i made a new release, it is hardforking
+
+[05-Jan-20 11:05 AM] jl777c#5810
+now any chain with -dexp2p=2 (or 1) will activate the decentralized DEX p2p messages
+txpow is active at a minimal level, tx/sec of blasters will likely be reduced by 10x to 50x
+packet priority is supported. each priority level doubles the txpow needed, dont go much above 16 and for now priority is not affecting routing, so can just set it to 0
+3 indices in parallel are maintained in realtime for all packets with tags (or destpubkey)
+DEX_broadcast now will actually broadcast the hex specified and takes a lot more parameters
+DEX_list is able to get a list of all the packets with matching tags
+plz dont abuse the messaging side yet, it is not hardened and limited to just 64 different tags for now. also, it will likely crash after an hour if you are making DEX_list requests that needs to get a packet being purged
+
+[05-Jan-20 11:06 AM] jl777c#5810
+destpubkey encryption and min/max amount filtering in DEX_list is not implemented yet, nor is minpriority filtering. DEX_stats and DEX_get is not implemented yet
+
+[05-Jan-20 11:07 AM] jl777c#5810
+however, enough should be work to be able to broadcast a specific message with a specific tag and then see it in a list
+
+[05-Jan-20 11:09 AM] jl777c#5810
+for example if tagA is KMD and tagB is BTC, then the packet will be in the indices for "KMD", "BTC" and "KMD/BTC". that will allow future DEX_list for BTC to find this along with any other that had BTC as tagA or tagB. if you DEX_list with both KMD and BTC, only the ones that match the order will be returned. so to get an orderbook, you can do a DEX_list KMD BTC and a DEX_list BTC KMD and construct it. however, i plan to add convenient orderbook functions as each packet also has volumeA and volumeB fields that can be used to calculate a price
+
+[05-Jan-20 11:10 AM] jl777c#5810
+i was just able to get this to work in a few cases and havent had a chance to find and fix all bugs, but too tired now and will wait for bug reports based on the above functionality
+
+[05-Jan-20 11:14 AM] looye29#2126
+Can orrderbook be filled by multiple targets? E.g. Alice has 1000 KMD and Bob can only fill 500 KMD can Stanley  take the other 500 KMD?
+
+[05-Jan-20 11:16 AM] looye29#2126
+Now in explaining of Atomic DEX it talks only about Alice and Bob swap.
+
+[05-Jan-20 11:25 AM] jl777c#5810
+pretty sure that is already implemented
+
+[05-Jan-20 11:26 AM] jl777c#5810
+dexp2p is for a decentralized and fast way to get orders to all nodes, it does not deal with using that data, that is up to the app
+
+[05-Jan-20 11:27 AM] jl777c#5810
+with the messaging layer it should make it quite easy to write dapps that want to deal with any sort of messaging that fits into the tagA/tagB, destpubkey, volumeA volumeB framework
+
+[05-Jan-20 01:36 PM] kmdkrazy#8280
+Had to leave town....it seems easily reproducable..
+
+[05-Jan-20 03:00 PM] jl777c#5810
+it wont be anymore. there are known problems after one hour, for now only crashes in the first hour are of interest
+
+[05-Jan-20 03:06 PM] kmdkrazy#8280
+Ok... the crash seems daemon related...I will run daemon only and backtrace when it jumps down from 2000 kb to 150....I dont have my glasses with me to read your posts....I'll tey at my next stop
+
+[05-Jan-20 03:08 PM] jl777c#5810
+what else could crash, the deamon is the only thing running
+
+[05-Jan-20 03:09 PM] jl777c#5810
+when i say "there are known problems after one hour" that means i know of things that can cause crashes after an hour, only crashes before one hour purges start are of interest until i fix the known bug
+
+[05-Jan-20 03:13 PM] kmdkrazy#8280
+Well yeah but...didn't know if blaster caused daemon to overload or if it did it by itself....I understand
+
+[05-Jan-20 03:45 PM] jl777c#5810
+daemon is designed to not overload
+
+[05-Jan-20 03:45 PM] jl777c#5810
+well, if you start blasting 4MB packets, it would make nodes run out of memory
+
+[05-Jan-20 03:46 PM] jl777c#5810
+but based on tx count, it will drop packets, to avoid overload
+
+[05-Jan-20 03:51 PM] kmdkrazy#8280
+Yes it did do that without blaster running....which confused me....like its exchanging data without blaster...It did not "crash" but was running poorly at the suspected 1 hour mark "ish" was going to scientifically get correct data on my next tests.....computer only froze with blastee....70 MPH statements are not my forte
+
+[05-Jan-20 03:56 PM] kmdkrazy#8280
+4.5 GB of mem was consumed before the 1hr mark and without blaster
+
+[05-Jan-20 03:57 PM] jl777c#5810
+with no transactions being sent at all?
+
+[05-Jan-20 03:57 PM] kmdkrazy#8280
+Blaster tached my up to 4.9
+
+[05-Jan-20 03:57 PM] kmdkrazy#8280
+Yes..  I got confused
+
+[05-Jan-20 03:57 PM] jl777c#5810
+if nothing is being blasted, the nodes mem use should be minimal other than the half gig overhead
+
+[05-Jan-20 03:57 PM] kmdkrazy#8280
+Wondering why
+
+[05-Jan-20 03:58 PM] jl777c#5810
+if any node is blasting, all nodes will see 99.999% the same packets
+
+[05-Jan-20 03:58 PM] jl777c#5810
+and have mem use about the same
+
+[05-Jan-20 03:58 PM] jl777c#5810
+what are you wondering about
+
+[05-Jan-20 03:58 PM] kmdkrazy#8280
+I know....I rest and retested
+
+[05-Jan-20 03:58 PM] daemonfox#6136
+how can we tell if nodes are staying in sync?
+
+[05-Jan-20 03:59 PM] kmdkrazy#8280
+Why mem was being chewed up
+
+[05-Jan-20 03:59 PM] daemonfox#6136
+I have created 4 nodes and blasted them all for a bit and they all seem to drift
+
+[05-Jan-20 03:59 PM] kmdkrazy#8280
+I had to leave this morning with no answer
+
+[05-Jan-20 04:02 PM] jl777c#5810
+if you blast at a higher rate than the network can handle, PACKETS WILL BE DROPPED
+
+[05-Jan-20 04:02 PM] kmdkrazy#8280
+Next test was/will be no blaster for 1 hour then backtrace
+
+[05-Jan-20 04:02 PM] jl777c#5810
+and sync will be lost
+
+[05-Jan-20 04:02 PM] jl777c#5810
+if you are below the critical rate, then i am seeing very very few packets out of sync
+
+[05-Jan-20 04:02 PM] jl777c#5810
+on the order of 1 in a millon
+
+[05-Jan-20 04:03 PM] jl777c#5810
+you can check the summary hashes for the totals to see if it is in sync or not (when there are no new packets coming in)
+
+[05-Jan-20 04:04 PM] jl777c#5810
+with the messaging level, it should be possible to packetize files, blast it and then reconstruct it and see if they are the same
+
+[05-Jan-20 04:10 PM] kmdkrazy#8280
+If no update in 8 hours I will see what I can do
+
+[05-Jan-20 04:17 PM] kmdkrazy#8280
+1GB memory munching loop every 15minutes shouldn't be that hard to replicate....I'm 8 hours out
+
+[05-Jan-20 04:23 PM] kmdkrazy#8280
+It wasn't there on Friday ....pretty sure
+
+[05-Jan-20 11:48 PM] kmdkrazy#8280
+testing  now  ---
+
+[05-Jan-20 11:48 PM] kmdkrazy#8280
+first print  NO BLASTER
+
+[05-Jan-20 11:48 PM] kmdkrazy#8280
+DEXpurge.2910 for t.1578264510 -> n.0 00000000, total.21913 2196fe92 R.22122 S.473 A.21913 duplicates.209 | L.125356 A.34580 coll.1764 | avelag P 0.0, T 8.1 errlag.0 pend.13713 | 2191/sec
+
+[05-Jan-20 11:48 PM] kmdkrazy#8280
+back in 58 minutes
+
+[05-Jan-20 11:49 PM] kmdkrazy#8280
+mem 250 MiB
+
+[05-Jan-20 11:50 PM] kmdkrazy#8280
+virtual 1.8  GiB
+
