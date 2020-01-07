@@ -1,0 +1,130 @@
+==============================================================
+Guild: Komodo
+Channel: ask-jl777
+Topic: Ask questions about the core tech here, but not questions about prices or personal questions or GUI and  please don't DM JL777.
+https://dexstats.info/richlistlookup.php?address=RLVzC4tr9cNKvuw2z4m8KuMfZURwCehx55
+https://medium.com/@jameslee777
+After: 06-Jan-20 12:00 AM
+Before: 07-Jan-20 12:00 AM
+==============================================================
+
+[06-Jan-20 07:13 PM] jl777c#5810
+and the smallest number of cli commands that reproduces a bug will be best
+
+[06-Jan-20 07:13 PM] TonyL#3577
+sure, will prepare it now
+
+[06-Jan-20 07:21 PM] TonyL#3577
+https://paste.ubuntu.com/p/fJjxS3ndsJ/
+
+[06-Jan-20 07:23 PM] TonyL#3577
+looks like volume filtering works as expected
+
+[06-Jan-20 07:24 PM] jl777c#5810
+that's is unexpected! i never had a chance to test it
+
+{Reactions}
+😎
+
+[06-Jan-20 07:25 PM] jl777c#5810
+a lot of the lines have [] in them. probably that could have confused things?
+
+[06-Jan-20 07:25 PM] TonyL#3577
+it were my tries "to learn new language"
+
+[06-Jan-20 07:25 PM] TonyL#3577
+let me try to reproduce it cleanly on restart
+
+[06-Jan-20 07:26 PM] jl777c#5810
+most likely is that the minpriority is being parsed as 0
+
+[06-Jan-20 07:29 PM] TonyL#3577
+``` 
+./komodo-cli -ac_name=DEXP2P DEX_broadcast "TonyL" 0 "BTC" "KMD" "028a45fb6ab295576ccf963371c701776900c15b2583608427c616e2316ef39740" "0.1" "100"
+./komodo-cli -ac_name=DEXP2P DEX_broadcast "TonyL" 1 "BTC" "KMD" "028a45fb6ab295576ccf963371c701776900c15b2583608427c616e2316ef39740" "0.1" "100"
+./komodo-cli -ac_name=DEXP2P DEX_broadcast "TonyL" 2 "BTC" "KMD" "028a45fb6ab295576ccf963371c701776900c15b2583608427c616e2316ef39740" "0.1" "100"
+./komodo-cli -ac_name=DEXP2P DEX_broadcast "TonyL" 3 "BTC" "KMD" "028a45fb6ab295576ccf963371c701776900c15b2583608427c616e2316ef39740" "0.1" "100"
+./komodo-cli -ac_name=DEXP2P DEX_broadcast "TonyL" 4 "BTC" "KMD" "028a45fb6ab295576ccf963371c701776900c15b2583608427c616e2316ef39740" "0.1" "100"
+./komodo-cli -ac_name=DEXP2P DEX_broadcast "TonyL" 5 "BTC" "KMD" "028a45fb6ab295576ccf963371c701776900c15b2583608427c616e2316ef39740" "0.1" "100"
+./komodo-cli -ac_name=DEXP2P DEX_list "" 3 "BTC"
+```
+
+[06-Jan-20 07:30 PM] TonyL#3577
+https://paste.ubuntu.com/p/BGBvRRhjry/ output I'm getting from `./komodo-cli -ac_name=DEXP2P DEX_list "" 3 "BTC"`
+
+[06-Jan-20 07:31 PM] TonyL#3577
+maybe `02` pubkey is matters, trying without pubkey
+
+[06-Jan-20 07:32 PM] jl777c#5810
+pushed fix
+
+{Reactions}
+👌
+
+[06-Jan-20 07:39 PM] TonyL#3577
+@Sir Seven Please connect to this tech testing and write CI test (at least for filtering for start)
+
+{Reactions}
+👌
+
+[06-Jan-20 07:41 PM] jl777c#5810
+also, basic tag tracking is not really tested much. i just sent a few tagA tagB combinations and it looked sane, but didnt explore all possible edge cases
+
+[06-Jan-20 07:42 PM] jl777c#5810
+also the broadcast of ffff is a special case for load testing. if you can setup a decent p2p network with 100+ nodes. you can run a blaster loop to see how much packet/sec can be handled
+
+{Reactions}
+👍
+
+[06-Jan-20 07:42 PM] TonyL#3577
+`./komodo-cli -ac_name=DEXP2P DEX_list "" 3 "BTC"` displaying now only entries with priority >=3 so it is fixed it seems
+
+[06-Jan-20 07:43 PM] jl777c#5810
+```while true
+do
+./komodo-cli -ac_name=XUZ DEX_broadcast ffff
+done
+```
+
+[06-Jan-20 07:45 PM] jl777c#5810
+above is a blaster loop. it seems you can launch more than one on a single node, but with current txpow it will saturate pretty fast. for max throughput change:
+#define KOMODO_DEX_TXPOWBITS 12   -->
+#define KOMODO_DEX_TXPOWBITS 1
+at that setting, a single node can push out about 500 to 1000 per second
+
+[06-Jan-20 07:45 PM] jl777c#5810
+a p2p network should have each node having random 3+ other nodes as local peers
+
+[06-Jan-20 07:45 PM] jl777c#5810
+not sure if you are able to set up such a network automatically
+
+[06-Jan-20 07:45 PM] jl777c#5810
+you dont want it fully connected
+
+[06-Jan-20 07:47 PM] TonyL#3577
+if write such test suit on python we'll have rpc proxies for all nodes - the just `getpeersinfo` for each and some combinatorics peers ban before the test start
+
+[06-Jan-20 07:48 PM] jl777c#5810
+ok, it is lower priority than functionality testing as we already did a bunch of load testing
+
+[06-Jan-20 07:48 PM] TonyL#3577
+or even start 4th node with hardcoded `addnode` ips of previous three and so on
+
+[06-Jan-20 07:49 PM] jl777c#5810
+that wont work
+
+[06-Jan-20 07:49 PM] jl777c#5810
+you need to generate all the nodes and make a list of ip addresses
+
+[06-Jan-20 07:49 PM] jl777c#5810
+then on each one, pick 4 random nodes and addnode those
+
+[06-Jan-20 07:50 PM] jl777c#5810
+the important thing is that it is randomly selected peers, any pattern in the peer selection will lead to suboptimal connectivity
+
+{Reactions}
+👍
+
+[06-Jan-20 07:50 PM] jl777c#5810
+but before any stress test, i need to fix the mutex (lack of) problem and speed up the tag creation/lookup, once that is done, there shouldnt be any more significant changes to the internals
+

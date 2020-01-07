@@ -1,0 +1,121 @@
+==============================================================
+Guild: Komodo
+Channel: cc-pegs
+Topic: The Pegs Antara modules is a mechanism for creating a decentralized stable coin, pegged to any asset like fiat currency, stock, crypto that has a reliable price source 
+Intro + RPC: https://docs.komodoplatform.com/basic-docs/antara/antara-api/pegs.html
+User tutorial: https://docs.komodoplatform.com/basic-docs/antara/antara-tutorials/pegs-module-user-tutorial.html
+Peg Creator tutorial: https://docs.komodoplatform.com/basic-docs/antara/antara-tutorials/pegs-module-creator-tutorial.html
+After: 06-Jan-20 12:00 AM
+Before: 07-Jan-20 12:00 AM
+==============================================================
+
+[06-Jan-20 11:04 AM] Mihailo#5902
+@jl777c @blackjok3r I haven't figuered out what is the reason why on mining nodes the 1e16 priority txs get to 0. I noticed that they get to 0 when they are readded after unsuccssesful block mined because of prices.
+
+[06-Jan-20 11:04 AM] Mihailo#5902
+But it only happens on mining node, on other nodes txs stay at 1e16 priority.
+
+[06-Jan-20 11:07 AM] Mihailo#5902
+I have used -printpriority switch to check the priority in miner.cpp but the prints give me that it is at highest priority. Not sure where it could be set to 0.
+
+[06-Jan-20 11:32 AM] Mihailo#5902
+```ERROR: CheckTransaction(): invalid script data for coinbase time lock
+ContextualCheckBlock failed ht.357
+1d16cd7bccd8841e6b89494db522f0534809e84485cf45b148703f9173b7d7e6 height.357 O.1 , W.6  width.7   287 vs 480 , deficit  193 tip.69
+029908c282e16a21145b0f28a0408b18dba7697446314b09f7ded79f9cf6c3a8 height.357 O.1 , W.12 width.13  733 vs 840 , deficit  107 tip.69
+priority 9999999999999990.0 fee 0.00000000 KMD/kB txid 494b0d1e412116c6835398596161991275bed155d218e87a8208210f8ecb8fe8
+priority 9999999999999990.0 fee 0.00000000 KMD/kB txid 00f1b783644494593c216e32f8260b0d5da7bc128c766d2eb41e848d5066dee0
+priority 9999999999999990.0 fee 0.00000000 KMD/kB txid 1f873db7719c293cfc8e34687b36c2a7620fbd49bbeafd23da6142d43de380ac
+priority 9999999999999990.0 fee 0.00000000 KMD/kB txid 8c74bdb7f85a7ba2a16814d69fa5bebc0e7c97c55dcc1ad1f5c3e762eb68d3fd
+priority 9999999999999990.0 fee 0.00000000 KMD/kB txid 6500f5e4d581495d7851f84c38550e8a2f05d811098be35eb8c052ca6cd7b30f
+priority 9999999999999990.0 fee 0.00000000 KMD/kB txid 5d0e6be82df5b3d27dfab3ea6c15d60120769fe74bf8f9f17715740404c05e18
+priority 9999999999999990.0 fee 0.00000000 KMD/kB txid 1032b8b7190d42f5ec99378e3b7231b40f1556311891bc2e31369d9ab936d637
+priority 9999999999999990.0 fee 0.00000000 KMD/kB txid 1940b26e1b39728a2b065d1115f2a568f0a837e4e62558495d1e23a3bda14cf0
+```
+
+[06-Jan-20 11:37 AM] Mihailo#5902
+```"00f1b783644494593c216e32f8260b0d5da7bc128c766d2eb41e848d5066dee0": {
+    "size": 861,
+    "fee": 0.00000000,
+    "time": 1578310300,
+    "height": 356,
+    "startingpriority": 0,
+    "currentpriority": 0,
+    "depends": [
+    ]
+  },
+  "494b0d1e412116c6835398596161991275bed155d218e87a8208210f8ecb8fe8": {
+    "size": 862,
+    "fee": 0.00000000,
+    "time": 1578310300,
+    "height": 356,
+    "startingpriority": 0,
+    "currentpriority": 0,
+    "depends": [
+    ]
+  },
+```
+
+[06-Jan-20 11:38 AM] jl777c#5810
+could that coinbase error be clearing the priority?
+
+[06-Jan-20 11:41 AM] Mihailo#5902
+Well I'm checking the mempoolToJSON now as the problem could be there. Priority print is showing it is at max priority (1e16 - 10, this is for notarisation tx to be the first).
+
+[06-Jan-20 11:41 AM] Mihailo#5902
+```cpp
+double
+CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
+{
+    CAmount nValueIn = tx.GetValueOut()+nFee;
+    double deltaPriority = ((double)(currentHeight-nHeight)*nValueIn)/nModSize;
+    double dResult = dPriority + deltaPriority;
+    return dResult;
+}```
+
+[06-Jan-20 11:41 AM] Mihailo#5902
+This could maybe be the problem
+
+[06-Jan-20 11:41 AM] Mihailo#5902
+```cpp
+            info.push_back(Pair("startingpriority", e.GetPriority(e.GetHeight())));
+            info.push_back(Pair("currentpriority", e.GetPriority(chainActive.Height())));```
+
+[06-Jan-20 11:53 AM] Mihailo#5902
+No, it seems that in mempool it is set to 0.
+
+[06-Jan-20 11:54 AM] Mihailo#5902
+So it probably goes through another part of code where it gets 0 priority.
+
+[06-Jan-20 11:54 AM] Mihailo#5902
+I have set it to high priority on two places AcceptToMemoryPool() in main.cpp and in CreateNewBlock() in miner.cpp
+
+[06-Jan-20 12:11 PM] Mihailo#5902
+Figured it out. My bug 😦 😦 😦 I wanted to put highest priority after all the regular calcs for priority are made, but I set it little bit to late 😛 (in miner.cpp)
+```cpp
+            // Priority is sum(valuein * age) / modified_txsize
+            unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+            dPriority = tx.ComputePriority(dPriority, nTxSize);
+            
+            uint256 hash = tx.GetHash();
+  --->>>    mempool.ApplyDeltas(hash, dPriority, nTotalIn);
+
+            CFeeRate feeRate(nTotalIn-tx.GetValueOut(), nTxSize);
+
+  --->>>    if (tx.IsPriorityCC()) dPriority=1e16;```
+
+[06-Jan-20 12:14 PM] Mihailo#5902
+@jl777c Don't tell anyone 😂 😂
+
+[06-Jan-20 12:14 PM] jl777c#5810
+i wont
+
+[06-Jan-20 12:20 PM] Mihailo#5902
+Ok, so I think I'm gonna finally start on doing pegs validation. I have set txfee to 0 and make priority for those CC txs so this should work. I'll test it on the way...
+
+[06-Jan-20 09:50 PM] Alright#0419
+let me know when validation is ready for testing @Mihailo
+
+{Reactions}
+👍
+

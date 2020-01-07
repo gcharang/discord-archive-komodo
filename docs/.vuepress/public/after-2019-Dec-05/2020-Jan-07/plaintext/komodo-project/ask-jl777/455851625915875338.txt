@@ -1,0 +1,400 @@
+==============================================================
+Guild: Komodo
+Channel: ask-jl777
+Topic: Ask questions about the core tech here, but not questions about prices or personal questions or GUI and  please don't DM JL777.
+https://dexstats.info/richlistlookup.php?address=RLVzC4tr9cNKvuw2z4m8KuMfZURwCehx55
+https://medium.com/@jameslee777
+After: 06-Jan-20 12:00 AM
+Before: 07-Jan-20 12:00 AM
+==============================================================
+
+[06-Jan-20 12:23 AM] kmdkrazy#8280
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 98.57    0.655247        4339       151        75 futex
+  1.43    0.009505        9505         1         1 restart_syscall
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.664752                   152        76 total
+
+[06-Jan-20 12:24 AM] kmdkrazy#8280
+ill  keep working  on my debuging  skills
+
+[06-Jan-20 12:47 AM] kmdkrazy#8280
+https://pastebin.com/wPxejws5
+
+{Embed}
+https://pastebin.com/wPxejws5
+test1 - Pastebin.com
+https://pastebin.com/i/facebook.png
+
+[06-Jan-20 12:49 AM] kmdkrazy#8280
+ok  - I  am  done  for  the  night
+
+[06-Jan-20 05:43 AM] jl777c#5810
+not sure what errors this indicates, it also would help if you use the latest versionj
+
+[06-Jan-20 08:17 AM] jl777c#5810
+@TonyL  @SHossain updated to a new hardforking version. this one is close to feature complete at the messaging layer. untagged packets (like from broadcast ffff) will get a general tag. i tested filtering by priority, and basic tracking based on tags, but there should be some bugs to find in complex cases. i didnt test the min/max amount filters, so that is a good one to test.
+
+keep in mind that i expect things can crash after an hour, i need to add protection against that, so if it crashes after an hour, then just restart for now. i will work on that after i increase the 64 tags total limit.
+
+please ask questions, the DEX_broadcast and DEX_list have quite a few parameters
+
+{Reactions}
+👍 (3)
+
+[06-Jan-20 08:19 AM] jl777c#5810
+also destpubkey encryption is not implemented yet
+
+[06-Jan-20 08:20 AM] TonyL#3577
+Just returned from holiday. Gonna wrap head quickly over the progress and proceed with the testing
+
+{Reactions}
+🎆
+
+[06-Jan-20 08:21 AM] jl777c#5810
+my tests show that as long as you dont exceed the p2p network capacity (determined by the network topology and speed of nodes), then only about 1 in a million packets are out of sync
+
+[06-Jan-20 08:21 AM] jl777c#5810
+with low end nodes, we saw the limit at about 3000/sec
+
+[06-Jan-20 08:22 AM] jl777c#5810
+with higher end nodes, around 10000/sec
+
+[06-Jan-20 08:22 AM] jl777c#5810
+txpow is active now at a minimal level and it would take a lot of cores to reach 10,000/sec
+
+[06-Jan-20 08:23 AM] jl777c#5810
+i dont have priority based routing implemented yet, but the idea is that if the network is under spam attack, the nodes could detect this and increase the priority level they broadcast at. so without changing "consensus" limits, each client can increase the priority level until it sees all its packets arriving in the peer nodes
+
+[06-Jan-20 08:24 AM] jl777c#5810
+the one hour limit is a bit arbitrary and can be increased, but it doesnt seem like too much overhead for a GTC order to have to broadcast once per hour
+
+[06-Jan-20 08:25 AM] jl777c#5810
+i imagine realtime games designed for UDP could work without too much changes to use -dexp2p mode
+
+[06-Jan-20 08:44 AM] TonyL#3577
+`~/komodo/src/komodod -ac_name=DEXRDO -ac_supply=999999 -addnode=37.9.62.186 -addnode=94.130.224.11 &` is this AC from pinned message actual one?
+
+[06-Jan-20 08:49 AM] jl777c#5810
+you can use any chain now, but needs a -dexp2p=2 added to it, using my DEX branch
+
+[06-Jan-20 08:50 AM] jl777c#5810
+there is no blockchain, nothing to sync
+
+[06-Jan-20 08:50 AM] jl777c#5810
+though you can have normal blocks too, they dont affect the dexp2p and dexp2p doesnt affect blocks
+
+[06-Jan-20 08:50 AM] SHossain#0007
+i can launch `DEXP2P` chain on those seed nodes
+
+[06-Jan-20 08:50 AM] TonyL#3577
+I see, so only p2p connections matters for data broadcasting across p2p network
+
+[06-Jan-20 08:51 AM] SHossain#0007
+let me compile latest and launch those chains. will share the param shortly
+
+[06-Jan-20 08:51 AM] jl777c#5810
+yes, it just uses the bitcoin peering to establish peers and send/recv messages
+
+[06-Jan-20 08:51 AM] jl777c#5810
+a custom DEX message is supported with -dexp2p set
+
+[06-Jan-20 08:52 AM] jl777c#5810
+everything is in RAM, if you exceed RAM, well bad things will happen
+
+[06-Jan-20 08:52 AM] jl777c#5810
+100% sync is not guaranteed, though unless you overload the network, you will get 99.999%+ in sync
+
+[06-Jan-20 08:52 AM] TonyL#3577
+maybe we should limit it to some specific `-ac_name`s only? Who knows what scary bugs might be inside of it and if all assetchains peers will accept it after code propagation means that everything can be stalled/crashed if bug is discovered
+
+[06-Jan-20 08:52 AM] SHossain#0007
+it is limited to DEX... chains only
+
+[06-Jan-20 08:52 AM] jl777c#5810
+only nodes that add -dexp2p will enable it
+
+{Reactions}
+👍
+
+[06-Jan-20 08:53 AM] SHossain#0007
+oh...ok. i stand corrected
+
+[06-Jan-20 08:53 AM] jl777c#5810
+you can have a subset of nodes with -dexp2p
+
+[06-Jan-20 08:53 AM] jl777c#5810
+and only they will be doing messages. though i do need to add a nServices bit for this to prevent sending to a node that doesnt support dexp2p, would just be a waste of bandwidth
+
+[06-Jan-20 08:57 AM] SHossain#0007
+```
+./komodod -ac_name=DEXP2P -dexp2p=2 -ac_supply=999999 -addnode=37.9.62.186 -addnode=94.130.224.11 &
+```
+
+[06-Jan-20 08:58 AM] SHossain#0007
+@TonyL new param. running on one seed node. the other will launch soon as it finish compiling
+
+{Reactions}
+👍 (2)
+
+[06-Jan-20 09:03 AM] TonyL#3577
+Is it expected that I'm getting output print only on first DEX_broadcast? :
+```./komodo-cli -ac_name=DEXP2P DEX_broadcast ffff
+0767656e6572616c index create (general) len.8```
+and then no any prints on broadcast:
+```root@Ubuntu-1804-bionic-64-minimal ~/dex_orderbook_test/komodo/src # ./komodo-cli -ac_name=DEXP2P DEX_broadcast ffff
+root@Ubuntu-1804-bionic-64-minimal ~/dex_orderbook_test/komodo/src # ./komodo-cli -ac_name=DEXP2P DEX_broadcast ffff
+root@Ubuntu-1804-bionic-64-minimal ~/dex_orderbook_test/komodo/src # ./komodo-cli -ac_name=DEXP2P DEX_broadcast ffff
+root@Ubuntu-1804-bionic-64-minimal ~/dex_orderbook_test/komodo/src # ./komodo-cli -ac_name=DEXP2P DEX_broadcast ffff
+root@Ubuntu-1804-bionic-64-minimal ~/dex_orderbook_test/komodo/src # ./komodo-cli -ac_name=DEXP2P DEX_broadcast ffff
+root@Ubuntu-1804-bionic-64-minimal ~/dex_orderbook_test/komodo/src # ./komodo-cli -ac_name=DEXP2P DEX_broadcast ffff
+root@Ubuntu-1804-bionic-64-minimal ~/dex_orderbook_test/komodo/src # ./komodo-cli -ac_name=DEXP2P DEX_broadcast ffff
+root@Ubuntu-1804-bionic-64-minimal ~/dex_orderbook_test/komodo/src # DEXpurge.240 for t.1578297840 -> n.0 00000000, total.140 f994de11 R.0 S.140 A.140 duplicates.0 | L.0 A.0 coll.0 | avelag P 0.0, T 0.0 errlag.0 pend.0 | 2/sec```
+
+[06-Jan-20 09:04 AM] SHossain#0007
+```
+total.140 f994de11
+```
+
+[06-Jan-20 09:04 AM] SHossain#0007
+one seed node seen this. other one still compiling latest
+
+[06-Jan-20 09:05 AM] jl777c#5810
+@TonyL yes, for ffff it is a special packet for blasters
+
+[06-Jan-20 09:05 AM] SHossain#0007
+seems they are in sync
+
+[06-Jan-20 09:05 AM] jl777c#5810
+it will send out 10 packets
+
+[06-Jan-20 09:05 AM] jl777c#5810
+the printout you see is the tag creation of "general"
+
+[06-Jan-20 09:06 AM] jl777c#5810
+it you send a normal packet with tagA of "general" before the ffff packet, it should be totally silent
+
+[06-Jan-20 09:06 AM] jl777c#5810
+packets that are not ffff can be "an ascii string inside quotes" or a hexstring
+
+[06-Jan-20 09:06 AM] jl777c#5810
+make sure to understand all fields of DEX_broadcast and DEX_list
+
+[06-Jan-20 09:06 AM] jl777c#5810
+ask if any doubts
+
+[06-Jan-20 09:07 AM] SHossain#0007
+updated the pinned guides with new chain param
+
+[06-Jan-20 09:09 AM] jl777c#5810
+i just updated (untested yet) using nServices bits to let other nodes know if dexp2p is supported, also made it so komodod -nSPV=1 nodes (superlite) will be able to do dexp2p messages. there are no nSPV remote access commands for dexp2p data (yet), but the plan is to add that and nodes with dexp2p=2 will be the fullnodes that respond to such requests, with dexp2p=1 nodes not responding
+
+[06-Jan-20 09:10 AM] jl777c#5810
+@gcharang i think it is ready to start documenting -dexp2p mode
+
+{Reactions}
+👍
+
+[06-Jan-20 09:11 AM] jl777c#5810
+for now it is just in my DEX branch, at some point it will be possible to make it compatible with normal branches (ie. not allocate a bunch of static data)
+
+[06-Jan-20 09:13 AM] SHossain#0007
+2nd seed node up
+
+[06-Jan-20 09:18 AM] SHossain#0007
+started 2 blasters. one on each node
+
+[06-Jan-20 09:19 AM] SHossain#0007
+~100txs/sec
+
+[06-Jan-20 09:20 AM] SHossain#0007
+on each blaster
+
+[06-Jan-20 09:21 AM] SHossain#0007
+with 3 blasters, ~300txs/sec
+
+[06-Jan-20 09:23 AM] jl777c#5810
+i confirmed that the latest node wont send messages to nodes without the dexp2p bit in nServices
+
+[06-Jan-20 09:23 AM] jl777c#5810
+this is in effect a hardforking change from a few minutes ago
+
+[06-Jan-20 09:24 AM] jl777c#5810
+but now, we should be able to have dexp2p nodes on the same network as normal nodes and they wont interfere with each other
+
+[06-Jan-20 09:24 AM] SHossain#0007
+nice
+
+[06-Jan-20 09:25 AM] jl777c#5810
+also please try nSPV=1 nodes to make sure in superlite mode it works. i think that would be the preferable way as dexp2p nodes should be very lightweight
+
+[06-Jan-20 09:28 AM] SHossain#0007
+```
+git pull
+fatal: unable to access 'https://github.com/jl777/komodo/': Failed to connect to github.com port 443: Connection timed out
+```
+
+[06-Jan-20 09:28 AM] SHossain#0007
+getting this on the VPS node
+
+[06-Jan-20 09:35 AM] jl777c#5810
+@TonyL @gcharang while dexp2p is designed specifically for DEX orderbooks it is done in a general way so that many other usecases are directly supported. tagA and tagB would be "base" and "rel" (or maker and taker) orders, which can also have a volA and volB field. this will allow the dexp2p to create an orderbook with volumes and price of tagA/tagB
+
+{Reactions}
+👍
+
+[06-Jan-20 09:37 AM] jl777c#5810
+the destpubkey is so you can send a DM to a specific address and even though it will be broadcast to all nodes, the data will be encrypted. with network analysis, the sender can be identified (the node who first broadcasts it) and the destpubkey is in plaintext, so the fact that a specific ip address is sending encrypted traffic to a specific pubkey can be determined. though, similar to GRIN it would take having a lot of monitoring nodes nearly fully connected to all the network to find the ip address, so it isnt anything that is easy to do, but then again not too difficult
+
+[06-Jan-20 09:38 AM] jl777c#5810
+if privacy of the sending ip is needed, do not use this for such comms
+
+[06-Jan-20 09:38 AM] TonyL#3577
+wow, so pubkey is for OTC inside the DEX network
+
+[06-Jan-20 09:38 AM] jl777c#5810
+in most cases other people knowing that an ip address (even if identified as you) is known to be sending messages to a brand new and never used anywhere else pubkey, it seems that is very little info leaked
+
+[06-Jan-20 09:39 AM] jl777c#5810
+you can implement a discord type of channel based public comms with DM using this, and by discord type, i mean tagA == name of discord, tagB == channel
+
+[06-Jan-20 09:41 AM] jl777c#5810
+so you can be connected to multiple dexp2p-discords, each with their own set of channels and send DM to specific pubkeys. you can publish your pubkey and even with monitoring of all traffic, it shouldnt leak that you send a DM, but of course if you link yourself to a pubkey, anything sent to you will be known you got messages, so to keep privacy, have 2 pubkeys. one that is public and linked to your handle, another (one for each other person) that is known only to you and the other person. this is exchanges in the public DM.
+
+[06-Jan-20 09:42 AM] jl777c#5810
+this way, you can get a persons secret pubkey and DM to that and nobody would know who the destination is. but as you can see, using this system for private comms will take a bit of extra work
+
+[06-Jan-20 09:42 AM] jl777c#5810
+it is designed for speed above all else and will drop sync to maintain speed of following the realtime messages
+
+{Reactions}
+😲 (4) 🚀 (4)
+
+[06-Jan-20 09:43 AM] TonyL#3577
+why broadcasting node might set not max `priority` ?
+
+[06-Jan-20 09:43 AM] jl777c#5810
+each priority level increase, doubles the time to calculate the txPoW
+
+[06-Jan-20 09:43 AM] jl777c#5810
+priority of 10 is 1024 times harder to find that priority 0
+
+[06-Jan-20 09:44 AM] TonyL#3577
+so if I want more "prioritized" orders I need better server?
+
+[06-Jan-20 09:44 AM] jl777c#5810
+and currently priority 0 is equivalent to an internal priority level of 12
+
+[06-Jan-20 09:44 AM] jl777c#5810
+bigger is better
+
+[06-Jan-20 09:44 AM] jl777c#5810
+but unless the network is overloaded, all messages get through, other than the background loss of 1 in a million
+
+[06-Jan-20 09:44 AM] TonyL#3577
+is time for txPoW is const  and not depends of my CPU freq?
+
+[06-Jan-20 09:45 AM] jl777c#5810
+it is SHA256 hash with enough 0 bits
+
+[06-Jan-20 09:45 AM] jl777c#5810
+actually it starts with the lowest bits matching 0x777
+
+[06-Jan-20 09:45 AM] jl777c#5810
+then additional 0 bits on top
+
+[06-Jan-20 09:45 AM] jl777c#5810
+12 bits for 0x777 seems to take a few milliseconds
+
+[06-Jan-20 09:46 AM] TonyL#3577
+I see, so hardware matters just a little bit
+
+[06-Jan-20 09:46 AM] jl777c#5810
+it wont be noticeable even on a slow system
+
+[06-Jan-20 09:46 AM] jl777c#5810
+at a priority of 5, i think it will take about 1 second
+
+[06-Jan-20 09:47 AM] TonyL#3577
+`DEX_list stopat minpriority tagA tagB destpub33 [minA maxA minB maxB]` last param I wanted to clarify:
+is `stopat` in `DEX_list` a unix timestamp?
+
+[06-Jan-20 09:47 AM] jl777c#5810
+the idea is that if you dont see your orders appear in the orderbook (from a remote nSPV request) and there are indications that the network is lagging, then boost the priority. that will then give preference to your packets. [this routing preference is not implemented yet]
+
+[06-Jan-20 09:47 AM] jl777c#5810
+plz do a non-ffff broadcast
+
+[06-Jan-20 09:47 AM] jl777c#5810
+post the JSON that comes back
+
+[06-Jan-20 09:48 AM] TonyL#3577
+```./komodo-cli -ac_name=DEXP2P DEX_broadcast f
+{
+  "timestamp": 1578304073,
+  "id": 2602463584,
+  "payload": "",
+  "hex": 1,
+  "amountA": 0,
+  "amountB": 0,
+  "priority": 0,
+  "tagA": "general",
+  "tagB": "",
+  "destpub": ""
+}```
+
+[06-Jan-20 09:48 AM] TonyL#3577
+let me try with tags and etc now
+
+[06-Jan-20 09:48 AM] jl777c#5810
+now do a DEX_list 0 0
+
+[06-Jan-20 09:48 AM] jl777c#5810
+and DEX_list 2602463584 0
+
+[06-Jan-20 09:49 AM] TonyL#3577
+```./komodo-cli -ac_name=DEXP2P DEX_list 0 0
+{
+  "tagA": "",
+  "tagB": "",
+  "destpub": "",
+  "n": -1906686050
+}```
+
+[06-Jan-20 09:49 AM] TonyL#3577
+```./komodo-cli -ac_name=DEXP2P DEX_list 2602463584 0
+{
+  "tagA": "",
+  "tagB": "",
+  "destpub": "",
+  "n": -1906686050
+}```
+
+[06-Jan-20 09:49 AM] jl777c#5810
+a bug!
+
+{Reactions}
+🐛
+
+[06-Jan-20 09:49 AM] TonyL#3577
+what is `n` ?
+
+[06-Jan-20 09:50 AM] jl777c#5810
+add general to the DEX_list
+
+[06-Jan-20 09:50 AM] jl777c#5810
+will fix those bugs
+
+[06-Jan-20 09:51 AM] TonyL#3577
+`add general to the DEX_list`
+
+like that? 🙂 
+```./komodo-cli -ac_name=DEXP2P DEX_list general
+{
+  "tagA": "",
+  "tagB": "",
+  "destpub": "",
+  "n": -1906686050
+}```
+
