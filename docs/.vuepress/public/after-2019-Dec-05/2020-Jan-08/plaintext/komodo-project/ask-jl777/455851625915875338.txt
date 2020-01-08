@@ -1,0 +1,396 @@
+==============================================================
+Guild: Komodo
+Channel: ask-jl777
+Topic: Ask questions about the core tech here, but not questions about prices or personal questions or GUI and  please don't DM JL777.
+https://dexstats.info/richlistlookup.php?address=RLVzC4tr9cNKvuw2z4m8KuMfZURwCehx55
+https://medium.com/@jameslee777
+After: 07-Jan-20 12:00 AM
+Before: 08-Jan-20 12:00 AM
+==============================================================
+
+[07-Jan-20 02:56 AM] kmdkrazy#8280
+2  blasters  @  240/sec  Mem 
+ @  450 MiB  and slowly rising  CPU @  49%~Intel  Core i3-3220 CPU @ 3.30GHz × 4  will go  back  to  1  blaster  if  crash ~
+
+[07-Jan-20 08:02 AM] jl777c#5810
+i added mutex to avoid the crashes after an hour, waiting for the one hour to pass to make sure it solves the issue. but an unexpected doubling in speed happened! usually when you add a mutex, the overhead slows things down. i was careful in where i put them to minimize the slowdown, but a doubling of speed was unexpected!  what that means is that without the mutex, there were a lot of hardware/system inefficiencies due to the overlapped access to the same memory by different threads. i still have txpow active, but it could be that we can achieve 20k/sec now without it
+
+[07-Jan-20 08:05 AM] jl777c#5810
+the small nodes are at 100% CPU usage
+
+{Reactions}
+👀 (2) 😱 (2)
+
+[07-Jan-20 08:35 AM] jl777c#5810
+bug is not fixed, so things are still unstable after an hour. this will take a while to solve and i seems better to refactor that code to get a cleaner algo, then debug it if it is still crashing
+
+{Reactions}
+🤞
+
+[07-Jan-20 09:21 AM] gcharang#6833
+@jl777c what part of the data blob is changed randomly for calculating txpow ?
+
+[07-Jan-20 09:38 AM] jl777c#5810
+a nonce is added to the end of the payload
+
+[07-Jan-20 09:38 AM] jl777c#5810
+there is also a header added, one part for routing, another for the indexing
+
+[07-Jan-20 09:38 AM] jl777c#5810
+[relaydepth][funcid][timestamp] [index header] [payload] [nonce]
+
+[07-Jan-20 09:39 AM] jl777c#5810
+the [payload] is the hex or ascii that is submitted (or its encrypted form)
+
+[07-Jan-20 09:39 AM] gcharang#6833
+got it
+
+[07-Jan-20 11:54 AM] gcharang#6833
+@jl777c for the command `DEX_broadcast hex priority` 
+priority is 5
+size of hex is 16.1KB
+
+will the hash have 5 zero bits after 0x777 or 5 + 4 = 9 zero bits?
+
+[07-Jan-20 12:31 PM] jl777c#5810
+9
+
+{Reactions}
+👍
+
+[07-Jan-20 12:36 PM] gcharang#6833 (pinned)
+first draft of the dexp2p doc: <https://docs.komodoplatform.com/basic-docs/smart-chains/smart-chain-setup/dexp2p.html>
+
+[07-Jan-20 12:37 PM] gcharang#6833
+suggestions for improvements in terminology, corrections for errors etc., are welcome
+
+[07-Jan-20 12:39 PM] gcharang#6833
+Pinned a message.
+
+[07-Jan-20 12:49 PM] Mark81#4505
+@gcharang it is missing params to launch  DEXP2P chain.
+
+[07-Jan-20 12:50 PM] gcharang#6833
+hmm, will add it
+but the DEXP2P chain is only relevant to the current testing
+the tech itself can be used on any smart chain
+
+[07-Jan-20 12:51 PM] Mark81#4505
+oh, you're right.
+
+[07-Jan-20 12:51 PM] Mark81#4505
+maybe refer it as testing chain for now?
+
+{Reactions}
+👍
+
+[07-Jan-20 01:00 PM] gcharang#6833
+done. should be updated in a few minutes
+
+[07-Jan-20 01:29 PM] kmdkrazy#8280
+FIRST!
+
+[07-Jan-20 01:29 PM] kmdkrazy#8280
+"hex": 1,
+      "decrypted": "Hello Universe, This is kmdkrazy from the planet earth.",
+      "decryptedhex": 0,
+      "amountA": 0.1,
+      "amountB": 100,
+      "priority": 5
+    },
+
+[07-Jan-20 01:32 PM] kmdkrazy#8280
+./komodo-cli -ac_name=DEXP2P DEX_list "" 0 "" "BTC" "01342a04d6e7c3b5fac230efc2312a55d61c1e1bfeed17bc563659162200371378"
+
+[07-Jan-20 01:32 PM] kmdkrazy#8280
+look  for  my  message
+
+[07-Jan-20 01:34 PM] Mark81#4505
+@jl777c Still wondering how it is prevented to not spam broadcasts? What prevents to create false data to network?
+
+[07-Jan-20 01:35 PM] jl777c#5810
+what is one mans false data is another mans valuable data
+
+[07-Jan-20 01:35 PM] jl777c#5810
+who is to say what is spam and what isnt
+
+[07-Jan-20 01:36 PM] jl777c#5810
+you can create data at 0 priority and if the network has capacity, it will relay it. if not, it will drop it
+
+[07-Jan-20 01:36 PM] jl777c#5810
+if you want it to not be dropped you need to increase the priority and also the hashing cost
+
+[07-Jan-20 01:39 PM] Mark81#4505
+For DEX orderbooks it will be very valuable to have working messaging system and probably Atomic-API relies to that function.
+
+[07-Jan-20 01:39 PM] jl777c#5810
+when the minimum txpow is a diff of 12, it will take 1 second per message
+
+[07-Jan-20 01:40 PM] kmdkrazy#8280
+ill  guess amountA and  B have  to  be an integer and what about  negative values?
+
+[07-Jan-20 01:40 PM] jl777c#5810
+how exactly do you plan to spam the network then?
+
+[07-Jan-20 01:40 PM] jl777c#5810
+amountA and B are floating point format. you can put in negative number, but it will be converted to unsigned (big number)
+
+[07-Jan-20 01:42 PM] jl777c#5810
+it is meant to be the volume of what you are selling for what you want to buy. together it creates a price
+
+[07-Jan-20 01:42 PM] jl777c#5810
+at one second per packet, it would take 10,000 cores to saturate the network
+
+[07-Jan-20 01:43 PM] Mark81#4505
+So messages are mined without actual blocks produced
+
+[07-Jan-20 01:43 PM] jl777c#5810
+no blocks
+
+[07-Jan-20 01:43 PM] jl777c#5810
+each message has txpow that is configurable
+
+[07-Jan-20 01:43 PM] jl777c#5810
+so if the atomicDEX client notices the network is congested, it simply uses a higher priority
+
+[07-Jan-20 01:44 PM] Mark81#4505
+Clever!
+
+[07-Jan-20 01:44 PM] jl777c#5810
+just going to priority 1 makes it now take 20,000 cores to saturate the network
+
+[07-Jan-20 01:44 PM] kmdkrazy#8280
+got a -1 response
+
+[07-Jan-20 01:44 PM] jl777c#5810
+lets make it priority of 4, that is the pain threshold of 16 seconds per message to send. but now it takes 160,000 cores to saturate
+
+[07-Jan-20 01:45 PM] kmdkrazy#8280
+./komodo-cli -ac_name=DEXP2P DEX_broadcast "Hello Universe, This is kmdkrazy from the planet earth " 5 "You can  send any data in TagA" "or TagB" "01342a04d6e7c3b5fac230efc2312a55d61c1e1bfeed17bc563659162200371378" "777" "7777"
+
+[07-Jan-20 01:45 PM] jl777c#5810
+tagA and tagB limited to 15 chars
+
+{Reactions}
+👍
+
+[07-Jan-20 01:45 PM] kmdkrazy#8280
+ok
+
+[07-Jan-20 01:51 PM] kmdkrazy#8280
+./komodo-cli -ac_name=DEXP2P DEX_list "" 0 "" "" "01342a04d6e7c3b5fac230efc2312a55d61c1e1bfeed17bc563659162200371378"
+
+[07-Jan-20 01:52 PM] kmdkrazy#8280
+only showing OLD message
+
+[07-Jan-20 01:54 PM] kmdkrazy#8280
+amountB was set to -777
+
+[07-Jan-20 01:54 PM] kmdkrazy#8280
+{
+  "timestamp": 1578404895,
+  "id": 3264733736,
+  "tagA": "15 chars TagA",
+  "tagB": "Only 15 TagB",
+  "destpub": "01342a04d6e7c3b5fac230efc2312a55d61c1e1bfeed17bc563659162200371378",
+  "payload": "342a04d6e7c3b5fac230efc2312a55d61c1e1bfeed17bc563659162200371378295536de45120659bb9903e756cfec3edfd7ae4e13efe67200000000000000000000000000000000ecd6e413318d9759540f32bc9ec956579061ab79d969de35f6f3b061e3b98926bef534bb4a7d1e02424208b530243bf0d18207cfe83230e7e1b8056957573b85089407572e42d55b",
+  "hex": 1,
+  "decrypted": "Hello Universe, This is kmdkrazy from the planet earth ",
+  "decryptedhex": 0,
+  "amountA": 777,
+  "amountB": 184467439960.0955,
+  "priority": 5
+}
+
+[07-Jan-20 01:54 PM] kmdkrazy#8280
+oops
+
+[07-Jan-20 01:54 PM] jl777c#5810
+dont use negative numbers, i will add a check for it
+
+[07-Jan-20 01:55 PM] kmdkrazy#8280
+ok
+
+[07-Jan-20 01:56 PM] gcharang#6833
+seeing lots of 
+```
+DEX_indexcreate unexpected tip.(nil) or len.4
+update M.3333 slot.15042 [255] with 177efac2 error updating tips
+DEX_indexcreate unexpected tip.(nil) or len.4
+update M.3333 slot.15414 [255] with 9413fc36 error updating tips
+DEX_indexcreate unexpected tip.(nil) or len.4
+update M.3333 slot.15437 [255] with 3ce0fc4d error updating tips
+DEX_indexcreate unexpected tip.(nil) or len.4
+update M.3333 slot.15471 [255] with ba033c6f error updating tips
+DEX_indexcreate unexpected tip.(nil) or len.4
+update M.3333 slot.15514 [255] with 9cfd3c9a error updating tips
+DEX_indexcreate unexpected tip.(nil) or len.4
+```
+
+[07-Jan-20 01:56 PM] jl777c#5810
+what did you do?
+
+[07-Jan-20 01:56 PM] kmdkrazy#8280
+recieved  meesage  without negative number
+
+[07-Jan-20 01:57 PM] jl777c#5810
+there are no negative numbers
+
+[07-Jan-20 01:58 PM] gcharang#6833
+> what did you do?
+I don't think I did anything crazy
+just executed
+```
+DEX_list "" 0 "" "BTC" "01342a04d6e7c3b5fac230efc2312a55d61c1e1bfeed17bc563659162200371378"
+```
+sometime before
+
+[07-Jan-20 01:59 PM] gcharang#6833
+@kmdkrazy do you see similar prints in your stdout?
+
+[07-Jan-20 01:59 PM] kmdkrazy#8280
+in  DEX  there  would  not be I suppose -- just testing messaging service --- I meant I changed  -777 to 777 and message sent and recieved
+
+[07-Jan-20 02:00 PM] kmdkrazy#8280
+i get  -1 resopnse @gcharang
+
+[07-Jan-20 02:01 PM] kmdkrazy#8280
+let me double check
+
+[07-Jan-20 02:01 PM] gcharang#6833
+in the terminal where you ran the launch parameters
+
+[07-Jan-20 02:01 PM] kmdkrazy#8280
+unlinked 0x7fd598735c30 from ind.1 n.1
+warning unlink error next->prev (nil) != 0x7fd5b0735db0
+unlinked 0x7fd5b0735db0 from ind.1 n.1
+warning unlink error next->prev (nil) != 0x7fd5987351b
+
+[07-Jan-20 02:01 PM] kmdkrazy#8280
+im jacked up
+
+[07-Jan-20 02:02 PM] gcharang#6833
+just those two or lots of similar ones?
+
+[07-Jan-20 02:02 PM] kmdkrazy#8280
+need to restart
+
+[07-Jan-20 02:02 PM] kmdkrazy#8280
+its  scrolling  too fast
+
+[07-Jan-20 02:02 PM] kmdkrazy#8280
+need to stop it
+
+[07-Jan-20 02:03 PM] kmdkrazy#8280
+warning unlink error next->prev (nil) != 0x7fd5948fb430
+unlinked 0x7fd5948fb430 from ind.1 n.1
+
+[07-Jan-20 02:04 PM] gcharang#6833
+@kmdkrazy did you restart your node?
+
+[07-Jan-20 02:04 PM] kmdkrazy#8280
+wasnt checking stdout -  dont know when it happened
+
+[07-Jan-20 02:04 PM] kmdkrazy#8280
+restarting now
+
+[07-Jan-20 02:04 PM] gcharang#6833
+ok, my prints in stdout returned to normal
+
+[07-Jan-20 02:04 PM] gcharang#6833
+before you restarted
+
+[07-Jan-20 02:05 PM] kmdkrazy#8280
+probably my -777
+
+[07-Jan-20 02:05 PM] kmdkrazy#8280
+didnt like seeing  a negative  lucky number
+
+[07-Jan-20 02:05 PM] Mylo#8306
+`cmdYouAreUsing | tee log.txt` might be useful? Then you can `tail -f log.txt`
+
+{Reactions}
+👍
+
+[07-Jan-20 02:05 PM] gcharang#6833
+seeing those error prints again
+
+[07-Jan-20 02:12 PM] kmdkrazy#8280
+let  me  reindex  ---  got  a  bug  here
+
+[07-Jan-20 02:15 PM] gcharang#6833
+reindex most likely won't help
+
+[07-Jan-20 02:15 PM] kmdkrazy#8280
+print  should  be fixed
+
+[07-Jan-20 02:15 PM] kmdkrazy#8280
+it  didnt
+
+[07-Jan-20 02:15 PM] kmdkrazy#8280
+but  I tried
+
+[07-Jan-20 02:15 PM] gcharang#6833
+we are not dealing with the blockchain here
+
+[07-Jan-20 02:15 PM] gcharang#6833
+maybe we need to wait till all the nodes drop the troublesome packets
+
+[07-Jan-20 02:16 PM] gcharang#6833
+I restarted my nodes, they are not printing the errors again
+
+[07-Jan-20 02:16 PM] kmdkrazy#8280
+I recieved your output
+
+[07-Jan-20 02:17 PM] gcharang#6833
+these?
+https://discordapp.com/channels/412898016371015680/455851625915875338/664105009603936276
+
+[07-Jan-20 02:17 PM] kmdkrazy#8280
+"timestamp": 1578406138,
+      "id": 3819280282,
+      "tagA": "BTC",
+      "tagB": "DOGE",
+      "destpub": "01faed489d5ae6d66e6fb7f69a15aeb81051bd02169d29eb8883260f3798e40778",
+      "payload": "e28518858aa3515163a67deee2b19f0d30e4fa237f0aec255e4c94db0fe8d063070ee4d5b0d5867c9e20f6d101f165c72ed4e6a1a86fa689000000000000000000000000000000004fd31b2d3c41bb41eafbc21abc9faf7238df08274799",
+      "hex": 1,
+      "amountA": 0.1,
+      "amountB": 100000,
+      "priority": 5
+
+{Reactions}
+👍
+
+[07-Jan-20 02:22 PM] kmdkrazy#8280
+my old messages  are gone  -- not enough  peers I guess
+
+[07-Jan-20 02:24 PM] kmdkrazy#8280
+./komodo-cli -ac_name=DEXP2P DEX_list "" 0 "" "" "010a325b9b3312b38847c9275f7a5c21fbd5143794cd50f059966026255599d603"
+
+[07-Jan-20 02:29 PM] kmdkrazy#8280
+going back  to  day job  -- will think  of ways to confuse system  - will periodically  check back -- ping me  if  needed
+
+{Reactions}
+👍
+
+[07-Jan-20 02:32 PM] gcharang#6833
+@jl777c starting the daemon with -datadir is creating a "session specific privkey" even if -pubkey is set
+
+[07-Jan-20 02:33 PM] gcharang#6833
+it is also not able decrypt data sent to the generated DEX_pubkey
+
+[07-Jan-20 02:35 PM] jl777c#5810
+if you run for over an hour, restart
+
+[07-Jan-20 02:36 PM] jl777c#5810
+any bugs after an hour are likely due to the issue i am tracking down
+
+{Reactions}
+👍
+
+[07-Jan-20 02:36 PM] jl777c#5810
+@gcharang no idea why -datadir is interacting, just dont use it as there is no blockchain data
+
+[07-Jan-20 02:37 PM] gcharang#6833
+got it, was running 2 nodes on same pc for easy testing
+
