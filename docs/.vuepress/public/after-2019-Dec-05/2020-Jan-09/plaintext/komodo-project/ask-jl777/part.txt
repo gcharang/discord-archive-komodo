@@ -1,0 +1,209 @@
+==============================================================
+Guild: Komodo
+Channel: ask-jl777
+Topic: Ask questions about the core tech here, but not questions about prices or personal questions or GUI and  please don't DM JL777.
+https://dexstats.info/richlistlookup.php?address=RLVzC4tr9cNKvuw2z4m8KuMfZURwCehx55
+https://medium.com/@jameslee777
+After: 08-Jan-20 12:00 AM
+Before: 09-Jan-20 12:00 AM
+==============================================================
+
+[08-Jan-20 04:49 PM] jl777c#5810
+ok, so it seems no known bugs at this time?
+
+[08-Jan-20 04:49 PM] Sir Seven#7158
+I'm getting `komodo_DEX_decrypt decrytion error` on  locally created test chain with 2 nodes.
+On each broadcast/list call, and actual messages in DEX_list responce are not decrypted.
+At the same time works fine on DEXP2P chain, what can I miss here?
+
+[08-Jan-20 04:49 PM] jl777c#5810
+did you specify -pubkey=
+
+[08-Jan-20 04:50 PM] TonyL#3577
+maybe you don't posses valid pubkey
+
+[08-Jan-20 04:50 PM] jl777c#5810
+if not, it makes a session specific keypair
+
+[08-Jan-20 04:50 PM] Sir Seven#7158
+Either case with or withought -pubkey
+
+[08-Jan-20 04:50 PM] TonyL#3577
+`./komodo-cli -ac_name=DEXP2P DEX_list "" "" "tag9000"`
+
+```    {
+      "timestamp": 1578502121,
+      "id": 2247238255,
+      "tagA": "tag11000",
+      "tagB": "tagsdfsf",
+      "destpub": "",
+      "payload": "11022",
+      "hex": 0,
+      "amountA": 0.1,
+      "amountB": 100,
+      "priority": 0
+    },
+    {
+      "timestamp": 1578502121,
+      "id": 2207290541,
+      "tagA": "tag11000",
+      "tagB": "tagsdfsf",
+      "destpub": "",
+      "payload": "7098",
+      "hex": 1,
+      "amountA": 0.1,
+      "amountB": 100,
+      "priority": 0
+    }
+  ],
+  "tagA": "tag9000",
+  "tagB": "",
+  "destpub": "",
+  "n": 20000
+}```
+
+[08-Jan-20 04:51 PM] TonyL#3577
+tag filtering still doesn't work for me
+
+[08-Jan-20 04:52 PM] jl777c#5810
+very strange issues. what are the exact cli calls after start to duplicate this?
+
+[08-Jan-20 04:53 PM] TonyL#3577
+1)
+```#!/bin/bash
+
+i="0"
+
+while [ $i -lt 9000 ]
+do
+./komodo-cli -ac_name=DEXP2P DEX_broadcast $(( ( RANDOM % 1000000 )  + 1 )) 0 "tag9000" "tagsdfsf" "" "0.1" "100"
+i=$[$i+1]
+done```
+
+2)
+
+```#!/bin/bash
+
+i="0"
+
+while [ $i -lt 11000 ]
+do
+./komodo-cli -ac_name=DEXP2P DEX_broadcast $(( ( RANDOM % 1000000 )  + 1 )) 0 "tag11000" "tagsdfsf" "" "0.1" "100"
+i=$[$i+1]
+done```
+
+3) `./komodo-cli -ac_name=DEXP2P DEX_list "" "" "tag9000"`
+
+[08-Jan-20 04:53 PM] jl777c#5810
+@Sir Seven what are the parameters for the chain that doesnt work. it is unusual to have so different behavior between chains
+
+[08-Jan-20 04:55 PM] Sir Seven#7158
+Chain we are running CI tests on:
+`-ac_name=TONYCI -ac_reward=100000000000 -ac_supply=10000000000 -ac_cc=2 -daemon -whitelist=127.0.0.1 -dexp2p=2`
+
+With bootstrap: `https://sirseven.me/share/bootstrap.tar.gz`
+
+[08-Jan-20 04:56 PM] jl777c#5810
+duplicated the DEX_list bug
+
+{Reactions}
+👌
+
+[08-Jan-20 04:57 PM] jl777c#5810
+no idea about the chain that doesnt work
+
+[08-Jan-20 04:57 PM] Sir Seven#7158
+Usually runs with `-pukey=02pubkey`
+
+[08-Jan-20 04:57 PM] jl777c#5810
+what if the chain has no reward or supply
+
+[08-Jan-20 04:58 PM] TonyL#3577
+@Sir Sevenfor comparison you can try on DEXP2P chain or on chain with identical params to it (params can be found in pinned message)
+
+[08-Jan-20 05:48 PM] jl777c#5810
+@TonyL pushed fix. the issue was an index was overloaded, so i had to split things out into destpub33, tagA, tagB, tagA/tagB. that means you can search for just the tagB matching a search tag and it wont match it if it is in tagA
+
+[08-Jan-20 05:53 PM] jl777c#5810
+@TonyL just pushed a version with txpowbits of 1, which will allow blasting 500+ per second per blaster, maybe even 1000. this way you can create a simulated orderbook flow of orders, just use tagA/tagB for the base/rel as that will allow the orderbook rpc call to work. it can have volA and volB in floats, which implies a price by volA/volB division. so we can verify the max rate of orderflow that is possible to do and then also make sure that the orderbooks can be generated locally (and accurately)
+
+[08-Jan-20 05:54 PM] jl777c#5810
+most interested in networks of 100+ nodes with about 4 peers each, to see how well it works. at 11 nodes it works quite well, but 100+ nodes could have a totally different performance in some cases. will need to see the every minute stats outputs
+
+[08-Jan-20 05:54 PM] jl777c#5810
+after the 100 nodes test, we can go to 1000 nodes
+
+[08-Jan-20 05:56 PM] jl777c#5810
+these 1000 nodes blasting orderbook entries at txpowbits of 1, is equivalent to 65 million nodes at txpow of 17, which seems quite sufficient. but that assumes that as the network grows that the added capacity of the extra nodes allows for linear performance on the key metrics. too complex to know ahead of time (for me) whether it will stay linear.
+
+[08-Jan-20 06:11 PM] jl777c#5810
+pushed change so the ffff blast makes packets of different priorities, 0 to 9
+
+[08-Jan-20 06:12 PM] jl777c#5810
+i want to make sure the highest priority gets the highest sync rate, but gracefully degrade the lower priorities. so will need to have a few more changes to the internals, but this wont really be visible at the rpc level
+
+[08-Jan-20 06:22 PM] TonyL#3577
+```  "tagA": "tag9000",
+  "tagB": "",
+  "destpub": "",
+  "n": 9000
+}``` yay, tag filtering works fine now
+
+[08-Jan-20 06:22 PM] TonyL#3577
+lets check if anything losing during tag filtering for 100,000 packages
+
+[08-Jan-20 06:25 PM] TonyL#3577
+```most interested in networks of 100+ nodes with about 4 peers each, to see how well it works. at 11 nodes it works quite well, but 100+ nodes could have a totally different performance in some cases. will need to see the every minute stats outputs
+``` Yes, that should be very interesting to test - I'll prepare such network after tomorrow (tomorrow will be on road whole day)
+
+[08-Jan-20 06:27 PM] TonyL#3577
+```  "tagA": "tag100000",
+  "tagB": "",
+  "destpub": "",
+  "n": 100000
+}```
+
+for 100,000 I'm getting 100,000 in list now so looks like losses 0% with such amount at the moment
+
+[08-Jan-20 06:40 PM] jl777c#5810
+i like having no known bugs
+
+[08-Jan-20 06:41 PM] jl777c#5810
+i added a stats display for the different priority levels displayed after tx/sec in descending order
+
+[08-Jan-20 06:42 PM] TonyL#3577
+are stats printing in stdout?
+
+[08-Jan-20 06:42 PM] jl777c#5810
+i expected it to be even across the different priorities as i am not giving any preference to the higher priorities yet. however, already it is giving preference to the higher priorities
+
+[08-Jan-20 06:42 PM] jl777c#5810
+yes, stats are in stdout for now, i havent had a chance to move it to rpc call.
+
+[08-Jan-20 06:42 PM] jl777c#5810
+hoping somebody else would step up to do such easy stuff while i am still dealing with the core functionality
+
+[08-Jan-20 06:43 PM] jl777c#5810
+oh, i think the preference is not real
+
+[08-Jan-20 06:43 PM] jl777c#5810
+it is the binomial distribution due to the 0 bits
+
+[08-Jan-20 06:44 PM] jl777c#5810
+good thing i tested it first without any routing preference. i can get a baseline distribution
+
+[08-Jan-20 06:49 PM] TonyL#3577
+`i want to make sure the highest priority gets the highest sync rate, but gracefully degrade the lower priorities` looks like one more degradation auto-test idea 🙂
+
+[08-Jan-20 06:55 PM] jl777c#5810
+yes, i am targeting each higher priority level to have 2x higher chance of being in sync, but the scale would be 1/n, so if priority 0 is 1/20 out of sync, priority 1 would be 1/40 out of sync, priority 2 being 1/80 out of sync, etc. not sure i can hit this sort of theoretical gradient as it will necessarily need to be done via request prioritization. so really, as long as each priority has a higher sync rate than a lower priority, it is a valid performance
+
+[08-Jan-20 06:56 PM] jl777c#5810
+the difference in initial stats was indeed the 0 bits, now i see it at close to 10% for priority 3 to 9, then it drops in half for each one above 9, with  the last one being the same as the second to last as i put all the highest priorities in the last slot. 1/2 + 1/4 + 1/8 ... ends up adding up to 1
+
+[08-Jan-20 06:57 PM] jl777c#5810
+the first 3 priorities are lower counts due to loss of the 0 bits, but 3 to 9 have balanced losses from the 0 bits as gained from the 0 bits of lower priorities.
+
+[08-Jan-20 06:57 PM] jl777c#5810
+now i have an accurate baseline to measure priority delivery rates. just need to come up with a way to achieve it...
+
