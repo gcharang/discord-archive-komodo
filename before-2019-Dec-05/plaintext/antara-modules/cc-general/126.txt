@@ -1,0 +1,388 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[08-Nov-18 12:08 PM] CrisF#3405
+I'm looking for info on it like `channels.cpp` has.
+
+[08-Nov-18 12:11 PM] jl777c#5810
+migration is pre-CC method
+
+[08-Nov-18 12:12 PM] CrisF#3405
+Oh!  Thank you.
+
+[08-Nov-18 12:12 PM] CMaurice#1685
+it's a one-way peg, in effect isn't it?
+
+[08-Nov-18 12:13 PM] jl777c#5810
+it is a N:N peg
+
+[08-Nov-18 12:13 PM] jl777c#5810
+any chain in the cluster to any other chain
+
+[08-Nov-18 12:13 PM] CMaurice#1685
+not quite sure what imagined use cases for it are, would like to hear some
+
+[08-Nov-18 12:14 PM] jl777c#5810
+it ensures the total coins across the cluster stays the ssame
+
+[08-Nov-18 12:15 PM] CMaurice#1685
+thanks, that helps a bit
+
+[08-Nov-18 01:55 PM] dukeleto#7326
+@Mihailo if you pass an object around that contains an error (or JSON or whatever), you will need to change a lot of code. Such as when funcA calls funcB which calls funcC, you are going to be passing that object/json around many layers of the call stack, managing it/etc. It's much easier to use the `CCerror` global, and then each RPC checks if `CCerror` has been set, and if it has, renders the error in JSON response correctly. There is even a macro for it, it's just `RETURN_IF_ERROR(CCerrror)` and you are done
+
+[08-Nov-18 02:00 PM] Mihailo#5902
+@dukeleto I ment just for the CC RPC function. Like we are returning string now and then in rpcwallet correspondent function we check if it is not empty and then push success and hex into result UniValue. So I meant we could use UniValue in CC function and push Pair("hex",hex) if it is ok, or Pair("error",error_String) if it did not went ok. And in rpcwallet we can add result state and return that.
+
+[08-Nov-18 02:01 PM] Mihailo#5902
+But it is similair to CCerror with a lot more code change, so as I said maybe it is easier to use CCerror 😉
+
+[08-Nov-18 02:04 PM] dukeleto#7326
+@Mihailo dicebet and one other internals function was using the `error` variable as an arg, but I just changed that to use CCerror like everything else. That way, it can catch an error set by a function 2 call levels deep, instead of only an error caught in that call level (hope that makes sense)
+
+[08-Nov-18 02:04 PM] dukeleto#7326
+various CC's still don't have much error checking, and need this ported
+
+[08-Nov-18 02:05 PM] dukeleto#7326
+the ERR_RESULT and RETURN_IF_ERROR macros make things a lot less annoying 😃
+
+[08-Nov-18 02:08 PM] Mihailo#5902
+👍
+
+[08-Nov-18 08:53 PM] Bryan_Beus#6442
+I'm working on the last few cc documentation stuff, before we can finally soft-launch this new streamlined documentation.
+
+On the `channels` documentation, I don't see any existing docs in the repo:
+
+https://github.com/KomodoPlatform/Documentation/tree/master/docs/source/cc/contracts/channels
+
+Is there anyone with a channels cc chain up and running that can help me work on docs, either today or tomorrow?
+
+I need someone to give me a basic description of what the channels cc is all about, make a list of all rpc calls, make a very simple one-sentence explanation for each rpc call, and show the arguments/structure the call takes.
+
+And then I need this person to execute a full example of the command in the terminal, copy paste that to me, and also copy paste the full response to me. 
+
+I can do some of this by myself, but not all of it, and it is much slower as I don't know anything about how channels works or what it does.
+
+{Embed}
+https://github.com/KomodoPlatform/Documentation/tree/master/docs/source/cc/contracts/channels
+KomodoPlatform/Documentation
+Developer and End user documentation. Contribute to KomodoPlatform/Documentation development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[08-Nov-18 08:54 PM] jl777c#5810
+@Mihailo is the one that did the channels
+
+[08-Nov-18 08:55 PM] Mihailo#5902
+@Bryan_Beus I can give you a hand tomorrow with channels CC...
+
+[08-Nov-18 08:55 PM] Bryan_Beus#6442
+great, thank you very much
+
+[08-Nov-18 08:56 PM] Bryan_Beus#6442
+let me know when you're available. I'm generally around somewhere between 4pm to 12am UTC.
+
+[08-Nov-18 08:56 PM] Mihailo#5902
+Ok, lets do it around 4pm if you can...
+
+[08-Nov-18 08:57 PM] Bryan_Beus#6442
+sounds good, that's usually when I start work
+
+[09-Nov-18 12:44 AM] Bryan_Beus#6442
+What's a "baton" in the oracles cc?
+
+[09-Nov-18 12:44 AM] Bryan_Beus#6442
+anyone know?
+
+[09-Nov-18 12:45 AM] jl777c#5810
+a utxo that is spent by the next transaction in the chain
+
+[09-Nov-18 12:45 AM] jl777c#5810
+think of the baton in a relay race as the runners pass the baton to the next runner
+
+[09-Nov-18 12:45 AM] jl777c#5810
+there is mutual exclusivity, as there is only one baton
+
+[09-Nov-18 12:45 AM] jl777c#5810
+and you can find the tip of the linked list by finding the baton utxo
+
+[09-Nov-18 12:47 AM] Bryan_Beus#6442
+I'm a little familiar with linked lists. did some exercises in my programming classes.
+
+so, the baton is the next transaction that will be awarded to the publisher upon a data upload?
+
+[09-Nov-18 12:47 AM] jl777c#5810
+it is a marker, used to track each list
+
+[09-Nov-18 12:48 AM] jl777c#5810
+not the datafee
+
+[09-Nov-18 12:48 AM] Bryan_Beus#6442
+so, you could look up the utxo that's marked as a baton, and in that utxo, there is a cc property that tells you what the next utxo is in that list?
+
+[09-Nov-18 12:49 AM] jl777c#5810
+it is the property of the blockchain
+
+[09-Nov-18 12:49 AM] jl777c#5810
+the previous utxo, is in the input
+
+[09-Nov-18 12:49 AM] jl777c#5810
+so you can just keep finding the previous tx in the baton chain
+
+[09-Nov-18 12:49 AM] jl777c#5810
+you know like a linked list
+
+[09-Nov-18 12:50 AM] Bryan_Beus#6442
+that makes a little sense
+
+[09-Nov-18 12:50 AM] jl777c#5810
+not only can you find the most current datapoint, you can traverse it backwards to the very beginning
+
+[09-Nov-18 12:50 AM] jl777c#5810
+you need to understand linked list
+
+[09-Nov-18 12:50 AM] jl777c#5810
+in this case a backwards linked list
+
+[09-Nov-18 12:50 AM] Bryan_Beus#6442
+I'm still confused about what utxo specifically we're talking about, if it's not the datafee paid to the publisher?
+
+[09-Nov-18 12:50 AM] jl777c#5810
+the transactions vouts -> vins creates a backwards linked list
+
+[09-Nov-18 12:50 AM] jl777c#5810
+it is a special baton utxo
+
+[09-Nov-18 12:51 AM] jl777c#5810
+sole purpose is to be a baton
+
+[09-Nov-18 12:51 AM] jl777c#5810
+it gets a free ride as the txfee for the transaction and datafee are already taken care of
+
+[09-Nov-18 12:51 AM] Bryan_Beus#6442
+that part I think makes sense.
+
+You're saying that blockchains have a built-in property that show how to link one utxo to another. So, you can mark one utxo as a baton, and then trace its history backwards using the normal blockchain propertiees. Is that correct?
+
+[09-Nov-18 12:51 AM] jl777c#5810
+yes
+
+[09-Nov-18 12:52 AM] jl777c#5810
+it is literally a backward linked list
+
+[09-Nov-18 12:52 AM] Bryan_Beus#6442
+This part still confuses me a bit. Not sure how well I need to understand it to write documentation, but I'm not quite able to describe this yet.
+
+```
+sole purpose is to be a baton
+it gets a free ride as the txfee for the transaction and datafee are already taken care of
+```
+
+[09-Nov-18 12:52 AM] jl777c#5810
+and for oracle that is exactly the data structure you need to be able to find all the historical data samples
+
+[09-Nov-18 12:52 AM] Bryan_Beus#6442
+I get the part that you're saying, but I don't get why we need a baton.
+
+Does each publisher get a unique baton?
+
+[09-Nov-18 12:52 AM] Bryan_Beus#6442
+Or does the baton change over time?
+
+[09-Nov-18 12:53 AM] jl777c#5810
+ok, think about a publisher that is publishing a stream of data
+
+[09-Nov-18 12:53 AM] jl777c#5810
+each one gets a txid
+
+[09-Nov-18 12:53 AM] jl777c#5810
+how would you find the most recent one?
+
+[09-Nov-18 12:53 AM] jl777c#5810
+how would you find all of them?
+
+[09-Nov-18 12:53 AM] jl777c#5810
+how would you know the sequence?
+
+[09-Nov-18 12:53 AM] jl777c#5810
+each publisher gets a baton
+
+[09-Nov-18 12:54 AM] jl777c#5810
+each data sample spends the baton and makes a new one
+
+[09-Nov-18 12:54 AM] Bryan_Beus#6442
+"each one gets a txid"
+
+by this, do you mean this:
+
+each publisher gets a unique txid, which comes from the `oraclesregister` rpc call? (after doing `sendrawtransaction`)?
+
+[09-Nov-18 12:54 AM] jl777c#5810
+you understand that the publisher needs to publish data
+
+[09-Nov-18 12:54 AM] jl777c#5810
+he does that by making a transaction
+
+[09-Nov-18 12:54 AM] Bryan_Beus#6442
+ok
+
+[09-Nov-18 12:54 AM] jl777c#5810
+each transaction gets a txid
+
+[09-Nov-18 12:55 AM] Bryan_Beus#6442
+ok
+
+[09-Nov-18 12:55 AM] jl777c#5810
+if a publisher publishes a million data points, there is a million txids
+
+[09-Nov-18 12:55 AM] Bryan_Beus#6442
+ok
+
+[09-Nov-18 12:55 AM] jl777c#5810
+how would you organize this?
+
+[09-Nov-18 12:55 AM] jl777c#5810
+how would you even find them all?
+
+[09-Nov-18 12:55 AM] Bryan_Beus#6442
+hmm, interesting
+
+[09-Nov-18 12:55 AM] jl777c#5810
+you could make a DB and database all the txids...
+
+[09-Nov-18 12:55 AM] jl777c#5810
+but that would require a special DB
+
+[09-Nov-18 12:56 AM] Bryan_Beus#6442
+but that would be difficult for every publisher to manage on their own
+
+easier to keep it managed on-chain
+
+[09-Nov-18 12:56 AM] jl777c#5810
+so instead of the overhead of having a custom DB to track each publishers data samples, I came up with the baton utxo
+
+[09-Nov-18 12:56 AM] Bryan_Beus#6442
+ok
+
+[09-Nov-18 12:56 AM] Bryan_Beus#6442
+and the baton utxo comes from the most recent data-related txid that the publisher created?
+
+[09-Nov-18 12:57 AM] jl777c#5810
+now there can be thousands of publishers all publishing millions of samples and we have billions of txids
+
+[09-Nov-18 12:57 AM] jl777c#5810
+when the publisher registers, he creates the first baton
+
+[09-Nov-18 12:57 AM] jl777c#5810
+the first datasample spends the first baton and makes the second
+
+[09-Nov-18 12:57 AM] jl777c#5810
+the next datasample spends the second an makes the third
+
+[09-Nov-18 12:58 AM] jl777c#5810
+register:
+ vins.*: normal inputs
+ vout.0: txfee tag to normal marker address
+ vout.1: baton CC utxo
+ vout.2: change, if any
+ vout.n-1: opreturn with oracletxid, pubkey and price per data point
+
+[09-Nov-18 12:58 AM] jl777c#5810
+data:
+ vin.0: normal input
+ vin.1: baton CC utxo (most of the time)
+ vin.2+: subscription or data vout.0
+ vout.0: change to publishers CC address
+ vout.1: baton CC utxo
+ vout.2: payment for dataprovider
+ vout.3: change, if any
+ vout.n-1: opreturn with oracletxid, prevbatontxid and data in proper format
+
+[09-Nov-18 12:58 AM] jl777c#5810
+this is why I carefully define all inputs and outputs
+
+[09-Nov-18 01:00 AM] jl777c#5810
+so given the most recent datasample txid, the baton utxo is txid/v1
+
+[09-Nov-18 01:00 AM] jl777c#5810
+we look at vin1 to find the previous datasample
+
+[09-Nov-18 01:00 AM] jl777c#5810
+all the way to the initial register
+
+[09-Nov-18 01:00 AM] Bryan_Beus#6442
+I think I got you here
+
+so, you may have said this already, but I wasn't clear enough on what a baton is to understand.
+
+is the baton the txid hash of the utxo in question?
+
+[09-Nov-18 01:01 AM] Bryan_Beus#6442
+ok ya
+
+[09-Nov-18 01:01 AM] Bryan_Beus#6442
+I think that's what you just posted
+
+[09-Nov-18 01:01 AM] Bryan_Beus#6442
+```so given the most recent datasample txid, the baton utxo is txid/v1```
+
+[09-Nov-18 01:01 AM] jl777c#5810
+the baton is a bitcoin utxo
+
+[09-Nov-18 01:01 AM] jl777c#5810
+with special purpose
+
+[09-Nov-18 01:01 AM] jl777c#5810
+its purpose is not to make a payment
+
+[09-Nov-18 01:01 AM] jl777c#5810
+its purpose is to replace the need for a database
+
+[09-Nov-18 01:13 AM] Bryan_Beus#6442
+ok, could we say it like this ? being a bit verbose here, to make sure I understand:
+
+to understand the baton property, one must first understand the problem that it solves.
+
+a publisher publishes data to an oracle
+
+he does this by creating a transaction, using the `oraclesdata` method
+
+when completed (after broadcasting the hex using `sendrawtransaction`), this method returns a txid
+
+if there was only one such txid, it would not be difficult to keep track of it
+
+however, as each publisher is likely publishing lots of data, and thus creating lots of txids, and there are also many publishers, this could result in a state of disorder. It would be difficult to know which data is the most recent, or how data in a contract is related to other data, etc. 
+
+To solve this problem without using centralized and/or external databases, it is easiest for each publisher to have an automatically managed linked list.
+
+This linked list keeps track of the txids submitted by a publisher to a oracle contract, and keeps them in order.
+
+When a publisher first registers for an oracles contract, the returned txid of the `oraclesregister` command (after `sendrawtransaction`) is the first baton.
+
+When the publisher uploads their first data publication to the chain, using `oraclesdata`, the baton property for this publisher in the master `oracles` contract updates to the `txid` returned from the data publication.
+
+Likewise each time they upload data to the chain.
+
+By the nature of blockchain data structure, each utxo txid is already a linked list leading back in time. 
+
+The baton, therefore, points to the txid of the most recently created utxo for this publisher. By finding that utxo, you can find the previous utxo created by this publisher, on this contract, and so on, all the way until you find their first `oraclesregister` utxo (and so on).
+
+[09-Nov-18 01:14 AM] jl777c#5810
+yes
+
+[09-Nov-18 01:14 AM] Bryan_Beus#6442
+great, thanks
+
+[09-Nov-18 01:14 AM] Bryan_Beus#6442
+I'll put this in the introduction
+
+[09-Nov-18 01:14 AM] jl777c#5810
+it is likely the most efficient DB ever created
+

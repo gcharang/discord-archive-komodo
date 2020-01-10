@@ -1,0 +1,510 @@
+==============================================================
+Guild: Komodo
+Channel: ask-jl777
+Topic: Ask questions about the core tech here, but not questions about prices or personal questions or GUI and  please don't DM JL777.
+https://dexstats.info/richlistlookup.php?address=RLVzC4tr9cNKvuw2z4m8KuMfZURwCehx55
+https://medium.com/@jameslee777
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[24-Aug-18 04:37 PM] jusoaresf#3291
+"each of the vouts gets a spend script that must be satisfied to be able to be spent. Which means for all three of out vins, all the requirements (as specified in the output that created them) are satisfied."
+All or nothing?
+
+[24-Aug-18 04:38 PM] jusoaresf#3291
+meaning either both vouts are satisfied or nothing happens?
+
+[24-Aug-18 04:38 PM] jl777c#5810
+yes, all or nothing
+
+[24-Aug-18 04:38 PM] dukeleto#7326
+@jl777c random question on my mind is "How do airdrops + `getsnapshot` handle CC utxos? If both the source and target chain support CC, can CC utxos be airdropped across chains?
+
+[24-Aug-18 04:39 PM] jl777c#5810
+yes
+
+[24-Aug-18 04:39 PM] dukeleto#7326
+that is some futuristic stuff
+
+[24-Aug-18 04:39 PM] jl777c#5810
+but danger of consensus not achieved for the exact snapshot amounts, so I plan to make it more like dice
+
+[24-Aug-18 04:40 PM] jl777c#5810
+where the dealer node sends out the tx, so for the airdrop, the special node will be doing all the sendmany tx
+
+[24-Aug-18 04:40 PM] jusoaresf#3291
+this is pure beauty
+
+[24-Aug-18 04:40 PM] jl777c#5810
+but this is for after the second iteration of CC contracts
+
+[24-Aug-18 04:40 PM] dukeleto#7326
+👍
+
+[24-Aug-18 04:49 PM] CrisF#3405
+Good level for me there.  Wondered about this part "`all three of out vins,`".  The 'nice chart` will help!
+
+[24-Aug-18 05:00 PM] CrisF#3405
+Yeah, I read "`out vins`" as "`vout`". Oops!  The concept was clear.
+
+[24-Aug-18 05:02 PM] CrisF#3405
+My tired eyes 😅
+
+{Reactions}
+😄 
+
+[24-Aug-18 05:05 PM] grewalsatinder#9653
+finished chapter 3. more clarity on vin/vout funds inside CC contracts! 🙂 👍
+
+{Reactions}
+💯 
+
+[24-Aug-18 05:16 PM] jl777c#5810
+Chapter 4 - CC rpc extensions
+Currently, CC contracts need to be integrated at the source level. This limits who is able to create and add new CC contracts, which at first is good, but eventually will be a too strict limitation. The runtime bindings chapter will touch on how to break out of the source based limitation, but there is another key interface level, the RPC.
+
+By convention, each CC contract adds an associated set of rpc calls to the komodo-cli. This not only simplifies the creation of the CC contract transactions, it further will allow dapps to be created just via rpc calls. That will require there being enough foundational CC contracts already in place. As we find new usecases that cannot be implemented via rpc, then a new CC contract is made that can handle that (and more) and the power of the rpc level increases. This is a long term process.
+
+The typical rpc calls that are added <CC>address, <CClist>, <CCinfo> return the various special CC addresses, the list of CC contract instances and info about each CC contract instance. Along with an rpc that creates a CC instance and of course the calls to invoke a CC instance.
+
+[24-Aug-18 05:17 PM] jl777c#5810
+The role of the rpc calls are to create properly signed rawtransactions that are ready for broadcasting. This then allows using only the rpc calls to not only invoke but to create a specific instance of a CC. The faucet contract is special in that it only has a single instance, so some of these rpc calls are skipped.
+
+So, there is no MUSTHAVE rpc calls, just a sane convention to follow so it fits into the general pattern.
+
+One thing that I forgot to describe was how to create a special CC address and even though this is not really an rpc issue, it is kind of separate from the core CC functions, so I will show how to do it here:
+
+const char *FaucetCCaddr = "R9zHrofhRbub7ER77B7NrVch3A63R39GuC";
+const char *FaucetNormaladdr = "RKQV4oYs4rvxAWx1J43VnT73rSTVtUeckk";
+char FaucetCChexstr[67] = { "03682b255c40d0cde8faee381a1a50bbb89980ff24539cb8518e294d3a63cefe12" };
+uint8_t FaucetCCpriv[32] = { 0xd4, 0x4f, 0xf2, 0x31, 0x71, 0x7d, 0x28, 0x02, 0x4b, 0xc7, 0xdd, 0x71, 0xa0, 0x39, 0xc4, 0xbe, 0x1a, 0xfe, 0xeb, 0xc2, 0x46, 0xda, 0x76, 0xf8, 0x07, 0x53, 0x3d, 0x96, 0xb4, 0xca, 0xa0, 0xe9 };
+
+[24-Aug-18 05:17 PM] jl777c#5810
+Above are the specifics for the faucet CC, but each one has the equivalent in CCcustom.cpp. At the bottom of the file is a big switch statement where these values are copied into an in memory data structure for each CC type. This allows all the CC codebase to access these special addresses in a standard way.
+
+In order to get the above values, follow these steps:
+A. use getnewaddress to get a new address and put that in the <CC>Normaladdr = ""; line
+B. use validateaddress <newaddress from A> to get the pubkey, which is put into the <CC>hexstr[67] = ""; line
+C. stop the daemon and start with -pubkey=<pubkey from B> and do a <CC>address rpc call. In the console you will get a printout of the hex for the privkey, assuming the if ( 0 ) in Myprivkey() is enabled (CCutils.cpp)
+D. update the CCaddress and privkey and dont forget to change the -pubkey= parameter
+
+The first rpc command to add is <CC>address and to do that, add a line to rpcserver.h and update the commands array in rpcserver.cpp
+
+In the rpcwallet.cpp file you will find the actual rpc functions, find one of the <CC>address ones, copy paste, change the eval code to your eval code and customize the function. Oh, and dont forget to add an entry into eval.h
+
+Now you have made your own CC contract, but it wont link as you still need to implement the actual functions of it. This will be covered in the following chapters.
+
+[24-Aug-18 05:30 PM] jl777c#5810
+Chapter 5 - CC validation
+CC validation is what its all about, not the "hokey pokey"!
+
+Each CC must have its own validation function and when the blockchain is validating a transaction, it will call the CC validation code. It is totally up to the CC validation whether to validate it or not.
+
+Any set of rules that you can think of and implement can be part of the validation. Make sure that there is no ambiguity! Make sure that all transactions that should be rejected are in fact rejected.
+
+Also, make sure any rpc calls that create a CC transaction dont create anything that doesnt validate.
+
+Really, that is all that needs to be said about validation that is generic, as it is just a concept and gets a dedicated function to determine if a transaction is valid or not.
+
+For most of the initial CC contracts, I made a function code for various functions of the CC contract and add that along with the creation txid. That enables the validation of the transactions much easier, as the required data is right there in the opreturn.
+
+You do need to be careful not to cause a deadlock as the CC validation code is called while already locked in the main loop of the bitcoin protocol. As long as the provided CC contracts are used as models, you should keep out of deadlock troubles.
+
+[24-Aug-18 05:31 PM] CrisF#3405
+The level of the rcp part is fine to follow along.
+
+[24-Aug-18 05:38 PM] CrisF#3405
+From "`One thing that I forgot to describe was...`" I'm not sure where things are going.  
+For example I'm not sure what "`a special CC address`" is or where and when I'd need it.
+
+[24-Aug-18 05:40 PM] CrisF#3405
+I could probably follow along with the instructions, especially if they were laid out in a guide, but I would definitely have to go to outside sources for some terms like "`CCcustom.cpp`".
+
+[24-Aug-18 05:44 PM] CrisF#3405
+Not a problem, just the first time I'd have to move outside the document for major clarification and want to look around my system and find things.
+
+[24-Aug-18 05:45 PM] CrisF#3405
+Next Ch.5
+
+[24-Aug-18 05:48 PM] jl777c#5810
+terms that end in .cpp is a source file, where you can see all the details
+
+{Reactions}
+👍 
+
+[24-Aug-18 05:55 PM] jl777c#5810
+Chapter 6 - faucet example
+Finally, we are ready for the first actual example of a CC contract. The faucet. This is a very simple contract and it ran into some interesting bugs in the first incarnation.
+
+The code in ~/komodo/src/cc/faucet.cpp is the ultimate documentation for it with all the details, so I will just address the conceptual issues here.
+
+There are only 7 functions in faucet.cpp, a bit over 200 lines including comments. The first three are for validation, the last four for the rpc calls to use. 
+
+int64_t IsFaucetvout(struct CCcontract_info *cp,const CTransaction& tx,int32_t v)
+
+bool FaucetExactAmounts(struct CCcontract_info *cp,Eval* eval,const CTransaction &tx,int32_t minage,uint64_t txfee)
+
+bool FaucetValidate(struct CCcontract_info *cp,Eval* eval,const CTransaction &tx)
+
+int64_t AddFaucetInputs(struct CCcontract_info *cp,CMutableTransaction &mtx,CPubKey pk,int64_t total,int32_t maxinputs)
+
+std::string FaucetGet(uint64_t txfee)
+
+std::string FaucetFund(uint64_t txfee,int64_t funds)
+
+UniValue FaucetInfo()
+
+[24-Aug-18 05:56 PM] jl777c#5810
+Functions in rpcwallet implement:
+
+faucetaddress fully implemented in rpcwallet.cpp
+faucetfund calls FaucetFund
+faucetget calls FaucetGet
+faucetinfo calls FaucetInfo
+
+Now you might not be a programmer, but I hope you are able to understand the above sequence. user types in a cli call, komodo-cli processes it by calling the rpc function, which in turn calls the function inside faucet.cpp
+
+No magic, just simple conversion of a user command line call that runs code inside the komodod. Both the faucetfund and faucetget create properly signed rawtransaction that is ready to be broadcast to the network using the standard sendrawtransaction rpc. It doesnt automatically do this to allow the GUI to have a confirmation step with all the details before doing an irrevocable CC contract transaction.
+
+faucetfund allows anybody to add funds to the faucet
+faucetget allows anybody to get 0.1 coins from the faucet as long as they dont violate the rules.
+
+[24-Aug-18 05:56 PM] jl777c#5810
+And we come to what it is all about. The rules of the faucet. Initially it was much less strict and that allowed it to be drained slowly, but automatically and it prevented most from being able to use the faucet. 
+
+To make it much harder to leech, it was made so each faucetget returned only 0.1 coins (down from 1.0) so it was worth 90% less. It was also made so that it had to be to a fresh address with less than 3 transactions. Finally each txid was constrained to start and end with 00! This is a cool trick to force usage of precious CPU time (20 to 60 seconds depending on system) to generate a valid txid. Like PoW mining for the txid and I expect other CC contracts to use a similar mechanism if they want to rate limit usage.
+
+Combined, it became such a pain to get 0.1 coins, the faucet leeching problem was solved. It might not seem like too much trouble to change an address to get another 0.1 coins, but the way things are setup you need to launch the komodod -pubkey=<your pubkey> to change the pubkey that is active for a node. That means to change the pubkey being used, the komodod needs to be restarted and this creates a lot of issues for any automation trying to do this. Combined with the PoW required, only when 0.1 coins becomes worth a significant effort will faucet leeching return. In that case, the PoW requirement can be increased and coin amount decreased, likely with a faucet2 CC contract as I dont expect many such variations to be needed.
+
+[24-Aug-18 06:04 PM] CrisF#3405
+👍
+
+[24-Aug-18 06:05 PM] jl777c#5810
+the idea is now you can look at faucet.cpp and have the context required to dig into the details
+
+{Reactions}
+💯 (2) 
+
+[24-Aug-18 06:06 PM] grewalsatinder#9653
+updating this all chapters file on git in formatted way:
+https://github.com/KomodoPlatform/Mastering_CryptoConditions/blob/master/all_chapters.md
+
+{Embed}
+https://github.com/KomodoPlatform/Mastering_CryptoConditions/blob/master/all_chapters.md
+KomodoPlatform/Mastering_CryptoConditions
+Mastering_CryptoConditions - How to write utxo based CryptoConditions contracts for KMD chains - by jl777
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[24-Aug-18 06:06 PM] grewalsatinder#9653
+linking .cpp and .h files to jl777 branch files
+
+[24-Aug-18 06:07 PM] grewalsatinder#9653
+yet to read chapter 4 onwards 😄
+
+[24-Aug-18 06:07 PM] grewalsatinder#9653
+been formatting
+
+[24-Aug-18 06:14 PM] jl777c#5810
+it seems I am getting a bit tired and the chapters are not as complete as they should be. will continue on this later. I think the difficulty level is calibrated and offers the bridge into the actual C code to allow anyone that can code to at least have an idea of what is going on and for experienced blockchain devs to start writing a custom CC contract of their own
+
+{Reactions}
+👍 (2) 🍺 (2) 💯 (4) 
+
+[24-Aug-18 06:16 PM] grewalsatinder#9653
+yeah, get some rest.... It's a good writeup. 🙂
+
+[24-Aug-18 06:18 PM] grewalsatinder#9653
+I'll finish reading the rest of the chapters and will probably have some questions. I also been up all night. will get back on read/Q later. 
+thanks for these chapters/writeup so soon. was expecting after announcement it will take a while... 😅
+
+[24-Aug-18 06:19 PM] CrisF#3405
+Great stuff!  This will be an amazing asset for new people.  Thanks for all of the work 🙏
+
+[24-Aug-18 06:24 PM] CrisF#3405
+This looks great on github, @grewalsatinder !  Awesome 👍
+
+[24-Aug-18 06:25 PM] grewalsatinder#9653
+🙂 👍
+
+{Reactions}
+yassinheart (3) 
+
+[24-Aug-18 07:46 PM] jl777c#5810
+Chapter 12 - limitless possibilities
+As can be seen, CC contracts can do a wide range of things and since they are Turing complete, we know that this is true. However, what is more important is the added security gained from using a utxo based system. While in some ways it is more complex to have to deal with utxo, as can be seen by the above examples, it is either solved and made invisible at the rpc level, or actually used as part of the solution.
+
+Being utxo based, automatically builds in a rate limit to how many tx per block a specific CC contract can do. The state advancing by one transaction at a time is another means that rate limits. Since more utxo can be made available to increase capacity, it actually offers a way for managing load.
+
+I believe I have made one of the first operational utxo smart contracts, CC or otherwise and hope that there will be many more developers joining forces to create more foundational CC contracts. Feel free to contact me for feedback on the type of CC contract you want to make. I have not documented all my notes and it could well be I already sort of know how to implement what your want your CC contract to do. Just only so many I can actually make time to code and debug.
+
+Our testing cycle went a lot faster than expected as the bugs found were few and far between. Considering the scope of the assets CC and the realtime response aspects of dice CC, this was quite unexpected. I can only attribute it to the fact that CC validation is just the final validation on top of all the standard bitcoin protocol validations. Not having to worry about double spends is sure a nice luxury, though dont get too complacent about chain rewrites! It is possible to wait for information to be divulged and then reorg the chain to take advantage of this knowledge in a chain which is rewound.
+
+Yes, blockchains are complicated.
+
+{Reactions}
+❤ (4) 👍 
+
+[24-Aug-18 08:25 PM] $tefano.#3560
+ready to translate into my language, italian, as soon as CC finished. 👍
+
+[24-Aug-18 08:27 PM] jl777c#5810
+https://github.com/jl777/komodo/blob/FSM/src/cc/CC%20made%20easy
+
+{Embed}
+https://github.com/jl777/komodo/blob/FSM/src/cc/CC%20made%20easy
+jl777/komodo
+komodo - Komodo
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[24-Aug-18 08:27 PM] jl777c#5810
+all in one text file and pull requests with translations are definitely welcome
+
+[24-Aug-18 08:42 PM] Quarterback#7090
+thank you, well done,!!!!
+
+[24-Aug-18 08:49 PM] jl777c#5810
+Chapter 13 - different languages
+The current codebase is integrated into the komodod codebase, which is C/C++. However, it is possible to use different languages and integrate into the C/C++ as zcash has shown by using the rust language for some parts of the zcashd.
+
+I think any language that is compiled and can create a linkable library while being able to call and be called by C/C++ functions can be used. If you are able to make such a language binding for a simple CC contract like faucet, this will be good for a 777 KMD bounty. Of course, you need to be the first to submit a properly working pull request.
+
+[24-Aug-18 08:49 PM] jl777c#5810
+Chapter 14 - runtime bindings
+Once build time linking works, then it is one step away from being able to do runtime linking, ie. dynamically linked libraries. There will be some work required to prevent duplication of eval codes and making sure it is a valid version of the CC contract plugin, but these are issues that have been solved before and I dont see any reason they cant be solved for CC contracts.
+
+This would open up the door for quite an interesting ecosystem of CC plugins that blockchains can subscribe to.
+
+Chapter 15 - rpc based dapps
+Ultimately, I expect there to be so many new rpc calls (one set from each CC contract), that virtually any dapp can be made with rpc calls. We are just at the beginning now, but it is just a matter of time when we get there.
+
+For now, we just need to keep listening to what the market wants as far as dapps go. Then make a new CC contract that enables doing as many of those as possible.
+
+Repeat...
+
+Imagine the scope that will exist after a year or two of continuous new CC contracts being created, along with all the rpc based dapps. I have seen some automatic GUI generators and it could be that for most cases, there can be a special GUI that not only create the dapp's GUI, but also all the rpc calls that are needed to make it work the way it is customized.
+
+This codebase and tools in between the GUI and the rpc level will be a very good area for new initiatives.
+
+##########
+
+Conclusion
+I hope this document has helped you understand what a Komodo utxo based CC contract is and how it is different from the other smart contracts. If you are now able to dive into the cc directory and start making your own CC contract, then I am very happy!
+
+{Reactions}
+👀 Komodo 
+
+[24-Aug-18 08:49 PM] jl777c#5810
+all but the non-faucet descriptions are now done
+
+[24-Aug-18 08:52 PM] jl777c#5810
+31kb of text, i guess not a bad halfday of work
+
+{Reactions}
+💯 (3) Komodo (2) 👌 
+
+[24-Aug-18 09:09 PM] freakbros#9074
+Holy sheep shit Batman going to take me a week to read
+
+[24-Aug-18 09:11 PM] freakbros#9074
+Awesome
+
+[24-Aug-18 09:32 PM] allbits#5898
+I thought you said you were going to rest!  What a scammer!! :trollface:
+
+[24-Aug-18 10:05 PM] TonyL#3577
+Russian translation reserved :trollface:
+
+[25-Aug-18 01:13 AM] jl777c#5810
+for those of you following along and reading these chapters, try to figure out how to make the CC contracts that I did not write the details about yet.
+
+[25-Aug-18 01:13 AM] jl777c#5810
+that way, when I do write the chapter on it, you can see if you were close
+
+{Reactions}
+🤔 (2) 🤕 
+
+[25-Aug-18 01:53 AM] Mylo#8306
+thanks grewal
+
+[25-Aug-18 06:42 AM] grewalsatinder#9653
+updated all_chapters.md file with new chapters and more formatting and links
+https://github.com/KomodoPlatform/Mastering_CryptoConditions/blob/master/all_chapters.md
+
+{Embed}
+https://github.com/KomodoPlatform/Mastering_CryptoConditions/blob/master/all_chapters.md
+KomodoPlatform/Mastering_CryptoConditions
+Mastering_CryptoConditions - How to write utxo based CryptoConditions contracts for KMD chains - by jl777
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+{Reactions}
+🚀 
+
+[25-Aug-18 06:49 AM] TonyL#3577
+@grewalsatinder https://github.com/KomodoPlatform/Mastering_CryptoConditions/pull/1 I want to start adding Russian translation. Is such folder structuring is ok?
+
+{Embed}
+https://github.com/KomodoPlatform/Mastering_CryptoConditions/pull/1
+Started Russian translation. Readme.txt done by tonymorony · Pull...
+https://avatars1.githubusercontent.com/u/24797699?s=400&v=4
+
+[25-Aug-18 06:50 AM] TonyL#3577
+Like this
+
+{Attachments}
+https://cdn.discordapp.com/attachments/455851625915875338/482803988392181761/unknown.png
+
+[25-Aug-18 06:58 AM] grewalsatinder#9653
+@TonyL thanks mate, merged it 🙂 👍
+
+{Reactions}
+👍 🙌 (2) 
+
+[25-Aug-18 06:58 AM] grewalsatinder#9653
+yes looks fine
+
+[25-Aug-18 06:58 AM] grewalsatinder#9653
+just push any reformatting, restructuring of the directory/files structure as you find best
+
+[25-Aug-18 06:59 AM] TonyL#3577
+@grewalsatinder Alright, thanks!
+
+{Reactions}
+👍 
+
+[25-Aug-18 10:06 AM] jl777c#5810
+we should also add all the rpc docs and test guides we have to the repo
+
+{Reactions}
+👍🏽 
+
+[25-Aug-18 10:06 AM] jl777c#5810
+so there is one place where someone can dig as deep as they want
+
+[25-Aug-18 10:31 AM] grewalsatinder#9653
+cool! @SHossain would need your help.
+
+[25-Aug-18 10:32 AM] grewalsatinder#9653
+just make a docs directory in Mastering_CryptoConditions repo, and can put your docs there.
+
+[25-Aug-18 10:33 AM] grewalsatinder#9653
+thanks mate 🙂
+
+[25-Aug-18 10:52 AM] SHossain#0007
+on it.
+
+[25-Aug-18 11:11 AM] SHossain#0007
+@jl777c @grewalsatinder everything has been ported from repo https://github.com/KomodoPlatform/Mastering_CryptoConditions/tree/master/rpc
+
+{Embed}
+https://github.com/KomodoPlatform/Mastering_CryptoConditions/tree/master/rpc
+KomodoPlatform/Mastering_CryptoConditions
+Mastering_CryptoConditions - How to write utxo based CryptoConditions contracts for KMD chains - by jl777
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[25-Aug-18 11:12 AM] grewalsatinder#9653
+great! thanks @SHossain 🙂 👍
+
+[25-Aug-18 11:14 AM] grewalsatinder#9653
+I renamed rpc directory to docs
+
+[25-Aug-18 11:14 AM] SHossain#0007
+sorry, i didnt' do that. thanks
+
+[25-Aug-18 11:14 AM] grewalsatinder#9653
+maybe should rename it to 'rpc_docs' ? 🤔
+
+[25-Aug-18 11:14 AM] grewalsatinder#9653
+what you think ?
+
+[25-Aug-18 11:15 AM] jl777c#5810
+plz dont rely on me for improvement ideas for the docs repo, this is more for onboarding new devs, so whatever will help with that, then lets just do it
+
+[25-Aug-18 11:15 AM] jl777c#5810
+different languages, definitely
+
+[25-Aug-18 11:15 AM] grewalsatinder#9653
+yes, agree
+
+[25-Aug-18 11:15 AM] grewalsatinder#9653
+leaving it as is then. 🙂
+
+[25-Aug-18 11:16 AM] SHossain#0007
+👍🏽
+
+[25-Aug-18 11:16 AM] SHossain#0007
+maybe you can put the `docs`  dir inside `EN` dir
+
+[25-Aug-18 11:16 AM] SHossain#0007
+just an idea to keep languages separate
+
+[25-Aug-18 11:17 AM] SHossain#0007
+or we can leave it as it is for English
+
+[25-Aug-18 11:17 AM] grewalsatinder#9653
+I think it is as is fine.
+most devs will look for english documentation/guide and rpc docs help.
+
+{Reactions}
+👍🏽 
+
+[25-Aug-18 11:17 AM] jl777c#5810
+yes, i think just to translate my doc is enough
+
+[25-Aug-18 11:18 AM] grewalsatinder#9653
+just would need to make the main readme file edited.
+I'll renamed current ReadMe.txt to `Index` file.
+and let's create a ReadMe.md file which shows some directions and info of this repo.
+
+[25-Aug-18 11:18 AM] grewalsatinder#9653
+gonna do it now
+
+[25-Aug-18 11:18 AM] SHossain#0007
+great!
+
+[25-Aug-18 11:49 AM] grewalsatinder#9653
+ReadMe.md added with some information about this repo:
+https://github.com/KomodoPlatform/Mastering_CryptoConditions
+
+{Embed}
+https://github.com/KomodoPlatform/Mastering_CryptoConditions
+KomodoPlatform/Mastering_CryptoConditions
+Mastering_CryptoConditions - How to write utxo based CryptoConditions contracts for KMD chains - by jl777
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+{Reactions}
+👍 
+
+[25-Aug-18 11:53 AM] SHossain#0007
+Looks nice @grewalsatinder
+
+[25-Aug-18 11:54 AM] grewalsatinder#9653
+Thanks 🙂
+
+[25-Aug-18 11:54 AM] SHossain#0007
+btw, i see another @grewalsatinder account
+
+[25-Aug-18 11:54 AM] SHossain#0007
+don't think that is you?
+
+[25-Aug-18 11:55 AM] SHossain#0007
+@grewalsatinder ^^
+
+[25-Aug-18 11:56 AM] grewalsatinder#9653
+I have two here in this komodo discord.
+
+[25-Aug-18 11:56 AM] SHossain#0007
+oh..ok.
+
+[25-Aug-18 11:56 AM] grewalsatinder#9653
+the other one is with different email.
+
+[25-Aug-18 11:56 AM] grewalsatinder#9653
+more than two! trouble. just better don't accept messages from any other user 😄
+
+[25-Aug-18 11:56 AM] grewalsatinder#9653
+check the profile
+
+[25-Aug-18 11:56 AM] SHossain#0007
+thanks for clarifying
+

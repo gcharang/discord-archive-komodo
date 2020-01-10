@@ -1,0 +1,397 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[14-Jun-19 09:34 AM] jorian#4555
+which you use to query the chain
+
+[14-Jun-19 09:34 AM] jorian#4555
+so yes, you connect to a different node for each assetchain
+
+[14-Jun-19 09:35 AM] Andy#1801
+Ok. So then I guess if you have KMD supported, it would be pretty easy to also support asset chains because everything is the same except for the port and name (and maybe some other parameters)?
+
+[14-Jun-19 09:36 AM] jorian#4555
+yep
+
+[14-Jun-19 09:36 AM] Andy#1801
+Ok thanks a lot!
+
+[14-Jun-19 09:36 AM] jorian#4555
+but, name is not the only identifier. if you define a chain with name ANDY and a premined supply of 20, and another chain called ANDY with a supply of 40, they will both be completely different chains, with different rpc port
+
+[14-Jun-19 09:37 AM] Andy#1801
+So name+supply is the identifier?
+
+[14-Jun-19 09:37 AM] Andy#1801
+I found this list: https://github.com/jl777/komodo/blob/dev/src/assetchains.json
+
+{Embed}
+https://github.com/jl777/komodo/blob/dev/src/assetchains.json
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[14-Jun-19 09:37 AM] jorian#4555
+no, even more. i don't know which parameters are the identifiers, maybe @blackjok3r can enlighten
+
+[14-Jun-19 09:38 AM] jl777c#5810
+basically all -ac parameters affect the chain magic
+
+[14-Jun-19 09:38 AM] gcharang#6833
+@Andy that list are the chains that have dPoW enabled
+
+[14-Jun-19 09:38 AM] jl777c#5810
+change anything and it is a different chain
+
+[14-Jun-19 09:38 AM] Andy#1801
+So then I guess there is still a little more to it (eg. to prevent "replay" attacks)
+
+[14-Jun-19 09:38 AM] blackjok3r#3181
+yes, there are like 2 ac params that allow height activation that do not change magic, everything else does.
+
+[14-Jun-19 09:38 AM] jl777c#5810
+block 1 will be different for all assetchains
+
+[14-Jun-19 09:38 AM] jl777c#5810
+then with the first notarization, it becomes permanent
+
+[14-Jun-19 09:39 AM] Andy#1801
+and if I try to create the exact same asset chain that someone has already created, it will be able to match that and then use the existing one?
+
+[14-Jun-19 09:39 AM] jl777c#5810
+identical parameters will connect to the same chain
+
+[14-Jun-19 09:40 AM] jl777c#5810
+assuming you know the ip address of at least one of the existing nodes
+
+[14-Jun-19 09:42 AM] Andy#1801
+Ok, thanks a lot for the help so far. I'm just trying to get a feel for how much work is involved regarding integrating that into a wallet. I'll have to do a deep-dive once we actually start integrating.
+
+[14-Jun-19 09:43 AM] Andy#1801
+Are there public nodes that you can query over HTTP? Or a list of asset-chains and a node you can connect to?
+
+[14-Jun-19 09:43 AM] jl777c#5810
+you should be able to have a COIN variable that is used to talk to the different daemons. if issuing rpc calls via komodo-cli just add -ac_name=<COIN>
+
+[14-Jun-19 09:44 AM] jl777c#5810
+it talking to the rpc port, then find the rpc port for each coin and can use curl or equivalent to that port
+
+[14-Jun-19 09:45 AM] Andy#1801
+ok makes sense. Is there a standard "indexer" or "middleware" that can be used to get things like transaction histories etc? I saw you use bitpay insight, but since that one is deprecated, maybe there is a new one?
+
+[14-Jun-19 09:46 AM] Andy#1801
+That will be my last question, promised 😛
+
+[14-Jun-19 09:46 AM] jorian#4555
+you can never ask too many questions
+
+[14-Jun-19 09:46 AM] jorian#4555
+we'd rather have millions of questions than no questions
+
+[14-Jun-19 09:46 AM] jorian#4555
+insight is still a thing though
+
+[14-Jun-19 09:47 AM] jorian#4555
+https://dexstats.info/explorers.php lists all explorers for all chains known
+
+{Embed}
+https://dexstats.info/explorers.php
+Dexstats Dashboard - BarterDEX
+Explorer Links and Money Supply Data for KMD Ecosystem Coins
+
+[14-Jun-19 09:47 AM] Andy#1801
+I believe people should try to read first and try to figure it out themselves, and only after that ask questions. There's a reason why people write FAQs and blogposts.
+
+[14-Jun-19 09:49 AM] Andy#1801
+Thanks! That website was exactly what I was looking for 😃
+
+[14-Jun-19 09:49 AM] jorian#4555
+👍
+
+[14-Jun-19 09:50 AM] jorian#4555
+KMD is undergoing a rebrand, lots of documentation is being created so having a fresh set of eyes going through the documentation and pointing out unclear parts is only good
+
+[14-Jun-19 09:51 AM] Andy#1801
+👍
+
+[14-Jun-19 09:51 AM] jl777c#5810
+@Andy just sync the chain with -addressindex=1 and -spentindex=1
+
+[14-Jun-19 09:51 AM] jl777c#5810
+then the daemon directly supports the address based calls to get balances, utxo, history
+
+[14-Jun-19 09:51 AM] jl777c#5810
+it is what the explorers use
+
+[14-Jun-19 09:52 AM] Andy#1801
+ok, will do 😃
+
+[14-Jun-19 09:56 AM] gcharang#6833
+@Andy the insight api from the explorers does work
+
+https://github.com/DeckerSU/insight-api-komodo#api-http-endpoints
+all of them should work, just replace
+`insight-api` with `insight-api-komodo`
+ex: https://kmdexplorer.io/insight-api-komodo/tx/a61ff1eee265777890a1c87f286d93ff5d45c336f3c22ac7b0b0b287e580c3f9
+
+but the explorers have ratelimits so be vary about that
+alternately you could run your own explorer for any assetchain you want using
+https://github.com/gcharang/komodo-install-explorer
+
+{Embed}
+https://github.com/DeckerSU/insight-api-komodo
+DeckerSU/insight-api-komodo
+Contribute to DeckerSU/insight-api-komodo development by creating an account on GitHub.
+https://avatars3.githubusercontent.com/u/22120003?s=400&v=4
+
+{Embed}
+https://github.com/gcharang/komodo-install-explorer
+gcharang/komodo-install-explorer
+Install a komodo assetchain block explorer. Contribute to gcharang/komodo-install-explorer development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/21151592?s=400&v=4
+
+[14-Jun-19 09:57 AM] jorian#4555
+the explorers itself don't have a rate limiter if you don't set one.
+
+[14-Jun-19 09:57 AM] gcharang#6833
+yeah, official ones do have ratelimits
+
+[14-Jun-19 10:11 AM] jorian#4555
+this falls outside the discussion, but those rate limiters are nginx limiters, not limiters from insight. all except the dexstats.info explorers suffer from that
+
+[14-Jun-19 10:19 AM] gcharang#6833
+I don't know if this setting matters, but this is present in the default install of insight explorer from decker's repo:
+```
+  "insight-api-komodo": {
+    "rateLimiterOptions": {
+      "whitelist": ["::ffff:127.0.0.1","127.0.0.1"],
+      "whitelistLimit": 500000, 
+      "whitelistInterval": 3600000 
+    }
+}
+```
+
+[14-Jun-19 10:45 AM] CHMEX#0686
+I tried now to resynch twice -ac_name=SEC from scratch and get stuck at 
+ "blocks": 145935,
+  "longestchain": 145938,
+
+[14-Jun-19 10:45 AM] CHMEX#0686
+latest beta
+
+[14-Jun-19 10:45 AM] CHMEX#0686
+sorry latest dev
+
+[14-Jun-19 11:23 AM] blackjok3r#3181
+might have to wait until all notaries update.
+
+[14-Jun-19 11:23 AM] blackjok3r#3181
+there could be a longer chain out there that is invalid on new codebase
+
+[14-Jun-19 11:24 AM] blackjok3r#3181
+Option is to force min blocks on new code to force the right chain to be longer
+
+[14-Jun-19 11:54 AM] Andy#1801
+@gcharang thanks!
+
+[14-Jun-19 11:55 AM] Andy#1801
+If the rate limit is IP-based then that shouldn't be an issue for us because the clients connect directly
+
+{Reactions}
+👍 
+
+[14-Jun-19 03:17 PM] Decker#3767
+@Deleted User you can't sign the tx offline ... bcz to sign raw transaction signer should know the vin amounts (!) ... this form requesting it from explorer. It can be implemented by other way, but it will be like a hell to users ... bcz they should enter each vin amount without any errors, otherwise sign will be incorrect.
+
+[14-Jun-19 03:18 PM] Decker#3767
+That's why i implement it user-friendly, just enter unsigned tx, it will request vin amounts automatically and sign it.
+
+[14-Jun-19 03:20 PM] Decker#3767
+vins included ... txid and vout_num ... but not amount ...
+
+[14-Jun-19 03:20 PM] Decker#3767
+unsigned tx doesn't contain any information of vins amount.
+
+[14-Jun-19 03:20 PM] Decker#3767
+use `decoderawtransaction` in komodod and you will understand.
+
+[14-Jun-19 03:21 PM] Decker#3767
+you will unable to answer on question "what's the amount of vin[0]" ...
+
+[14-Jun-19 03:21 PM] Decker#3767
+bcz your unsigned tx contains only txid and n fields.
+
+[14-Jun-19 03:23 PM] Decker#3767
+)) automatically ... if you will enter vin amounts ...
+
+[14-Jun-19 03:24 PM] Decker#3767
+created raw transaction will be without vin amounts anyway ... you will need to specify it separately at signing stage.
+
+[14-Jun-19 03:24 PM] Decker#3767
+with sapling ...
+
+[14-Jun-19 03:25 PM] Decker#3767
+just always remember one thing - unsigned raw tx don't contain vin amounts info. but for signing - it's needed.
+
+[14-Jun-19 03:26 PM] Decker#3767
+where you get it - from explorer, from your memory, doesn't matter. but for signing it's needed anyway. it's part of a signing process in sapling.
+
+[14-Jun-19 03:26 PM] jl777c#5810
+satoshi design
+
+[14-Jun-19 03:26 PM] Decker#3767
+if you just need to sign something offline - sync komodod, unplug internet cable and sign.
+
+[14-Jun-19 03:26 PM] jl777c#5810
+if the amount was put into the spending tx, you would need to validate it anyway to make sure it was indeed the correct value
+
+[14-Jun-19 03:27 PM] Decker#3767
+without sapling signing changes - all was little bit easier ...
+
+[14-Jun-19 03:27 PM] Decker#3767
+i'm agree.
+
+[14-Jun-19 03:34 PM] Decker#3767
+@Deleted User if you need to sign OOT tx (as i remember they not enabled sapling) - just clone repo https://github.com/DeckerSU/coinbin/commits/komodo (komodo branch) and revert last 2 commits.
+
+{Embed}
+https://github.com/DeckerSU/coinbin/commits/komodo
+DeckerSU/coinbin
+Javascript Bitcoin Wallet. Supports Multisig, Stealth, HD, SegWit, Bech32, Time Locked Addresses, RBF and more! - DeckerSU/coinbin
+https://avatars3.githubusercontent.com/u/22120003?s=400&v=4
+
+[14-Jun-19 03:36 PM] Decker#3767
+it's open source ... you can do with it what you want ...
+
+[14-Jun-19 04:32 PM] ashwin#5867
+I'm using macOS Mojave. When I use brew link boost I get an error `Linking /usr/local/Cellar/boost/1.70.0... 
+Error: Could not symlink include/boost
+/usr/local/include is not writable`.... Steps taken 1. `sudo chown -R $USER:admin /usr/local/include` 2. `brew doctor`
+Does anybody face this same problem.
+
+[14-Jun-19 04:53 PM] dukeleto#7326
+spinning up a linux docker container and doing all KMD development in that will avoid a lot of problems like this, but also requires learning more stuff. Compiling stuff on mac is rarely easy. But you are have a `homebrew` problem, which is deeper. Your homebrew install is broken and the permissions of /usr/local/include wrong. What are they and who owns the directory?
+
+[14-Jun-19 05:07 PM] ashwin#5867
+Currently, the directory is owned by $USER and the group is admin. The OS behavior is weird however, Ive moved to a Ubuntu system.
+
+[14-Jun-19 06:34 PM] dukeleto#7326
+ubuntu will let you concentrate on your code instead of other weird errors
+
+[14-Jun-19 06:35 PM] dukeleto#7326
+16.04 and 18.04 seem best. I have a 19.04 and it's "too new" for some things, so beware
+
+[15-Jun-19 01:08 PM] dukeleto#7326
+@Alright how concerned should I be about these warnings/errors about ccactivateht ? `https://gist.github.com/leto/c0fed22c8ecfef2d5554f86a7e102894`
+
+[16-Jun-19 08:21 AM] NutellaLicka#4241
+Has anyone had the output of their coins just stop like this?
+https://i.gyazo.com/275ec76c2fb5fd1b691f1113dec29a66.png
+
+half of the output is there, but for some reason, the other half isn't populating for a long while
+
+{Embed}
+https://i.gyazo.com/275ec76c2fb5fd1b691f1113dec29a66.png
+https://i.gyazo.com/275ec76c2fb5fd1b691f1113dec29a66.png
+
+[16-Jun-19 08:45 AM] NutellaLicka#4241
+I'm also getting a tonne of `socket send error Broken pipe (32)` messages in the debug.log
+
+[16-Jun-19 09:12 AM] NutellaLicka#4241
+Should I be worried about these?
+
+[16-Jun-19 09:50 AM] NutellaLicka#4241
+```ERROR: ContextualCheckTransaction(): transaction 8f07af13c3714ecd3f469e3396f5a1ad63f4c488825c7bfda79ea05292ce20b9 is expired, expiry block 413326 vs current block 413330```
+
+[16-Jun-19 09:56 AM] ComputerGenie 👴🏼📢#7004
+@NutellaLicka that tx was blocked in block 413307
+combined with the posts from an hr ago, I'd say you had/have connectivity issues and need to restart the daemon
+
+[16-Jun-19 09:57 AM] NutellaLicka#4241
+Thanks for the reply. I have 55 connections, and have only just restarted the daemon (2hrs ago) :S
+
+[16-Jun-19 09:59 AM] ComputerGenie 👴🏼📢#7004
+that you have connections doesn't mean that you don't have connectivity issues
+it could be jitter lag or intermittent cut-outs
+
+[16-Jun-19 11:01 AM] NutellaLicka#4241
+Yeah okay, thanks
+
+[16-Jun-19 11:01 AM] NutellaLicka#4241
+I'll investigate
+
+[16-Jun-19 11:54 AM] NutellaLicka#4241
+It looks as though it is only happening on Pirate, weird. All other chains seem to have fine connection without these issues.
+
+[16-Jun-19 11:59 AM] ComputerGenie 👴🏼📢#7004
+if all is right on your end, it is also possible that someone else is having an issue and you're receiving and not processing their issues
+
+[16-Jun-19 12:00 PM] NutellaLicka#4241
+I'm getting a butt tonne of ```ERROR: AcceptToMemoryPool: joinsplit requirements not met
+2019-06-16 11:58:13 ERROR: AcceptToMemoryPool: joinsplit requirements not met
+2019-06-16 11:58:24 ERROR: AcceptToMemoryPool: inputs already spent
+2019-06-16 11:58:30 ERROR: AcceptToMemoryPool: joinsplit requirements not met
+2019-06-16 11:59:06 ERROR: AcceptToMemoryPool: tx inputs not found
+2019-06-16 11:59:06 ERROR: AcceptToMemoryPool: tx inputs not found
+2019-06-16 11:59:14 ERROR: AcceptToMemoryPool: joinsplit requirements not met```
+Along with the socket errors
+```socket recv error Connection timed out (110)```
+
+[16-Jun-19 12:01 PM] NutellaLicka#4241
+I've completely restarted the server and daemon and still get these issues
+
+[16-Jun-19 12:25 PM] NutellaLicka#4241
+!arrrtip @ComputerGenie 👴🏼📢 20
+
+[16-Jun-19 12:26 PM] ARRR TipBot#1743
+
+{Embed}
+TipBot
+@NutellaLicka (NutellaLicka#4241)
+You tipped @ComputerGenie 👴🏼📢 **19.9999 ARRR**
+A network fee of 0.0001 ARRR was deducted from the amount.
+This operation is pending. You will be notified when when it has finished.
+
+[16-Jun-19 12:26 PM] ComputerGenie 👴🏼📢#7004
+tnks
+
+[18-Jun-19 02:59 PM] qiutiepeng0525#5991
+Turn to the administrator
+I the number of the number and ZEXO ZEX AGAMA purse is not equal to! Wallet version is 0.5.7! How does ability let ZEX and ZEXO equal amount?
+
+[18-Jun-19 08:58 PM] ComputerGenie 👴🏼📢#7004
+ZEXO = ZEX **only** until the cutoff block
+any ZEX you got *after* that block will not be ZEXO
+
+{Reactions}
+☝🏼 
+
+[19-Jun-19 01:28 PM] coinmonks || CoinCodeCap#8469
+can you asset chains have same name?
+
+[19-Jun-19 01:38 PM] coinmonks || CoinCodeCap#8469
+Will it not create conflict if both subscribe for dPoW
+
+[19-Jun-19 01:40 PM] ComputerGenie 👴🏼📢#7004
+Not sure anyone wants to be the first to find out 😛
+
+{Reactions}
+💯 
+
+[19-Jun-19 01:43 PM] jl777c#5810
+the restriction is all dPoW coins must have unique names
+
+[19-Jun-19 01:43 PM] jl777c#5810
+it should work technically, but it could end up being a bit confused
+
+[19-Jun-19 01:49 PM] ComputerGenie 👴🏼📢#7004
+or in the case of BTC, it doesn't even mean that exchanges will accept your code :troll:
+
+{Reactions}
+troll 
+

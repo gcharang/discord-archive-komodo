@@ -1,0 +1,403 @@
+==============================================================
+Guild: Komodo
+Channel: notarynode
+Topic: Setup Guide: https://docs.komodoplatform.com/notary/setup-Komodo-Notary-Node.html
+Stats: https://komodostats.com
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[03-May-19 08:57 AM] mrlynch#5735
+and in crontab you can set any job to send alerts to telegram i.e.:
+`clean=$(~/nnutils/cleanwallettransactionskmdandacs.sh | tee -a ~/logs/clean_wallet.log 2>&1) && ~/nnutils/telegram/telegram_send.sh "[Clean Wallet Report]\%0A ${clean}"`
+
+[03-May-19 08:57 AM] mrlynch#5735
+that's what i've got
+
+[03-May-19 08:58 AM] mrlynch#5735
+easy way to get alerts and reports on the go
+
+{Reactions}
+👍 
+
+[03-May-19 08:59 AM] Mylo#8306
+`${clean}` ✅
+
+[03-May-19 08:59 AM] Mylo#8306
+`walletsize.sh` https://github.com/imylomylo/emc2-51-attack-alert/blob/master/telegram/walletsize.sh
+
+{Embed}
+https://github.com/imylomylo/emc2-51-attack-alert/blob/master/telegram/walletsize.sh
+imylomylo/emc2-51-attack-alert
+Some scripts to get some warnings of mining rate increases - imylomylo/emc2-51-attack-alert
+https://avatars3.githubusercontent.com/u/19399102?s=400&v=4
+
+{Reactions}
+👌 
+
+[03-May-19 08:59 AM] mrlynch#5735
+yeah.. took me a while to figure out the format for new line for telegram tho 😂
+
+[03-May-19 09:01 AM] mrlynch#5735
+i want to setup zabbix for all servers though... have pretty dashboards and wall full of monitors
+
+[03-May-19 09:01 AM] mrlynch#5735
+better visualization than tmux i reckon
+
+[03-May-19 09:02 AM] Mylo#8306
+monitoring introduces security risk
+
+[03-May-19 09:03 AM] Mylo#8306
+```
+#!/bin/bash
+TELEGRAMDIR=/home/pioneermylo/bin/telegram
+#${TELEGRAMDIR}/telegram_send.sh "${MESSAGE}"
+FILE="/home/pioneermylo/report.utxo.txt"
+echo "" > ${FILE}
+AC=$(cat /home/pioneermylo/komodo/src/assetchains.json | jq -r '.[]|.ac_name')
+for i in ${AC}
+do
+  UTXO_COUNT=$(/home/pioneermylo/bin/komodo-cli -ac_name=${i} listunspent | grep 10000 | wc -l)
+  echo "${UTXO_COUNT} UTXOs for ${i}" >> ${FILE}
+done
+UTXO_COUNT=$(/home/pioneermylo/bin/komodo-cli listunspent | grep 10000 | wc -l)
+echo "${UTXO_COUNT} UTXOs for KMD" >> ${FILE}
+SORTED=$(cat ${FILE} | sort -g)
+${TELEGRAMDIR}/telegram_send.sh "${SORTED}"
+cat ${FILE} | sort -g
+echo "this has been sent via telegram"
+```
+
+{Reactions}
+🙏 
+
+[03-May-19 09:03 AM] Mylo#8306
+that spits out your UTXO count for assetchains via telegram.  handy sometimes 😃
+
+[03-May-19 09:05 AM] mrlynch#5735
+i'm aware of the security risk. but i'm looking at dwy's stats dashboard setup -> have a json scp-ed to a proxy and make a template.. unfortunately i don't know zabbix that well, challenge is making a template out of a json
+
+[03-May-19 09:05 AM] Mylo#8306
+yeah - json scp is best
+
+[03-May-19 09:05 AM] Mylo#8306
+just scp text files with values,   not even a key=value.  just value.
+
+{Reactions}
+🤔 
+
+[03-May-19 09:05 AM] Mylo#8306
+i used ot use zabbix in telco
+
+[03-May-19 09:06 AM] Mylo#8306
+custom monitoring type
+
+[03-May-19 09:06 AM] mrlynch#5735
+thanks for the tip... we had zabbix at one of my previous jobs, but it was all internal
+
+[03-May-19 09:06 AM] mrlynch#5735
+getting it to work securely across multiple dc's ... not really keen on it
+
+[03-May-19 09:06 AM] mrlynch#5735
+but for ease of monitoring i have to come up with something 😄
+
+[03-May-19 09:06 AM] Mylo#8306
+there's a helpful tutorial for zabbix on monitoring if a file exists.   it will report 1, and your graph will be happy.
+
+[03-May-19 09:07 AM] Mylo#8306
+follow that tutorial.
+
+[03-May-19 09:07 AM] Mylo#8306
+same thing, except for if file exists, read the value out of the file.
+
+[03-May-19 09:07 AM] Mylo#8306
+i used to do this for SIP trunk latencies.
+
+[03-May-19 09:07 AM] mrlynch#5735
+thanks
+
+[03-May-19 09:08 AM] Mylo#8306
+zabbix used to have agents communicate unencrypted.  you can use stunnel to encrypt between agent -> server or agent -> proxy.  but much safer to scp values to a filename on an external box.
+
+[03-May-19 09:09 AM] Mylo#8306
+i think they use encryption now 😃
+
+[03-May-19 09:09 AM] mrlynch#5735
+they use stunnels now
+
+[03-May-19 09:09 AM] Mylo#8306
+lol
+
+[03-May-19 09:09 AM] mrlynch#5735
+so maybe that could work, after all it's an outbound connection to a proxy 🤔
+
+[03-May-19 09:10 AM] mrlynch#5735
+i just have to trust the agent 😄
+
+[03-May-19 09:11 AM] Mylo#8306
+no.  def not :D
+unless you audit the code.   you lose your keys to someone it's all over.
+
+[03-May-19 09:15 AM] mrlynch#5735
+`Connections in Zabbix can use:
+
+no encryption (default)
+RSA certificate-based encryption
+PSK-based encryption`
+
+{Reactions}
+🤔 
+
+[03-May-19 09:16 AM] Mylo#8306
+https://web.archive.org/web/20130429195840/http://mrvoip.com.au/blog/secure-zabbix-proxy-communications-stunnel
+
+[03-May-19 09:17 AM] Mylo#8306
+back when i used centos 😃
+
+[03-May-19 09:19 AM] mrlynch#5735
+thanks for that... am thinking at 2 centos 7 boxes - server & proxy; nodes -> proxy -> server; silly monkey (me) watches dashboard from server 😄
+
+[03-May-19 09:19 AM] mrlynch#5735
+and have them 2 boxes on the same lan
+
+[03-May-19 09:20 AM] mrlynch#5735
+mind if i DM u?
+
+[03-May-19 09:20 AM] Mylo#8306
+try it
+
+[03-May-19 09:20 AM] mrlynch#5735
+lol
+
+[03-May-19 09:39 AM] Mylo#8306
+@TonyL has tested centos fyi @mrlynch not sure what you're using atm.
+worst case you can compile everything like gentoo 😃
+
+[03-May-19 09:40 AM] mrlynch#5735
+using deb 9 atm.. running daemons on centos is more of a "it can be done, here's how" kinda thing
+
+[03-May-19 09:42 AM] TonyL#3577
+I've stopped my tests because of no visual demand 😃
+
+[03-May-19 09:52 AM] Mylo#8306
+did you have any notes @TonyL ?
+
+[03-May-19 09:53 AM] TonyL#3577
+I tested only Agama and it did not work properly
+
+[03-May-19 09:54 AM] Mylo#8306
+oh like desktop, not compiling komodo
+
+[03-May-19 09:54 AM] TonyL#3577
+Yeah, used GUI 😃 Can try to compile Komodo, sounds like an intetesting quest
+
+[03-May-19 09:55 AM] Mylo#8306
+i used to compile voip systems on centos 6, i'll get the pre-req list as a starter on a gist
+
+[03-May-19 09:55 AM] TonyL#3577
+Just afraid that there is not enough demand to support it
+
+[03-May-19 09:56 AM] TonyL#3577
+I had to use Centos 7.1 as everyday OS on previous job
+
+[03-May-19 09:56 AM] TonyL#3577
+And lamp stack lol
+
+[03-May-19 09:56 AM] Mylo#8306
+`yum install -y `
+
+[03-May-19 09:56 AM] TonyL#3577
+`setenforce 1`
+
+[03-May-19 09:57 AM] Mylo#8306
+ok thanks i'll test for a quick install
+
+[03-May-19 09:57 AM] Mylo#8306
+no, i disabled selinux 😦
+
+[03-May-19 09:57 AM] TonyL#3577
+Dives into jungles of this military oriented selinux are unforgetable
+
+{Reactions}
+🤕 
+
+[03-May-19 09:58 AM] mrlynch#5735
+selinux rocks 😄  also source of great frustration 😂
+
+[03-May-19 09:58 AM] NutellaLicka#4241
+How does it work if somebody is only "running" a node for a team or somebody else, but also has their own node in the same region? How would that issue be addressed?
+
+[03-May-19 09:58 AM] Mylo#8306
+i had a fedora desktop with the selinux gui to get the command for the rule modifications on teh centos server 😃
+
+{Reactions}
+😂 3040_kingpeepo 
+
+[03-May-19 09:59 AM] Mylo#8306
+@NutellaLicka good question
+
+[03-May-19 09:59 AM] mrlynch#5735
+well, it seems that there's enough interest in centos/fedora to get this goin.. 3 of us is enough right? 😂
+
+[03-May-19 09:59 AM] Mylo#8306
+not for me for prod without testing for ages
+
+[03-May-19 10:00 AM] mrlynch#5735
+i only said to get it going 😄
+
+[03-May-19 10:00 AM] Mylo#8306
+don't have time atm, too many scripts to change 😃  too little time
+
+[03-May-19 10:00 AM] mrlynch#5735
+after election
+
+[03-May-19 10:03 AM] Mylo#8306
+testing a quick compilation now
+
+[03-May-19 10:09 AM] NutellaLicka#4241
+In relation to chats earlier. I personally believe that the more new notaries, the more new and exciting people/teams will be able to devote time to the KMD ecosystem (although as proven by a lot of people in here, not being a NN doesnt proclude you from inputting into to the ecosystem). Having multiple nodes would also aid some people to devoting almost full time work to the ecosystem which I see as the main benefit or reason to vote somebody, or some specific project in for multiple nodes.
+My personal opinion for the question I posed just before is that if you're "running" a node for somebody or some team, you are apart of that team, therefor, you shouldnt be able to run for another node, personally or with another team.
+
+[03-May-19 10:14 AM] Mylo#8306
+agree on everything but the multiple team rule.    the same region different team is interesting.   i've done it on purpose to see what happens.
+
+[03-May-19 10:24 AM] Mylo#8306
+@kolo same sys admin, different team, same region.   what is the rule?
+
+[03-May-19 10:29 AM] NutellaLicka#4241
+If you're running a node, you're effectively the one securing komodo and all of the assetchains. If Notary Node "sysadmins" are allowed, it will pave the way of a select few actually knowing how to run NN's who are paid by teams to run the nodes for them. Isnt the whole idea of having 4 regions with different node operators to decentralise the notarisation process. If what you're saying is allowed. You could have a single region where 1 person "sysadmins" every single node in that region. This could actually happen if people didnt know the team they were voting for hired someone to run their node for them.
+
+{Reactions}
+👍 
+
+[03-May-19 10:37 AM] Mylo#8306
+this is extreme:  `You could have a single region where 1 person "sysadmins" every single node in that region. `
+this will probably happen one day: `hired someone to run their node for them`
+i'm not arguing against, just pointing out some weakness.  refine it a bit to make a better case.
+
+[03-May-19 10:40 AM] NutellaLicka#4241
+It may seem "extreme", but it is achieveable within that rule set. Which will in turn make people question "are komodo notary nodes actually decentralised" (more than they already do, justified or not).
+Im not trying to call you out @Mylo I am just questioning the system more than anything. I want the notarisation process to be the best it can be, as it was intended to be. 
+As you've stated yourself in your cakeshop proposal `"Mylo is the lead tech of the komodo pioneers team"` and komodo pioneers have said you're part of their team in their proposal `"Some of our team are Komodo Platform team members (mylo, "`
+
+[03-May-19 10:41 AM] Mylo#8306
+yep i'm on the webpage too 😃
+
+[03-May-19 10:41 AM] NutellaLicka#4241
+I appreciate the disclosure and openness!
+
+[03-May-19 10:41 AM] Mylo#8306
+it's a DAO concept, so anyone is a pioneer 😄
+
+[03-May-19 10:43 AM] Mylo#8306
+yeah, i'm interested in getting a somewhat watertight set of rules, like the legal framework, it's something to challenge and fix
+
+[03-May-19 10:43 AM] Mylo#8306
+watertight is wrong word.   a loose set of rules that has clear guidelines etc.
+
+[03-May-19 10:44 AM] Mylo#8306
+it's a purposely tricky situation.  thanks for raising it
+
+[03-May-19 10:48 AM] NutellaLicka#4241
+Notary Node consensus rules perhaps?
+No worries, again, I dont doubt your ability, or question your contribution to the community, just questioning whether this is within the rule set or not. Happy to discuss openly.
+
+[03-May-19 11:08 AM] Mylo#8306
+ditto 100% & thanks for your kind words :)
+no hard feelings, cakeshop SH is there for this reason.
+🍕 reward now 😃
+
+[03-May-19 12:09 PM] kolo#1111
+It’s easy, if we find someone running two nodes in a same region - we disqualify both.
+
+[03-May-19 12:10 PM] kolo#1111
+If sysadmin as hired sysadmin - that’s not a problem as long, as you’re not a single person for both nodes.
+
+[03-May-19 12:10 PM] kolo#1111
+By last years - it’s easy to discover during normal day to day work
+
+[03-May-19 12:11 PM] kolo#1111
+@Mylo
+
+[03-May-19 12:15 PM] kolo#1111
+Most of the tricky rules IMO should be not the rules, but decisions made by voters. It’s their work to select better nn. If they see one person running under two names and still vote for him up to “elected” amount for both... uh... they shoot in both legs... 😉
+
+[03-May-19 12:15 PM] kolo#1111
+Just my opinion
+
+[03-May-19 01:53 PM] CrisF#3405
+🍀 🍀 :labs:🍀 🍀 
+Hi Everyone,
+We'll be having a game in #kmdlabs shortly that we'll be using to test a new CC. Just need to send Blackjok3r or I an R address to start. There will be prizes in LABS, and possibly in KMD, when we get enough people. There is info pinned in the channel and you can ask questions there.
+🍀 🍀 :labs:🍀 🍀
+
+{Reactions}
+3040_kingpeepo (2) 
+
+[03-May-19 02:06 PM] Carlos Crypto Economy#7861
+Hi guys, as promised, we have set Komodo as the Crypto of the Month in our website: https://www.crypto-economy.net/en/the-crypto-of-the-month-komodo-kmd/ also we are running a giveaway to promote the adoption: https://gleam.io/e0c3H/the-crypto-of-the-month-komodo-crypto-economy-giveaway-200-kmd-in-prizes
+
+{Embed}
+https://www.crypto-economy.net/en/the-crypto-of-the-month-komodo-kmd/
+The Crypto Of The Month - KOMODO [KMD] - Crypto Economy
+The crypto of the month will be dedicated to the Komodo platform, a project that is focused on anonymity, security, interoperability and adaptability.
+https://www.crypto-economy.net/wp-content/uploads/2019/04/KOMODO-LCDM-ENG.jpg
+
+{Embed}
+https://gleam.io/e0c3H/the-crypto-of-the-month-komodo-crypto-economy-giveaway-200-kmd-in-prizes
+The Crypto of the Month: Komodo - Crypto Economy Giveaway - 200 KM...
+Welcome to the contest: The Crypto of the Month : Komodo, from Crypto Economy where we will give away 200 KMD among the 5 lucky winners (First prize: 100 KMD, 2nd prize: 40 KMD and 3 prizes of 20 KMD). The time window to participate begins on May 3 and ends on April 30.
+https://d36eyd5j1kt1m6.cloudfront.net/user-assets/1277505/kSVfDKp8VToJBYUE/komodo-gleam.jpg
+
+{Reactions}
+👍 (3) 👏 (4) 🙏 👌 
+
+[03-May-19 03:01 PM] Alright#0419
+@deleted-role `git pull` `./m_notary_testnet` please
+added keys for mylo and lowered sigs to 11
+
+{Reactions}
+☑ (14) 
+
+[03-May-19 03:05 PM] Strob#3417
+Cool, just before I was going to sleep! 💤 (I mean good timing cause I will loose less notas all night!)
+
+{Reactions}
+abusedsmily (2) 
+
+[03-May-19 03:15 PM] blackjok3r#3181
+started my NN in tokyo with `-DCHECKNODEIP=1` in the build script, lots of dead ips here aswell. Seems to have helped main net node but only been 1 day.
+
+[03-May-19 03:19 PM] Strob#3417
+what does it do exactly?
+
+[03-May-19 03:25 PM] NutellaLicka#4241
+`It’s easy, if we find someone running two nodes in a same region - we disqualify both.
+If sysadmin as hired sysadmin - that’s not a problem as long, as you’re not a single person for both nodes.`
+Confirm you're contradicting yourself here?
+
+[03-May-19 03:25 PM] NutellaLicka#4241
+@kolo
+
+[03-May-19 03:33 PM] PHBA2061#2530
+I think what he meant here is if the person who managed the nodes is hired, then the teams won't be disqualified if it happens to be the same person
+
+[03-May-19 04:40 PM] NutellaLicka#4241
+Are there no other NN's/NN candidates/komodo holders/dpow coin holders that have opinions on this? I would be interested to hear them.
+
+[03-May-19 04:47 PM] NutellaLicka#4241
+Also @kolo you mention that it is "your opinion". But confirm you're the election master? (Feel free to fill me in of these duties if I am misguided)
+I apologise if I'm questioning too many controversial topics. I also don't blame other NN candidates for not commenting. I understand how this could negatively impact their candidateship.
+
+[03-May-19 04:48 PM] jl777c#5810
+as long as you arent running more than one node in a region, there is no controversy
+
+[03-May-19 04:48 PM] jl777c#5810
+if you do, then you need to make sure it is an allowed case, otherwise disqualified
+
+[03-May-19 04:49 PM] NutellaLicka#4241
+That is exactly what we are discussing..
+
+[03-May-19 04:49 PM] jl777c#5810
+not sure what the confusion is
+

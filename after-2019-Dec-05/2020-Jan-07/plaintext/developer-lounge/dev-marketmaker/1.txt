@@ -1,0 +1,211 @@
+==============================================================
+Guild: Komodo
+Channel: dev-marketmaker
+Topic: Discussion about AtomiAPI and its market making tech.
+After: 06-Jan-20 12:00 AM
+Before: 07-Jan-20 12:00 AM
+==============================================================
+
+[06-Jan-20 07:36 AM] smk762#7640
+@Patrick Crypto I've updated my local mm2 binary and coins file using pytomicDEX, and not faced any problems. Never got a DM from you to explain what issue you had, so not sure what the problem you had was. If you are still having a problem, please post it to https://github.com/smk762/pytomicDEX/issues
+
+{Embed}
+https://github.com/smk762/pytomicDEX/issues
+smk762/pytomicDEX
+Contribute to smk762/pytomicDEX development by creating an account on GitHub.
+https://avatars3.githubusercontent.com/u/35845239?s=400&v=4
+
+[06-Jan-20 07:51 AM] zatJUM#9924
+@smk762 Why is it mandatory to fill binance API keys to use pytomicDEX?
+
+[06-Jan-20 09:26 AM] smk762#7640
+heh, didnt realise it was mandatroy, I've always had them in...  should work with an empty value tho. lemme check
+
+[06-Jan-20 09:26 AM] smk762#7640
+cant bot trade without it tho
+
+[06-Jan-20 09:29 AM] smk762#7640
+yeah, seems to work with blank values, tho error handling could be better.
+
+[06-Jan-20 09:50 AM] smk762#7640
+@zatJUM updated to omit tui menu items requiring binance keys. You'll still need to set them to empty value in api_keys.json tho, but I've made it automatically do that if user doesnt
+
+{Reactions}
+👌
+
+[06-Jan-20 09:53 AM] zatJUM#9924
+It's still querying Binance:```Getting prices from Binance...
+Getting prices from CoinGecko...
+Getting prices from mm2 orderbook...
+ --------------------------------------------------------------------------------------------------------------------------------------------------------
+ |   COIN   |          ADDRESS (green = bot trading)           |  BALANCE  |   BTC PRICE    | BTC VALUE | USD PRICE | USD VALUE | AUD PRICE | AUD VALUE |
+ --------------------------------------------------------------------------------------------------------------------------------------------------------```
+
+[06-Jan-20 09:53 AM] zatJUM#9924
+```Traceback (most recent call last):
+  File "./mm2_tui.py", line 140, in <module>
+    main()
+  File "./mm2_tui.py", line 117, in main
+    list(menuItems[int(choice)].values())[0](local_ip, userpass)
+  File "lib/tuilib.py", line 566, in show_balances_table
+    for coin in coins_data:
+TypeError: 'NoneType' object is not iterable```
+
+[06-Jan-20 01:41 PM] smk762#7640
+it'll query binance for prices, no api keys required. You can see it passes that step, then gets prices from coingecko without issue.
+
+[06-Jan-20 01:58 PM] smk762#7640
+I've added an error print in the build_coins_data() function. Git pull and let me know if it displays more info.
+
+[06-Jan-20 02:30 PM] zatJUM#9924
+```Getting prices from mm2 orderbook...
+Error getting KMD price: 'asks'
+Error getting KMD price: 'asks'
+Error getting KMD price: 'asks'
+Error getting KMD price: 'asks'
+Error getting KMD price: 'asks'
+Error getting KMD price: 'asks'
+Error getting KMD price: 'asks'
+Error getting KMD price: 'asks'```
+
+[06-Jan-20 03:43 PM] smk762#7640
+cool, so working otherwise? I'll try and make that a silent fail. Do you have KMD activated?
+
+[06-Jan-20 04:29 PM] zatJUM#9924
+Yes. Electrum
+
+[06-Jan-20 05:59 PM] cipi#4502
+@artem.pikulin yes, no need to change anything because of AXE
+i have another thing... saw couple of swaps failing because the MakerPayment sent by the Maker can't be seen by the Taker
+eg, `3cada8bf-95ba-4acd-ba7a-735d3e0845a1`
+```
+MAKER
+         "event" : {
+            "data" : {
+               "tx_hash" : "1621e7f7c60d15b12bad6037410f147d5e7a510e624d0990bb2f6abef8ba530b",
+               "coin" : "KMD"
+            },
+            "type" : "MakerPaymentSent"
+         },
+         "timestamp" : 1578308266486
+```
+but taker errors with `MakerPaymentValidateFailed`
+`taker_swap:718] !wait for maker payment confirmations: rpc_clients:107] Waited too long until 1578310692 for transaction Transaction to be confirmed 2 times`
+1578310692 is `01/06/2020 @ 11:38am (UTC)`
+but https://kmdexplorer.io/tx/1621e7f7c60d15b12bad6037410f147d5e7a510e624d0990bb2f6abef8ba530b tells me `mined Jan 6, 2020 10:58:49 AM`
+
+[06-Jan-20 06:02 PM] cipi#4502
+don't know what the problem is, but i have seen this often in the last days...
+sometimes this swaps are working, but it takes very long
+```
+06 17:15:23, maker_swap:461] Maker payment tx 4b9bae8c93206972fa619a871904323afab1da9a6413c8cbab2d1efbc959076e
+06 17:15:23, maker_swap:483] Sending 'maker-payment@872230bd-d86c-4fa9-aa4f-026a993e9e47' (686 bytes, crc 2973208954)
+...
+| (38:47) [swap uuid=872230bd-d86c-4fa9-aa4f-026a993e9e47] Maker payment sent...
+06 17:52:36, maker_swap:492] Received 'taker-payment@872230bd-d86c-4fa9-aa4f-026a993e9e47' (244 bytes, crc 2926632879)
+06 17:52:36, maker_swap:509] Taker payment tx e8e0aa380dd6a1fea0f777414f9079a4c1145ac279c738e854643567300f024c
++--- 06 17:52:36 -------
+| (39:06) [swap uuid=872230bd-d86c-4fa9-aa4f-026a993e9e47] Taker payment wait confirm started...
+| (0:00/4:12) [ETH] Waiting for confirmations…
+· 2020-01-06 17:52:36 +0000 [ETH] Waiting for confirmations… Confirmed.
+06 17:52:37, eth:2234] Max nonce 182 != 181 min nonce
+· 2020-01-06 17:52:38 +0000 [sign-and-send] get_addr_nonce…
+06 17:52:38, maker_swap:588] Taker payment spend tx b95810af9d7b3368b181bc4e94b25a4e70881d684b3b89eab4325b8c36a8db2b
+· 2020-01-06 17:52:38 +0000 [swap uuid=872230bd-d86c-4fa9-aa4f-026a993e9e47] Finished
+```
+so it took the taker 39 minutes to see the KMD MakerPayment... and then the swap finished in 10s
+
+[06-Jan-20 06:05 PM] cipi#4502
+i also looked on the KMD electrums and they know about the MakerPayment-tx long before Taker knows about it... very strange
+
+[06-Jan-20 06:15 PM] cipi#4502
+https://kmdexplorer.io/tx/4b9bae8c93206972fa619a871904323afab1da9a6413c8cbab2d1efbc959076e was `mined Jan 6, 2020 5:20:52 PM` and it took the taker till 17:52:36 to see the tx...
+
+[06-Jan-20 06:26 PM] cipi#4502
+is the time the Taker "waits" for MakerPayment dependent on the used TakerCoin? MakerCoin was in both cases KMD, one swap made it after 32 minutes, the other failed after 39 minutes
+
+[06-Jan-20 06:46 PM] artem.pikulin#0794
+@cipi The `required_confirmations` is 2 for KMD which means that notarization is required. MM2 uses standard 2/4 hours locktimes for KMD swap tx. And also it doesn't wait for full locktime to expire while checking confirmations, it uses 1/3 of the locktime which is ~40 minutes in this case: https://github.com/KomodoPlatform/atomicDEX-API/blob/mm2/mm2src/lp_swap/maker_swap.rs#L534
+So when KMD notarization takes over ~40 minutes the swap will be aborted.
+It's also true for all asset chains using `required_confirmations: 2`.
+
+{Embed}
+https://github.com/KomodoPlatform/atomicDEX-API/blob/mm2/mm2src/lp_swap/maker_swap.rs
+KomodoPlatform/atomicDEX-API
+This is the official AtomicAPI (atomicDEX API) repository - KomodoPlatform/atomicDEX-API
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[06-Jan-20 06:52 PM] jl777c#5810
+can you wait for 2/3 of locktime?
+
+[06-Jan-20 06:57 PM] cipi#4502
+ok, i forgot that KMD waits for 2 confs (nota)... the setting is not in the coins file https://github.com/jl777/coins/blob/master/coins#L13 for KMD, so my nodes are still using only 1 confirmation for KMD
+but i fear that when i change my settings to 2 too, more swaps will fail
+
+{Embed}
+https://github.com/jl777/coins/blob/master/coins
+jl777/coins
+coin parameters and all files needed for GUI support - jl777/coins
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[06-Jan-20 06:59 PM] jl777c#5810
+i think some notarizations could have 40 minute gaps, but very few would be 80 minute gaps
+
+[06-Jan-20 06:59 PM] jl777c#5810
+or maybe the logic can be that if there is one confirmation to wait a bit longer? the other side has done their part and it is now waiting for the blockchain
+
+[06-Jan-20 08:17 PM] artem.pikulin#0794
+@jl777c  `can you wait for 2/3 of locktime?` yes, it's 1 line backwards compatible change. However we might still have to increase the locktime especially when 2 notarized coins are swapped. E.g. if on DEX/KMD swap DEX payment (4h locktime) takes 80 minutes for notarization and then KMD payment (2h locktime) takes 80 minutes for notarization the KMD payment will be refundable right away. So it should be 40/20 hours (same as BTC) or bit lower as we have a request to decrease BTC payments locktime.
+
+[06-Jan-20 08:20 PM] jl777c#5810
+not sure why there is a need to boost the locktimes 10x for KMD. if it is made to be 2/3rds, it should solve this issue
+
+[06-Jan-20 08:29 PM] artem.pikulin#0794
+If there's 80 minutes gap for case when 2 notarized coins are swapped total confirmation times of 2 payments will be 160 minutes which is more than 120 minutes taker payment locktime so it is already refundable at this time and swap doesn't make sense. Notarization means that we actually wait for BTC block confirmation, right? Then we should use same locktime as we use for BTC (which is 10x now).
+
+[06-Jan-20 08:36 PM] artem.pikulin#0794
+If only 1 coin is slow the `2/3` will do the trick, but if both are slow then standard locktimes might be not sufficient.
+
+[06-Jan-20 09:13 PM] TonyL#3577
+`don't know what the problem is, but i have seen this often in the last days...` in one of the latest AtomicDEX mobile GUI updates for users funds safety reasons `required_confirmations: 2` param was added for KMD and all Komodo ecosystem ACs, I think it should be related
+
+[06-Jan-20 09:31 PM] cipi#4502
+yes, i forgot about the 2 confs required for KMD too... and maybe the problem is not that big, it is just that i now look more often into the details of failed swaps since i set up the DB with the errors
+so i would not increase timeout on KMD/ACs too much
+
+[06-Jan-20 09:44 PM] cipi#4502
+```
++---------------------+------------+------------+----------------------------+
+| started_at          | taker_coin | maker_coin | taker_error_type           |
++---------------------+------------+------------+----------------------------+
+| 2020-01-06 05:32:31 | LTC        | KMD        | MakerPaymentValidateFailed |
+| 2020-01-06 06:03:20 | TUSD       | KMD        | MakerPaymentValidateFailed |
+| 2020-01-06 08:10:43 | LTC        | KMD        | MakerPaymentValidateFailed |
+| 2020-01-06 10:54:52 | LTC        | KMD        | MakerPaymentValidateFailed |
+| 2020-01-06 16:37:59 | KMD        | DEX        | MakerPaymentValidateFailed |
++---------------------+------------+------------+----------------------------+
+```
+swaps with this type of error in the last 24h... there were 2 or 3 others with `MakerPaymentValidateFailed`, but not this kind
+
+[06-Jan-20 09:48 PM] cipi#4502
+if all our theories are correct, then it means that notarization on KMD chain was delayed more than 40 min. at least 4 times in the last 24h... can that be?
+
+[06-Jan-20 10:08 PM] cipi#4502
+i will setup a check in nagios and let it draw a simple chart `seconds since last notarization` with data taken from https://komodostats.com/api/notary/coin.json?coinName=KMD ... then  we will see
+i assume there is no such chart atm...
+
+[06-Jan-20 10:22 PM] Alright#0419
+do we have any documentation on the script of mm2 txes
+
+[06-Jan-20 10:23 PM] Alright#0419
+code where it's made would suffice as well
+
+[06-Jan-20 10:29 PM] Alright#0419
+https://github.com/KomodoPlatform/atomicDEX-API/blob/401425c5858c90b0381277131b872c481a37e79b/mm2src/lp_swap.rs#L22 nice
+
+{Embed}
+https://github.com/KomodoPlatform/atomicDEX-API/blob/401425c5858c90b0381277131b872c481a37e79b/mm2src/lp_swap.rs
+KomodoPlatform/atomicDEX-API
+This is the official AtomicAPI (atomicDEX API) repository - KomodoPlatform/atomicDEX-API
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+

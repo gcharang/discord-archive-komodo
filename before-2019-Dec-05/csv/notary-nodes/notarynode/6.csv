@@ -1,0 +1,354 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:12 AM";"Yeah, I'm leaning towards that tbh";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:13 AM";"that `jq` command is pretty horrific";"";"😄 (1)";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:13 AM";"and it also means whoever is tasting AC params can literally copy/pasta the args straight in";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:14 AM";"rather than having to smush them into some weird array syntax";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 06:14 AM";"yeah that too.  wanna make it easy for the copy pastas";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:15 AM";"jq works... so its fine :troll:";"";"🗣 (1)";
+"406037988850794496";"patchkez#5349";"27-Jun-18 06:19 AM";"but this assetchainparams.txt does not contain information like p2p or rpc port, so it is quite useless for me";"";"";
+"456226577798135808";"Deleted User#0000";"27-Jun-18 06:21 AM";"Afaik lazynode will just adapt whatever the args are to just continue launching with the same exact method.
+It just scans the asserchains file with args but never use it so json version will work too. As long as we got some sort of db (json) with all params it will be fine";"";"";
+"456226577798135808";"Deleted User#0000";"27-Jun-18 06:22 AM";"it s just modifying the parsing logic";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:23 AM";"To account for duplicate args JSON format needs to look like this:
+
+```
+cat assetchains.json
+[
+  [
+    [
+      ""ac_name"",
+      ""ZILLA""
+    ],
+    [
+      ""ac_supply"",
+      ""11000000""
+    ],
+    [
+      ""addnode"",
+      ""54.39.23.248""
+    ]
+  ],
+  [
+    [
+      ""ac_name"",
+      ""RFOX""
+    ],
+    [
+      ""ac_supply"",
+      ""1000000000""
+    ],
+    [
+      ""ac_reward"",
+      ""100000000""
+    ],
+    [
+      ""addnode"",
+      ""78.47.196.146""
+    ]
+  ]
+]
+```";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:23 AM";"that's pretty nasty";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:23 AM";"but it would allow adding custom meta";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:23 AM";"like RPC port etc";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:23 AM";"@patchkez why do you need p2p or rpc port?";"";"";
+"456226577798135808";"Deleted User#0000";"27-Jun-18 06:23 AM";"Unfixed and missing params could just be a mess to loop via jq btw...";"";"";
+"406037988850794496";"patchkez#5349";"27-Jun-18 06:29 AM";"@webworker01 that is ok, but we need to have it in config file. You could have some kind of tool talking to assetchains via RPC. And it can happen quite easily that assetchains are running on multiple nodes.";"";"";
+"406037988850794496";"patchkez#5349";"27-Jun-18 06:34 AM";"```[
+  {
+    ""ac_name"": ""ZILLA"",
+    ""ac_supply"": ""11000000"",
+    ""addnode"": ""54.39.23.248""
+  },
+  {
+    ""ac_name"": ""RFOX"",
+    ""ac_supply"": ""1000000000"",
+    ""ac_reward"": ""100000000"",
+    ""addnode"": [
+                ""78.47.196.146"",
+                ""78.47.196.147"",
+                ""78.47.196.148""
+               ]
+
+  }
+]
+```";"";"";
+"406037988850794496";"patchkez#5349";"27-Jun-18 06:34 AM";"@lukechilds you see above syntax as problematic?";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:35 AM";"Yes, significantly harder to pass with jq";"";"";
+"406037988850794496";"patchkez#5349";"27-Jun-18 06:35 AM";"@webworker01 rpc and p2p ports are also defined in coins/*_7776 files";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:36 AM";"If we were going the JSON rout it should be stored and parsed like this:
+
+```
+$ cat assetchains.json
+[
+  [
+    [
+      ""ac_name"",
+      ""ZILLA""
+    ],
+    [
+      ""ac_supply"",
+      ""11000000""
+    ],
+    [
+      ""addnode"",
+      ""54.39.23.248""
+    ]
+  ],
+  [
+    [
+      ""ac_name"",
+      ""RFOX""
+    ],
+    [
+      ""ac_supply"",
+      ""1000000000""
+    ],
+    [
+      ""ac_reward"",
+      ""100000000""
+    ],
+    [
+      ""addnode"",
+      ""78.47.196.146""
+    ],
+    [
+      ""addnode"",
+      ""123.45.678.90""
+    ]
+  ]
+]
+
+$ cat assetchains.json | jq '.[] | map(""-\(.[0])=\(.[1])"") | reduce .[1:][] as $i (""\(.[0])""; . + "" \($i)"")'
+""-ac_name=ZILLA -ac_supply=11000000 -addnode=54.39.23.248""
+""-ac_name=RFOX -ac_supply=1000000000 -ac_reward=100000000 -addnode=78.47.196.146 -addnode=123.45.678.90""
+```";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:36 AM";"simple map reduce";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:36 AM";"but I think it should be stored as a simple TXT file";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:36 AM";"Notice dupe addnode args work properly above ☝";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 06:37 AM";"```
+[
+  {
+    ""ac_name"": ""ZILLA"",
+    ""params"": [
+    ""ac_supply"": ""11000000"",
+    ""addnode"": ""54.39.23.248""
+    ]
+  },
+  {
+    ""ac_name"": ""RFOX"",
+     ""params"": [
+    ""ac_supply"": ""1000000000"",
+    ""ac_reward"": ""100000000"",
+    ""addnode"": ""78.47.196.146"",
+     ""addnode"": ""78.47.196.147"",
+      ""addnode"": ""78.47.196.148""
+      ],
+      ""meta"": [
+         ""rpcport"": 1234,
+         ""p2pport"": 1235,
+      ]
+  }
+]
+```";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 06:37 AM";"excuse spacing, rushing out";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:38 AM";"@Mylo that's not a valid JSON array";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:38 AM";"arrays only have a list of values";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:39 AM";"objects have property:value pairs";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:39 AM";"but property names are unique";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 06:39 AM";"oic and your object same same thing you mentioned earlier will be a problem and unreadable. gotcha";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:39 AM";"so you can't have dupes";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:39 AM";"anyway guys, I'm really busy with HyperDEX dev right now";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:39 AM";"but will try and get a PR together tonight";"";"👌 (1)";
+"371114647052615681";"Mylo#8306";"27-Jun-18 06:40 AM";"your last example is good @lukechilds";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:41 AM";"I still think plain text is the way to go";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:41 AM";"that doesn't offer much over plain text";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:41 AM";"apart from being hard to edit";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 06:42 AM";"csv just as easy
+ac_name=zilla,addnode=1.2.3.4,addnode=2.3.4.5
+using awk
+then p2p port misses out";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:42 AM";"plain text is fine really... but p2p rpc would need to be a separate thing then.";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:42 AM";"I still don't quite get why we need the p2p port in here";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:43 AM";"I need it... atm.. I have to maunually call getinfo then add it to firewall";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 06:43 AM";"central config.  but tbh not a problem in a _second_ config file 🤧";"";"";
+"406037988850794496";"patchkez#5349";"27-Jun-18 06:44 AM";"@lukechilds we aslo need it for starting docker containers, we need to tell Docker which ports to expose to the internet";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:45 AM";"where is the p2p port set? Is it always the same for all assetchain nodes or can it be different?";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:45 AM";"you can change it in confile I think, but its generated by the AC params.";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:45 AM";"each AC has its own one.";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:45 AM";"or *should* have its own one.";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 06:46 AM";"would 2 config files work though?
+csv normal for ac stuff
+then commented out lines for p2p stuff
+
+e.g.
+```
+ac_name=zilla,addnode=1.2.34,ac_blah=foo
+ac_name=mylo,addnode=1.2.34,ac_blah=foo
+#ac_name=zilla,p2p=1234,rcpport=5678
+#ac_name=mylo,p2p=9000,rpcport8000
+
+```";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 06:46 AM";"it's just a convention we're trying to get consensus on 😃";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:47 AM";"if it's changeable it probably shouldn't be in here";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:47 AM";"but I suppose we could have a meta property that's just for arbitrary data";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:47 AM";"it CAN be changed... but you really should not change it..";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:48 AM";"the other params, define its default";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:48 AM";"You can take some of james C code and port it to whatever, and generate the p2p/rpc ports fromt he other params if you want.";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:48 AM";"but seems pointless, if they cna just be added to the file by the chains creator.";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:49 AM";"you will also get a COIN_7776 file generated now, when you start the chain for first time... all the info it in that in JSON already.";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:49 AM";"ok";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:50 AM";"so to allow for general data to be added";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:50 AM";"including default rpc port";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:50 AM";"or any other key:value data";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:50 AM";"```
+$ cat assetchains.json
+[
+  {
+    ""data"": {
+      ""name"": ""ZILLA"",
+      ""rpcPort"": 4321,
+      ""key"": ""value""
+    },
+    ""params"": [
+      [
+        ""ac_name"",
+        ""ZILLA""
+      ],
+      [
+        ""ac_supply"",
+        ""11000000""
+      ],
+      [
+        ""addnode"",
+        ""54.39.23.248""
+      ]
+    ]
+  },
+  {
+    ""data"": {
+      ""name"": ""RFOX"",
+      ""rpcPort"": 4321,
+      ""key"": ""value""
+    },
+    ""params"": [
+      [
+        ""ac_name"",
+        ""RFOX""
+      ],
+      [
+        ""ac_supply"",
+        ""1000000000""
+      ],
+      [
+        ""ac_reward"",
+        ""100000000""
+      ],
+      [
+        ""addnode"",
+        ""78.47.196.146""
+      ],
+      [
+        ""addnode"",
+        ""123.45.678.90""
+      ]
+    ]
+  }
+]
+
+$ cat assetchains.json | jq '.[].params | map(""-\(.[0])=\(.[1])"") | reduce .[1:][] as $i (""\(.[0])""; . + "" \($i)"")'
+""-ac_name=ZILLA -ac_supply=11000000 -addnode=54.39.23.248""
+""-ac_name=RFOX -ac_supply=1000000000 -ac_reward=100000000 -addnode=78.47.196.146 -addnode=123.45.678.90""
+```";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:50 AM";"nice!";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 06:50 AM";"yep";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 06:51 AM";"you forgot mylo coin :troll:";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:51 AM";"ok";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:51 AM";"will PR this shit up later today";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 06:52 AM";"gsad";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:52 AM";"great work. Finally someone did it onstead of talking about it. Nice work.";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:55 AM";"wait";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:55 AM";"thinking about it";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:55 AM";"is there any reason that params actually need to be an array";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:56 AM";"like is anyone really going to want to query ACs with a supply larger than x";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:56 AM";"if not, we can get the best of both worlds";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:56 AM";"there is all diff kinds of them, and verus has multiple values for a single param";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:56 AM";"yeah, even more reason to not use an array";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:57 AM";"-ac_reward=0,38400000000,2400000000";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:58 AM";"could just be shortened to:
+
+```
+[
+  {
+    ""data"": {
+      ""rpcPort"": 4321,
+      ""key"": ""value""
+    },
+    ""params"": ""-ac_name=ZILLA -ac_supply=11000000 -addnode=54.39.23.248""
+  },
+  {
+    ""data"": {
+      ""rpcPort"": 4321,
+      ""key"": ""value""
+    },
+    ""params"": ""-ac_name=RFOX -ac_supply=1000000000 -ac_reward=100000000 -addnode=78.47.196.146 -addnode=123.45.678.90""
+  }
+]
+```";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:58 AM";"params is just a string so can be anything";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:59 AM";"what if we are not using some of them though like me... I dont use te addnode= on my NN.";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:59 AM";"good point";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:59 AM";"wihtout array I cant drop it off";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:59 AM";"well i could.. but that would get messy";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 07:00 AM";"yup";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 07:13 AM";"222223-ac_reward=0,38400000000,2400000-ac_reward=0,38400000000,2400000000oigf0000 at 3:00 PM
+yup";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 07:13 AM";"11ewdwë at 3:00 PM
+yup6";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 07:13 AM";"3+3.+363";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 07:13 AM";".6";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 07:13 AM";",jbgujn m ,m ,mç";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 07:13 AM";"+ö";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 07:13 AM";"ç««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««
+“«««««««««««««««««««««««««««««";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 07:13 AM";"¬¬¬";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 07:14 AM";"🤔";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 07:14 AM";"stupid child";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 07:15 AM";"lol";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 07:15 AM";"2 mins away";"";"";
+"406037988850794496";"patchkez#5349";"27-Jun-18 07:25 AM";"@lukechilds also we should be able to add other data into that file, something like:";"";"";
+"406037988850794496";"patchkez#5349";"27-Jun-18 07:25 AM";"```{
+  ""assetchains"": [
+      {
+        ""data"": {
+          ""name"": ""ZILLA"",
+          ""rpcPort"": 4321,
+          ""key"": ""value""
+        },
+        ""params"": [
+          [
+            ""ac_name"",
+            ""ZILLA""
+          ],
+          [
+            ""ac_supply"",
+            ""11000000""
+          ],
+          [
+            ""addnode"",
+            ""54.39.23.248""
+          ]
+        ]
+      },
+      {
+      ...
+      }
+  ],
+  ""notary_ips:"": [
+    ""54.39.23.249"",
+    ""54.39.23.250""
+    ]
+}
+```";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 07:29 AM";"@lukechilds  I think just move addnode to data section in you verion with no array.... as addnode is not an AC param.";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 07:29 AM";"you only need it for the very first sync... so put it in data, problem solved.";"";"";

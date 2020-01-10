@@ -1,0 +1,561 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[12-Sep-18 12:44 AM] Bryan_Beus#6442
+The 13 chosen notary nodes vary for each notarization.
+
+[12-Sep-18 12:45 AM] Bryan_Beus#6442
+The notary nodes wouldn't write "wrong" information to BTC.
+
+Whatever they write, that's the history, and the whole network (asset chains, etc.) just moves forward from there.
+
+[12-Sep-18 12:46 AM] Bryan_Beus#6442
+If what we might call "bad data" gets into a notarization -- i.e. your asset chain gets hacked, or someone does something so egregious that all your users are upset and want to go back -- you can rollback your own chain to whatever time you want with a hard fork, and resume the notarization process.
+
+[12-Sep-18 12:47 AM] Bryan_Beus#6442
+Likewise, if the users don't like what the blockchain developers are doing, and assuming they're operating with open-source philosophy, the users can hard fork and split however they desire, and start notarizing at whatever block height they desire.
+
+[12-Sep-18 12:47 AM] Bryan_Beus#6442
+Does that answer your question?
+
+[12-Sep-18 12:52 AM] joey#9690
+I think so, yes, although I'll have to do some research on my own to see how it works. I'm wondering what happens in the event of a reorganization, where 10 or 20 blocks are reorged on the chain, and the notarization nodes put that into the KMD/BTC blocks
+
+[12-Sep-18 12:58 AM] Bryan_Beus#6442
+Any attempt to reorganize the chain before the last notarization is simply ignored.
+
+During the period between the last notarization and the present moment, that's where your consensus mechanism is still in play.
+
+If you're worried about someone maliciously attacking your blockchain during the ten/twenty minutes since the last notarization, you just need to decide what style of chain you want.
+
+You can make a KMD-based chain have any percentage you choose of PoW vs PoS.
+
+One of the chains in our system, Verus, uses a hybrid between PoS and PoW, for this reason. I think they even wrote some of the underyling code for it, but I'm not sure.
+
+[12-Sep-18 01:00 AM] Bryan_Beus#6442
+If you're worried about a lot of miners attacking your chain, and if you want to have people have confirmations that they can at least act on faster, then use a good chunk of PoS in your setup.
+
+On the other hand, having at least some of the PoW method available in your consensus mechanism will allow you to ensure that anyone can mine a block. This curtails censorship, and other issues.
+
+If you're not worried about a time delay, best to keep your chain primarily PoW.
+
+[12-Sep-18 01:07 AM] Bryan_Beus#6442
+@joey Let me know if you have more questions.
+
+If you haven't had a chance yet, read part I of the white paper. It's about 30 pages, and goes into thorough detail.
+
+[12-Sep-18 01:07 AM] Bryan_Beus#6442
+@Alright 
+
+I have not yet received a successful response using `kvsearch`
+
+```
+siddhartha@aang:/opt/AgamaApp/resources/app/assets/bin/linux64$ ./komodo-cli -ac_name=SIDD kvupdate "examplekeyfour" "examplevalue" 2 "examplepassphrase"
+{
+  "coin": "SIDD",
+  "height": 561,
+  "expiration": 2001,
+  "flags": 3,
+  "key": "examplekeyfour",
+  "keylen": 14,
+  "value": "examplevalue",
+  "valuesize": 12,
+  "fee": 0.001,
+  "txid": "53a95d865c0cfe68bdb9876a545b0e833e991fb849176d4eb66a36432951d1a2"
+}
+
+siddhartha@aang:/opt/AgamaApp/resources/app/assets/bin/linux64$ ./komodo-cli -ac_name=SIDD kvsearch "examplekeyfour"
+{
+  "coin": "SIDD",
+  "currentheight": 561,
+  "key": "examplekeyfour",
+  "keylen": 14,
+  "error": "cant find key"
+}
+```
+
+[12-Sep-18 01:08 AM] Alright#0419
+check that 53a95d865c0cfe68bdb9876a545b0e833e991fb849176d4eb66a36432951d1a2 is confirmed
+
+[12-Sep-18 01:11 AM] Bryan_Beus#6442
+oh, right, I haven't done any block generations...
+
+[12-Sep-18 01:11 AM] Bryan_Beus#6442
+let's do that then...
+
+[12-Sep-18 01:11 AM] Bryan_Beus#6442
+I'm guessing this is why the other command also wasn't working.
+
+[12-Sep-18 01:17 AM] Bryan_Beus#6442
+@Alright 
+
+I was able to get all of that to work.
+
+How much is the cost for a KV transaction?
+
+It stores it in the transaction using OP_RETURN, correct?
+
+[12-Sep-18 01:23 AM] Alright#0419
+I believe it depends on the length of the value
+
+[12-Sep-18 01:23 AM] Alright#0419
+yes, it stores the data in OP_RETURN
+
+[12-Sep-18 01:28 AM] joey#9690
+@Bryan_Beus had to go do something in real life. My use-case is a PoW chain and I want to add notarized blocks into KMD (and Bitcoin)
+
+[12-Sep-18 01:28 AM] joey#9690
+PoS is not an option
+
+[12-Sep-18 01:29 AM] Bryan_Beus#6442
+Ok
+
+[12-Sep-18 01:29 AM] joey#9690
+What does this mean exactly?
+> Any attempt to reorganize the chain before the last notarization is simply ignored.
+
+[12-Sep-18 01:29 AM] Bryan_Beus#6442
+Ya, you can just use KMD, without BTC, if you want to save money, but if you want to use BTC as well, you're welcome to.
+
+[12-Sep-18 01:29 AM] joey#9690
+That makes sense
+
+[12-Sep-18 01:31 AM] Bryan_Beus#6442
+So, the way it works is that a KMD-based coin daemon will let the consensus mechanism just run according to the rules.
+
+If it's PoW, then it's PoW.
+
+... until...
+
+a notarization occurs.
+
+Once it occurs, the coin daemon considers everything that came before the notarization to be resolved history, beyond contestation.
+
+The public keys of the notary nodes are able to write data to the blockchain that the whole chain recognizes as the ultimate decider of history.
+
+[12-Sep-18 01:32 AM] Alright#0419
+Hey sidd, did kvupdate work properly once you started mining blocks
+
+[12-Sep-18 01:32 AM] Bryan_Beus#6442
+So, your users can compete for blocks during the ten to 20 minutes or so while you wait for a notarization, but once that notarization occurs, the history is settled, and everyone moves on to the next chunk.
+
+[12-Sep-18 01:32 AM] Bryan_Beus#6442
+@Alright Yes, thank you!
+
+[12-Sep-18 01:32 AM] Alright#0419
+just made that PR, should I test that?
+
+[12-Sep-18 01:32 AM] joey#9690
+Ah, yeah, I'm talking about a PoW chain that isn't a KMD sub-asset. Sorry
+
+[12-Sep-18 01:32 AM] Alright#0419
+Ok, please let me know if there are any other parse errors in curl examples
+
+[12-Sep-18 01:32 AM] Bryan_Beus#6442
+@Alright I'm not sure I follow. I'm wrapping up work for the day in a minute here. Wife needs some help in a few minutes.
+
+[12-Sep-18 01:32 AM] Bryan_Beus#6442
+@Alright K
+
+[12-Sep-18 01:33 AM] Alright#0419
+No, I was just asking whether or not I needed to test kvupdate again
+
+[12-Sep-18 01:33 AM] Bryan_Beus#6442
+@joey 
+
+I've got to head. It's late here. Can we continue tomorrow?
+
+[12-Sep-18 01:33 AM] Alright#0419
+having a stalled chain explains why that didn't work properly though
+
+[12-Sep-18 01:33 AM] joey#9690
+Sure, thanks for the help 😃
+
+[12-Sep-18 01:33 AM] Bryan_Beus#6442
+@joey 
+
+Ya, if you're not using a KMD sub asset, and you want to use KMD's notary nodes, then you need to talk with @dukeleto
+
+[12-Sep-18 01:33 AM] joey#9690
+We had a long chat earlier. Just trying to learn more
+
+[12-Sep-18 01:34 AM] Bryan_Beus#6442
+Okay, let's chat tomorrow. feel free to hit me up. Sorry if I misunderstood what you were asking.
+
+[12-Sep-18 01:34 AM] joey#9690
+No problem, it's complex
+
+[12-Sep-18 04:34 AM] Bryan_Beus#6442
+@Alright 
+
+Can you give me any specifics about cost for a KV update transaction? 
+
+This seems like something developers would want to know.
+
+(Also, in marketing, we're going to be building real-time cost calculations soon.)
+
+[12-Sep-18 04:41 AM] Bryan_Beus#6442
+@jl777c 
+
+Can you help me with these entries, please?
+
+```
+minerids needs height
+---------------------
+
+``COMING SOON``
+
+notaries height timestamp
+-------------------------
+
+``COMING SOON``
+
+```
+
+Need a description of the method, of each of its parameters, and an example of entering it into the command prompt.
+
+If it requires a special setup (meaning, if I can't do it on my regtest asset chain), then I also need a copy/paste of a response.
+
+[12-Sep-18 04:55 AM] Bryan_Beus#6442
+Also, here in ``getblocksubsidy``, I see a section about a founder's reward.
+
+This sounds like something leftover from the Zcash team?
+
+```
+
+getblocksubsidy
+---------------
+
+::
+
+  getblocksubsidy height_number
+
+The ``getblocksubsidy`` method returns the block-subsidy reward. The resulting calculation takes into account the mining slow start and the founders reward, of block at index provided.
+```
+
+How would we change this for KMD? Is there anything we'd need to indicate about how our rewards are calculated -- perhaps the 5% reward?
+
+[12-Sep-18 05:03 AM] Bryan_Beus#6442
+@Alright 
+
+I think I found another parsing error?
+
+```
+siddhartha@aang:/opt/AgamaApp/resources/app/assets/bin/linux64$ curl --user user138763741:pass5ff9f6434ed6405b884fc24ee41e590a64fcf163ee9f9c44e973124935aed7a9fc --data-binary '{"jsonrpc": "1.0", "id":"curltest", "method": "getblockubsidy", "params": [100] }' -H 'content-type: text/plain;' http://127.0.0.1:9801/ | jq
+ 
+
+ % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   166  100    85  100    81     85     81  0:00:01 --:--:--  0:00:01  162k
+{
+  "result": null,
+  "error": {
+    "code": -32601,
+    "message": "Method not found"
+  },
+  "id": "curltest"
+}
+```
+
+If you can show me where the parsing error is, I can fix it in the future, if I find anymore.
+
+[12-Sep-18 05:09 AM] Alright#0419
+you're missing an s in the json
+
+[12-Sep-18 05:09 AM] Alright#0419
+getblocksubsidy
+
+[12-Sep-18 05:13 AM] Bryan_Beus#6442
+gotcha.
+
+that's c/p from the actual doc, and I checked and it's there
+
+[12-Sep-18 05:13 AM] Bryan_Beus#6442
+will fix in next version
+
+[12-Sep-18 05:13 AM] Bryan_Beus#6442
+no worries for now
+
+[12-Sep-18 05:17 AM] Bryan_Beus#6442
+@Alright 
+
+Trying to do the `getblocktemplate` command, but am getting this error:
+
+```
+siddhartha@aang:/opt/AgamaApp/resources/app/assets/bin/linux64$ ./komodo-cli -ac_name=SIDD getblocktemplate
+error code: -9
+error message:
+Komodo is not connected!
+```
+
+[12-Sep-18 05:17 AM] Bryan_Beus#6442
+```
+./komodo-cli -ac_name=SIDD getblocktemplate '{"mode":"template"}'
+```
+
+[12-Sep-18 05:17 AM] Alright#0419
+that means you don't have peers
+
+[12-Sep-18 05:18 AM] Alright#0419
+you aren't connected to any other nodes
+
+[12-Sep-18 05:19 AM] Bryan_Beus#6442
+gotcha
+
+[12-Sep-18 05:19 AM] Bryan_Beus#6442
+hmm, let's try it on the main chain then...
+
+[12-Sep-18 05:20 AM] Bryan_Beus#6442
+nice, that worked
+
+[12-Sep-18 05:24 AM] Alright#0419
+made a PR to fix the getblocksubsidy typo
+
+[12-Sep-18 05:37 AM] Bryan_Beus#6442
+thanks
+
+I'm rewriting the whole doc, so I wouldn't worry too much
+
+[12-Sep-18 05:38 AM] Bryan_Beus#6442
+I'm getting `0` for both the regtest chain and the main chain when I run `getlocalsolps`, is that normal?
+
+[12-Sep-18 05:38 AM] Bryan_Beus#6442
+```
+siddhartha@aang:/opt/AgamaApp/resources/app/assets/bin/linux64$ ./komodo-cli -ac_name=SIDD getlocalsolps
+0
+siddhartha@aang:/opt/AgamaApp/resources/app/assets/bin/linux64$ ./komodo-cli getlocalsolps
+0
+```
+
+[12-Sep-18 05:39 AM] Bryan_Beus#6442
+Also, it says it's about "average local solutions", is that referring to the number of blocks mined per second?
+
+[12-Sep-18 05:49 AM] Alright#0419
+solutions/second
+
+[12-Sep-18 05:49 AM] Alright#0419
+it will say 0 if you aren't mining
+
+[12-Sep-18 06:15 AM] jl777c#5810
+minerids returns the notaryids of the blocks mined
+
+[12-Sep-18 06:15 AM] jl777c#5810
+notaries returns the info about the notaries at the specified height
+
+[12-Sep-18 06:30 AM] Mylo#8306
+@joey https://medium.com/@imylomylo/blockchain-security-for-dapps-and-ecosystems-1d64a2965b18?source=linkShare-ef822aa90af7-1536733826
+
+{Embed}
+https://medium.com/@imylomylo/blockchain-security-for-dapps-and-ecosystems-1d64a2965b18?source=linkShare-ef822aa90af7-1536733826
+Blockchain Security For dApps and Ecosystems – Mylo Mylo – Medium
+Komodo Blockchain Security comes from the technical innovation called delayed Proof-of-Work (dPoW). This happens when the network is…
+https://cdn-images-1.medium.com/max/1200/1*PS7RG3lA-4s7ay4lRH7TUw.jpeg
+
+[12-Sep-18 06:32 AM] Mylo#8306
+There’s a link in that article to the commits of GAME in their non-KMD-assetchain (a bitcoin fork) which might be useful for a coindev
+
+[12-Sep-18 06:32 AM] Mylo#8306
+GAME notarises to KMD
+
+[12-Sep-18 06:32 AM] Mylo#8306
+@Bryan_Beus ☝️
+
+[12-Sep-18 06:34 AM] Mylo#8306
+Different bitcoin version forks eg 0.11 vs 0.15 will need some massaging and testing
+
+[12-Sep-18 02:58 PM] dukeleto#7326
+I've also added a lot more detail about how Notary Nodes work and how to prevent Double Spend attacks with DPoW: https://github.com/leto/mastering_komodo_dpow/blob/master/mastering_komodo_dpow.md#high-level-overview-of-dpow
+
+{Embed}
+https://github.com/leto/mastering_komodo_dpow/blob/master/mastering_komodo_dpow.md
+leto/mastering_komodo_dpow
+Mastering Komodo Delayed Proof-of-Work. Contribute to leto/mastering_komodo_dpow development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/30298?s=400&v=4
+
+[12-Sep-18 10:51 PM] Bryan_Beus#6442
+@jl777c 
+
+In this here,
+
+```
+minerids needs height
+---------------------
+```
+
+what does needs stand for? 
+
+I assume height stands for block height.
+
+Are these numbers, strings, booleans, or something else?
+
+Do they need to be submitted as a JSON object, or are they submitted as standalone inputs?
+
+[12-Sep-18 11:21 PM] Bryan_Beus#6442
+@Alright What's the maximum length of a kvupdate value?
+
+[12-Sep-18 11:32 PM] Bryan_Beus#6442
+@jl777c 
+
+So, with some trial and error I find that I only need to submit the height for `minerids`.
+
+I'm assuming the `needs` thing was put there by accident?
+
+Also, in the response I receive, I see that inside the `miners` array there are 64 objects for notary nodes, and then one additional object that has 
+```
+{
+        "pubkey": "external miners",
+        "blocks": 541
+}
+```
+Can you tell me about this object?
+
+Also, in the notary node objects, I see that there's a `blocks` property as well. I believe these properties are related? Can you tell me about this as well?
+
+```
+{
+      "notaryid": 59,
+      "KMDaddress": "RWk4WLiAv6MKWLozJbj1jyhayKtjwbtX7M",
+      "pubkey": "029d19215440d8cb9cc6c6b7a4744ae7fb9fb18d986e371b06aeb34b64845f9325",
+      "blocks": 24
+    }
+```
+
+[12-Sep-18 11:35 PM] Deleted User#0000
+just deployed an assett chain but im unsure how to send funds to another person
+
+[12-Sep-18 11:41 PM] Bryan_Beus#6442
+Hi @Deleted User 
+
+Can you tell me more about what you're up to? I'd be happy to try and help.
+
+[13-Sep-18 12:37 AM] Deleted User#0000
+just testing this feature
+
+[13-Sep-18 12:38 AM] Deleted User#0000
+i want to use it to promote my business but i need to learn it better
+
+[13-Sep-18 01:41 AM] PTYX#6840
+What type of business do you have?
+
+[13-Sep-18 01:52 AM] Bryan_Beus#6442
+@Deleted User 
+
+When you're on an asset chain, the other person just needs to also be running the same new coin daemon (which you just created) on their computer.
+
+Since you don't have a GUI software wallet for it, yet (though you may be able to integrate with our Agama wallet), the other person just needs to enter this into their command prompt (I'm typing for Linux, if you need MacOS or Win, lmk)
+
+```
+./komodo-cli -ac_name=SIKAFFYCOIN getnewaddress
+```
+That will create a new address for them.
+
+They tell you what address they have, and then you send them money from your machine by going like this
+```
+./komodo-cli -ac_name=SIKAFFYCOIN sendtoaddress "YOURFRIENDSADDRESS" amount_number
+```
+That's it, for the command prompt.
+
+If you decide to integrate with Agama, then you'll have software to make it easier.
+
+[13-Sep-18 01:53 AM] Bryan_Beus#6442
+@Deleted User 
+
+You may want to talk with @PTYX, @siu - Chainmakers, or @Mylo 
+
+They're involved with consulting businesses that can help you get set up.
+
+[13-Sep-18 02:29 AM] Hegelian#0018
+How do you integrate new asset chain with agama?
+
+[13-Sep-18 02:30 AM] Hegelian#0018
+Is there a how-to like the one that shows how to make a AC?
+
+[13-Sep-18 02:36 AM] Bryan_Beus#6442
+@Hegelian 
+
+Let us know if those posts above don't answer your questions. The third post should have specific details.
+
+[13-Sep-18 03:56 AM] Bryan_Beus#6442
+@Alright 
+
+Another question (besides the one above -- what's the maximum length of a value for KVupdate ? )
+
+The second question:
+
+I'm trying to input this command using the optional parameters, but am not getting a valid response.
+
+```
+komodo-cli getnetworksolps 10
+error code: -1
+error message:
+JSON value is not an integer as expected
+```
+
+[13-Sep-18 04:00 AM] Bryan_Beus#6442
+I tried doing it as JSON:
+
+```
+./komodo-cli getnetworksolps '{"blocks":120}'
+```
+
+did a couple variations like that, but no luck yet
+
+[13-Sep-18 04:03 AM] Bryan_Beus#6442
+Another question, I assume that ``prioritisetransaction`` method requires that ``setgenerate`` be set to true?
+
+[13-Sep-18 04:50 AM] Mylo#8306
+@Bryan_Beus 8kB is max in one tx
+
+[13-Sep-18 04:51 AM] Mylo#8306
+One KV.  For oracle data 8kB as well but can be grouped together to create larger data
+
+[13-Sep-18 04:59 AM] Bryan_Beus#6442
+@Mylo thanks
+
+[13-Sep-18 06:01 AM] Alright#0419
+@Bryan_Beus this needs to be merged https://github.com/zcash/zcash/pull/3318
+
+{Embed}
+https://github.com/zcash/zcash/pull/3318
+Fix parsing parameters in getnetworksolps by Eirik0 · Pull Reques...
+This fixes #3298. The parameters were not correctly being converted.
+https://avatars0.githubusercontent.com/u/6133620?s=400&v=4
+
+[13-Sep-18 06:02 AM] Bryan_Beus#6442
+ok
+
+[13-Sep-18 06:02 AM] Bryan_Beus#6442
+I'll just leave it where I left it, then. 😃
+
+[13-Sep-18 06:02 AM] Alright#0419
+it's in zcash master, so it will happen eventually. You could ask jl to do it sooner if you like though
+
+[13-Sep-18 06:02 AM] Bryan_Beus#6442
+No, not necessary.
+
+[13-Sep-18 06:06 AM] Bryan_Beus#6442
+@Alright I'm working on the networking session.
+
+I need a node that I can add and then remove, for the examples.
+
+Do you have a node ip that I can connect to?
+
+[13-Sep-18 06:07 AM] Alright#0419
+you just need a KMD node to connect to?
+
+[13-Sep-18 06:07 AM] Alright#0419
+didn't quite understand what you mean
+
+[13-Sep-18 06:09 AM] Alright#0419
+I don't normally have a KMD node that is up 24/7 because I'm constantly rebuilding
+
+[13-Sep-18 06:14 AM] CHMEX#0686
+@Bryan_Beus 
+78.47.205.239
+if you need one to connect to
+

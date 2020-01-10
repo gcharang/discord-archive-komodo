@@ -1,0 +1,121 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"365714438864633856";"dukeleto#7326";"21-Aug-19 12:58 AM";"`ht.7603, ShieldedPayments=0, ShieldedTx=0, FullyShieldedTx=0, ntz=2` still some work to do, it detected 2 notarizations in this block";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 12:58 AM";"I need to make it smarter";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 12:59 AM";"I guess it is possible for 2 valid notarization xtns to be in the same block?";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 12:59 AM";"my guess is my code is just wrong, it treats all vin=13/vout=2 xtns as ntz's, when it should filter more";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:02 AM";"yes we do ?";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:02 AM";"getNotarzationsFromBlock";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:02 AM";"Yes.";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:02 AM";"you can have millions of nota in a block";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:02 AM";"what is the purpose of more than 1 ntz in a block, other than accident?";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:02 AM";"but only 1 og them is valid";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:03 AM";"And also, is it ""last one in wins?""";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:03 AM";"Its becaus iguana is broken";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:03 AM";"i.e. latest timestamp wins?";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:03 AM";"its supped to wait for confirms";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:03 AM";"but it does not";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:03 AM";"and no im not fixing that part";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:03 AM";"it will just make billions of egdecases";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:03 AM";"my code wants to count ""valid notarizations""";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:03 AM";"not ""things which might be notarizations but are edge cases""";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:04 AM";"so I think I only want to count 1 per block , but whatevs. I need to check for OP_RETURN or NN pubkeys in the xtn";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:04 AM";"i want to batch any stats that we might want into this PR, because stuff changes the disk format of CBlockIndex";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:04 AM";"then you need thi:
+https://github.com/blackjok3rtt/libnspv/blob/master/src/tools/nSPV_wallet.h#L240";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:05 AM";"What yo uneed to do is decode op_return";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:05 AM";"then extract the notarized ht";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:05 AM";"and so adding ntz data in the future would force all `zindex` nodes to resync from scratch, which sux";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:05 AM";"and only count hts that advance";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:05 AM";"@blackjok3r i am in very hot code";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:05 AM";"and this is stats";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:05 AM";"so i want to do as little work as possible";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:05 AM";"it's a heuristic, some error is OK";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:06 AM";"my code modifies ReceiveBlock() or whatever it's called, and LoadIndex, so every block that is received or read from disk has this code run. I don't want to add lots of complex shite";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:07 AM";"What deermines a valid notaraisation is:
+1) height is heighter than last noatrised ht
+2) block hash matches the ht being notarized
+3) min sigs notaries";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:07 AM";"probably looking for amount would filter out stuff";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:07 AM";"you can filter the NNmin sigs early on... as it adds ot the index.";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:07 AM";"then when fetching just flter the ht";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:07 AM";"@blackjok3r right now, a valid ntz in my code is ""vin=13, vout=2"" and that works pretty damn well to detect ntz's 🙂";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:07 AM";"i am just trying to detect, not verify";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:08 AM";"i need to filter on amount and maybe op_return, and it would be 99.99% correct";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:08 AM";"right now, if you happen to spend 13 utxos, and generate a change address, my code is fooled by that";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:08 AM";"assuming no body made false ones.. that will usually work, that is the first check the validation makes";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:09 AM";"include op)_return to that";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:09 AM";"thanks for the nspv_wallet.h link, it's a good read";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:09 AM";"vout[1].IsOpreturn()";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:09 AM";"i have read similar code in all the dpow header files";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:09 AM";"@blackjok3r now that is useful!";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:09 AM";"nSPV stuff taugt me alot.";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:09 AM";".IsOpreturn() is mighty fine";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:10 AM";"yes that should do it man";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:10 AM";"🙂";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:10 AM";"sweeeeet";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:10 AM";"there is a function in nspv_utils";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:10 AM";"that decodes the opret";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:10 AM";"but I doubt you need that";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:11 AM";"this channel is consistently an awesome place to ask questions and learn, no matter what stage of the game you are at :KMD:";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:11 AM";"lol yes... Its a great team here";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:12 AM";"@blackjok3r your contributions have really been kicking ass. Whatever you are doing, keep doing it yo";"";"";
+"232679450301431808";"blackjok3r#3181";"21-Aug-19 01:13 AM";"😅";"";"";
+"405011811511828481";"Alright#0419";"21-Aug-19 07:11 AM";"@dukeleto 
+https://github.com/jl777/komodo/blob/master/src/main.cpp#L5056";"";"";
+"211923166769971201";"DRE#7875";"21-Aug-19 10:45 AM";"Hello 👋🏼, With which framework are the SmartContracts developed?";"";"";
+"423176312354635779";"gcharang#6833";"21-Aug-19 11:24 AM";"@DRE Antara Framework
+https://developers.komodoplatform.com/basic-docs/antara/antara-tutorials/overview-of-antara-modules-part-i.html";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 12:44 PM";"ZEC is switching to a 75s blocktime on the Blossom NU";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:17 PM";"@jl777c i think that my use of int64_t for some stats is wasteful (per-block stats will never need such a large datatype), so I am going to refactor those to `unsigned int`. I will leave total chain stats as int64_t, since that seems more future-proof. `-zindex` is working, with reindex detection. And I have notarization stats as well. To finally merge this stuff to KMD, it needs to know how to look at sprout joinsplits";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:18 PM";"maybe a fellow Pirate can make that small tweak, I need to bubble back to Hush concerns";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:24 PM";"@mrlynch gets my nomination for porting to Pirate 😉";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 01:25 PM";"it's most likely <5 lines of code, I just need a pirate person to lead that charge and help me test";"";"";
+"504735704543395853";"mrlynch#5735";"21-Aug-19 02:03 PM";"i have been gladly voluntold";"";"";
+"504735704543395853";"mrlynch#5735";"21-Aug-19 02:04 PM";"more than happy to help if you give me some pointers.. spent most my day today trying to get viewkey to paper wallet, i managed so far to get the extendedfullviewkey which is invalid 😦";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 02:58 PM";"@mrlynch maybe i can help you with that, it's something hush wants too";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 02:58 PM";"and `voluntold` is hilarious, gotta remember that";"";"";
+"504735704543395853";"mrlynch#5735";"21-Aug-19 03:02 PM";"definition
+```""Voluntarily Told,"" ""Voluntold""
+
+There are two different kinds of voluntold:
+A. The gunny walks into the office and says, ""Man, wouldn't the floor look nice if somebody buffed it?"" Which means,""Buff the floor.""
+
+B. ""I need two volunteers to stand out in front of Best Buy this Saturday collecting Toys for Tots.""
+"" ... ""
+""Jones, Smith, you're collecting Toys for Tots this weekend."" ```";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 04:15 PM";"https://www.reddit.com/r/onions/comments/ct6zjf/moneromixer_a_simple_tool_to_help_you_anonymously/";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 04:15 PM";"that is intriguing, and ties into Hush+Pirate wanting TAILS integration @mrlynch";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 04:15 PM";"looks like a good place to get good ideas";"";"";
+"504735704543395853";"mrlynch#5735";"21-Aug-19 04:21 PM";"bookmarked";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 10:35 PM";"```
+~/git/hush3 ztxstats $%= )$ ./src/hush-cli getchaintxstats |grep notariz
+  ""notarizations"": 11403,
+  ""window_notarizations"": 2902,
+  ""notarization_txrate"": 0.001111602262428533,
+```";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 10:36 PM";"and that txrate is ""4.002 notarization transactions per hour, in the last month on HUSH mainnet""";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 10:36 PM";"11403 total on mainnet, and 2902 in the ""window"" of 1 month";"";"";
+"365714438864633856";"dukeleto#7326";"21-Aug-19 10:38 PM";"@CHMEX we can graph the daily ntz rate of each chain versus it's monthly average, might be a good metric of ntz health of that particular chain. That will take into account on-demand chains having long ntz gaps as well";"";"";
+"425038173853319178";"nille#9011";"22-Aug-19 06:01 AM";"good morning everyone ☕";"";"👋 (2)";
+"405011811511828481";"Alright#0419";"22-Aug-19 07:42 AM";"anyone know where I can find documentation for insight api?";"";"";
+"423176312354635779";"gcharang#6833";"22-Aug-19 07:44 AM";"@Alright `https://gist.github.com/jackzampolin/da3201b89d23dd5fa3becb0185da1fb2`";"";"";
+"405011811511828481";"Alright#0419";"22-Aug-19 07:44 AM";"ty";"";"";
+"365714438864633856";"dukeleto#7326";"22-Aug-19 12:24 PM";"@CHMEX zstats are now in Hush `dev` branch for playing, `-zindex` is your friend 🙂";"";"";
+"365714438864633856";"dukeleto#7326";"22-Aug-19 12:25 PM";"let's build a page to show off the stats for Hush, while we work on getting the code compat for other chains";"";"";
+"365714438864633856";"dukeleto#7326";"22-Aug-19 12:34 PM";"here is example output: `https://gist.github.com/leto/b2f6b4f7619e31da8de8de99c7d03282`";"";"shexy (1)";
+"365714438864633856";"dukeleto#7326";"22-Aug-19 12:43 PM";"@jl777c https://github.com/jl777/komodo/issues/1689";"";"";
+"365714438864633856";"dukeleto#7326";"22-Aug-19 12:45 PM";"@CHMEX fyi I was missing a `window_shielded_txcount` stat which i just added";"";"";
+"405011811511828481";"Alright#0419";"22-Aug-19 11:37 PM";"https://nioctib.tech very awesome resource for wrapping your head around script, would recommend everyone check this out. Give it a BTC txid and click ""interpret""";"";"";
+"405011811511828481";"Alright#0419";"22-Aug-19 11:38 PM";"script has always been black magic to me, visualizing it helps so much";"";"";
+"405011811511828481";"Alright#0419";"22-Aug-19 11:56 PM";"🙌 even better";"";"";
+"405011811511828481";"Alright#0419";"22-Aug-19 11:56 PM";"thank you";"";"👍 (1)";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 03:57 AM";"`..............komodod: main.cpp:4437: void PruneBlockIndexCandidates(): Assertion `!setBlockIndexCandidates.empty()' failed.`";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 03:57 AM";"😿";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 03:58 AM";"my new `zindex` code seems to break the block index of nodes, even when it's not enabled";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 03:59 AM";"I tried switching to an older branch but the blockindex seems busted now";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 03:59 AM";"so something I am doing, is only compatible with `zindex` enabled";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Aug-19 05:06 AM";"The blockindex can be diffrent for diffrent AC params... example here may help?
+`https://github.com/KMDLabs/komodo/blob/master/src/chain.h#L550`";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Aug-19 05:12 AM";"@dukeleto  Where is this code?";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 09:52 AM";"@blackjok3r hush3.git `duke` branch, it's my zindex code that is doing this";"";"";
+"365714438864633856";"dukeleto#7326";"23-Aug-19 09:52 AM";"@blackjok3r `zindex` changes the things written out in CBlockIndex";"";"";

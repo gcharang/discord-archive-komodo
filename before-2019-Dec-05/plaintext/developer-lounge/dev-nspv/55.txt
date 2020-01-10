@@ -1,0 +1,433 @@
+==============================================================
+Guild: Komodo
+Channel: dev-nspv
+Topic: ./komodod -nSPV=1 -ac_reward=100000000  -ac_name=NSPV -ac_supply=10000000000 -ac_cc=2 -addressindex=1 -spentindex=1 -connect=5.9.102.210 &
+./komodod -nSPV=1 -addnode=5.9.253.195 &
+https://drive.google.com/drive/folders/1ZvzrhNBQgroejTKPl0kCOTJ8h7XMnO2M?usp=sharing
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[28-Aug-19 05:36 PM] jl777c#5810
+if there are a million nspv nodes, all needing to get all unconfirmed tx...
+
+[28-Aug-19 05:37 PM] jl777c#5810
+that is a giant load on the network
+
+[28-Aug-19 05:37 PM] jl777c#5810
+that is the design reason why the fullnodes do mempool scanning, to avoid the nspv nodes from having to relay unconfirmed tx
+
+[28-Aug-19 05:38 PM] blackjok3r#3181
+yes a realiable utxo cache, and a local mempool will help a lot. 
+mempool might be a pretty big job lol. It needs to be done from scratch in C right?
+
+[28-Aug-19 05:38 PM] jl777c#5810
+so when the overall network bandwidth is taken into consideration, that changes the optimal answer from having a local mempool to offloading it to the fullnodes
+
+[28-Aug-19 05:38 PM] blackjok3r#3181
+ok
+
+[28-Aug-19 05:38 PM] jl777c#5810
+as you have experienced with bandwidth efficient header sync, the problem becomes orders of magnitude harder than just brute forcing requests to update local state
+
+[28-Aug-19 05:39 PM] blackjok3r#3181
+yes
+
+[28-Aug-19 05:39 PM] jl777c#5810
+the idea for nspv is to get to where a few thousand full nodes can comfortable support millions of nspv superlite clients
+
+[28-Aug-19 05:39 PM] jl777c#5810
+that is the design priority. imagine we have 9600 baud modem connections and treat the bandwidth as a very precious resource
+
+[28-Aug-19 05:40 PM] blackjok3r#3181
+got it. 🙂 
+mempool could be returned with the getinfo call if it was supplied the address? 
+This should make it very easy to do.
+
+[28-Aug-19 05:41 PM] jl777c#5810
+there is already a  mempool message
+
+[28-Aug-19 05:41 PM] blackjok3r#3181
+because nSPVC doesnt care about any other address
+
+[28-Aug-19 05:41 PM] jl777c#5810
+it has a function id and other parameters to use for searching
+
+[28-Aug-19 05:42 PM] jl777c#5810
+recommend to use the existing calls as mihailo is using it for CC tx creation
+
+[28-Aug-19 05:42 PM] blackjok3r#3181
+🤔
+
+[28-Aug-19 05:42 PM] Mihailo#5902
+@jl777c Is libnspv follwoing changes on Komodo nSPV or ?
+
+[28-Aug-19 05:42 PM] jl777c#5810
+and certainly querying for an address in mempool is already done
+
+[28-Aug-19 05:42 PM] blackjok3r#3181
+yes
+
+[28-Aug-19 05:42 PM] jl777c#5810
+@Mihailo that is the goal, but so far not even faucetget is implemented yet
+
+[28-Aug-19 05:43 PM] blackjok3r#3181
+maybe its another bug that I have ran into.. 
+after I spend a bunch of utxos... it refuses to make more tx, but the "wallet" page shows all txids and utxos just fine, evenm from mempool
+
+[28-Aug-19 05:43 PM] Mihailo#5902
+BTW, when I said to @siu - Chainmakers and others that CC is working, I meant on komodod. Haven't check libnspv!
+
+[28-Aug-19 05:43 PM] Mihailo#5902
+Should I work on libnspv to make CC work too?
+
+[28-Aug-19 05:44 PM] jl777c#5810
+after we solve what needs to be done for finalizecctx equivalent and have a plan on how to port all the CC rpc to libnspv
+
+[28-Aug-19 05:44 PM] Mihailo#5902
+Ok!
+
+[28-Aug-19 07:59 PM] Sir Seven#7158
+Got how to get 'fullnode not response' state JL777 mentioned.
+It's a problem on libnspv client side it seems. Will provide all info to blackjok3r.
+Does not reproduce on komodod -nSPV=1 instances.
+
+[28-Aug-19 08:13 PM] siu - Chainmakers#3920
+iim testing again now
+
+[28-Aug-19 08:13 PM] siu - Chainmakers#3920
+recompiled and im running NSPV chain
+
+[28-Aug-19 08:14 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=NSPV channelsaddress 03db419891c867f545d90be56f7ee8c9ce9fa829e88497bf3f7ba00a654a2634a4
+{
+  "result": "success",
+  "ChannelsCCAddress": "RQy3rwX8sP9oDm3c39vGKA6H315cgtPLfr",
+  "ChannelsCCBalance": 0.00000000,
+  "ChannelsNormalAddress": "RQUuT8zmkvDfXqECH4m3VD3SsHZAfnoh1v",
+  "ChannelsNormalBalance": 0.00000000,
+  "ChannelsCC1of2Address": "RPEZqwU4rQNY2vTYHpA1L345rYbU5tMxgS",
+  "ChannelsCC1of2TokensAddress": "RRSKXnvFWRpqPHHe37LEQvwszyD66CGF1d",
+  "PubkeyCCaddress(Channels)": "RA99yXLJ1F8qvUyWSPqBk2GAJW3sTAk3BL",
+  "PubkeyCCbalance(Channels)": 0.00000000,
+  "myCCAddress(Channels)": "RA99yXLJ1F8qvUyWSPqBk2GAJW3sTAk3BL",
+  "myCCbalance(Channels)": 0.00000000,
+  "myaddress": "RDGVBu3J9M1x2cXPB8MgX9S1Fbkq6FWzvc",
+  "mybalance": 0.00000000
+}
+```
+
+[28-Aug-19 08:14 PM] siu - Chainmakers#3920
+channelsaddress seems to be working
+
+[28-Aug-19 08:15 PM] siu - Chainmakers#3920
+takes a bit of time to return output
+
+[28-Aug-19 08:15 PM] siu - Chainmakers#3920
+about 5 seconds, maybe more
+
+[28-Aug-19 08:15 PM] siu - Chainmakers#3920
+can i get some NSPV?
+
+[28-Aug-19 08:15 PM] siu - Chainmakers#3920
+i could mine them, but prefer not to load the whole chain if what i want is just test nspv mode.
+
+[28-Aug-19 08:22 PM] siu - Chainmakers#3920
+no worries, i downloaded it on another server
+
+[28-Aug-19 08:25 PM] siu - Chainmakers#3920
+i was able to execute a faucetget on nspv
+
+[28-Aug-19 08:30 PM] siu - Chainmakers#3920
+oh... i can mine in nspv?
+
+[28-Aug-19 08:38 PM] blackjok3r#3181
+https://github.com/jl777/libnspv/pull/130/files
+Seems this fixes more crashes and sync bandwidth.
+
+{Embed}
+https://github.com/jl777/libnspv/pull/130/files
+fix some more crashes, and sync bandwidth by blackjok3rtt · Pull ...
+https://avatars3.githubusercontent.com/u/30971146?s=400&v=4
+
+[28-Aug-19 08:41 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=NSPV channelsinfo fc0aeb5fc6ce82c310734ee1ac48bd1dae8c1c4fe1cebf58a3271cdfd79e7619
+{
+  "result": "success",
+  "Channel CC address": "RTBPrmGXmKXoCwa3hPgNsMiGZCszATMPuR",
+  "Destination address": "RFGxmm9bFfX7nYWwKTV74SiJYdpV4kz19Z",
+  "Number of payments": 2,
+  "Denomination (satoshi)": "1",
+  "Amount (satoshi)": "2",
+  "Transactions": [
+  ]
+}
+```
+
+[28-Aug-19 08:41 PM] siu - Chainmakers#3920
+i was able to open a channel on nspv
+
+[28-Aug-19 08:58 PM] siu - Chainmakers#3920
+@Mihailo i paste all this here since i think there is an issue with either `channelsopen` or `channelspayment` on nspv
+
+[28-Aug-19 08:58 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=NSPV channelsinfo fc0aeb5fc6ce82c310734ee1ac48bd1dae8c1c4fe1cebf58a3271cdfd79e7619
+{
+  "result": "success",
+  "Channel CC address": "RTBPrmGXmKXoCwa3hPgNsMiGZCszATMPuR",
+  "Destination address": "RFGxmm9bFfX7nYWwKTV74SiJYdpV4kz19Z",
+  "Number of payments": 2,
+  "Denomination (satoshi)": "1",
+  "Amount (satoshi)": "2",
+  "Transactions": [
+    {
+      "Open": "fc0aeb5fc6ce82c310734ee1ac48bd1dae8c1c4fe1cebf58a3271cdfd79e7619"
+    }
+  ]
+}
+➜  src git:(nSPV) ✗ ./komodo-cli -ac_name=NSPV channelspayment fc0aeb5fc6ce82c310734ee1ac48bd1dae8c1c4fe1cebf58a3271cdfd79e7619 1
+{
+  "result": "error",
+  "error": "channelsopen tx not yet confirmed/notarized"
+}
+➜  src git:(nSPV) ✗ ./komodo-cli -ac_name=NSPV getrawmempool                   
+[
+]
+```
+
+[28-Aug-19 09:11 PM] Mihailo#5902
+@siu - Chainmakers You must compile komodo in testmode otherwise you must wait 100 blocks until tx is confirmed.
+
+[28-Aug-19 09:11 PM] Mihailo#5902
+There is the command how to do it in cc-general pinned I think
+
+[28-Aug-19 09:15 PM] siu - Chainmakers#3920
+ok, thanks.
+
+[29-Aug-19 12:27 PM] dukeleto#7326
+Is there a way to visualize to the user, how much bandwidth the current wallet "connection" has used?
+
+[29-Aug-19 12:27 PM] dukeleto#7326
+Might be useful for people that are using pre-paid internet plans with a fixed bandwith limit
+
+[29-Aug-19 01:20 PM] jl777c#5810
+getinfo call shows network bytes received and sent
+
+[29-Aug-19 01:21 PM] jl777c#5810
+displayed on the html info page, latest version is looking really good, less than 1MB after 4+ hrs
+
+{Reactions}
+👌 shexy (2) 
+
+[29-Aug-19 01:45 PM] blackjok3r#3181
+Love it.
+
+[30-Aug-19 05:34 PM] gcharang#6833
+@jl777c @Mihailo 
+I've run a script to find the rpc that crash komdod in the -nSPV=1 mode
+```
+assetchainproof
+getrawtransaction
+zcsamplejoinsplit
+```
+all of these crash with
+```
+error: couldn't connect to server: EOF reached (code 1)
+(make sure server is running and you are connecting to the correct RPC port)
+```
+
+[30-Aug-19 05:42 PM] jl777c#5810
+only those three?
+
+[30-Aug-19 05:43 PM] gcharang#6833
+these three crash the daemon
+I haven't checked for other types of errors or outputs that make no sense
+
+[30-Aug-19 05:44 PM] jl777c#5810
+as long as it doesnt crash, it seems ok for the non-nspv rpc
+
+[30-Aug-19 05:58 PM] gcharang#6833
+agreed
+after the cc are working, may be the non-nspv rpc could return "Disabled"
+
+[30-Aug-19 10:46 PM] Mihailo#5902
+@gcharang I'll take a look at them on monday, maybe it will be quick fix!
+
+{Reactions}
+👍 
+
+[31-Aug-19 08:26 AM] jl777c#5810
+probably just to return error if nSPV=1
+
+[31-Aug-19 08:42 AM] gcharang#6833
+@Mihailo I had run the script before with random arguments
+but after running with correct arguments for the rpc, I have found a few more that crash the daemon. The commands along with arguments:
+```
+assetchainproof d19f1c3f7e630966e1d40838c56c8c63a6cbd828d34c3544be5a60b236cf1610
+
+getrawtransaction "a44feb2e788d0332e283d8ca69c6a20999944dccac93246cbf9b36d841b08c95"
+
+zcsamplejoinsplit
+
+getblockchaininfo
+
+gettxout "d7f9b34ad3e86f48fce55dbec1f2925b8dcbd15199977fd75d224254db9ae80d" 1
+
+gettxoutsetinfo
+
+signrawtransaction 0400008085202f8901ffbf4547647abdba819d44699942cb63681be37061f4acd760c0d1e0240d93ad0600000000ffffffff0130a57500000000003b6a39e283150a4346454b445241474f4efa2fe05c5d6cb0bf5a9be2aec4f1cd7a10c9472d6abc1e9bb9dc5903a4ec1a5b0a094346454b484f554e4400000000f36f00000000000000000000000000
+
+z_getpaymentdisclosure 96f12882450429324d5f3b48630e3168220e49ab7b0f066e5c2935a6b88bb0f2 0 0 "refund"
+```
+
+[31-Aug-19 08:44 AM] grewalsatinder#9653
+it'd be nice to see if libnspv can be compiled with emscripten and run in a browser
+
+[31-Aug-19 08:45 AM] grewalsatinder#9653
+and then turned into a browser add-on/extension: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions
+
+{Embed}
+https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions
+Browser Extensions
+Extensions can extend and modify the capability of a browser. Extensions for Firefox are built using the WebExtensions API, a cross-browser system for developing extensions.
+https://developer.mozilla.org/static/img/opengraph-logo.72382e605ce3.png
+
+{Reactions}
+👀 
+
+[02-Sep-19 08:08 AM] CrisF#3405
+Hi, does `Create secure login image` (CREATE_LOGIN_IMG) still require translation?
+
+[02-Sep-19 08:09 AM] CrisF#3405
+I seem to remember seeing that steganography might not be used...
+
+[02-Sep-19 08:09 AM] CrisF#3405
+@grewalsatinder
+
+[02-Sep-19 08:18 AM] jl777c#5810
+for now it is disabled, but if not too much trouble, might as well translate it
+
+[02-Sep-19 08:21 AM] CrisF#3405
+Great thanks.
+
+[02-Sep-19 08:23 AM] CrisF#3405
+Be nice if there was a way to securely add it.  It's one of the features that I was interested in when I first came here, but nobody ever talked about.
+
+[02-Sep-19 08:37 AM] CrisF#3405
+I'm wondering how to have `Transaction Height` translated. 
+Could someone please tell me what is it?
+
+[02-Sep-19 08:38 AM] jl777c#5810
+the height the txid was confirmed in
+
+[02-Sep-19 08:38 AM] CrisF#3405
+Thanks you 🙏
+
+[02-Sep-19 08:48 AM] CrisF#3405
+Sorry, couple more questions:
+Does `height` in 'the height the txid was confirmed in' mean block?
+What is `Transaction Length`?
+
+[02-Sep-19 09:07 AM] blackjok3r#3181
+height is the block height yes, and tranmsaction lenght is the size of the tx in bytes I think.
+
+[02-Sep-19 09:07 AM] jl777c#5810
+yes
+
+[02-Sep-19 09:07 AM] blackjok3r#3181
+@CrisF
+
+[02-Sep-19 09:08 AM] CrisF#3405
+Thank you!
+
+[03-Sep-19 12:11 AM] CrisF#3405
+Hi,
+Made a PR (#131) for Japanese translation.
+Still have 2 questions though.  Will add to translation later.
+
+1.  What is "Best Known Height" from `{ "BEST_HEIGHT": "Best Known Height"}`?  (left as English for now)
+
+2.  What is `vini` from `"SPENT_VINI"`?  Found `spentvini` as "the input number of this output in the transaction that spent it" but a clear term in Japanese would help understanding.  Currently translated as `送信vini`.
+
+[03-Sep-19 12:23 AM] blackjok3r#3181
+best known height is the last header that the client seen from that peer that links back to the last notarization (validated) 
+1 coin }
+2 coin    ---> 6 coins 
+3coin }
+vin[0] = 1 
+vin[1] = 2 
+vin[2] = 3 
+0,1,2 is i
+
+[03-Sep-19 12:26 AM] CrisF#3405
+Oh, ok, thanks 👍
+
+[03-Sep-19 03:43 PM] dukeleto#7326
+I am working on this Android app that connects to a full node, and I am wondering, how can I leverage some nSPV data, so that the app connecting to a full node doesn't actually have to fully "trust" that node? Is it possible to look at nSPV data and detect a malicious node giving false info? @jl777c
+
+[03-Sep-19 03:44 PM] jl777c#5810
+you can validate specific txids
+
+[03-Sep-19 03:44 PM] dukeleto#7326
+I am not trying to make a superlite wallet, but maybe leverage some of the data
+
+[03-Sep-19 03:44 PM] jl777c#5810
+you can also verify if a node is on the mainchain
+
+[03-Sep-19 03:44 PM] dukeleto#7326
+interesting
+
+[03-Sep-19 03:45 PM] dukeleto#7326
+@jl777c my app would need to send p2p messages to an nSPV-enabled full node, correct?
+
+[03-Sep-19 03:46 PM] dukeleto#7326
+this isn't in RPC-world
+
+[03-Sep-19 03:46 PM] dukeleto#7326
+unfortunately the mobile app is Kotlin and the backend service is Java. Using libnspv might be "fun"
+
+[03-Sep-19 03:52 PM] jl777c#5810
+can you issue curl requests?
+
+[04-Sep-19 02:32 AM] dukeleto#7326
+yes
+
+[04-Sep-19 07:56 AM] jl777c#5810
+then you can just issue api calls to libnspv, it will need to run as its own process
+
+[04-Sep-19 12:09 PM] dukeleto#7326
+maybe we need a special android build of libnspv, because android cannot run arbitrary executables. They need to be in .apk format
+
+[04-Sep-19 01:42 PM] grewalsatinder#9653
+@ca333 maybe can share idea of turning it to an android app module etc.
+
+[04-Sep-19 01:43 PM] grewalsatinder#9653
+or @artem.pikulin
+
+[04-Sep-19 02:00 PM] dukeleto#7326
+basically, how can Android apps leverage some nSPV data? We probably need to make an android app/library helper for libnspv. It' can't be compiled and used directly
+
+[04-Sep-19 02:01 PM] dukeleto#7326
+mostly it would be a wrapper around talking to full nodes via HTTP requests and parsing results
+
+[04-Sep-19 02:01 PM] dukeleto#7326
+we could probably get more android adoption if we make it easy for people
+
+[04-Sep-19 02:03 PM] jl777c#5810
+i heard it built for android
+
+[04-Sep-19 02:13 PM] grewalsatinder#9653
+it can be compiled as executable binary which needs to be exected from termux app.
+
+[04-Sep-19 02:13 PM] grewalsatinder#9653
+but if an app needs to be built, that might not be done similarly.
+
+[04-Sep-19 02:13 PM] grewalsatinder#9653
+I done such trials from `iguana` android test days.
+
+[04-Sep-19 02:13 PM] grewalsatinder#9653
+wasn't working for me
+
+[04-Sep-19 02:14 PM] grewalsatinder#9653
+the executable doesn't give the API or don't executed in the secure sandboxed environment if I understand correctly.
+

@@ -1,0 +1,446 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[29-Jan-19 10:01 AM] jl777c#5810
+it seems is isnt in the DASH codebase
+
+[29-Jan-19 10:15 AM] dukeleto#7326
+i see now, i only have a stub definition in komodo_validation012.h, maybe they removed or changed the name of ImportAddress
+
+[29-Jan-19 10:15 AM] dukeleto#7326
+there are some weird changes
+
+[29-Jan-19 10:15 AM] dukeleto#7326
+there is no pwalletMain or vpwallets
+
+[29-Jan-19 10:15 AM] dukeleto#7326
+you must go thru this GetWallets() interface
+
+[29-Jan-19 10:15 AM] dukeleto#7326
+and i think this is related
+
+[29-Jan-19 10:24 AM] dukeleto#7326
+```
+src/wallet/rpcdump.cpp
+155:void ImportAddress(const CBitcoinAddress& address, const string& strLabel);
+169:        ImportAddress(CBitcoinAddress(CScriptID(script)), strLabel);
+173:void ImportAddress(const CBitcoinAddress& address, const string& strLabel)
+231:        ImportAddress(address, strLabel);
+293:    ImportAddress(CBitcoinAddress(pubKey.GetID()), strLabel);
+```
+
+[29-Jan-19 10:24 AM] dukeleto#7326
+it's only in rpcdump.cpp
+
+[29-Jan-19 10:25 AM] dukeleto#7326
+so i guess my code is not linking with rpcdump.cpp
+
+[29-Jan-19 10:25 AM] dukeleto#7326
+btc 0.17 removed CBitcoinAddress, what a bunch of jokers
+
+[29-Jan-19 11:32 AM] Mihailo#5902
+@blackjok3r @jl777c I'm having some strange behaviour of miner. When block is mined that node is stuck. Also I noticed in last few weeks when I start nodes they need some time before they start propagationg tx to the network...
+
+[29-Jan-19 11:32 AM] Mihailo#5902
+```
+  CTransaction(hash=38425e57a1, ver=4, fOverwintered=1, nVersionGroupId=892f2085, vin.size=4, vout.size=5, nLockTime=0, nExpiryHeight=1467, valueBalance=0, vShieldedSpend.size=0, vShieldedOutput.size=0)
+    CTxIn(COutPoint(3c4001df8e, 2), scriptSig=47304402201f21d377bdd508)
+    CTxIn(COutPoint(3c4001df8e, 1), scriptSig=4c79a276a072a26ba067a565)
+    CTxIn(COutPoint(3c4001df8e, 0), scriptSig=4c79a276a072a26ba067a565)
+    CTxIn(COutPoint(3c4001df8e, 3), scriptSig=48304502210082d252ea3409)
+    CTxOut(nValue=9.99890000, scriptPubKey=2ea22c80206e705f688166e770fcca)
+    CTxOut(nValue=0.00010000, scriptPubKey=2ea22c802028a34c7086b6590db9f9)
+    CTxOut(nValue=0.00010000, scriptPubKey=2102fe75222263840294f798e08417)
+    CTxOut(nValue=0.00010000, scriptPubKey=2102fe75222263840294f798e08417)
+    CTxOut(nValue=0.00000000, scriptPubKey=6a4ca9ec44bcd5ead3bf249f5d472e)
+
+  vMerkleTree:  7198687965f726624696d7b21724e0b2fcac46a4863b9b2f2d0458da4a51f061 1ff5eb0238868d62cb55d7339101ff07a7ac840ee2781458879c6e68176e1675 6206d16ab6fa49a0d75334c5f48e06cb328f57282dac79350b2c4f51ed8ba79d 38425e57a17ea87a063e0c32b7dfb7293966ad731d1dcfc4694b2da28f27f74b 26705f8e18f16b54f97490cad004665aecbe6984c829ff227965748b01166f7f c3365d9d4ac5f142dca09200e64c759b52052451e1016572b657e2778c155c98 f233142da4b1c324f84a43f69673010e2f8b462fb3c39d7f48ec857441b40868
+
+generated 1.0003 height.1454
+```
+
+[29-Jan-19 11:33 AM] Mihailo#5902
+Here it is stuck, does not mine anymore, RPC is stuck...
+
+[29-Jan-19 11:33 AM] blackjok3r#3181
+dead locked? I thaught this was fixed?
+
+[29-Jan-19 11:33 AM] Mihailo#5902
+I'm on FSM from yesterday...
+
+[29-Jan-19 11:34 AM] Mihailo#5902
+Hmmm, or not.
+
+[29-Jan-19 11:34 AM] blackjok3r#3181
+too many branches lol
+
+[29-Jan-19 11:35 AM] blackjok3r#3181
+```if ( ASSETCHAINS_SYMBOL[0] == 0 ||  (ASSETCHAINS_SYMBOL[0] != 0 && !isStake) )
+                {
+                    LEAVE_CRITICAL_SECTION(cs_main);
+                    LEAVE_CRITICAL_SECTION(mempool.cs);
+                }
+                return 0;```
+Make sure that that is in CreateBlock where ever it does return(0)
+
+[29-Jan-19 11:35 AM] blackjok3r#3181
+that was the cause of lock up.
+
+[29-Jan-19 11:36 AM] blackjok3r#3181
+unless this is something else that is
+
+[29-Jan-19 11:38 AM] Mihailo#5902
+I was on FSM from Jan 21
+
+[29-Jan-19 11:42 AM] blackjok3r#3181
+not sure what chian your using but there is one return without unlock in FSM, that is not in LABS.... maybe its this:
+https://github.com/jl777/komodo/blob/FSM/src/miner.cpp#L587
+
+{Embed}
+https://github.com/jl777/komodo/blob/FSM/src/miner.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[29-Jan-19 11:54 AM] Mihailo#5902
+Will check now with latest FSM.
+
+[29-Jan-19 11:59 AM] Mylo#8306
+miner deadlock i think happened earlier, jan 11.
+
+[29-Jan-19 12:00 PM] Mihailo#5902
+Yep, still problem on latest FSM
+
+[29-Jan-19 12:07 PM] Mihailo#5902
+@blackjok3r Still blocking with unlock on that return
+
+[29-Jan-19 12:09 PM] blackjok3r#3181
+🤔 
+Tracking that down was tricky... I had to attach GBD to it once it was locked, and then trace each thread until I found what was locking it up.
+
+[29-Jan-19 12:09 PM] blackjok3r#3181
+Havent had any problem with it since...
+
+[29-Jan-19 12:09 PM] blackjok3r#3181
+that said I am not on FSM... but we are pretty close to equal with it.
+
+[29-Jan-19 12:10 PM] Mihailo#5902
+I thought sam that I have to check every thread.
+
+[29-Jan-19 12:11 PM] blackjok3r#3181
+get one that is in LOCK cs_main and then trace what owns it
+
+[29-Jan-19 12:11 PM] Mihailo#5902
+Did it long time ago, can you give me hints how to do it easy?
+
+[29-Jan-19 12:11 PM] blackjok3r#3181
+I followed youtube video it was very clear... let me see if I cn find it
+
+[29-Jan-19 12:11 PM] Mihailo#5902
+And why I need to attach after lock, can't run it with GDB?
+
+[29-Jan-19 12:12 PM] blackjok3r#3181
+I think you need to attack afterwards... or at least thats just how I did it
+
+[29-Jan-19 12:12 PM] blackjok3r#3181
+https://www.youtube.com/watch?v=MvnQfaPpMcA
+
+{Embed}
+CSE 3320
+https://www.youtube.com/watch?v=MvnQfaPpMcA
+Finding a deadlock with gdb
+In this video I demonstrate finding a deadlock using gdb
+https://i.ytimg.com/vi/MvnQfaPpMcA/maxresdefault.jpg
+
+[29-Jan-19 12:13 PM] blackjok3r#3181
+I followed that for the most part
+
+[29-Jan-19 12:35 PM] Mihailo#5902
+@blackjok3r How to get who owns cs_main?
+
+[29-Jan-19 12:39 PM] blackjok3r#3181
+http://46dogs.blogspot.com/2012/06/debugging-mutex-locks-in-threaded.html
+I think this was something else I used... haveing trouble rembering exactly
+
+{Embed}
+http://46dogs.blogspot.com/2012/06/debugging-mutex-locks-in-threaded.html
+Debugging mutex locks in threaded programs using GDB
+A common problem I have while debugging a threaded program is trying to determine which thread currently has a mutex lock when another threa...
+
+[29-Jan-19 12:44 PM] Mihailo#5902
+@blackjok3r If I got it right one of miner thread is blocked here: https://github.com/jl777/komodo/blob/FSM/src/main.cpp#L3573
+
+{Embed}
+https://github.com/jl777/komodo/blob/FSM/src/main.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[29-Jan-19 12:45 PM] blackjok3r#3181
+never seen it lock there before
+
+[29-Jan-19 12:45 PM] blackjok3r#3181
+is another thread owning a mutex?
+
+[29-Jan-19 12:45 PM] Mihailo#5902
+```Thread 21 (5679)
+print cs_main
+$3 = {<boost::recursive_mutex> = {m = pthread_mutex_t = {Type = Recursive, 
+      Status = Acquired, possibly with waiters, Owner ID = 5680, Robust = No, Shared = No, 
+      Protocol = None}}, <No data fields>}
+```
+
+```Thread 22 (5680)
+#0  0x00007ffff773c9f3 in futex_wait_cancelable (private=<optimized out>, expected=0, 
+    futex_word=0x5555565d8ef0 <scriptcheckqueue+208>) at ../sysdeps/unix/sysv/linux/futex-internal.h:88
+#1  __pthread_cond_wait_common (abstime=0x0, mutex=0x5555565d8ea0 <scriptcheckqueue+128>, 
+    cond=0x5555565d8ec8 <scriptcheckqueue+168>) at pthread_cond_wait.c:502
+#2  __pthread_cond_wait (cond=cond@entry=0x5555565d8ec8 <scriptcheckqueue+168>, 
+    mutex=mutex@entry=0x5555565d8ea0 <scriptcheckqueue+128>) at pthread_cond_wait.c:655
+#3  0x00005555556eaf0b in boost::condition_variable::wait (m=..., 
+    this=0x5555565d8ea0 <scriptcheckqueue+128>)
+    at /home/mixa/komodo/depends/x86_64-unknown-linux-gnu/share/../include/boost/thread/pthread/condition_variable.hpp:81
+#4  CCheckQueue<CScriptCheck>::Loop (this=this@entry=0x5555565d8e20 <scriptcheckqueue>, 
+    fMaster=fMaster@entry=true) at checkqueue.h:117
+#5  0x00005555556bfaaf in CCheckQueue<CScriptCheck>::Wait (this=0x5555565d8e20 <scriptcheckqueue>)
+    at checkqueue.h:157
+#6  CCheckQueueControl<CScriptCheck>::Wait (this=<synthetic pointer>) at checkqueue.h:212
+#7  ConnectBlock (block=..., state=..., pindex=<optimized out>, pindex@entry=0x7fff9c012600, view=..., 
+    fJustCheck=fJustCheck@entry=false, fCheckPOW=fCheckPOW@entry=true) at main.cpp:3573
+#8  0x00005555556c45ba in ConnectTip (pblock=0x7fffccff5240, pindexNew=0x7fff9c012600, state=...)
+    at main.cpp:4041
+```
+
+[29-Jan-19 12:46 PM] Mihailo#5902
+```
+  21   Thread 0x7fffcd7fa700 (LWP 5679) "komodo-miner" __lll_lock_wait ()
+    at ../sysdeps/unix/sysv/linux/x86_64/lowlevellock.S:135
+---Type <return> to continue, or q <return> to quit---
+* 22   Thread 0x7fffccff9700 (LWP 5680) "komodo-miner" 0x00007ffff773c9f3 in futex_wait_cancelable (
+    private=<optimized out>, expected=0, futex_word=0x5555565d8ef0 <scriptcheckqueue+208>)
+    at ../sysdeps/unix/sysv/linux/futex-internal.h:88
+  23   Thread 0x7fffa7fff700 (LWP 5681) "komodo-miner" 0x000055555572d402 in equi::digit0 (
+    this=this@entry=0x7fffa7ffbbc0, id=id@entry=0) at pow/tromp/equi_miner.h:444
+  24   Thread 0x7fffa77fe700 (LWP 5682) "komodo-miner" 0x0000555555ef4681 in blake2b_compress_sse41 ()```
+
+[29-Jan-19 12:47 PM] Mihailo#5902
+Only those two komodo-miner threads are blocked
+
+[29-Jan-19 12:47 PM] Mihailo#5902
+I can check if some other is also blocked
+
+[29-Jan-19 12:57 PM] blackjok3r#3181
+really not too sure... definatly seems a diffrent problem that what I fixed before
+
+[29-Jan-19 12:59 PM] Mihailo#5902
+I can start with fresh chain, as I used this for longer time. But I'm curious why this happens.
+
+[29-Jan-19 01:00 PM] Mihailo#5902
+If I understand correctly this is doing some checks of vins, and it never finishes so that control.Wait() waits indefinitely
+
+[29-Jan-19 01:03 PM] blackjok3r#3181
+Worst bugs man... I spent litteral days on those... Havent noticed anything locking up since.. BUt maybe we are doing dioffrent things.
+
+[29-Jan-19 01:04 PM] blackjok3r#3181
+Its entering a LOCK when its already in a lock.
+
+[29-Jan-19 01:04 PM] blackjok3r#3181
+finding where is a mission. If a new chain doesnt help, send me chain params and I can have a look,.
+
+{Reactions}
+👍 
+
+[29-Jan-19 01:34 PM] Mihailo#5902
+@blackjok3r It seems miner only blocks when it mines a GatewaysClaim tx. It was working before, I must check what's going on
+
+[29-Jan-19 01:35 PM] blackjok3r#3181
+That might explain why we dont see any thing locking up.
+
+[29-Jan-19 06:48 PM] dukeleto#7326
+@Deleted User yep, it's true. Forced pair programming (always 2 coders sitting at 1 computer with 1 keyboard, test driven development (write failing tests first, then make them pass), a full test suite that took over 24hrs, i could go on...)
+
+{Reactions}
+abusedsmily 
+
+[30-Jan-19 12:02 AM] CryptoMedication#4824
+Hey devs.
+
+[30-Jan-19 12:02 AM] CryptoMedication#4824
+I got a few questions for any devs in the house
+
+[30-Jan-19 12:35 AM] Mylo#8306
+I’m a “weekend coder”, just ask Qs someone will answer
+
+[30-Jan-19 12:52 AM] dukeleto#7326
+@CryptoMedication ask ye questions
+
+[30-Jan-19 12:53 AM] CryptoMedication#4824
+Perfect.
+
+[30-Jan-19 12:53 AM] CryptoMedication#4824
+So I get the basics of $KMD but there are a few things that are tripping me up here.
+
+[30-Jan-19 12:54 AM] CryptoMedication#4824
+Let's say I'm Charlie Lee. I come to Komodo and I want to secure Litecoin with Komodo's dpow. I tell you all work your magic. 
+
+You notarize my blockchain on yours and also on Bitcoin, correct?
+
+[30-Jan-19 12:54 AM] CryptoMedication#4824
+@Mylo @dukeleto
+
+[30-Jan-19 01:00 AM] grewalsatinder#9653
+Does anyone know any *good* Picture-to-Text library? Desired languages:
+- JavaScript
+- Java
+- C/C++
+
+[30-Jan-19 01:00 AM] grewalsatinder#9653
+- Go
+- Rust
+
+[30-Jan-19 01:00 AM] grewalsatinder#9653
+In any language which I mentioned
+
+[30-Jan-19 01:01 AM] grewalsatinder#9653
+Can use that in some of my future apps for dev tutorials
+
+[30-Jan-19 01:41 AM] Mylo#8306
+@CryptoMedication  yes.  charlie, vitalik, johnny and joan doe.   anyone.  you.
+
+one of those basics of KMD is to be able to create your own chain.
+
+- "you" being a dev, and you can create an application specific chain and secure it to bitcoin hashrate.
+
+or
+
+-  you being a dev and your application wants to create a chain for "your user", so essentially your application will run a cluster of 10k chains.  Verus Coin project is doing something like this with public blockchains as a service for polls.  Each poll is just a short lived chain, maybe a day, maybe a week.
+
+The notary network does the notarizations, but in the #kmdlabs they are making their own notary network that still does the YOURCHAIN->KMD notarization, but they'll be incentivizing their channel and their own notaries by other means.
+
+There's nothing to stop in say 1000 days, 50 other notary networks being created.   If you have an application that requires 1 chain per user, maybe you'll have a partner network of B2B that can integrate related services and between your partner network, you're all incentivized to notarize (keep a healthy network) for different methods of rewards for maintaining a healthy ecosystem of your own.
+
+[30-Jan-19 01:43 AM] Mylo#8306
+e.g. KMD is the working tech of a proof of concept.  we all notarize to KMD when we need to, KMD goes into BTC.  We all piggy back off KMD tech, independently.
+
+[30-Jan-19 01:54 AM] Mylo#8306
+That's the security aspect 👆 
+
+
+Now for scalability.   Instead of your application making 1 chain per user, it needs maximum throughput, of say 10k actions per second.   Then to achieve this, your application would run a cluster of chains, approx 100.   These 100 chains can interact with each other, through KMD's crypto conditions tech and act as one chain.  All your cluster will notarize to KMD and be able to interrogate KMD for past notarizations.  This interrogation is handled efficiently using a MoMoM (merkle root of merkle root of merkle root).  In your cluster, you want to maintain coin/token/etc. supply, so combined with MoMoM is a burn protocol, so within your cluster it's always got same balance.
+
+[30-Jan-19 01:54 AM] Mylo#8306
+That's one use of Crypto Conditions.
+
+[30-Jan-19 02:02 AM] Mylo#8306
+More uses of cryptoconditions include tokenization, interactivity between a user and chain, oracles for making off-chain data on-chain data thru your trusted application, and other things - not to be vague, but you basically can make any code part of the consensus.   If you wanted to make a  very ridiculousconsensus rule that a transaction needed human authorization e.g. by making a pop up saying "click me", and if the user clicks it's authorized and tx passes validity - or if it's not clicked, then the tx is rejected, then that is part of the consensus code, that silly pop up is now blockchain verifiable that someone clicked it.
+
+More sensible uses are for time locked block rewards being paid when timelock expires to a group of ppl, like pool miners in a share system, or some other off-chain system that is oraclized, like how many goals were scored on playstation in the last 5 mins to those goal scorers.
+
+[30-Jan-19 02:03 AM] Mylo#8306
+Crypto Conditions + MoMoM between chains allows a lot of interoperability possibilities.   Basically make up the rules of interoperability, they will be validated that what happened at time X did happen when it happened, and that data can be validated across chains, for use in the future at time Y.
+
+[30-Jan-19 02:04 AM] Mylo#8306
+I"ve sat here with the devs in chat for 12+months, so if there's Qs, to that just ask.
+
+[30-Jan-19 02:06 AM] Mylo#8306
+you might have a curly question i can't answer, but there'll be someone that knows how to solve it
+
+[30-Jan-19 02:14 AM] Mylo#8306
+@grewalsatinder some years ago googles open source OCR was the best.
+
+[30-Jan-19 02:14 AM] Mylo#8306
+https://opensource.google.com/projects/tesseract
+
+{Embed}
+https://opensource.google.com/projects/tesseract
+Projects – opensource.google.com
+Learn about all our projects.
+https://opensource.google.com/assets/static/images/misc/og1.jpg
+
+[30-Jan-19 02:15 AM] grewalsatinder#9653
+oh cool!! thanks for the link @Mylo 😃
+
+[30-Jan-19 02:15 AM] grewalsatinder#9653
+https://github.com/tesseract-ocr/tesseract
+
+{Embed}
+https://github.com/tesseract-ocr/tesseract
+tesseract-ocr/tesseract
+Tesseract Open Source OCR Engine (main repository) - tesseract-ocr/tesseract
+https://avatars2.githubusercontent.com/u/8401422?s=400&v=4
+
+[30-Jan-19 02:15 AM] grewalsatinder#9653
+Can definitely explore it 😃
+
+{Reactions}
+👍 
+
+[30-Jan-19 02:16 AM] Mylo#8306
+sorry to make you wait through that rant 😬
+
+[30-Jan-19 02:17 AM] Mylo#8306
+i'm sure you were busy anyway hehe
+
+[30-Jan-19 02:17 AM] grewalsatinder#9653
+yes was busy reading team chat of last two days... hehe 😁
+
+[30-Jan-19 02:18 AM] Mylo#8306
+i'm brushing my teeth pacing about....i think i know what you want OCR for 😃
+
+[30-Jan-19 02:19 AM] grewalsatinder#9653
+Sometimes just random ideas come to mind, and I just write those in points somwhere.
+then later asses if they are actually good and worth exploring further
+
+[30-Jan-19 02:20 AM] Mylo#8306
+definitely worth exploring.   with tony's work on file uploads of pics to oracles
+
+[30-Jan-19 02:20 AM] grewalsatinder#9653
+yep
+
+[30-Jan-19 02:20 AM] Mylo#8306
+which is in #cc-oracles for ppl
+
+[30-Jan-19 02:20 AM] grewalsatinder#9653
+since I'd only focus on creating the demo or example apps from now on, I'll try to create half baked apps and write the process of creating those
+
+[30-Jan-19 02:21 AM] grewalsatinder#9653
+that should give ample of examples to community and also showcase the possibilities what KMD can do
+
+[30-Jan-19 02:21 AM] Mylo#8306
+yeah, watch out - that means you're getting old mate!!   😛
+
+[30-Jan-19 02:21 AM] grewalsatinder#9653
+including a detailed developer focused documentation that I always wished myself to see
+
+{Reactions}
+abusedsmily 
+
+[30-Jan-19 02:22 AM] grewalsatinder#9653
+the code by code documentation 😄
+
+[30-Jan-19 02:23 AM] grewalsatinder#9653
+I felt bad for not contributing enough this whole last year to Komodo.... this year, I changed some of my ways, which are so far very efficient and effective.
+
+[30-Jan-19 02:25 AM] Mylo#8306
+yep, don't stop creating.   code, docs, music, +ve vibes.  never stop creating.
+
+[30-Jan-19 02:25 AM] grewalsatinder#9653
+true mate
+
+[30-Jan-19 02:25 AM] grewalsatinder#9653
+learned tiny bit of Cricket in last 2 days.... hehe 😂
+
+[30-Jan-19 02:26 AM] grewalsatinder#9653
+NZ vs IND 3rd ODI match
+
+[30-Jan-19 02:26 AM] grewalsatinder#9653
+watching this match, and little learned about the rules, the only thought came to me is how I can use that in decentralized betting
+
+[30-Jan-19 02:26 AM] grewalsatinder#9653
+using KMD OracleCC
+

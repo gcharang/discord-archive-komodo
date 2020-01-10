@@ -1,0 +1,409 @@
+==============================================================
+Guild: Komodo
+Channel: antara-composer-beta
+Topic: This is the official Antara Composer beta program channel - please use https://github.com/KomodoPlatform/composer/issues for bug reports and feature requests. For critical security bug reports please do send us your encrypted (https://pgp.mit.edu/pks/lookup?op=get&search=0x379287998EE6CF47) report to security@komodoplatform.com and allow up to 24h for reply.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[03-Aug-19 02:22 PM] naezith#9757
+`transaction too large`
+
+[03-Aug-19 02:22 PM] naezith#9757
+code runs when I click the withdraw button
+
+{Attachments}
+https://cdn.discordapp.com/attachments/585490205751115777/607216795685879810/unknown.png
+
+[03-Aug-19 02:23 PM] naezith#9757
+can you explain @jl777c
+
+[03-Aug-19 02:23 PM] jl777c#5810
+too many inputs
+
+[03-Aug-19 02:23 PM] naezith#9757
+`/home/ubuntu/komodo/src/komodo-cli -ac_name=${ac_name} sendtoaddress ${withdrawal.kmd_address} $(/home/ubuntu/komodo/src/komodo-cli -ac_name=${ac_name} getbalance) "" "" true`
+
+[03-Aug-19 02:23 PM] jl777c#5810
+send smaller amounts
+
+[03-Aug-19 02:24 PM] jl777c#5810
+you have no guarantee that you can send your entire balance
+
+[03-Aug-19 02:24 PM] naezith#9757
+can you give me a safer line
+
+[03-Aug-19 02:24 PM] naezith#9757
+which would work
+
+[03-Aug-19 02:25 PM] naezith#9757
+though I do exactly the same when I send the premined coins
+
+[03-Aug-19 02:25 PM] naezith#9757
+250,000
+
+[03-Aug-19 02:25 PM] naezith#9757
+that works and this doesn't, why
+
+[03-Aug-19 02:30 PM] naezith#9757
+okay ca explained the reason why it happens nicely
+
+[03-Aug-19 02:30 PM] naezith#9757
+now I need to definition or implementation of `smaller amounts`
+
+[03-Aug-19 02:30 PM] naezith#9757
+what is the highest safe amount
+
+[03-Aug-19 02:56 PM] naezith#9757
+and will it be same for all chains
+this value I'll find
+
+[03-Aug-19 03:11 PM] jl777c#5810
+you can use about 500 inputs
+
+[03-Aug-19 03:12 PM] jl777c#5810
+so if it is mining and has a lot of block rewards 500x blockreward would be the cap
+
+[03-Aug-19 03:12 PM] jl777c#5810
+all depends on actual utxos
+
+[03-Aug-19 03:32 PM] naezith#9757
+`1000` works
+
+[03-Aug-19 03:32 PM] naezith#9757
+I'll set it 500 then
+
+[03-Aug-19 03:34 PM] jl777c#5810
+there is no one size fits all
+
+[03-Aug-19 03:36 PM] naezith#9757
+what should I do then
+
+[03-Aug-19 03:37 PM] naezith#9757
+something smaller like 100?
+
+[03-Aug-19 03:39 PM] jl777c#5810
+for 250,000?
+
+[03-Aug-19 03:39 PM] jl777c#5810
+i would try to send all, if it fails, send half
+
+[03-Aug-19 03:39 PM] jl777c#5810
+if that fails send quarter
+
+[03-Aug-19 03:39 PM] jl777c#5810
+until it works
+
+[03-Aug-19 04:34 PM] naezith#9757
+okay so there is no pure math we can get from supply or something
+
+[03-Aug-19 04:39 PM] jl777c#5810
+depends on exact state of wallet
+
+[03-Aug-19 04:39 PM] jl777c#5810
+the limit is that each tx cant be larger than 200kb
+
+[03-Aug-19 04:39 PM] jl777c#5810
+each input needs to be signed, so that is 120 bytes or so, but depending on the type of input, can be a lot bigger
+
+[03-Aug-19 04:40 PM] jl777c#5810
+its like trying to figure out exactly how many drops of rain a specific area on earth will get, and not knowing where or when
+
+[05-Aug-19 07:45 AM] gcharang#6833
+I am not sure if it is clear, the problem is not the "amount of coins"; atleast not directly
+the actual problem is the number of inputs the total value is in
+
+Ex: 250000 coins available in 1 input vs 1000 inputs that each have 250 coins
+the transaction to send 250000 in the first case will be very small (in terms of data size)
+the transaction to send 250000 in the second case is very large(in terms of data size) as it needs to include details about 1000 different inputs and sign all of them
+
+as there is a limit on the maximum size a transaction can be, the above difference matters
+
+[05-Aug-19 09:30 AM] gcharang#6833
+you could run this script or similar: https://github.com/TheComputerGenie/Misc_Stuff/blob/master/Wallet%20stuff/Consolidate.sh
+on a crontab to consolidate the coins from a large number of utxos on mining nodes
+
+{Embed}
+https://github.com/TheComputerGenie/Misc_Stuff/blob/master/Wallet%20stuff/Consolidate.sh
+TheComputerGenie/Misc_Stuff
+It's gotta go somewhere, so why not here? Contribute to TheComputerGenie/Misc_Stuff development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/21057518?s=400&v=4
+
+[05-Aug-19 01:11 PM] naezith#9757
+trying to send and halving the amount at every failure works well
+
+{Reactions}
+👍 
+
+[05-Aug-19 05:47 PM] naezith#9757
+@gcharang can you provide more professional texts
+
+{Attachments}
+https://cdn.discordapp.com/attachments/585490205751115777/607992983643750400/unknown.png
+
+[05-Aug-19 05:47 PM] naezith#9757
+and is it looking as you wanted
+
+[06-Aug-19 08:41 AM] gcharang#6833
+@naezith 
+that looks correct
+
+for the first option, 
+```
+don't include -ac_cc in the chain parameters at all
+```
+that would disable Antara modules
+
+Regarding the texts, the content is accurate. @Daniel CP would be of more help making the copy better
+
+[06-Aug-19 08:43 AM] naezith#9757
+yeah it does `don't include -ac_cc in the chain parameters at all`
+
+[06-Aug-19 08:43 AM] naezith#9757
+I'll type that instead then
+
+{Reactions}
+👍 
+
+[06-Aug-19 11:44 AM] Daniel CP#2020
+Hey guys, I think that copy works
+
+[06-Aug-19 11:45 AM] Daniel CP#2020
+''Do not include -ac_CC in your Smart Chain's parameters''
+
+[06-Aug-19 11:45 AM] Daniel CP#2020
+I'd suggest using this ^
+
+{Reactions}
+👍 
+
+[07-Aug-19 05:51 PM] naezith#9757
+@TonyL 
+here is an update which might create issues:
+
+```
+- Reimplemented "Antara Modules" UI.
+- Improved ticker input box, space and letters like Ş Ç Ö are not being typed.
+- Tiny UI tweaks.
+- Fixed and tested the withdraw issue fully.
+- Added Subscription Month Selectors to Cart Page, Cart Sidebar and Tools Page.
+- Changed prices.
+- Website is served built/statically instead of in development mode.
+```
+
+[07-Aug-19 05:52 PM] naezith#9757
+so now we have subscription length option
+
+[07-Aug-19 05:52 PM] naezith#9757
+1-3-6-12 months
+
+[07-Aug-19 05:53 PM] naezith#9757
+though subscription is not implemented on server-side yet
+
+[07-Aug-19 05:54 PM] naezith#9757
+like they don't cancel after 1 month atm, that's the next thing I'll be working on now
+
+[07-Aug-19 05:55 PM] TonyL#3577
+Thank you for updates @naezith ! For now we're fine with video I shown you yesterday. I can help to fully test subscription logic when it's ready and make another one with different scenario - lets say another business case with some tricky rewards scheme and monthly payments
+
+[08-Aug-19 08:42 AM] ca333#0118
+@TonyL @smk762 -  dracocanis ominator plz test ^
+
+{Reactions}
+👍🏼 
+
+[08-Aug-19 09:14 AM] smk762 -  dracocanis ominator#7640
+I reset password, and after a couple min got reset link. Entered/confirmed new password, screen says to check email for verification link. 30 min later, still no email. 
+Clicked resend... waiting.
+
+[08-Aug-19 09:17 AM] smk762 -  dracocanis ominator#7640
+Is email verification after password reset neccessary? Seems duplicate action after already using the password reset link which was emailed to same address.
+
+[08-Aug-19 09:25 AM] smk762 -  dracocanis ominator#7640
+verification link arrived after manual resent button clicked.
+email link text != href makes spam detection unhappy
+
+{Attachments}
+https://cdn.discordapp.com/attachments/585490205751115777/608953924095049729/unknown.png
+
+[08-Aug-19 09:42 AM] smk762 -  dracocanis ominator#7640
+- confirm space and special chars not being input for ticker.
+- suggest dynamic $ value next to subscription item values, and column each for monthly / total for item
+ - cancel and return from coinpayments page clears pending chain order (not sue if intended, just mentioning). Assuming payment works, did not test.
+
+[09-Aug-19 09:31 AM] naezith#9757
+I thought about this but there is no space in the row `- suggest dynamic $ value next to subscription item values, and column each for monthly / total for item`
+
+[09-Aug-19 09:32 AM] naezith#9757
+I can add it inside the select dropdown maybe
+
+[09-Aug-19 09:32 AM] naezith#9757
+yes `- cancel and return from coinpayments page clears pending chain order `
+
+[09-Aug-19 09:54 AM] naezith#9757
+whoa that email link thingy is so weird
+
+[09-Aug-19 09:54 AM] naezith#9757
+it's basically plain text in the code
+
+[09-Aug-19 09:55 AM] naezith#9757
+sendgrid turns it into their own url somehow
+
+[09-Aug-19 09:55 AM] naezith#9757
+@smk762 -  dracocanis ominator there shouldn't be any email verification after password reset
+
+[09-Aug-19 09:55 AM] naezith#9757
+
+{Attachments}
+https://cdn.discordapp.com/attachments/585490205751115777/609323971237904404/unknown.png
+
+[09-Aug-19 09:56 AM] naezith#9757
+this happens for me
+
+[09-Aug-19 09:56 AM] naezith#9757
+email verification should occur only if you didn't do email verification before
+
+[09-Aug-19 09:59 AM] smk762 -  dracocanis ominator#7640
+I recall having some problem recieving the verification link testing early on, I think I used gmail on the second attempt to get in so that makes sense. The address used last night probably wasnt verified until yesterday
+
+[09-Aug-19 10:01 AM] smk762 -  dracocanis ominator#7640
+this might help with the link issue - https://sendgrid.com/docs/ui/account-and-settings/how-to-set-up-link-branding/#what-is-link-branding
+
+{Embed}
+https://sendgrid.com/docs/ui/account-and-settings/how-to-set-up-link-branding/
+How to set up link branding
+Set up link branding to improve your deliverability and security of your emails.
+https://sendgrid.com/brand/sg-twilio/SG_Twilio_Lockup_Social.png
+
+[09-Aug-19 12:01 PM] naezith#9757
+this is really absurd
+
+[09-Aug-19 12:01 PM] naezith#9757
+@ca333 can you check what's going on within the sendgrid dashboard please?
+
+[09-Aug-19 12:03 PM] naezith#9757
+
+{Attachments}
+https://cdn.discordapp.com/attachments/585490205751115777/609356016760520717/unknown.png
+
+[09-Aug-19 12:11 PM] ca333#0118
+checking shortly @naezith
+
+[06-Sep-19 01:59 PM] naezith#9757
+I need some new lines
+
+{Attachments}
+https://cdn.discordapp.com/attachments/585490205751115777/619532250819854367/unknown.png
+
+[06-Sep-19 02:00 PM] naezith#9757
+Nodes got been separated to "Base Nodes" and "Nodes", latter is being extra
+
+[06-Sep-19 02:01 PM] naezith#9757
+@Daniel CP
+
+[06-Sep-19 02:02 PM] naezith#9757
+that "You need at least two nodes to run a Smart Chain" is now the "Base Nodes"
+
+[06-Sep-19 02:02 PM] naezith#9757
+though I think we should hide that "two" so quantity will be a mystery
+
+[06-Sep-19 02:44 PM] Daniel CP#2020
+Hi @naezith I'm happy to help but not sure what you need
+
+[06-Sep-19 02:45 PM] Daniel CP#2020
+Should I write 3 new lines for the "NODES" page on the right in the image you sent?
+
+[06-Sep-19 02:50 PM] naezith#9757
+both needs to be updated I think
+
+[06-Sep-19 02:50 PM] naezith#9757
+doesn't have to be `new` lines but I need to fill them, so 6 lines
+
+[06-Sep-19 03:59 PM] Daniel CP#2020
+OK sure, no problem. I'll get it done shortly
+
+[09-Sep-19 09:50 AM] naezith#9757
+@Daniel CP any update?
+
+[09-Sep-19 09:52 AM] naezith#9757
+btw the site is updated, now we have Subscription working fully.  also it's possible now to add new tools and nodes, or extend the tool subscription of existing chains
+
+[09-Sep-19 09:56 AM] Daniel CP#2020
+Sorry, forgot to get this done over the weekend
+
+[09-Sep-19 09:56 AM] Daniel CP#2020
+I still need a bit more context. What is the difference between Base Nodes and Nodes?
+
+[09-Sep-19 09:57 AM] Daniel CP#2020
+If we are requiring two base nodes for every Smart Chain, would it make sense to remove that from the UI completely? And just encourage people to add more nodes?
+
+[09-Sep-19 10:05 AM] naezith#9757
+since we have subscription system, nodes get terminated when subscription expires. but we need two base nodes to stay alive because the tools depend on them. so we have a fixed price for the base nodes which will live as long as chain is alive, and extra nodes can be created and expire/die separately @Daniel CP
+
+[09-Sep-19 10:13 AM] Daniel CP#2020
+https://docs.google.com/document/d/1kz7AFFkX7TQHnUMiDSuSUWAOZtIhYGVVlH8lF_E3kdg/edit?usp=sharing
+
+{Embed}
+https://docs.google.com/document/d/1kz7AFFkX7TQHnUMiDSuSUWAOZtIhYGVVlH8lF_E3kdg/edit?usp=sharing
+Base Nodes & Nodes
+Base Nodes  Decentralized networks must have more than one node, by definition A minimum of 2 base nodes is required for running your Smart Chain Each node keeps a copy of your Smart Chain’s distributed ledger  Nodes  Additional nodes boost the security and decentralization...
+https://lh5.googleusercontent.com/BqjHp5RoYcnQ1WBNVeCmWQ4y-6huHl2a5DDiu3GhnCtAMhpb8XFSWRAj-iUv94Fl3tr1sg=w1200-h630-p
+
+[09-Sep-19 10:13 AM] Daniel CP#2020
+Ok I think this will work @naezith
+
+[09-Sep-19 10:23 AM] naezith#9757
+perfect, thanks
+
+[09-Sep-19 10:27 AM] Daniel CP#2020
+No problem
+
+[12-Oct-19 09:35 AM] runpaint#7773
+We're about to launch a blockchain with Antara Composer.  How soon can we be added to the AtomicDEX mobile app?
+
+{Reactions}
+😃 
+
+[12-Oct-19 11:54 AM] runpaint#7773
+I completed checkout, but my bank declined the transaction for a security check.  The order history says I should get a Coinpayments email, but I haven't gotten one.
+
+[12-Oct-19 12:07 PM] Regnar#6164
+@ca333 ^
+
+{Reactions}
+👍 
+
+[12-Oct-19 12:15 PM] ca333#0118
+If you took the "atomicDEX Mobile Wallet Listing" it will take less than a week to list you in the AtomicDEX mobile app @runpaint
+
+{Reactions}
+AntaraFramework (3) 
+
+[12-Oct-19 12:16 PM] runpaint#7773
+Thanks!
+
+[12-Oct-19 09:41 PM] Oszy#5734
+@runpaint  welcome aboard 🙂
+
+[12-Oct-19 10:22 PM] runpaint#7773
+@Oszy thanks!
+
+[19-Oct-19 05:51 PM] runpaint#7773
+Golden Crypto Commodity is launching with Antara Composer.  Everything's almost ready, so we went ahead and announced at Bitcointalk.
+https://bitcointalk.org/index.php?topic=5194266.0;topicseen
+
+{Embed}
+https://bitcointalk.org/index.php?topic=5194266.0;topicseen
+[ANN] [COMMOD] Golden Crypto Commodity - The #2 Cryptocurrency
+[ANN] [COMMOD] Golden Crypto Commodity - The #2 Cryptocurrency
+
+{Reactions}
+🎆 (7) 
+
+[19-Oct-19 08:24 PM] kmdkrazy#8280
+Built using the Komode platform
+(Spell Correct)
+
+{Reactions}
+👆 
+

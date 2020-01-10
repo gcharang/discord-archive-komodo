@@ -1,0 +1,117 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"232679450301431808";"blackjok3r#3181";"04-Aug-18 03:36 AM";"Sif ever do any work..";"";"";
+"456226577798135808";"Deleted User#0000";"05-Aug-18 01:41 AM";"*rips paper to shreds*";"";"";
+"456226577798135808";"Deleted User#0000";"05-Aug-18 01:41 AM";"*cuts hole in bottom of your bin, refeeds same rubbish*";"";"";
+"456226577798135808";"Deleted User#0000";"05-Aug-18 01:41 AM";"😛";"";"";
+"456490768589258753";"ComputerGenie#2331";"05-Aug-18 02:03 AM";"@♻ emrals.com - community ♻ I've been on the Adopt a Highway commission for 3 decades, where's my feken EMRALS, ya spammin' twat?";"";"🍀 (1)";
+"455846139296481302";"digital bullion#8223";"06-Aug-18 07:40 PM";"Any update on the scaling test? 😃";"";"";
+"406037988850794496";"patchkez#5349";"07-Aug-18 11:12 AM";"@blackjok3r  hey hey! I was working on configuring storage for our K8N cluster and found few limitations. First one is that EBS volume can be mounted only to EC2 instances in the same region and AZ. Which can cause us some problems if the cluster is spread across 2 zones. The other limitation is that AWSElasticBlockStore can mount volume  with read/write permissionsonly to one ec2 instance. See the table in Access Mode chapter: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistent-volumes";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:13 AM";"🤔";"";"";
+"406037988850794496";"patchkez#5349";"07-Aug-18 11:13 AM";"as a workaround we could create 1 volume per ec2 node. But this seem to complicate things";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:13 AM";"Could we `rsync` it all to a single isntance with a huge HDD storage volume after the test?";"";"";
+"406037988850794496";"patchkez#5349";"07-Aug-18 11:14 AM";"other option is to deploy NFS/Ceph/Glusterfs and use volumes exported from there";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:14 AM";"Its *only* 7TB";"";"";
+"406037988850794496";"patchkez#5349";"07-Aug-18 11:16 AM";"hmm, the thing is that without any volume attached to container/pod,  data are lost once the container is removed or restarted on another node.  Maybe we could implement some kind of trigger which would run rsync from inside the container after we are done with testing.";"";"";
+"406037988850794496";"patchkez#5349";"07-Aug-18 11:16 AM";"but I am not sure how this would be reliable";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:16 AM";"thats what i was thinking yes";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:17 AM";"The same as the start trigger";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:17 AM";"I have found this 100% reliable so far for triggering start,  However, trying to push that much data in parallel with rsync all at once, might not be so reliable.";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:18 AM";"We still have the issue that the longer the test needs to run, the more cost adds up very fast. Maybe we could seperate the chains into clusters of 2048 and push to a few intances with rsync.";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:19 AM";"then combine it from there as the cost on a few instance is much less.";"";"";
+"371114647052615681";"Mylo#8306";"07-Aug-18 11:20 AM";"can you set up a machine that has all blockchains syncing on a physical host with 20TB HDD?";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:20 AM";"No";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:20 AM";"not a chance";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:20 AM";"the amount of CPU/network bandwidth required for that would be insane";"";"";
+"371114647052615681";"Mylo#8306";"07-Aug-18 11:21 AM";"what about in same AZ so all network bandwidth is within datacentre?";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:21 AM";"rsync will the best way to send the chains. as I did in the first test, as you dont have to validate all TX's that way.";"";"";
+"371114647052615681";"Mylo#8306";"07-Aug-18 11:21 AM";"cool";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:22 AM";"even with 1024 chains, it was basically impossible to sync them in real time usign the komodod deamon.";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:23 AM";"I guess I can play with this in the next few days, this might be better than one giant shared data store anyway...  we want to avoind any centralised points that could bottleneck.";"";"";
+"406037988850794496";"patchkez#5349";"07-Aug-18 11:23 AM";"@blackjok3r  I think we would need to stop komodod before starting rsync process. But if you stop komodod, container will exit";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:24 AM";"yeah, I am not 100% sure... I need to test that, because hte blocknitory script is a thread of komodod";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:24 AM";"it might be able to call a stop rpc call then loop for ever until the start trigger is activated.";"";"";
+"371114647052615681";"Mylo#8306";"07-Aug-18 11:24 AM";"```curl -v --user user   --data-binary '{""jsonrpc"": ""1.0"", ""id"":""curltest"", ""method"": ""stop"", ""params"": []}' -H 'content-type: text/plain' http://127.0.0.1:7771```
+will stop docker running?";"";"";
+"371114647052615681";"Mylo#8306";"07-Aug-18 11:24 AM";"harsh";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:24 AM";"I think so yes, but if the call is called from a blocknotify it might not stop it";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:25 AM";"because there is still a job running that is a child process of komodod";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:25 AM";"might not work, but it might... can only try it.";"";"";
+"406037988850794496";"patchkez#5349";"07-Aug-18 11:26 AM";"stopping main process will stop also container";"";"";
+"406037988850794496";"patchkez#5349";"07-Aug-18 11:27 AM";"so if there is some parent process responsible for starting subprocesses it should work";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:27 AM";"also on my notary node... I was using rsync to save the ramdisk to SSD with all the demons running and never ad an issue";"";"";
+"371114647052615681";"Mylo#8306";"07-Aug-18 11:27 AM";"ok . i'm not using fancy entrypoints etc. for my docker testing.  gotta get back to my stff.  (wow, rsync whilst running...)";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:28 AM";"yes I was doing it every 12H....";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:28 AM";"but I realiesed later I have 2 entire copies if the .komodo folder for no reason, so now the notary VM just copys into ramdisk via NFS then resets all wallet.datsm from the mining node.";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:29 AM";"I guess I can try play around with a few ways, see how long it takes to `rsync` 64 chains and how much bandwidth that takes.";"";"";
+"406037988850794496";"patchkez#5349";"07-Aug-18 11:32 AM";"I will try to investigate if we can solve this in a docker/kubernetes way";"";"👍 (1)";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:32 AM";"we should try both, and use the best solution.";"";"";
+"406037988850794496";"patchkez#5349";"07-Aug-18 11:33 AM";"ok";"";"";
+"406037988850794496";"patchkez#5349";"07-Aug-18 11:34 AM";"ideally the rsync is running continuously in the background from the very first second when container is started";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:35 AM";"hmm thats interesting... I was thinking to wait at least until empty blocks are being  pushed out because of SSH overhead, I moved to NFS on notary node, because of CPU overhead using SSH.";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:38 AM";"my internet is also dead at the moment, using phone only. Waiting for it to be fixed or changed to fiber. 😦";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:38 AM";"If you find anything let me know. I will also have a look and see if there are better solutions.";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:44 AM";"Can we use Elastic Filestore: https://docs.aws.amazon.com/efs/latest/ug/getting-started.html ?";"";"";
+"406037988850794496";"patchkez#5349";"07-Aug-18 11:45 AM";"@blackjok3r  we need to think also how we restore the data after testing is done";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:45 AM";"I think the blockchains were just to be made available for anyone who wants to actually check it. We cannot feasibly create explorers for all the chains or anything like that.";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:46 AM";"I think I will have exploreres for the first 64 however so people can check the notarization process.";"";"";
+"406037988850794496";"patchkez#5349";"07-Aug-18 11:46 AM";"these are volume types supported by K8N: https://kubernetes.io/docs/concepts/storage/volumes/#types-of-volumes";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:48 AM";"NFS is there.... I wonder how many parallel connections an  NFS  server can take?";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 12:03 PM";"This one you mentioned seems to be a good idea.  https://github.com/kubernetes/examples/tree/master/staging/volumes/glusterfs";"";"";
+"406037988850794496";"patchkez#5349";"07-Aug-18 12:05 PM";"yeah it should work, or CEPH which is IMO better. It can  also scale by adding nodes to the cluster";"";"";
+"406037988850794496";"patchkez#5349";"07-Aug-18 12:05 PM";"but it is extra overhead for us, we have to take care of that storage cluster";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 12:12 PM";"Yes... Ideally we should keep the storage on AWS at  lease for when the test is running, to make sure there are no networking bottlenecks, we can then move them to a cheaper Hetzner server or something later on. 10TB of HDD space isn't going to be a huge amount of cash.";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 12:13 PM";"Saving it all on real time into shared storage, isnt exactly needed, although it would be much simpler to implement.";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 01:46 PM";"Its far from anything I know about, but this CEPH looks like a good way to go. Although it adds a whole extra layer of infrastructure,  we can deploy it on AWS instances, and its not limited by region.";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 01:47 PM";"https://sysdig.com/blog/a-ceph-guide-for-kubernetes-and-openshift-users/
+
+@patchkez  do you have much time to try this out or should I try and get a cluster working, and see what kinds of sized cluster we will need for X chains?";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 01:48 PM";"getting the cluster correctly sized seems the only real issue with going this way.";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 01:48 PM";"Then we can just copy the data to a single server/instance after the test.";"";"";
+"406037988850794496";"patchkez#5349";"07-Aug-18 01:54 PM";"well I thought this is our backup plan, but if you have time you can give it a try";"";"";
+"406037988850794496";"patchkez#5349";"07-Aug-18 01:55 PM";"I deployed ceph cluster once, manually without using ansible playbooks, with playbooks should be pretty easy, but not sure how easy is to add other OSDs";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 02:12 PM";"I had a read through a few docs, playbook seems like an easy way to go, I think deployment should be pretty easy, for me it will be configuring the containers to use it as storage.  I can defiantly give it a try, as I know I will have more time than you in the next few days.";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 02:18 PM";"Thursday I have some work on, so will try and get this working before then, and we can hopefully test some small tests togauge cluster size over the weekend. 😃";"";"👌 (1)";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 03:15 PM";"@patchkez  do the kubernetes EC2 instances need to be running all the time? can we shut them down when not in use because it burns through a fair bit of credits. For my EC2's I just `sudo shutdown now` when finished and then it doesn't charge us anything, until I start them again.  No big deal over a few days, but it starts to add up fast.";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 04:15 PM";"Got a little bit done, will hit it agian tomorrow. I *think* it made one instance on AWS and started to deploy at least one node of Ceph. The guide I found seems to use much older versions, so its not as straight forward as I had hoped.";"";"";
+"406037988850794496";"patchkez#5349";"07-Aug-18 05:42 PM";"@blackjok3r  not sure about stopping instances. when you delete them, they will be re-created again, most probably because they were deployed by cloudformation stack and there is some rule to keep them up. Maybe we should automate creation of K8N cluster and everytime we are done with testing, we delete whole stack (worker nodes - ec2 instances). When we would need to test again we just automagically re-create the cluster.";"";"";
+"406037988850794496";"patchkez#5349";"07-Aug-18 05:43 PM";"Good luck with CEPH. It is great technology. How many OSD nodes are you trying to deploy? 3?";"";"";
+"456717614098415616";"GuilouGuilouOTE#1930";"07-Aug-18 09:06 PM";"Thank you and good luck guys 😉";"";"";
+"347922216429813760";"grewalsatinder#9653";"07-Aug-18 10:22 PM";"@blackjok3r I am not doing good with funds now a days with my company account 
+So trying to keep my expenses low.
+Keep using hetzner as long as u guys want. No issues with that.
+I want to but unfortunately won’t be able to help with Amazon with my own funds.
+But maybe if project is helping with funds then sure can use amazon too 🙂";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:20 PM";"@grewalsatinder the 3 hetzner servers are not really being used, haven't touched them in quite some time. One is serving the explorers from the first test but as far as I know there is no URL for them 😂 
+
+The other 2 were being used for MoMoM testing but once that was tested I *think* those 2 servers don't need to be running any more, haven't upgraded them in months. @SHossain  might know more about this. I might use one of these to host explorers for the first 64 chains in the next test if they are no longer needed for the MoMoM test chains.";"";"";
+"347922216429813760";"grewalsatinder#9653";"07-Aug-18 11:46 PM";"@blackjok3r okay,
+Just let me know once those aren’t needed anymore. I can use them to host explorers and electrum servers to help ecosystem 🙂";"";"🍺 (1)";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:46 PM";"Will do, I await reply from @Shossain about MoMoM chains";"";"";
+"347922216429813760";"grewalsatinder#9653";"07-Aug-18 11:46 PM";"@ns408 FYI";"";"👌 (1)";
+"347922216429813760";"grewalsatinder#9653";"07-Aug-18 11:47 PM";"Cool mate 🙂👍";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:48 PM";"Once I have been told if these are no longer needed you can go ahead and use them for whatever. Ask James about what to do with the explorers on the sever with 88 IP. I spent 3 days syncing all chains and explorers from first test to it, but as far as I know its not being used by anyone.";"";"";
+"347922216429813760";"grewalsatinder#9653";"07-Aug-18 11:49 PM";"Okay I will wait for a reply from shossain too";"";"";
+"347922216429813760";"grewalsatinder#9653";"07-Aug-18 11:49 PM";"Thanks guys
+Keep up the good work 👌";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:49 PM";"Getting close now, finally. Thanks :)";"";"👍 (1)";
+"347922216429813760";"grewalsatinder#9653";"07-Aug-18 11:51 PM";"Oh, also if project can help with funds then can use my amazon account too. I specifically made a separate account for scaling test, to keep accounting fine.";"";"";
+"232679450301431808";"blackjok3r#3181";"07-Aug-18 11:54 PM";"We will be in touch if it is needed, the account we have should be large enough, as we had to have meetings with AWS people about it, although I am yet to try and provision the required resources. If we require more than the one account, funding will need to be sorted out somehow. For us we just need to complete a scalable test that can be replicated into whatever avalible recourse we can get our hands on, which is almost done, just left with a shared storage to save all block chains onto. Which is what I am starting on today, more new stuff to learn, but seems pretty I interesting.";"";"";
+"347922216429813760";"grewalsatinder#9653";"07-Aug-18 11:56 PM";"Very good mate. Tag me when you need me";"";"";
+"347922216429813760";"grewalsatinder#9653";"07-Aug-18 11:56 PM";"😁";"";"";
+"232679450301431808";"blackjok3r#3181";"08-Aug-18 01:53 AM";"I will just delete the cloud formation for the test Kubernetes cluster for now so we dont run out of money.";"";"";
+"232679450301431808";"blackjok3r#3181";"08-Aug-18 01:53 AM";"Once I have CEPH working I can try and create a new one via a script, hopefully its possible.";"";"";
+"403137719049519106";"Audo#5667";"08-Aug-18 06:57 AM";"I renamed this to #dev-scalability and put the mention about scalability test to channel description. I hope you guys don't mind 😃 
+
+It's now in allign with the 5 blockchain pillars we have been talking about. Easier for newcomers to understand the channel purposes.";"";"👍 (4)";
+"232679450301431808";"blackjok3r#3181";"08-Aug-18 07:18 AM";"no worries...";"";"";
+"371114647052615681";"Mylo#8306";"08-Aug-18 07:28 AM";"ban this guy :trollface:";"";"🙃 (1)";
+"232679450301431808";"blackjok3r#3181";"08-Aug-18 07:29 AM";"I'm getting there on this CEPH/AWS crap lol... I have a script to deploy a cluster, just 🙏  the ansible playbook configures them all correctly.";"";"";
+"232679450301431808";"blackjok3r#3181";"08-Aug-18 07:29 AM";"had to create security groups and all kinds of crap, so we follow what they asked for.";"";"";
+"232679450301431808";"blackjok3r#3181";"08-Aug-18 08:23 AM";"@patchkez 
+Hey man having some problems with the ansible-playbook. It keeps giving me SSH errors for only some nodes in my cluster of 6. such as this : `fatal: [ec2-18-209-14-104.compute-1.amazonaws.com]: UNREACHABLE! => {""changed"": false, ""msg"": ""SSH Error: data could not be sent to remote host \""ec2-18-209-14-104.compute-1.amazonaws.com\"". Make sure this host can be reached over ssh"", ""unreachable"": true}`
+But every time i can ssh to it manually without any issues.";"";"";
+"232679450301431808";"blackjok3r#3181";"08-Aug-18 08:26 AM";"I am totally lost with it, and cant see any reason for this to be happening.... Might have wasted an enitire day, when I could have done them manually by now 😦";"";"";
+"232679450301431808";"blackjok3r#3181";"08-Aug-18 08:26 AM";"To be sure it wasnt my internet I am using a VM on my server to push all commands from.";"";"";
+"419964976397156352";"cipi#4502";"08-Aug-18 08:50 AM";"@blackjok3r  also had this issue once, but it was a very long time ago, so i don't remember very good what the problem was... it had something to do with the persistent connections stuff of ssh... ansible is using this to speed up playbook execution... problem is that i don't know where the socket files are stored... normally it is in ~/.ssh ... look in there if you have files that start with ""socket""... if so, delete this files and try again...
+this might also help: https://docs.ansible.com/ansible/latest/user_guide/playbooks_error_handling.html#resetting-unreachable-hosts";"";"";
+"232679450301431808";"blackjok3r#3181";"08-Aug-18 08:57 AM";"Thanks man 😄";"";"";

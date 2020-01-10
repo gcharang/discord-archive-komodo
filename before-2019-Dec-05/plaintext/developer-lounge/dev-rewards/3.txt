@@ -1,0 +1,337 @@
+==============================================================
+Guild: Komodo
+Channel: dev-rewards
+Topic: A channel to discuss claiming Komodo's 5.1% rewards.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[31-Oct-18 02:02 PM] lukechilds#2707
+or I guess that is what the `minutes -= 59;` is for in the interest function
+
+[31-Oct-18 02:03 PM] lukechilds#2707
+but it still means you don't have to wait an hour to start accruing rewards like most normal users if you manually set nLocktime just under an hour in the past, right?
+
+[31-Oct-18 02:09 PM] jl777c#5810
+yes
+
+[31-Oct-18 02:10 PM] jl777c#5810
+we had a compound interest attack that did that
+
+[31-Oct-18 02:10 PM] jl777c#5810
+so there is a one hour setback
+
+[31-Oct-18 02:12 PM] lukechilds#2707
+awww
+
+[31-Oct-18 02:12 PM] lukechilds#2707
+I was gonna try that
+
+[31-Oct-18 02:12 PM] lukechilds#2707
+:trollface:
+
+[01-Nov-18 01:00 PM] jorian#4555
+nice locktime
+
+[01-Nov-18 01:00 PM] jorian#4555
+any idea when this is merged?
+
+[01-Nov-18 04:46 PM] lukechilds#2707
+The Ledger reward claiming app will be a third party app
+
+[01-Nov-18 04:46 PM] lukechilds#2707
+development should be finished this month but not sure how long it will take for Ledger to approve the changes to the KMD Ledger app
+
+[01-Nov-18 04:52 PM] lukechilds#2707
+Btw, I think there are some errors here:
+https://komodoplatform.atlassian.net/wiki/spaces/KPSD/pages/71729215/What+is+the+5+Komodo+Stake+Reward
+
+```
+The 5% reward starts accumulating after a few minutes if you hold over 10 KMD in your wallet.
+```
+
+It will more likely be around an hour not a few minutes if nLockTime is set slightly in the past.
+
+```
+It is very similar to POS 
+```
+And then in the next line:
+```
+KMD's POS is a hybrid zero footprint proof of stake
+```
+
+These two statements seem to contradict each other, saying it's **similar** to PoS and then saying it **is** PoS then saying it's **hybrid** PoS.
+
+Also, it's completely unrelated to PoS, it's not a consensus mechanism. I think the comparison to PoS is confusing, PoS should either not be mentioned at all, or only be mentioned purely to explain that Komodo is not PoS and KMD rewards are nothing to do with stake rewards.
+
+[01-Nov-18 04:54 PM] lukechilds#2707
+I don't think I have the ability to edit this myself so CC @SHossain @PTYX
+
+{Reactions}
+👍 (3) 
+
+[02-Nov-18 05:14 AM] lukechilds#2707
+@jl777c just FYI, in the first transaction I set nLocktime to 777 instead of a timestamp in error.
+
+However it was accepted by the network and confirmed in a block. Shouldn't  777 as a unix timestamp be evaluated as 01/01/1970 @ 12:12am (UTC)?
+
+Which should be rejected?
+
+[02-Nov-18 06:19 AM] hyperDEX#6586
+@lukechilds Great Job!
+
+{Reactions}
+🎉 
+
+[02-Nov-18 08:15 AM] Alright#0419
+@lukechilds nlocktime is just a limit on the earliest time a transaction can be included in a block
+
+[02-Nov-18 08:23 AM] lukechilds#2707
+@Alright I'm aware of that, but I mistakenly set it to 777, which as a unix timestamp evaluates to 01/01/1970 @ 12:12am. The network is supposed to reject transactions older than one hour. So I'm wondering how that transaction was accepted.
+
+[02-Nov-18 08:30 AM] Alright#0419
+pm'd you
+
+[02-Nov-18 09:21 AM] jl777c#5810
+anything less than 500 mil is treated as height and the interest calc will ignore it
+
+[02-Nov-18 09:53 AM] lukechilds#2707
+Yeah, just figured that out in my testing, `nLockTime >= LOCKTIME_THRESHOLD` to the rescue
+
+[02-Nov-18 09:54 AM] lukechilds#2707
+btw @jl777c what happens if the client interest calcs are slightly under the `komodod` calcs?
+
+[02-Nov-18 09:54 AM] lukechilds#2707
+say the client is under by 100 sats
+
+[02-Nov-18 09:54 AM] lukechilds#2707
+does the miner calculate the interest and realise there are an extra unused 100 sats and credit it to himself in the block reward?
+
+[02-Nov-18 09:55 AM] lukechilds#2707
+or are those 100 sats just never minted?
+
+[02-Nov-18 10:53 AM] jl777c#5810
+miner gets unclaimed interest
+
+[02-Nov-18 11:46 AM] lukechilds#2707
+Thanks
+
+[02-Nov-18 11:46 AM] lukechilds#2707
+oh and one more thing
+
+[02-Nov-18 11:46 AM] lukechilds#2707
+If you set nLocktime more than an hour in the past the TX gets rejected
+
+[02-Nov-18 11:47 AM] jl777c#5810
+yes
+
+[02-Nov-18 11:47 AM] lukechilds#2707
+is that a normal BTC rule
+
+[02-Nov-18 11:47 AM] jl777c#5810
+no
+
+[02-Nov-18 11:47 AM] lukechilds#2707
+or was that added to KMD due to the supply infaltion bug
+
+[02-Nov-18 11:47 AM] jl777c#5810
+BTC allows any time from the past
+
+[02-Nov-18 11:47 AM] jl777c#5810
+it was added to prevent the backdating of utxo, also it achieves mempool expiration
+
+[02-Nov-18 11:48 AM] jl777c#5810
+so after an hour if you tx isnt confirmed you dont have to worry about it confirming sometime in the next week
+
+[02-Nov-18 11:49 AM] lukechilds#2707
+Can you expand on mempool expiration a little? I'm not quite sure I understand
+
+[02-Nov-18 11:50 AM] lukechilds#2707
+oh you just mean if it doesn't get confirmed in an hour, it won't be floating around in the mempool for an unkonwn amount of time, it'll be removed from the mempool because it's now invalid? Is that correct?
+
+[02-Nov-18 11:52 AM] jl777c#5810
+yes
+
+[02-Nov-18 11:53 AM] lukechilds#2707
+got it
+
+[02-Nov-18 11:53 AM] lukechilds#2707
+just an idea
+
+[02-Nov-18 11:54 AM] lukechilds#2707
+but what would happen if you submitted a transaction with an nLocktime of 59 mins in the past, the network accepts it because it's valid, but the next block takes 2 mins to mine, so your transaction is technically invalid at the time the block is mined
+
+[02-Nov-18 11:54 AM] lukechilds#2707
+would the block be invalid?
+
+[02-Nov-18 11:55 AM] lukechilds#2707
+or would the network accept it?
+
+[02-Nov-18 11:55 AM] lukechilds#2707
+just trying to figure out how far back I can safely set nLocktime to maximise users rewards
+
+[02-Nov-18 11:55 AM] jl777c#5810
+it is a consensus rule
+
+[02-Nov-18 11:55 AM] lukechilds#2707
+but obvs don't wanna cause failed transactions/blocks
+
+[02-Nov-18 11:55 AM] jl777c#5810
+I set it back 777 seconds
+
+[02-Nov-18 11:56 AM] jl777c#5810
+the extra satoshis compared to the frustration of a tx being invalidated
+
+[02-Nov-18 11:56 AM] lukechilds#2707
+true, was also just kinda interested in that scenario as a thought experiment
+
+[02-Nov-18 11:57 AM] lukechilds#2707
+so when you say it's a consensus rule, you mean that the nodes would validate all the TXs in the block, treat that TX as invalid and discard the entire block as invalid? Is that correct?
+
+[02-Nov-18 11:58 AM] jl777c#5810
+any block with that tx mined in it will get rejected
+
+[02-Nov-18 11:58 AM] jl777c#5810
+a sad miner will be
+
+[02-Nov-18 11:59 AM] lukechilds#2707
+ok, wasn't sure if maybe the timestamp in the block header would be used to check the date instead of the time receiving the block. As you could then verify that the miner was following the rules
+
+[02-Nov-18 11:59 AM] jl777c#5810
+i think it is using the block timestamp so it can know during block construction it is invalid
+
+[02-Nov-18 11:59 AM] jl777c#5810
+in any case, nothing good comes from pushing too close to the edge
+
+[02-Nov-18 12:00 PM] jl777c#5810
+we used to get 30 min+ between blocks
+
+[02-Nov-18 12:00 PM] jl777c#5810
+now that doesnt seem to be the case anymore, but still always possible to get a long time between blocks
+
+[02-Nov-18 12:00 PM] lukechilds#2707
+but a lot of good comes from finding exactly where the edge is so you can be sure you don't go past it 😉
+
+[02-Nov-18 12:01 PM] jl777c#5810
+I only go 777 seconds back out of 3600
+
+[02-Nov-18 12:02 PM] lukechilds#2707
+and teh reason for going back 777 instead of 0 is to account for node clock variation so out of (time) sync nodes don't discard yout TX, correct?
+
+[02-Nov-18 12:05 PM] jl777c#5810
+yes
+
+[02-Nov-18 12:05 PM] jl777c#5810
+also the actual check is not current time but the median blocktime of the past 17 block window
+
+[02-Nov-18 12:05 PM] jl777c#5810
+or about 9 minutes in the past
+
+[02-Nov-18 12:06 PM] lukechilds#2707
+oh interesting
+
+[02-Nov-18 12:06 PM] lukechilds#2707
+so if you set nLocktime as -59 mins then you could end up trying to claim a reward before it existed
+
+[02-Nov-18 12:06 PM] jl777c#5810
+little know quirk that makes some CLTV claims fail by not being in the past enough
+
+[02-Nov-18 12:07 PM] jl777c#5810
+maybe there is an extra 8 minutes in there that you can squeeze out
+
+[02-Nov-18 12:07 PM] lukechilds#2707
+also
+
+[02-Nov-18 12:07 PM] lukechilds#2707
+one other idea
+
+[02-Nov-18 12:08 PM] jl777c#5810
+I just like to have it so the tx confirms and a setback of 777 achieves this in virtually all cases
+
+[02-Nov-18 12:08 PM] lukechilds#2707
+yep I understand
+
+[02-Nov-18 12:08 PM] lukechilds#2707
+what is the time drift allowed between different miner clocks?
+
+[02-Nov-18 12:08 PM] lukechilds#2707
+not sure what the correct terminology is
+
+[02-Nov-18 12:08 PM] jl777c#5810
+60 seconds forward
+
+[02-Nov-18 12:09 PM] jl777c#5810
+10 minutes behind (I think)
+
+[02-Nov-18 12:09 PM] jl777c#5810
+yes a dominant miner can likely gain an extra 10 minutes of rewards
+
+[02-Nov-18 12:09 PM] lukechilds#2707
+yep
+
+[02-Nov-18 12:10 PM] lukechilds#2707
+but yeah, I guess that's not a huge issues
+
+[02-Nov-18 12:10 PM] lukechilds#2707
+if it's only 1 min forward
+
+[02-Nov-18 12:10 PM] jl777c#5810
+much bigger issues at play if there is such a dominant miner than fractional gains from rewards
+
+[02-Nov-18 12:11 PM] lukechilds#2707
+wait, where does the extra 10 mins come from?
+
+[02-Nov-18 12:11 PM] jl777c#5810
+blocktimestamps are arbitrary
+
+[02-Nov-18 12:11 PM] lukechilds#2707
+I was gonna say they get extra fees becuase their clock is 1 min ahead of the clients clock that calcualted their interest
+
+[02-Nov-18 12:11 PM] lukechilds#2707
+and other miners will accept that due to the 1 min drift allowance
+
+[02-Nov-18 12:11 PM] jl777c#5810
+but it is the best time reference the blockchain has
+
+[02-Nov-18 12:12 PM] lukechilds#2707
+but how do you go from 1 min extra to 10 mins extra?
+
+[02-Nov-18 12:12 PM] jl777c#5810
+there needs to be more negative timestamps allowed than forward timestamps
+
+[02-Nov-18 12:12 PM] jl777c#5810
+to avoid timewarp attacks
+
+[02-Nov-18 12:13 PM] jl777c#5810
+so you can have a block a minute from the future or 10 minutes in the past
+
+[02-Nov-18 12:13 PM] lukechilds#2707
+but the negative timestamps won't affect interest will they? because the interest calcs are done via a users clock, not the blockhcain timestamps
+
+[02-Nov-18 12:14 PM] lukechilds#2707
+*the interest calcs signed in the TX
+
+[02-Nov-18 12:14 PM] jl777c#5810
+unless there is a timewarp attack going on, it wont affect things
+
+[02-Nov-18 12:14 PM] jl777c#5810
+even with a timewarp attack going on, by back dating it 777 seconds, i think most cases are fine
+
+[02-Nov-18 12:15 PM] jl777c#5810
+calculate based on local clock, consensus based on previous blocktime and nLockTime
+
+[02-Nov-18 12:15 PM] jl777c#5810
+there really are a lot of different things going on and getting a stable working consensus wasnt easy
+
+[02-Nov-18 12:15 PM] jl777c#5810
+now that it works, I dont want to fix it
+
+[02-Nov-18 12:15 PM] lukechilds#2707
+yeah, I will definitely use 777 in our app
+
+[02-Nov-18 12:16 PM] lukechilds#2707
+just wanted to understand how it worked
+
+[02-Nov-18 12:16 PM] lukechilds#2707
+thanks for taking the time to explain
+

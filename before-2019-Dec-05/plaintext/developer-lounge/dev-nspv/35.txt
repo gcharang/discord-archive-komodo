@@ -1,0 +1,337 @@
+==============================================================
+Guild: Komodo
+Channel: dev-nspv
+Topic: ./komodod -nSPV=1 -ac_reward=100000000  -ac_name=NSPV -ac_supply=10000000000 -ac_cc=2 -addressindex=1 -spentindex=1 -connect=5.9.102.210 &
+./komodod -nSPV=1 -addnode=5.9.253.195 &
+https://drive.google.com/drive/folders/1ZvzrhNBQgroejTKPl0kCOTJ8h7XMnO2M?usp=sharing
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[30-Jul-19 09:23 AM] jl777c#5810
+therefore it might actually be better to have a special new dapp multinspv, that launches the various single threaded nspv and just makes api requests to each of them
+
+{Reactions}
+🔥 
+
+[30-Jul-19 09:24 AM] jl777c#5810
+it will be a bit less efficient as api calls would be needed for each interaction, but i dont forsee there needing to be thousands of interactions per second
+
+[30-Jul-19 09:24 AM] jl777c#5810
+yes, this will be much simpler. making nspv handle multicoins per instance will make it have to deal with mutex issues
+
+[30-Jul-19 09:25 AM] jl777c#5810
+though the only internally generated event now is the getinfo call, so maybe it isnt so bad, but as it grows, maybe we put more in the NSPV_periodic and each additional thing that is done is potentially in a race condition with the multicoin logic
+
+[30-Jul-19 09:26 AM] jl777c#5810
+the multinspv of course should be multithreaded
+
+[30-Jul-19 09:26 AM] jl777c#5810
+but like iguana it is just talking to the existing daemons
+
+[30-Jul-19 09:26 AM] blackjok3r#3181
+So for more coins you want to launch a new process?
+
+[30-Jul-19 09:27 AM] jl777c#5810
+why not? a 3MB footprint is no big deal
+
+[30-Jul-19 09:28 AM] jl777c#5810
+its not like it has a 3GB footprint
+
+[30-Jul-19 09:28 AM] jl777c#5810
+being so small, what makes no sense normally starts making sense
+
+[30-Jul-19 09:28 AM] blackjok3r#3181
+Yes doesn't seem a problem, I actually thought of that myself, just have it luanhc a new nspv instance for the coin it needs to connect to andd wait until it sends the response
+
+[30-Jul-19 09:28 AM] jl777c#5810
+you need to recalculate all the reasons for most everything
+
+[30-Jul-19 09:29 AM] jl777c#5810
+usually you dont want to spawn a new executable due to its overhead
+
+[30-Jul-19 09:29 AM] jl777c#5810
+but if the overhead is 3MB, you can spawn 100 of them, literally and be the same as a single komodod footprint
+
+[30-Jul-19 09:30 AM] jl777c#5810
+what is the name of the smallest lizard, like a microscopic one
+
+[30-Jul-19 09:30 AM] blackjok3r#3181
+For the multichain stuff though, if an import tx happens all nodes will need to connect to the other chain to verify the proof
+
+[30-Jul-19 09:31 AM] blackjok3r#3181
+We have geckos? And skinks?
+
+[30-Jul-19 09:31 AM] blackjok3r#3181
+Skinks are tiny
+
+[30-Jul-19 09:31 AM] jl777c#5810
+In 2001, scientists discovered a tiny lizard on a tiny island off the coast of the Dominican Republic. The Jaragua lizard measures about three quarters of an inch in length, or 16 millimeters, from the tip of his snout to the base of his tail. To get a good idea of just how small this fellow is, picture a dime with the lizard curled up around its perimeter.
+
+[30-Jul-19 09:31 AM] jl777c#5810
+what do you mean all nodes?
+
+[30-Jul-19 09:33 AM] blackjok3r#3181
+Wait sorry, no the proof is part of the import and linked back to notaries. Sorry
+
+[30-Jul-19 09:34 AM] jl777c#5810
+i imagine that to do a crosschain, you need to spawn the two chains (if they are not already running)
+
+[30-Jul-19 09:34 AM] jl777c#5810
+do what you need to do on each chain to issue and validate it is all happy
+
+[30-Jul-19 09:35 AM] jl777c#5810
+then can even disconnect from the originating chain
+
+[30-Jul-19 09:35 AM] blackjok3r#3181
+Yes I figured it would work the same, but would not all nodes who need to verify that tx need tondo the same?
+
+[30-Jul-19 09:36 AM] jl777c#5810
+all the fullnodes would be doing the validating
+
+[30-Jul-19 09:36 AM] jl777c#5810
+it gets mined
+
+[30-Jul-19 09:37 AM] jl777c#5810
+notarized
+
+[30-Jul-19 09:37 AM] jl777c#5810
+then nspv can verify it is notarized
+
+[30-Jul-19 09:37 AM] jl777c#5810
+why would all nspv nodes have to do anything about some random other nodes crosschain tx?
+
+[30-Jul-19 09:37 AM] jl777c#5810
+nspv nodes only care about a single address at a time
+
+[30-Jul-19 09:37 AM] blackjok3r#3181
+No I was meaning for full nodes
+
+[30-Jul-19 09:38 AM] jl777c#5810
+if the nspv is making a valid tx, what is the problem?
+
+[30-Jul-19 09:38 AM] jl777c#5810
+when nspv makes a tx and broadcasts it, all fullnodes validate it
+
+[30-Jul-19 09:38 AM] jl777c#5810
+how is a crosschain CC tx any different?
+
+[30-Jul-19 09:39 AM] blackjok3r#3181
+OK so full node just uses momom?
+
+[30-Jul-19 09:39 AM] jl777c#5810
+nspv can get the notarization tx right?
+
+[30-Jul-19 09:40 AM] jl777c#5810
+that notarization tx has MoMoM data
+
+[30-Jul-19 09:40 AM] blackjok3r#3181
+If u can find it
+
+[30-Jul-19 09:40 AM] jl777c#5810
+we might need a bit of fullnode help to achieve this
+
+[30-Jul-19 09:40 AM] jl777c#5810
+adding a new p2p message is not hard, just a lot of places to add things to
+
+[30-Jul-19 09:41 AM] jl777c#5810
+or we could use the baggage claim path, which might be less work and possible without any extra fullnode support
+
+[30-Jul-19 09:41 AM] jl777c#5810
+the power of nspv is that given a txid, we can prove it happened
+
+[30-Jul-19 09:41 AM] jl777c#5810
+which means we can prove the burn happened
+
+[30-Jul-19 09:41 AM] blackjok3r#3181
+That path requires a proof from x notaries
+
+[30-Jul-19 09:41 AM] blackjok3r#3181
+Yes
+
+[30-Jul-19 09:42 AM] jl777c#5810
+ah, forgot that detail...
+
+[30-Jul-19 09:42 AM] jl777c#5810
+ok so what is needed to use MoMoM for this case
+
+[30-Jul-19 09:42 AM] blackjok3r#3181
+Any node can prove, a tx happened on another chain as long as they can spawn an nspv and validate it
+
+[30-Jul-19 09:43 AM] jl777c#5810
+what is required to create a valid import?
+
+[30-Jul-19 09:43 AM] jl777c#5810
+that seems the harder half
+
+[30-Jul-19 09:43 AM] blackjok3r#3181
+Momom will do it, as long as the node that creates the tx gives a momom hash that exists on the target
+
+[30-Jul-19 09:43 AM] jl777c#5810
+or given a valid burn and a properly constructed import, will the fullnodes automatically be able to validate it as it is
+
+[30-Jul-19 09:44 AM] jl777c#5810
+nspv nodes can get momom hashes from the notarizations, it is in the opreturn. so the opreturn parsing needs to expand to extract the momom data
+
+[30-Jul-19 09:45 AM] jl777c#5810
+are all the pieces there already do to a momom cross chain?
+
+[30-Jul-19 09:46 AM] blackjok3r#3181
+Yes I think I got it. Right now a successful momom transfer needs kmd node to get the momom and add it to the import tx, it keeps trying this until it gets the right hash, nspv has less work to do there
+
+[30-Jul-19 09:46 AM] jl777c#5810
+if not, maybe txproof request can also return whatever missing momom data needed
+
+[30-Jul-19 09:46 AM] blackjok3r#3181
+Yes
+
+[30-Jul-19 09:47 AM] jl777c#5810
+so the KMD fullnode can do the scan of momom given a txid and return the correct momom to use, and with just adding a single field it seems nspv gets all the data with almost no overhead on the superlite side. maybe we only do this on the fullnode side if there is a specific flag set
+
+[30-Jul-19 09:48 AM] jl777c#5810
+which means multinspv needs to spawn KMD, oldchain, newchain, so 9MB overhead
+
+[30-Jul-19 09:50 AM] jl777c#5810
+there can literally be thousands of chains in the cluster and any user would just need to occasionally spawn some new nspv instances to deal with the crosschain and at most run the nspv for the chains they have coins on. or even launch them only as needed, as it takes no time to launch a new nspv instance
+
+[30-Jul-19 09:50 AM] jl777c#5810
+can even be stateless locally, ie. no data needed on HDD. to manage coins that can be in any of 8192 chains, but at that scale it might make sense to have a list of which chains we know we have coins on
+
+[30-Jul-19 09:51 AM] jl777c#5810
+what all this means is we dont need to make a globals structure!
+
+[30-Jul-19 09:52 AM] blackjok3r#3181
+No I don't think we need to either
+
+[30-Jul-19 09:52 AM] blackjok3r#3181
+That's a lot of work
+
+[30-Jul-19 09:52 AM] jl777c#5810
+we can simply use global variables in nspv, very easy
+
+[30-Jul-19 09:52 AM] jl777c#5810
+i estimate it would take me a full day and it doesnt give any real benefits
+
+[30-Jul-19 09:53 AM] blackjok3r#3181
+Take me longer than that, I estimated about a week lol
+
+[30-Jul-19 09:54 AM] jl777c#5810
+ok, so you think you can tackle the crosschain via nspv using a multinspv (maybe we call it the jaragua client)
+
+[30-Jul-19 09:55 AM] blackjok3r#3181
+Yeah, I think we can do that, have some master process that spawns what ever chain it needs and RPC to it
+
+[30-Jul-19 09:55 AM] jl777c#5810
+yes, pretty sure iguana already does this
+
+[30-Jul-19 09:55 AM] jl777c#5810
+making it cross platform and working in windows might be a bit of a trick
+
+[30-Jul-19 09:56 AM] jl777c#5810
+but i think even windows is able to launch executables
+
+[30-Jul-19 09:56 AM] blackjok3r#3181
+Maybe it can just spawn itself as a thread?
+
+[30-Jul-19 09:56 AM] blackjok3r#3181
+Not sure if possible
+
+[30-Jul-19 09:57 AM] jl777c#5810
+in unix and osx you can just do system("./nspv KMD");
+
+[30-Jul-19 09:58 AM] jl777c#5810
+pretty sure windows has a similar method, so for now, just use that to spawn the nspv instances
+
+[30-Jul-19 09:58 AM] jl777c#5810
+that gets the rpc port active and you can just libcurl the api requests
+
+[30-Jul-19 09:59 AM] blackjok3r#3181
+Its like boost::thread or something, komodod does it for blocknotify
+
+[30-Jul-19 09:59 AM] blackjok3r#3181
+Np
+
+[30-Jul-19 10:00 AM] jl777c#5810
+thankfully we cant contaminate libnspv with boost!
+
+[30-Jul-19 10:00 AM] blackjok3r#3181
+Yes, lol
+
+[30-Jul-19 10:01 AM] blackjok3r#3181
+But the call exists in boost so it will work, just need to find out what it is that call calls
+
+[30-Jul-19 10:01 AM] jl777c#5810
+good luck with that. windows docs are probably a faster way, or just ask decker
+
+[30-Jul-19 10:02 AM] blackjok3r#3181
+Why not just depreciate windows 🤣
+
+[30-Jul-19 10:03 AM] jl777c#5810
+anyway, glad we talked this out. we now have a clear mandate to keep things as simple as possible and single threaded nspv will work fine, in a multi nspv instance environment. one jaragua to manage the many nspv, which means the nspv is smaller than a jaragua
+
+[30-Jul-19 10:04 AM] blackjok3r#3181
+Hmm
+
+[30-Jul-19 10:05 AM] blackjok3r#3181
+So what will nspv be called? Not a lizard I guess
+
+[30-Jul-19 10:09 AM] jl777c#5810
+likely people wont directly use nspv, but rather the multicoin variant, jaragua.
+
+[30-Jul-19 10:10 AM] jl777c#5810
+since people like multicoin wallets, it seems that is the level they will interact. similar to nspv jaragua can spawn an rpc port and serve html in the same style and interlinked with the nspv html
+
+[30-Jul-19 11:54 AM] TonyL#3577
+
+{Attachments}
+https://cdn.discordapp.com/attachments/594906735467036682/605729833644720130/dwarf-gecko.png
+
+[30-Jul-19 12:18 PM] grewalsatinder#9653
+"jaragua client" 😍
+
+[30-Jul-19 12:29 PM] jl777c#5810
+a pizza sized coin?
+
+[30-Jul-19 12:30 PM] TonyL#3577
+just zoomed photo 😅
+
+[30-Jul-19 12:35 PM] jl777c#5810
+@blackjok3r your validate_notarization function is passing in the notarization value but not using it. maybe it needs to be checked against NSPV_inforesult.notarization.txid also?
+
+{Reactions}
+👍 
+
+[30-Jul-19 01:40 PM] Sir Seven#7158
+Noticed while writing tests:
+Some time after starting nspv daemon (~60s or so), mempool,  listunspent, listtransactions and spentinfo calls will return error:
+```json
+{"result":"error","error":"timeout"}
+```
+Same calls work just fine executed right after getinfo call.
+
+A simple script to reproduce it:
+```python
+    while True:
+        rpc_call = tf.nspv_getinfo()
+        tf.assert_success(rpc_call)
+        rpc_call = tf.nspv_mempool()
+        tf.assert_success(rpc_call)
+        time.sleep(70)
+        rpc_call = tf.nspv_mempool()
+        tf.assert_success(rpc_call)
+        time.sleep(70)
+```
+Always fails on second mempool call.
+
+[30-Jul-19 01:41 PM] jl777c#5810
+there is a rate limiter of one request per second per peer, for each message
+
+[30-Jul-19 01:42 PM] jl777c#5810
+depending on how many peers you have, it will determine how many requests you can blast away
+
+[30-Jul-19 01:42 PM] Sir Seven#7158
+Hm. Still, 70 seconds sounds legit.
+
+[30-Jul-19 01:44 PM] jl777c#5810
+you shouldnt have to sleep for any more than 1 second
+

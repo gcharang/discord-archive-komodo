@@ -1,0 +1,362 @@
+==============================================================
+Guild: Komodo
+Channel: kmdlabs
+Topic: Please read pinned messages
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[02-Jan-19 02:27 PM] CMaurice#1685
+yepyep, catching up with the reading on that
+
+{Reactions}
+😂 
+
+[02-Jan-19 02:29 PM] CrisF#3405
+Please check out the pad when you have a chance 😃
+
+[02-Jan-19 02:44 PM] blackjok3r#3181
+OK I have this working. I ended up removing teh exports... Its going to be too slow to calculate those. It seems a simple `gettxoutsetinfo`  will be the easierst way to detect burnt coins, and then usign the new data from james change earlier we can locate the export tx on the source chain. 
+So you run the RPC on a block, it returns the blocktime, the total amount imported in that block, and an array of these for each import tx:
+```    {
+      "txid": "57afa5f7750029709ec224e63528eba997f6865598c7bfc6c5fb7324f3e7b62e",
+      "amount": 10.00000000,
+      "address": "RAwx45zENMPa2p4AGnGmbrFEw6wtGoUXi6",
+      "export": {
+        "txid": "1f3294e2c236d36cf3d8d447d3f6185e4523101a9f5498c629ad3872dc995a91",
+        "amount": 10.00000000
+        "chain": "CFEK:"
+      }
+    }
+```
+
+[02-Jan-19 02:46 PM] blackjok3r#3181
+I guess I will merge upstream down, and make sure I can build everything in the new branch with those changes. Then we need new chains with this new data. ONce 2we have some data I can work out how to extract it and add to the new RPC.
+
+[02-Jan-19 02:47 PM] blackjok3r#3181
+We can also add one of these new chains james is working on, as a seperate chain, so we can test his new changes, to make sure they dont break anything.
+
+[02-Jan-19 02:48 PM] blackjok3r#3181
+This will be needed before launch.
+
+{Reactions}
+👍 
+
+[02-Jan-19 02:57 PM] CrisF#3405
+So I have 3 new chains for testing - Stress Test Logging, Dragonhound spam test, jl777 Test chain.
+
+[02-Jan-19 02:57 PM] CrisF#3405
+Does that sound right?
+
+[02-Jan-19 02:57 PM] blackjok3r#3181
+We needto check with james on specifics of his new chain and what he needs tested.
+
+[02-Jan-19 02:57 PM] blackjok3r#3181
+As we now need to merge the code down, we need to test it...
+
+[02-Jan-19 02:58 PM] CrisF#3405
+Ok, and need to find out if PoS can be on-demand.
+
+[02-Jan-19 02:58 PM] blackjok3r#3181
+I think that it can, as long as there is no block reward.... Keep in mind an on demand chain cannot be in the cluster
+
+[02-Jan-19 02:59 PM] blackjok3r#3181
+without blocks happening, the MoMoM hash cannot get built.
+
+[02-Jan-19 03:00 PM] CrisF#3405
+Ahh, maybe better to put that on-demand off then.
+
+[02-Jan-19 03:01 PM] blackjok3r#3181
+it wont take up that much extra, but having too many chains, will make this test a little hard... we should keep scale in mind but not go overboard.
+
+[02-Jan-19 03:01 PM] blackjok3r#3181
+It will get expensive fast if we have too many chains.
+
+[02-Jan-19 03:03 PM] CrisF#3405
+With a Dragonhound chain and log chain both doing a lot of oracle transactions while the migration stress test is going on will it be a bit of a simulation for the Scaling Test?
+
+[02-Jan-19 03:04 PM] blackjok3r#3181
+yes this is the idea... I was asked to incorperate othe new types of txs into that...
+
+[02-Jan-19 03:05 PM] CrisF#3405
+Is it better to do a pure migration test first?  Then add oracle action when that's complete?
+
+[02-Jan-19 03:06 PM] blackjok3r#3181
+Hard to say... at this point we just need new chains so we can test something, as right now the whole CFEK network is not really usuable for migrates.
+
+[02-Jan-19 03:07 PM] CrisF#3405
+So next step is making new chains to test RPC?
+
+[02-Jan-19 03:07 PM] blackjok3r#3181
+yes, I need to get this stuff working, it should be the last of any hardforking changes needed..
+
+[02-Jan-19 03:07 PM] blackjok3r#3181
+unles we find more
+
+[02-Jan-19 03:07 PM] jl777c#5810
+ondemand is independent of consensus mechanism
+
+{Reactions}
+👍 
+
+[02-Jan-19 03:08 PM] blackjok3r#3181
+migrates depend on block to be happening though, so on demand is not compatible with a cluster,
+
+[02-Jan-19 03:08 PM] blackjok3r#3181
+it would probably work, but you need to tx generate to keep the chain moving
+
+[02-Jan-19 03:09 PM] jl777c#5810
+makes sense. ondemand is just the miners waiting for a mempool tx
+
+{Reactions}
+👍 
+
+[02-Jan-19 03:12 PM] CrisF#3405
+Should we add a 100%PoW or 2 also?
+
+[02-Jan-19 03:15 PM] blackjok3r#3181
+not sure... those are easier for test chains as we dont need to worry about staking... that said, if someone wants to ruin th test they can stall the chains... so
+
+[02-Jan-19 03:17 PM] CrisF#3405
+I was thinking just for these tests, more to simulate Scaling, not for final launch config.
+
+[02-Jan-19 03:17 PM] blackjok3r#3181
+I think it should be ok to just do something easier yes.
+
+[02-Jan-19 03:19 PM] blackjok3r#3181
+What we want at first is simply 2 chains in a cluster
+
+[02-Jan-19 03:20 PM] blackjok3r#3181
+Once everything on those is confirmed to at least work, we can launch everything else... We cna keep CFEK and CFEKLF if ppl need those for existing work.
+
+[02-Jan-19 03:20 PM] blackjok3r#3181
+these changes are in a new branch at least for now...
+
+[02-Jan-19 03:35 PM] CrisF#3405
+So something like this?
+Test jl777 chain
+100%POW -- Dragonhound cluster  (fresh chains, just testing migrations)
+add Log chain (outside observer, not in cluster, see how oracle activity effects migrations, start logging)
+add new 100%POW -- new Dragonhound to CFEK -- CFEKLF cluster with Log chain (logging, outside observer)
+Go sick, logging mass migrations.
+
+[02-Jan-19 03:36 PM] blackjok3r#3181
+looks good 😃
+
+[02-Jan-19 03:39 PM] blackjok3r#3181
+This new branch is working... Appears that existing calls are not broken with new feild... I need to create a burn with the new feild though 🤔
+
+[02-Jan-19 03:39 PM] CrisF#3405
+Cool!
+
+[02-Jan-19 03:40 PM] blackjok3r#3181
+I might try a migrate on CFEKING ....
+
+{Reactions}
+👍 
+
+[02-Jan-19 03:41 PM] CrisF#3405
+Do you still need the params and info needed for the chain for jl777?
+
+[02-Jan-19 03:41 PM] blackjok3r#3181
+yes I am not 100% sure what he changed... I changed some of that code already to make it work for what I need it for...
+
+{Reactions}
+👌 
+
+[02-Jan-19 03:42 PM] blackjok3r#3181
+Not even sure if all these changes are finished.
+
+[02-Jan-19 03:43 PM] jl777c#5810
+it adds the source chain automatically, as long as that is what runs the migrate_converttoexport rpc
+
+[02-Jan-19 03:43 PM] blackjok3r#3181
+yes that is there... I just ahd to remove your things for 0xfffff
+
+[02-Jan-19 03:43 PM] blackjok3r#3181
+so it actually used it for all chains
+
+[02-Jan-19 03:44 PM] jl777c#5810
+why? 0xffffffff wont ever happen
+
+[02-Jan-19 03:44 PM] blackjok3r#3181
+Existing calls seem to be working... I think
+
+[02-Jan-19 03:44 PM] blackjok3r#3181
+I thaught that was some special case you added to activate the rawproof
+
+[02-Jan-19 03:44 PM] jl777c#5810
+only selfimport call does that
+
+[02-Jan-19 03:44 PM] jl777c#5810
+it denotes a selfimport
+
+[02-Jan-19 03:45 PM] jl777c#5810
+which happens to need the rawproof
+
+[02-Jan-19 03:45 PM] blackjok3r#3181
+yes and migtates now also need the rawproof
+
+[02-Jan-19 03:45 PM] jl777c#5810
+well  i had it so it was optional
+
+[02-Jan-19 03:45 PM] jl777c#5810
+if you want to make it required that is a hardfork
+
+[02-Jan-19 03:45 PM] blackjok3r#3181
+yes which is why I am hardforking
+
+[02-Jan-19 03:45 PM] blackjok3r#3181
+and making new chains
+
+[02-Jan-19 03:46 PM] blackjok3r#3181
+they have been hard forked already
+
+[02-Jan-19 03:46 PM] blackjok3r#3181
+and they are broken
+
+[02-Jan-19 03:46 PM] blackjok3r#3181
+how do I convert the vecort of ints back to a string?
+
+[02-Jan-19 03:47 PM] jl777c#5810
+it is just len followed by the string
+
+[02-Jan-19 03:47 PM] jl777c#5810
+uint8_t holds a char
+
+[02-Jan-19 03:47 PM] blackjok3r#3181
+got it
+
+[02-Jan-19 03:49 PM] jl777c#5810
+i designed the 0xffffffff path to be able to work backwards compatible with existing
+
+[02-Jan-19 03:49 PM] jl777c#5810
+and it would never happen with normal crosschain import
+
+[02-Jan-19 03:49 PM] blackjok3r#3181
+Yes but to add the source chain to the burntx it would never add it
+
+[02-Jan-19 03:50 PM] blackjok3r#3181
+For anything we have been discussing today to work it needs this change...
+
+[02-Jan-19 03:50 PM] jl777c#5810
+it does
+
+[02-Jan-19 03:50 PM] jl777c#5810
+line 204 to 207 crosschain.cpp
+
+[02-Jan-19 03:51 PM] jl777c#5810
+the MakeBurnOutput gets the rawproof, which is the ASSETCHAINS_SYMBOL
+
+[02-Jan-19 03:51 PM] jl777c#5810
+oh, i see, i missed a spot
+
+[02-Jan-19 03:51 PM] jl777c#5810
+in the function itself it needs to do it all the time
+
+[02-Jan-19 03:51 PM] jl777c#5810
+fixing
+
+[02-Jan-19 03:53 PM] jl777c#5810
+fixed
+
+[02-Jan-19 03:53 PM] jl777c#5810
+so it always write it, but it wont use it for consensus
+
+[02-Jan-19 03:56 PM] blackjok3r#3181
+ok I think I get how I am supposed to do it then, rather than use UnmarshalBurn I just use the code for it in my RPC. Thanks
+
+[02-Jan-19 03:57 PM] jl777c#5810
+yes
+
+[02-Jan-19 03:57 PM] blackjok3r#3181
+if I try to add data that isnt there it will crash right?
+
+[02-Jan-19 03:57 PM] blackjok3r#3181
+So i need to check that its included first ?
+
+[02-Jan-19 03:57 PM] jl777c#5810
+unmarshal will just fail
+
+[02-Jan-19 03:58 PM] blackjok3r#3181
+ok sweet that makes it easy then
+
+[02-Jan-19 05:05 PM] blackjok3r#3181
+ok this is all working now... I tested the logic of extracting the source name with a simple 10 line C program, and ti worked so it should work. Its also al backwards compatible. If the data isnt there it just skips source for that import.
+
+[02-Jan-19 05:07 PM] blackjok3r#3181
+https://github.com/StakedChain/komodo/pull/68
+
+{Embed}
+https://github.com/StakedChain/komodo/pull/68
+Merge in latest FSM to test migrates and new RPC call. by blackjok...
+https://avatars3.githubusercontent.com/u/30971146?s=400&v=4
+
+[02-Jan-19 05:07 PM] blackjok3r#3181
+going to migrate on CFEKING to test this.
+
+[02-Jan-19 05:14 PM] blackjok3r#3181
+Pulled down a few build issues again. 
+./zcutil/build.sh -j8 
+git clean -f
+make -j8
+
+[02-Jan-19 06:07 PM] blackjok3r#3181
+```error code: -1
+error message:
+Couldn't parse burnTx
+```
+I'll have to come back to this... didnt work.
+
+[02-Jan-19 06:11 PM] jl777c#5810
+maybe it does need to specifically parse the rawproof
+
+[02-Jan-19 06:11 PM] blackjok3r#3181
+It might do... Its far too late to delve into it now.. Will look at it tomorrow
+
+[02-Jan-19 10:39 PM] Mylo#8306
+Morning.   Thx for py examples will read during brekky
+
+{Reactions}
+🍽 
+
+[03-Jan-19 12:22 AM] CrisF#3405
+Hi @smk762 -  dracocanis ominator,  was wondering if you saw the talk of adding a Dragonhound test change to the migration stress test?
+
+[03-Jan-19 12:22 AM] CrisF#3405
+Are there and params that you'd like to test/use?
+
+[03-Jan-19 01:30 AM] CrisF#3405
+Hi, I've added a summary of what was discussed yesterday to the pad and updated the Todo.
+
+[03-Jan-19 01:34 AM] CrisF#3405
+There are 2 things that could use some rather immediate attention:
+(on Todo)  
+1.1 Collect info on what is needed for TUI.  Send to TonyL.
+1.2 Data Format for oracle
+Help on these would be much appreciated!
+
+[03-Jan-19 01:34 AM] CrisF#3405
+https://kmdlabs.cc/p/logging_stats_project
+
+[03-Jan-19 01:37 AM] CrisF#3405
+🙏
+
+[03-Jan-19 01:38 AM] blackjok3r#3181
+Both those things are pretty much the same thing ..
+
+[03-Jan-19 01:38 AM] CrisF#3405
+Yeah 😃
+
+[03-Jan-19 01:38 AM] blackjok3r#3181
+We need to decide what data is relavent ...
+
+[03-Jan-19 01:38 AM] blackjok3r#3181
+Like what do we want to show...
+
+[03-Jan-19 01:39 AM] blackjok3r#3181
+If we show too much ... it will be overwhelming... needs to be like what we did for scaletest and take the bare minimum. Then show it nice and simple.
+
+[03-Jan-19 01:44 AM] CrisF#3405
+First part for stress test should be straight logging.
+

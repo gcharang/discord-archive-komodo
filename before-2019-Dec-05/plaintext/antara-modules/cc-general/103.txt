@@ -1,0 +1,563 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[30-Sep-18 07:20 PM] MoldyLunchbox#5734
+Such as OUTPUT1 on TX2
+
+[30-Sep-18 07:30 PM] jl777c#5810
+txfees are usually 0.0001
+
+[30-Sep-18 07:31 PM] MoldyLunchbox#5734
+I'm a bit confused as to why there are 8 missing KMD at the end though.
+
+[30-Sep-18 07:32 PM] jl777c#5810
+not sure who made that graphic, it does appear to be technically correct
+
+[30-Sep-18 07:33 PM] jl777c#5810
+which means the graphic is wrong about the amounts
+
+[30-Sep-18 07:35 PM] MoldyLunchbox#5734
+Perfect. Thank you for taking the time.
+I'm working on the infographic competition and was confused regarding this issue. I'm glad that's clarified.
+
+[01-Oct-18 01:12 AM] TonyL#3577
+@jl777c Strange gateway `totalsupply` `remaining` about which I wrote yesterday (pls let me know if you need hexes as well) :
+1) Creating token with supply 1 (*10^8):
+```./komodo-cli -ac_name=ORCL1 tokencreate KMD 1 Testing <- hex
+./komodo-cli -ac_name=ORCL1 sendrawtransaction hex <- 339c3c1d131a20a3670605a0506979a178745bbef0f6464c07eb592ee295e251
+./komodo-cli -ac_name=ORCL1 tokeninfo 339c3c1d131a20a3670605a0506979a178745bbef0f6464c07eb592ee295e251
+{
+  "result": "success",
+  "tokenid": "339c3c1d131a20a3670605a0506979a178745bbef0f6464c07eb592ee295e251",
+  "owner": "03431a95c761c491e38a891425009cff5f9eaa3aa3d3d4945dd17f3d0bfcff2590",
+  "name": "KMD",
+  "supply": 100000000,
+  "description": "Testing"
+}
+```
+
+2) Converting token supply (since `tokenconvert` using  tokentransfer I assume that I have to declare supply as 1 * 10^8): 
+```./komodo-cli -ac_name=ORCL1 tokenconvert 241 339c3c1d131a20a3670605a0506979a178745bbef0f6464c07eb592ee295e251 03ea9c062b9652d8eff34879b504eda0717895d27597aaeb60347d65eed96ccb40 100000000 <- hex
+./komodo-cli -ac_name=ORCL1 sendrawtransaction hex <- ecb8e0e49288b0b9eefa52e82497aa60704eabd4820accd8fdd968228f714b30```
+
+[01-Oct-18 01:12 AM] TonyL#3577
+3) Binding gateway (using pre-created oracle with Ihh data type):
+```./komodo-cli -ac_name=ORCL1 gatewaysbind 339c3c1d131a20a3670605a0506979a178745bbef0f6464c07eb592ee295e251 8bea86f9c6cbf35cb3f443dcb39dd84b499871a86a40f26f8abdd1e4b198c07f KMD 100000000 1 1 03431a95c761c491e38a891425009cff5f9eaa3aa3d3d4945dd17f3d0bfcff2590 <- hex
+./komodo-cli -ac_name=ORCL1 sendrawtransaction hex <- 1bc88a3ece1e385d5ff504ad445254d90505cfbbd1ad85350e5c8ef132c586c7
+./komodo-cli -ac_name=ORCL1 gatewaysinfo 1bc88a3ece1e385d5ff504ad445254d90505cfbbd1ad85350e5c8ef132c586c7
+{
+  "result": "success",
+  "name": "Gateways",
+  "pubkey": "03431a95c761c491e38a891425009cff5f9eaa3aa3d3d4945dd17f3d0bfcff2590",
+  "coin": "KMD",
+  "oracletxid": "8bea86f9c6cbf35cb3f443dcb39dd84b499871a86a40f26f8abdd1e4b198c07f",
+  "taddr": 0,
+  "prefix": 60,
+  "prefix2": 85,
+  "deposit": "RH8mu756oZMoYWLKKUh3GXJfvHizEhyFEd",
+  "tokenid": "339c3c1d131a20a3670605a0506979a178745bbef0f6464c07eb592ee295e251",
+  "totalsupply": "1.00000000",
+  "remaining": "3000020.90110200",
+  "issued": "-3000019.90110200"
+}
+```
+
+[01-Oct-18 01:15 AM] TonyL#3577
+@jl777c Also I noticed that I can broadcast more than one `gatewaysbind` with same parameters in one block and as result can have more than one gateway with same token/oracle binded. Should I consider it as expected behaviour? 
+A lil bit scary to imagine what will happen if multiply gateway will use same token for back and forth converts 😃
+
+[01-Oct-18 01:23 AM] TonyL#3577
+Also as I've reported before `oraclesfeed` keep trying to broadcast withdrawal which was successfully completed for another gateway. 
+To reproduce just have to complete tokens withdrawal (with successful KMD receiving) and run `oraclefeed` to oraclize for any oracle/gateway on same pubkey node as which made successful withdrawal:
+```./oraclefeed ORCL1 8bea86f9c6cbf35cb3f443dcb39dd84b499871a86a40f26f8abdd1e4b198c07f 03431a95c761c491e38a891425009cff5f9eaa3aa3d3d4945dd17f3d0bfcff2590 Ihh 25d44838bad71592c2a8ffb1bb31e7a17e10fa34631df8246846ccf7fe72d470
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   672    0   672    0     0  29217      0 --:--:-- --:--:-- --:--:-- 29217
+BTC/USD 6622.5563
+Powered by CoinDesk (https://www.coindesk.com/price/) 6622.55630000
+coin.KMD vs KMD
+loadfile null size.(/tmp/oraclefeed.importaddress)
+set refcoin RH8mu756oZMoYWLKKUh3GXJfvHizEhyFEd <- KMD [./komodo-cli] M.1 of N.1
+broadcast ORCL1 txid.(44394abf3f6a081309a2619bd0ac8c3aeaa547dc367c2f9b0c8c790bbceb47af)
+KMD ht.1032371 <- b3c00f00059dfcfca55713a663486f119acb104355af4292143519f54737917d02000000209c269806d628b422e2f0c35c5e775b51c4efa8c28adb619ae4051bc6eea9aa
+already did withdraw KMD RMLBM7dNHUqsfnExV3H9uHeZzPi5dsYSkv 0.00000100 processed
+spend ORCL1 47132762ff6a679c2c9d3310dc4bf323b1f614309e5b468eaa207ba168761888/v2 as marker
+error code: -25
+error message:
+
+loadfile null size.(/tmp/oraclefeed.sendrawtransaction)
+broadcast ORCL1 txid.(018e0f5edc72114a412412fb725a7b15ef80aef0fc4b81ba5884989749af10f0)
+KMD ht.1032372 <- b4c00f0026e71294ba478a2b3889da40ab6b7093df2f4a0fcc4e4aa8cde88b4b1ef04801a9c52f452f2fdc559cc7b1caf895fd68dcee4b5049d8479aa044704dc0ae3695
+already did withdraw KMD RMLBM7dNHUqsfnExV3H9uHeZzPi5dsYSkv 0.00000100 processed
+spend ORCL1 47132762ff6a679c2c9d3310dc4bf323b1f614309e5b468eaa207ba168761888/v2 as marker
+error code: -25
+error message:
+```
+
+[01-Oct-18 01:23 AM] TonyL#3577
+Looks like a minor thing since it's just a dAPP issue - not consensus one but In case of big completed withdrawals amount it will be a huuge mess-up in `oraclesfeed` printouts and RPC spam.
+
+[01-Oct-18 06:07 AM] gcharang#6833
+@MoldyLunchbox here is a good explanation of UTXO: https://docs.komodoplatform.com/whitepaper/chapter6.html#the-utxo-an-elusive-yet-fundamental-concept
+
+[01-Oct-18 07:58 AM] jl777c#5810
+@TonyL these are good bugs. will investigate
+
+{Reactions}
+🔥 
+
+[01-Oct-18 09:28 AM] gcharang#6833
+@SHossain  @TonyL I am starting to document the rpc calls of cc contracts. Can you correct me if  any of the below statements are false:
+1) dice, token, faucet, rewards are all currently active on the komodo mainchain
+2) https://github.com/KomodoPlatform/Mastering_CryptoConditions/tree/master/docs this location has the most uptodate info on these
+3)https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=821923243 -- this doc has latest explanations
+
+Please post links to any other docs/guides that have been written for these contracts
+
+Once I have the docs for the above contracts ready, I will start working on the next ones
+
+{Embed}
+https://github.com/KomodoPlatform/Mastering_CryptoConditions/tree/master/docs
+KomodoPlatform/Mastering_CryptoConditions
+How to write utxo based CryptoConditions contracts for KMD chains - by jl777 - KomodoPlatform/Mastering_CryptoConditions
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+{Embed}
+https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit
+Smart Contract Test Plan
+faucet
+
+
+ Faucet Contract
+ Availalble RPC calls, What does this Call do?, Example Test Command, Example Expected Output, What to Check, Comments, Testing Result
+ faucetaddress[ pubkey], Will display central faucet address and your faucet contract address for your pubkey.
+ pub...
+https://lh4.googleusercontent.com/jG0EwoRG0GKTwPpnAwZivN2UkcMWt-qr3QUTPsmy2nz8nNGRLIBXezodcKzZoKg9bFwJDQ=w1200-h630-p
+
+[01-Oct-18 09:50 AM] TonyL#3577
+@gcharang if I understand correct CCs working only on ACs within the Komodo cluster atm but not mainchain itself
+
+[01-Oct-18 09:54 AM] gcharang#6833
+Thanks tony. Can you link me to any other guides/docs that you have used/written while testing these?
+
+[01-Oct-18 09:57 AM] TonyL#3577
+http://pad.supernet.org/cc_gateways_guide I've almost finished how-to for gatewaysCC (it's using tokens, oracles, gateways CCs + oraclefeed dAPP). But it's just an adoption of James github hints.
+https://docs.google.com/spreadsheets/d/1AWSepYrKM-TYGtfVmXN-rwUMSjnuFeTAqhG64vxyvfw/edit?usp=sharing - in this doc I've reflected coverage of CCs by autotests + some examples of oracle data input
+
+{Embed}
+https://docs.google.com/spreadsheets/d/1AWSepYrKM-TYGtfVmXN-rwUMSjnuFeTAqhG64vxyvfw/edit?usp=sharing
+CCs Test Plan
+ORACLE CC Data input
+
+ Oracles type, Type description, Data input, Expected output, Output, Oracles id( ORCL chain)
+ L, 8 byte unsigned little endian, 00000000ffffffff, 18446744069414584000, 18446744069414584320, eb79c3b6ec1cde314c19e8fbb2f9627ad7d8469d8536335794286c4eb68c9fb...
+https://lh4.googleusercontent.com/9yeKWoEVtVvujIgExr4kwbRrCe3JBbDGkoWm0bJ8RVRKjuX0Wd3LIWIq-QK1nEmqiu1vNg=w1200-h630-p
+
+[01-Oct-18 09:58 AM] TonyL#3577
+Not sure if there any other docs
+
+[01-Oct-18 10:00 AM] TonyL#3577
+@gcharang https://github.com/jl777/komodo/tree/FSM/src/cc atm most relevant info usually can be found here in James comments
+
+{Embed}
+https://github.com/jl777/komodo/tree/FSM/src/cc
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+{Reactions}
+👍 
+
+[01-Oct-18 10:03 AM] gcharang#6833
+Got it.
+
+[01-Oct-18 10:06 AM] TonyL#3577
+Feel free to buzz me if you'll encounter some difficulties/doubts with RPC calls - always glad to help 👍
+
+[01-Oct-18 10:09 AM] jl777c#5810
+a chain with -ac_cc=N with N > 0, will have CC active
+
+[01-Oct-18 10:09 AM] jl777c#5810
+if N > 100, then it forms a cluster and all other chains in that cluster are fungible
+
+[01-Oct-18 10:10 AM] jl777c#5810
+if N is 1, then it just enables CC
+
+[01-Oct-18 10:10 AM] jl777c#5810
+if N is > 1 and <= 100, it allows for non-fungible cross chain within the cluster
+
+[01-Oct-18 10:16 AM] TonyL#3577
+Oh looks like this info not documented anywhere but it's like a most important `step 0` when architecting asset chain / cluster with CCs support
+
+[01-Oct-18 10:19 AM] TonyL#3577
+https://docs.komodoplatform.com/komodo/example-asset-chains.html 
+https://docs.komodoplatform.com/komodo/create-Komodo-Assetchain.html
+there is no even parameter `ac_cc` in these docs - I guess it's have to be refreshed with taking into account the possibility of creating a CC
+
+[01-Oct-18 10:21 AM] Mylo#8306
+Some info in second section here i found one week https://komodoplatform.com/tech-tuesday-update/
+
+{Embed}
+https://komodoplatform.com/tech-tuesday-update
+Tech Tuesday Update: A Summary Of Last Week's Development - Komodo
+Komodo Platform is starting a weekly briefing on the progress the Komodo Dev Team is making. It's called Tech Tuesday Update. Here's the first one.
+https://komodoplatform.com/wp-content/uploads/2018/09/tech-tuesday-update.jpg
+
+[01-Oct-18 10:21 AM] Mylo#8306
+yes it is a step 0 😃
+
+[01-Oct-18 10:22 AM] TonyL#3577
+https://docs.komodoplatform.com/komodo/assetchain-params.html#ac-cc oh it's here
+
+[01-Oct-18 10:22 AM] TonyL#3577
+not very noticeable place 😃
+
+[01-Oct-18 10:22 AM] Mylo#8306
+yeah not very 😃
+
+[01-Oct-18 10:28 AM] TonyL#3577
+Maybe write some handbook like a `Hands-on Komodo blockchain infrastructure architecting with crypto-conditions Turing-complete smart-contracts`
+
+We can start from advices on servers choosing, asset chain requirements for CCs support and include how-to usage guide for each CC with thoughts on real-life / business cases application
+
+[01-Oct-18 10:29 AM] TonyL#3577
+If it's a good idea - I may create some initial draft as soon as finish with gatewaysCC automation
+
+[01-Oct-18 10:32 AM] TonyL#3577
+Something like an adoption of James CCs development WP but targeting on architects and users (more wide audience in general and with aim on usage description rather then development/creation) with examples and pictures to fill the gap in mass-understanding
+
+[01-Oct-18 10:35 AM] jl777c#5810
+yes Alright would be the most familiar with this topic
+
+[01-Oct-18 12:29 PM] jl777c#5810
+@jl777c Also I noticed that I can broadcast more than one gatewaysbind with same parameters in one block and as result can have more than one gateway with same token/oracle binded. Should I consider it as expected behaviour? 
+part of the gatewaysbind process should be to make sure no other with the same name was created in the same block
+since no economic activity is done the moment of bind, it is a matter to do a bind, verify not duplicate, if there was, do anotherbind, etc.
+
+[01-Oct-18 12:30 PM] jl777c#5810
+tokenconvert operates on tokens, so specify the total satoshis
+
+[01-Oct-18 12:30 PM] jl777c#5810
+I realized different rpc are using different convention, I try to keep it so when doing tokens it is at the satoshi level, when dealing with the native coin, then it is float
+
+[01-Oct-18 12:31 PM] jl777c#5810
+if I violate that rule, then it is a bug
+
+[01-Oct-18 12:31 PM] jl777c#5810
+@SHossain plz try to duplicate tony bugs via cli and let me know which ones are confirmed
+
+{Reactions}
+👍🏽 (2) 
+
+[01-Oct-18 01:32 PM] SHossain#0007
+@jl777c 1 bug reproduced
+```
+./komodo-cli -ac_name=ORCL1 gatewaysinfo ee319aa3f1eda1b7ee4ea8c50306a6f9d616c4b2ad013f8266d3bd6d2b9700aa
+{
+  "result": "success",
+  "name": "Gateways",
+  "pubkey": "036fe66a54d40b0146bcbf6627064cf023be5bfbb7a4bd5fd390007e5ddb801d13",
+  "coin": "KMD",
+  "oracletxid": "47f317d9d140eb622d22b352cea1b0f531ee0a477d560acc885432b167f61ee6",
+  "taddr": 0,
+  "prefix": 60,
+  "prefix2": 85,
+  "deposit": "REF8a789UoCKtZcH6XYW5StnXE5XDWBYfK",
+  "tokenid": "17386850e7530ac9b2f569345fd6934c5fe869ca084d63dcb52d686e88f5b67e",
+  "totalsupply": "1.00000000",
+  "remaining": "3000021.90120200",
+  "issued": "-3000020.90120200"
+}
+```
+
+[01-Oct-18 01:32 PM] SHossain#0007
+remaining supply is > than totalsupply by some reason
+
+[01-Oct-18 01:33 PM] SHossain#0007
+we will work on the next one after 15-20 minutes
+
+[01-Oct-18 01:33 PM] jl777c#5810
+how is that created? my guess is that it is due to having other funds in the same address
+
+[01-Oct-18 01:34 PM] TonyL#3577
+@SHossain Followed cli calls from my post above
+
+[01-Oct-18 01:34 PM] SHossain#0007
+if you want, i can post all the exact calls i've used to get to this step
+
+[01-Oct-18 01:34 PM] jl777c#5810
+it is displaying the balance in the gateways address
+
+[01-Oct-18 01:34 PM] jl777c#5810
+so I need to add a check for the assetid too. fixing
+
+{Reactions}
+👍🏽 (2) 
+
+[01-Oct-18 01:38 PM] jl777c#5810
+pushed fix. I was calling the wrong function
+
+[01-Oct-18 01:41 PM] TonyL#3577
+@jl777c Great! Will re-test.
+Which sum reflect "oraclesinfo funds"?
+I've noticed now when SHossain created gateway that   "funds": "150000.00000000", but he called `oraclesregister 10000` and `oraclessubscribe 10000` both once. Just wonder from where these `150000.00000000`
+```
+ ./komodo-cli -ac_name=ORCL1 oraclesinfo 47f317d9d140eb622d22b352cea1b0f531ee0a477d560acc885432b167f61ee6
+{
+  "result": "success",
+  "txid": "47f317d9d140eb622d22b352cea1b0f531ee0a477d560acc885432b167f61ee6",
+  "name": "KMD",
+  "description": "blockheaders",
+  "format": "Ihh",
+  "marker": "RMjyWM1BMG3pVkeX39Bx5qAFw1dJsT2YMy",
+  "registered": [
+    {
+      "publisher": "036fe66a54d40b0146bcbf6627064cf023be5bfbb7a4bd5fd390007e5ddb801d13",
+      "baton": "RCvvusXLaN4iS18QVcYuioFg4cWu9vJgTe",
+      "batontxid": "c5ff210e5962830696afe455af520139d4344150433bd89bec823c9ffc3a4ac4",
+      "lifetime": "0.00000000",
+      "funds": "150000.00000000",
+      "datafee": "0.00010000"
+    }
+  ]```
+
+[01-Oct-18 01:41 PM] jl777c#5810
+it should just be funds in the oracles address
+
+[01-Oct-18 01:42 PM] jl777c#5810
+use addressbalance to crosscheck
+
+[01-Oct-18 01:43 PM] TonyL#3577
+```./komodo-cli -ac_name=ORCL1 getaddressbalance '{"addresses": ["RMjyWM1BMG3pVkeX39Bx5qAFw1dJsT2YMy"]}'
+{
+  "balance": 20000,
+  "received": 20000
+}
+```
+
+[01-Oct-18 01:43 PM] TonyL#3577
+Not match
+
+[01-Oct-18 01:44 PM] jl777c#5810
+ok, seems a bug. will check
+
+[01-Oct-18 01:48 PM] jl777c#5810
+the address with funds is: addoracleinputs from (RHq9UmGoTzmPgQRDUTAmjquiMwm13t8N1E)
+
+[01-Oct-18 01:48 PM] jl777c#5810
+check address balance of RHq9UmGoTzmPgQRDUTAmjquiMwm13t8N1E
+
+[01-Oct-18 01:49 PM] TonyL#3577
+```./komodo-cli -ac_name=ORCL1 getaddressbalance '{"addresses": ["RHq9UmGoTzmPgQRDUTAmjquiMwm13t8N1E"]}'
+{
+  "balance": 16000000000000,
+  "received": 16000000000000
+}
+```
+
+[01-Oct-18 01:50 PM] jl777c#5810
+which is what oracles info is returning
+
+[01-Oct-18 01:50 PM] jl777c#5810
+not a bug
+
+[01-Oct-18 01:52 PM] TonyL#3577
+Just interesting on which step oracle getting this balance - when I'm creating it?
+```./komodo-cli -ac_name=ORCL oraclesregister 47f317d9d140eb622d22b352cea1b0f531ee0a477d560acc885432b167f61ee6 10000
+./komodo-cli -ac_name=ORCL1 oraclessubscribe 47f317d9d140eb622d22b352cea1b0f531ee0a477d560acc885432b167f61ee6 036fe66a54d40b0146bcbf6627064cf023be5bfbb7a4bd5fd390007e5ddb801d13 10000
+```
+Seems like a 20000 which have `maker` wallet:
+```./komodo-cli -ac_name=ORCL1 getaddressbalance '{"addresses": ["RMjyWM1BMG3pVkeX39Bx5qAFw1dJsT2YMy"]}'
+{
+  "balance": 20000,
+  "received": 20000
+}```
+
+[01-Oct-18 01:53 PM] SHossain#0007
+updating both my nodes
+
+[01-Oct-18 01:56 PM] jl777c#5810
+you can always look at the rawtx to answer such questions
+
+{Reactions}
+👌 
+
+[01-Oct-18 01:56 PM] jl777c#5810
+you dont need me for that
+
+[01-Oct-18 01:57 PM] TonyL#3577
+Yeah, I think I got the point - UTXO is an answer 😃
+
+[01-Oct-18 01:57 PM] jl777c#5810
+if you need to know what the code is trying to do, there are the code comments
+
+[01-Oct-18 02:01 PM] SHossain#0007
+@TonyL Let's get the 2nd bug reproduced 😃
+
+{Reactions}
+🙌 
+
+[01-Oct-18 02:06 PM] TonyL#3577
+"I have no idea what I'm doing dog"
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/496322071291363331/2j4g8c.png
+
+{Reactions}
+👍🏽 🤓 👮🏽 abusedsmily 
+
+[01-Oct-18 02:17 PM] siu - Chainmakers#3920
+@TonyL will try to test your gatewayscc app today 😃
+
+[01-Oct-18 02:26 PM] TonyL#3577
+@siu - Chainmakers  great! I'm glad to help if you'll have troubles with it. Please keep in mind that's prototype release to check the direction 😃  I'm working on new now  to cover all flow and make more user-friendly (for example my local version handle Ctrl + C  😃  :trollface: )
+
+[01-Oct-18 02:26 PM] siu - Chainmakers#3920
+where is the link?
+
+[01-Oct-18 02:27 PM] TonyL#3577
+Pinned a message.
+
+[01-Oct-18 02:27 PM] TonyL#3577
+@siu - Chainmakers  Pinned post with link and some guide
+
+[01-Oct-18 02:38 PM] siu - Chainmakers#3920
+thanks!
+
+{Reactions}
+👍 
+
+[01-Oct-18 02:39 PM] siu - Chainmakers#3920
+what chain is the latest test chain? sorry, ive been out of the look for some days
+
+[01-Oct-18 02:40 PM] TonyL#3577
+@jl777c bug with gateway supply fixed :
+```
+./komodo-cli -ac_name=ORCL1 gatewaysinfo b028e73586ec11151c1c98586eee8f7fad34dbda43e8e30665e046630ec981ef
+{
+  "result": "success",
+  "name": "Gateways",
+  "pubkey": "03d82cb358ef7cb1d89becbba3ab1a1805ab4921984066c57e18a278de8f1a43cd",
+  "coin": "KMD",
+  "oracletxid": "47f317d9d140eb622d22b352cea1b0f531ee0a477d560acc885432b167f61ee6",
+  "taddr": 0,
+  "prefix": 60,
+  "prefix2": 85,
+  "deposit": "RJjGtrxXzvnJp4QwU8iz5Fvh3suoogvLL2",
+  "tokenid": "30657ef199daf3be545f24808fff4974b24b3ecee615fb240c2ba06b3143e611",
+  "totalsupply": "1.00000000",
+  "remaining": "1.00000000",
+  "issued": "0.00000000"
+}```
+
+[01-Oct-18 02:41 PM] TonyL#3577
+@siu - Chainmakers It's ORCL1 now (second pinned post)
+
+[01-Oct-18 02:48 PM] siu - Chainmakers#3920
+ok
+
+[01-Oct-18 04:29 PM] SHossain#0007
+```
+./oraclefeed ORCL1 47f317d9d140eb622d22b352cea1b0f531ee0a477d560acc885432b167f61ee6 036fe66a54d40b0146bcbf6627064cf023be5bfbb7a4bd5fd390007e5ddb801d13 Ihh 4bc77852ea1df68d8aece2823d99309a7de03a2cb24efeab63ebc536952e4706
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   671    0   671    0     0   9067      0 --:--:-- --:--:-- --:--:--  9067
+BTC/USD 6542.6288
+Powered by CoinDesk (https://www.coindesk.com/price/) 6542.62880000
+coin.KMD vs KMD
+loadfile null size.(/tmp/oraclefeed.importaddress)
+set refcoin REF8a789UoCKtZcH6XYW5StnXE5XDWBYfK <- KMD [./komodo-cli] M.1 of N.1
+broadcast ORCL1 txid.(d11f2a8c2c12d38e07e68862be0f054931505a31729f667b2a1ea6e2d349dbb0)
+KMD ht.1033940 <- d4c60f004927593ee95a5c9a3f6c03cb1ac47e4bc533194224e43ad838a47a164b70b50a9a1a4a403a0fdcb42cef141896fe80a2554e8b78f74968180c9201dd1f3dbd2b
+already did withdraw KMD RMLBM7dNHUqsfnExV3H9uHeZzPi5dsYSkv 0.00000100 processed
+spend ORCL1 47132762ff6a679c2c9d3310dc4bf323b1f614309e5b468eaa207ba168761888/v2 as marker
+error code: -25
+error message:
+```
+
+[01-Oct-18 04:30 PM] SHossain#0007
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/496358135196286986/Screenshot_from_2018-10-01_17-26-38.png
+
+[01-Oct-18 04:31 PM] TonyL#3577
+@SHossain run oraclefeed and it's trying to broadcast my successful withdrawal transaction which I made few days ago.
+So it's different reproducing as I thought - even no matter which privkey node have it's trying to re-brodcast succesfully completed withdrawal
+
+[01-Oct-18 04:32 PM] TonyL#3577
+And @SHossain used brand new gateway without any deposit/withdrawal transactions for this `oraclefeed` execution
+
+[01-Oct-18 04:37 PM] TonyL#3577
+@jl777c https://github.com/jl777/komodo/blob/FSM/src/cc/dapps/oraclefeed.c#L470 btw isn't it should get `bindtxid` instead of `oracletxid`?
+
+{Embed}
+https://github.com/jl777/komodo/blob/FSM/src/cc/dapps/oraclefeed.c
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[01-Oct-18 04:39 PM] jl777c#5810
+yes, it is using bindtxid, just the variable name is wrong
+
+[01-Oct-18 04:40 PM] jl777c#5810
+fixed in the code, but it wont change behavior
+
+[01-Oct-18 04:40 PM] TonyL#3577
+Yep, I see
+
+[01-Oct-18 04:45 PM] TonyL#3577
+I guess what we see is this execution https://github.com/jl777/komodo/blob/FSM/src/cc/dapps/oraclefeed.c#L843
+
+{Embed}
+https://github.com/jl777/komodo/blob/FSM/src/cc/dapps/oraclefeed.c
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[01-Oct-18 04:51 PM] jl777c#5810
+spend ORCL1 47132762ff6a679c2c9d3310dc4bf323b1f614309e5b468eaa207ba168761888/v2 as marker
+the oraclefeed node needs to be able to spend that
+
+[01-Oct-18 04:54 PM] TonyL#3577
+So `oraclefeed` marker now just monitoring for all transactions which looks like gateways withdrawals and trying to execute no matter which pubkey it belongs
+
+[01-Oct-18 04:54 PM] TonyL#3577
+I guess there is no problem so
+
+[01-Oct-18 04:56 PM] TonyL#3577
+I'm really sorry if I made buzz from nothing. Really missed in these things a little bit last days 😂
+
+[01-Oct-18 04:57 PM] jl777c#5810
+well cant stop invalid nodes from trying
+
+[01-Oct-18 04:58 PM] TonyL#3577
+I just wonder that it's maybe a problem for node if AC live for a long time
+
+[01-Oct-18 04:58 PM] jl777c#5810
+as long as it works for the valid node(s) it is not a bug
+
+{Reactions}
+👌 
+
+[01-Oct-18 04:58 PM] TonyL#3577
+And there are millions of succesfull transactions
+
+[01-Oct-18 04:58 PM] TonyL#3577
+So `oraclefeed` will try to rebroadcast each
+
+[01-Oct-18 04:59 PM] TonyL#3577
+But it's hypothetical thing for now
+
+[01-Oct-18 05:03 PM] jl777c#5810
+i just merged mihailo's channels CC implementation. He said it is ready to test, but he doubts any of you will find any bugs as his code is totally perfect
+
+[01-Oct-18 05:03 PM] jl777c#5810
+😃
+

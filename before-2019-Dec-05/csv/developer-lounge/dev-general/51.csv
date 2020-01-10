@@ -1,0 +1,137 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"232679450301431808";"blackjok3r#3181";"05-Nov-18 02:36 PM";"no use someone else reading code for days to work it out";"";"abusedsmily (1)";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 02:42 PM";"@blackjok3r I think something like ` if( strcmp(""REGTEST"",ccdata.symbol) == 0 && blockheight%10==0) { notarized=1; }` maybe be exactly what I need to make it think every 10th block is notarized";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 02:44 PM";"NOTARIZED_HASH and NOTARIZED_TXID might not get set correctly, but mostly I want to test dpowconfs, which doesn't need to look at txid or hash";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 02:45 PM";"@blackjok3r Hush does not have exactly the same code, but I think I can port it over to Hush";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Nov-18 02:45 PM";"Yes just make those functions that check if the op_return data is valid, say yes if regtest";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 04:07 PM";"@blackjok3r i have something like this that I am going to try in Hush: ```--- a/src/komodo_validation011.h
++++ b/src/komodo_validation011.h
+@@ -1224,6 +1224,8 @@ void komodo_connectblock(CBlockIndex *pindex,CBlock& block)
+             numvalid = bitweight(signedmask);
+             if ( numvalid >= KOMODO_MINRATIFY )
+                 notarized = 1;
++            if ( Params().NetworkIDString() == ""regtest"" && ( height%7 == 0) )
++                notarized = 1;```";"";"👍 (1),🎉 (1)";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 04:14 PM";"does it compile.....";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 04:15 PM";"Yes other Barry, it does compile";"";"😂 (1)";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 04:16 PM";"";"https://cdn.discordapp.com/attachments/463445317136809984/509038339882483728/yes-other-barry.png";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 04:32 PM";"@blackjok3r figured it would be too easy. I think the local `notarized` variable is being set but that never makes it to the globals that the rest of the system uses. But it feels like I am close";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 04:32 PM";"maybe I just set all the NOTARIZED_ globals right there";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Nov-18 04:32 PM";"No there is another flag called valid =";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Nov-18 04:33 PM";"you need to set that... wher I showed you the PIZZA exception";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Nov-18 04:33 PM";"likely is just a bit further down maybe";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Nov-18 04:33 PM";"maybe you cant set tx with 0 op_return as valid though";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 04:35 PM";"@blackjok3r these are coinbase xtns, too";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 04:35 PM";"@blackjok3r in regtest, the only xtns in my blocks are coinbase. Maybe if I make non-coinbase xtns, those will work";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 04:36 PM";"@blackjok3r something probably is smart enough to ignore coinbase xtns, when looking for ntz's, maybe I can fake that too 😃";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Nov-18 04:36 PM";"I dont think it does that, as when I was getting stked working at the start, it would say all mined blocks by a notary pubkey were notarised.. but not valid notarisations .. only got to the first round of checks.";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 06:07 PM";"@jl777c have you seen this ""zPoS"" from PIVX stuff? they claim to have private/stealth staking: https://pivx.org/zpos/";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 06:08 PM";"i wonder if something similar can be brought to Sprout/Sapling";"";"";
+"455741312273219595";"jl777c#5810";"05-Nov-18 06:11 PM";"i think zerocoin protocol doesnt shield amounts and that allows calulating stake";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 07:13 PM";"@blackjok3r ```DEBUG:BitcoinRPC:-4-> getinfo []
+DEBUG:BitcoinRPC:<-4- {""connections"": 0, ""notarizedtxid"": ""18420ce2f8be49337754c4991dad3d49f74cabb2262c9e1dfac0cb118df31958"", ""errors"": """", ""blocks"": 8, ""paytxfee"": 0.0, ""keypoololdest"": 1541444852, ""tls_connections"": 0, ""notarized"": 7, ""walletversion"": 60000, ""difficulty"": 1, ""testnet"": false, ""version"": 2000050, ""proxy"": """", ""protocolversion"": 170002, ""timeoffset"": 0, ""notarizedhash"": ""0000000000000000000000000000000000000000000000000000000000000000"", ""balance"": 0.0, ""relayfee"": 1e-06, ""keypoolsize"": 2}```";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 07:14 PM";"""notarized"" blocks in regtest! Every 7th block in regtest is automagically notarized, in honor of @jl777c";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 07:16 PM";"this allows testing dpowconfs and various other things related to dpow";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 07:16 PM";"the above is working in Hush, once it's all shiny with some nice passing tests, I will port that to KMD";"";"🎉 (2)";
+"371114647052615681";"Mylo#8306";"05-Nov-18 07:54 PM";"hush will get some tech tuesday love 😃";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 08:00 PM";"wooot";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 08:03 PM";"@Mylo i am cooking up some real tests now";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 08:04 PM";"https://giphy.com/gifs/BM5piDpZ9neV2";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 08:06 PM";"```DEBUG:BitcoinRPC:<-9- [{""account"": """", ""vout"": 0, ""amount"": 40000.0, ""txid"": ""5e9ea7b83be826d503ba5b09433633506d2c94ac0e24eeb58752d6863d69b5cb"", ""generated"": true, ""confirmations"": 102, ""rawconfirmations"": 102, ""address"": ""tmKikrFUgJjTFNqBkwtphLSTVv9Bo5N4DHf"", ""spendable"": true, ""scriptPubKey"": ""76a9146dc4e3e29d3d7a287ce8c92a6a5c73cbdf81834988ac""}, {""account"": """", ""vout"": 0, ""amount"": 1.0, ""txid"": ""9bab04ec68c1770b9e1c1c76f04c7ce6eff77ac6367be3ad0db528c6e87720f3"", ""generated"": false, ""confirmations"": 1, ""rawconfirmations"": 2, ""address"": ""tmKikrFUgJjTFNqBkwtphLSTVv9Bo5N4DHf"", ""spendable"": true, ""scriptPubKey"": ""76a9146dc4e3e29d3d7a287ce8c92a6a5c73cbdf81834988ac""},```";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 08:06 PM";"@Mylo notice how `confirmations` and `rawconfirmations` are different";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 08:07 PM";"that xtn really has 2 ""raw"" confirmations, but it's not notarized, so dpowconfs holds the confirmations at 1";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 08:07 PM";"there is a coinbase xtn with 102 confirmations, and since it's been notarized, rawconfirmations = confirmations";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 08:07 PM";"this is all in regtest";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 08:23 PM";"https://github.com/MyHush/hush/commit/799c4c1ec744f8f609d4902fda209e1eec8da425";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 08:24 PM";"passing dpowconfs tests in regtest mode!";"";"";
+"371114647052615681";"Mylo#8306";"05-Nov-18 08:46 PM";"boom 💥 
+i like the equals check rather than introduce flags.
+if i was writing a web component for dpow conf, is `listunspent` the only way to get this data for now?
+looks like a handy lot of python for the dev community there 😃";"";"";
+"405011811511828481";"Alright#0419";"05-Nov-18 09:02 PM";"gettransaction should work as well";"";"";
+"371114647052615681";"Mylo#8306";"05-Nov-18 09:29 PM";"```
+$ komodo-cli gettransaction 1b49ddd7079f45ae090140b19ea15f4a9584ae63744bb541e5b7530a5ff7fcb8
+{
+  ""amount"": 0.00000000,
+  ""fee"": -0.00087000,
+  ""confirmations"": 92,
+  ""blockhash"": ""00000001f3d51d6354eda5a477446f42d93c71b28d65ae292dcab9ba2bab3b8c"",
+  ""blockindex"": 1,
+  ""blocktime"": 1541447201,
+  ""expiryheight"": 0,
+  ""txid"": ""1b49ddd7079f45ae090140b19ea15f4a9584ae63744bb541e5b7530a5ff7fcb8"",
+  ""walletconflicts"": [
+  ],
+```
+not atm, but yeah handy for explorers.  where'd this be done in the code?";"";"";
+"405011811511828481";"Alright#0419";"05-Nov-18 09:35 PM";"seems you don't have it activated";"";"";
+"405011811511828481";"Alright#0419";"05-Nov-18 09:35 PM";"it should add ""rawconfirmations""";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 10:07 PM";"@Mylo in komodo, you have to be on master or fsm branch";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 10:07 PM";"@Mylo you are probably on `dev`, which I don't think has dpowconfs yet";"";"";
+"365714438864633856";"dukeleto#7326";"05-Nov-18 10:09 PM";"@Mylo there are a handful of RPCs that changed with dpowconfs, anything that had a `confirmations` key now has that and `rawconfirmations`";"";"";
+"371114647052615681";"Mylo#8306";"05-Nov-18 10:23 PM";"```
+  {
+    ""repoinfo"": {
+      ""reponame"": ""KMD"",
+      ""repobranch"": ""dev"",
+      ""lastcommit"": ""1ed9e2c8b"",
+      ""commitunix"": ""1540805900"",
+      ""commitauthdate"": ""2018-10-28T22:38:20-11:00""
+    }
+```
+hmmm week behind ...";"";"";
+"371114647052615681";"Mylo#8306";"06-Nov-18 03:53 AM";"";"https://cdn.discordapp.com/attachments/463445317136809984/509213730341650444/remote-regtest-vue-cakeshop.png";"shexy (2)";
+"498812134398885908";"D.rabbani#9094";"06-Nov-18 01:39 PM";"hi i am just having a concern about the ./zcutil/build-win.sh -j8 are these the threads of the core or the aplication level  threads can someone explain it please";"";"";
+"455741312273219595";"jl777c#5810";"06-Nov-18 01:39 PM";"number of threads used for building";"";"";
+"498812134398885908";"D.rabbani#9094";"06-Nov-18 01:44 PM";"so if  i  use j4 ?? i just need to know whether they are cpu threads or application threads";"";"";
+"498812134398885908";"D.rabbani#9094";"06-Nov-18 01:44 PM";"?";"";"";
+"455741312273219595";"jl777c#5810";"06-Nov-18 01:46 PM";"CPU threads";"";"";
+"455741312273219595";"jl777c#5810";"06-Nov-18 01:46 PM";"-j4 will take twice as long as -j8 if you have 8 cores";"";"";
+"498812134398885908";"D.rabbani#9094";"06-Nov-18 01:46 PM";"thanks @jl777c";"";"";
+"498812134398885908";"D.rabbani#9094";"06-Nov-18 01:47 PM";"okai thankyou so much";"";"";
+"498812134398885908";"D.rabbani#9094";"06-Nov-18 01:47 PM";"😃";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:16 AM";"hi just a question while practicing .. if i want to get a block reward of 2.3% per year i.e. 5.29 mil /year how should i calculate the reward ? i am just confused";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:17 AM";"and what is ac_end ?";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:18 AM";"""for eg  ./komodod -ac_name=examplecoin   -ac_supply= 2300000000  -ac_reward= 367361111111   -ac_staked=100  -ac_cc=1  -ac_end=9799621""";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 07:24 AM";"-ac_end is when the blockrewards end";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 07:24 AM";"the -ac_reward is the blockreward in satoshis";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 07:25 AM";"you can also use -ac_decay to reduce the blockreward incrementally";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 07:25 AM";"there is also -ac_halving";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 07:25 AM";"plz read the docs on this";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:25 AM";"yes read it";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:25 AM";"but my question is did i calculate it right ? the block reward";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 07:25 AM";"you can use getblocksubsidy <height> to verify the blockreward at a height";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 07:25 AM";"given an expanding supply and a fixed reward, the percentage wont be constant";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:25 AM";"will it generate 5.29 mil /year ?";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:26 AM";"okai";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 07:26 AM";"blocktime of 60 seconds";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 07:26 AM";"1440 per day";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:26 AM";"yes";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 07:26 AM";"1440*365 per year";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:26 AM";"yes";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 07:26 AM";"1440*365 * blockreward per year";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 07:26 AM";"you can do the math";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:27 AM";"525600";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:27 AM";"it is";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:28 AM";"if i want to keep 3.3% reward per year";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:28 AM";"it will be 1440*365*0.033 ? right";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 07:43 AM";"for the first year, but the supply is increasing, so the percentage will decrease";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 07:44 AM";"I think a negative -ac_decay is needed to increase the blockreward over time, but that is not implemented";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:45 AM";"no i just want to keep it fix just as 3.3% per year";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 07:46 AM";"the supply is increasing, so the percentage will decrease
+I think a negative -ac_decay is needed to increase the blockreward over time, but that is not implemented";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:48 AM";"okai";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:48 AM";"i got it";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 07:48 AM";"to keep a constant percentage, you would need to change the blockreward based on coinsupply";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:48 AM";"okai";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 07:48 AM";"but with an ever changing blockreward, keeping track of that becomes problematic";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:48 AM";"the coin supply for example say 2.3 billion";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:49 AM";"and 2.3% will be block reward /year";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:49 AM";"out of it";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:53 AM";"its okay i got it thanks";"";"";
+"498812134398885908";"D.rabbani#9094";"07-Nov-18 07:53 AM";"😃";"";"";
+"371114647052615681";"Mylo#8306";"07-Nov-18 08:39 AM";"!kmdtip @Bryan_Beus 1.5";"";"👍 (1)";
+"499325474128920597";"KMD TipBot#0077";"07-Nov-18 08:39 AM";"";"";"";
+"321062779492761602";"0786#0786";"07-Nov-18 12:22 PM";"Hi, is there anyone who can help me with creating a Komodo web wallet";"";"";
+"504987654836715522";"ulhaq.anwaar#2918";"07-Nov-18 01:41 PM";"Can we configure bitcore-node library with komodo jsonrpc port?";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 01:43 PM";"@ulhaq.anwaar should be possible";"";"";

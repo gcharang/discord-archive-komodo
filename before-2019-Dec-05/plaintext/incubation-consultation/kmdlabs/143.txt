@@ -1,0 +1,436 @@
+==============================================================
+Guild: Komodo
+Channel: kmdlabs
+Topic: Please read pinned messages
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[04-Dec-18 02:38 PM] jl777c#5810
+that code in main.cpp
+
+[04-Dec-18 02:39 PM] jl777c#5810
+then
+    if (ptx)
+    {
+        SyncWithWallets(*ptx, &block);
+    }
+
+[04-Dec-18 02:40 PM] jl777c#5810
+so adding a check for PoS64 staking to the:                     if (i == (block.vtx.size() - 1) && ASSETCHAINS_LWMAPOS && block.IsVerusPOSBlock() && state.GetRejectReason() == "staking")
+
+[04-Dec-18 02:40 PM] jl777c#5810
+that could fix it
+
+[04-Dec-18 02:40 PM] blackjok3r#3181
+ok cool thanks
+
+[04-Dec-18 02:40 PM] blackjok3r#3181
+will give this a go.
+
+[04-Dec-18 02:44 PM] blackjok3r#3181
+actually this makes sense, I guess its adding the tx back to the mempool when the block was invalid. Not quite sure why that breaks the wallet, but it does explain why there are rouge staking txs in PoW blocks.
+
+[04-Dec-18 02:44 PM] blackjok3r#3181
+So it needs fixing anyway.
+
+[04-Dec-18 04:54 PM] blackjok3r#3181
+@jl777c  I mesaged miket but havent heard back... I dont think that is related. Although I think I have found an answer fixing it seems difficult... 
+Theory is this, When you are the only staker this happens a lot, less so with more nodes.
+The ram staker loads every 10 minutes from the wallet, but there is no way for it to clear a tx after its choses that I can see. So it can select one twice. Of course this means that the second time its chosen the block is invalid. 
+Then when it disconnects tip, it removes the chosen tx from the wallet by force, with EraseTransaction (the same as I used in my wallet cleaner)
+This means that the valid staked utxo now has been removed from the wallet and cannot be an input for the next tx seen.
+
+[04-Dec-18 04:55 PM] blackjok3r#3181
+this also explains the null pwaleltin relay transactio0n crash
+
+[04-Dec-18 04:55 PM] blackjok3r#3181
+that was introduced after the ram staker
+
+[04-Dec-18 04:56 PM] jl777c#5810
+for less than 10000 utxo, the ramstaker should behave as it would without
+
+[04-Dec-18 04:56 PM] jl777c#5810
+do you have more than 10000 utxo?
+
+[04-Dec-18 04:56 PM] blackjok3r#3181
+one chain has 10,000 the rest have 5000 ish ... but there might be lots and lots of dust utrxo that are not eleghible as the block reward is 0 on these chains.
+
+[04-Dec-18 04:57 PM] blackjok3r#3181
+and I am mining nearly all the blocks
+
+[04-Dec-18 04:57 PM] jl777c#5810
+if it selects the same one twice, then it wouldnt be valid
+
+[04-Dec-18 04:57 PM] jl777c#5810
+maybe you can test by changing the 10000 utxo limit to 25000
+
+[04-Dec-18 04:57 PM] jl777c#5810
+see if that stabilizes the behavior
+
+{Reactions}
+👌 
+
+[04-Dec-18 04:57 PM] blackjok3r#3181
+the only place is removes the tx fromt he wallet to cause a missing vin error on load is in dissconnect tip in main.cpp
+
+[04-Dec-18 04:58 PM] jl777c#5810
+but if it is disconnecting the tip, it should add it back into the wallet? not remove
+
+[04-Dec-18 04:59 PM] blackjok3r#3181
+its removing the tx that staked the block, so maybe thats not even the right place
+
+[04-Dec-18 04:59 PM] blackjok3r#3181
+as it should not select one of those txs
+
+[04-Dec-18 04:59 PM] blackjok3r#3181
+to stake
+
+[04-Dec-18 05:00 PM] blackjok3r#3181
+will try to just increase ram staker to some huge value to disable it and do zapwallet
+
+[04-Dec-18 05:00 PM] blackjok3r#3181
+then leave for a day
+
+[04-Dec-18 05:46 PM] blackjok3r#3181
+acept to memory pool errors are not related to wallet corruption.
+
+[04-Dec-18 05:46 PM] blackjok3r#3181
+diffrent transactions
+
+[04-Dec-18 07:27 PM] Bar_F1sh_Rel#0834
+Staking VPS up and running - just starting to fund it.
+Any requests on the funding method? @blackjok3r
+
+[04-Dec-18 07:27 PM] blackjok3r#3181
+Make sure u have 100 utxos that are over 10 in size on each chain
+
+[04-Dec-18 07:28 PM] blackjok3r#3181
+I just changed some code on mine and restarted with rescanned wallet's
+
+[04-Dec-18 07:28 PM] blackjok3r#3181
+Hope it fixes the corrupt wallet issue but likely that would be lucky if it does
+
+[04-Dec-18 07:29 PM] blackjok3r#3181
+You should split over 64 segids but I'm quite sure mine are all in the same address here
+
+[04-Dec-18 07:30 PM] blackjok3r#3181
+If u can get a paste bin of any failed migrate logs for me , I will check those out tomorrow
+
+[04-Dec-18 07:31 PM] blackjok3r#3181
+DM if u need to, shouldn't be anything about priv keys as the logs only Dave export tx and afterwards which is already fully signed.
+
+[04-Dec-18 07:40 PM] Bar_F1sh_Rel#0834
+Paste's are all from CFEKED this time - https://pastebin.com/Z9muj1HP 
+https://pastebin.com/LacVhLsN
+https://pastebin.com/9vhuf7Py
+https://pastebin.com/ccjEH9rT
+
+{Embed}
+https://pastebin.com/Z9muj1HP
+CFEK 30-11 1 - Pastebin.com
+https://pastebin.com/i/facebook.png
+
+{Embed}
+https://pastebin.com/LacVhLsN
+CFEK 30-11 2 - Pastebin.com
+https://pastebin.com/i/facebook.png
+
+{Embed}
+https://pastebin.com/9vhuf7Py
+CFEK 30-11 3 - Pastebin.com
+https://pastebin.com/i/facebook.png
+
+{Embed}
+https://pastebin.com/ccjEH9rT
+CFEK 30-11 4 - Pastebin.com
+https://pastebin.com/i/facebook.png
+
+[04-Dec-18 07:42 PM] Bar_F1sh_Rel#0834
+These were followed by 5 good imports - with no changes between
+
+[04-Dec-18 10:58 PM] blackjok3r#3181
+Thanks
+
+[04-Dec-18 11:07 PM] Bar_F1sh_Rel#0834
+CFEK is funded now - just setting some migrates off to fund the others.
+
+[04-Dec-18 11:09 PM] blackjok3r#3181
+Cool that'd what I did... All my chains are just thousands of migrate txs as utxos
+
+[04-Dec-18 11:11 PM] blackjok3r#3181
+I will leave my staker up most of the day and get another up on ducks, as I need to work on staking scripts, once yours is going g smoothly and we know the chain s won't stall I'll start migrating. If yours check out ok, we should hard fork the cluster 102 to sapling on its own branch and teat everything there
+
+[04-Dec-18 11:14 PM] blackjok3r#3181
+Migrates and anything else we can think of, been holding off on sapling activation for us waiting for the oraclels fix
+
+[04-Dec-18 11:14 PM] blackjok3r#3181
+Unless they need help to fix that...
+
+[04-Dec-18 11:15 PM] blackjok3r#3181
+Which as of yesterday they didn't
+
+{Reactions}
+👍 
+
+[04-Dec-18 11:17 PM] Bar_F1sh_Rel#0834
+is there a way to list utxo qty by cli?
+
+[04-Dec-18 11:19 PM] ComputerGenie 👴🏼📢#7004
+`./komodo-cli -ac_name=CHAIN listunspent | jq '.|length'`
+
+[04-Dec-18 11:22 PM] blackjok3r#3181
+I say 100 utxo, because they thake 100 blocks to mature but at 1% pos it can be less, we just cannot have the chain stall so 100 is the go, my advice is to send 1 large sum then send many it to yourself
+
+[04-Dec-18 11:22 PM] blackjok3r#3181
+If u need a script to build send many jsons I can post one
+
+[04-Dec-18 11:24 PM] Bar_F1sh_Rel#0834
+That might help
+
+[04-Dec-18 11:39 PM] axo777#1232
+Hi Everybody.  I was out all day yesterday.  Totally snowed under.
+
+{Reactions}
+👋 
+
+[04-Dec-18 11:41 PM] axo777#1232
+Thanks @smk762 -  dracocanis ominator  for that great music video.  Those songs date a relic like me better than carbon 14
+
+[04-Dec-18 11:46 PM] axo777#1232
+Added you guys to my friends list.
+
+[04-Dec-18 11:47 PM] axo777#1232
+😀
+
+[05-Dec-18 01:35 AM] smk762 -  dracocanis ominator#7640
+Daily motivation - https://m.youtube.com/watch?v=fj-10lIrboM
+
+{Embed}
+moshspeggeti
+https://m.youtube.com/watch?v=fj-10lIrboM
+Tool - Right in Two [1080p HD]
+Note that I did not make this song or the video and all copyrights go to their respectful owners. This is a phenomenal song made by Tool, probably one of my ...
+https://i.ytimg.com/vi/fj-10lIrboM/maxresdefault.jpg
+
+{Reactions}
+💯 👌 
+
+[05-Dec-18 02:06 AM] CrisF#3405
+Hi @LabsAssistant, thanks to those who voted, gave feedback and made submissions on the proposed KMDLabs logo.
+ Could you please give a `yea` or `nay` on the following. 
+It's based on the submission that received the most positive feedback with a change of letter coloring, as was suggested.
+The below are all the same logo, just set on different backgrounds to give an idea of how it will look.
+Please note, your yes/no vote is for the logo, not the background.
+Thanks 🙂 
+https://i.postimg.cc/G3D8d3Zf/KMDlabs-logo5.png
+https://i.postimg.cc/ZKh9Rtm5/KMDlabs-logo5-bg.png
+https://i.postimg.cc/9FtDw8Xt/KMDlabs-logo6.png
+
+{Embed}
+https://i.postimg.cc/G3D8d3Zf/KMDlabs-logo5.png
+https://i.postimg.cc/G3D8d3Zf/KMDlabs-logo5.png
+
+{Embed}
+https://i.postimg.cc/ZKh9Rtm5/KMDlabs-logo5-bg.png
+https://i.postimg.cc/ZKh9Rtm5/KMDlabs-logo5-bg.png
+
+{Embed}
+https://i.postimg.cc/9FtDw8Xt/KMDlabs-logo6.png
+https://i.postimg.cc/9FtDw8Xt/KMDlabs-logo6.png
+
+{Reactions}
+☑ (4) 💯 (3) 
+
+[05-Dec-18 02:34 AM] axo777#1232
+Here is a cute presentation by some Hyperledger Sawtooth Lake devs about fish tracking.  The basic concepts there can be deployed in many sectors of our CC tools.  The Hyperledger devs will soon find the limitations of their platform choice.  Komodo has been wisely planned to avoid all of the pitfalls the others are bumping their heads on today.  https://www.youtube.com/watch?v=-oxOas6cFXE
+
+{Embed}
+Sawtooth Lake
+https://www.youtube.com/watch?v=-oxOas6cFXE
+Supply Chain Provenance with Sawtooth
+Sawtooth Lake is a modular platform for building, deploying, and running distributed ledgers. Distributed ledgers provide a digital record (such as asset own...
+https://i.ytimg.com/vi/-oxOas6cFXE/maxresdefault.jpg
+
+{Reactions}
+💯 
+
+[05-Dec-18 02:41 AM] axo777#1232
+Of course their promo stuff will never admit their challenges.  It is just so nice to have a platform that has been built from the ground up in such a way that the problems other ledgers will see do not enter the reality of Komodo blockchains.
+
+[05-Dec-18 03:02 AM] axo777#1232
+It appears that they are placing active RFID's on each fish caught.  While this is OK, it probably is not necessary.  All we really need is location information on the fishing vessel which is a GPS signal.  The skipper can issue a blanket barcode or QR code for the complete haul.  Sensors will transmit temperature and other data while on the fishing vessel. Then at port the fish will be processed and packed. At port individual package codes are generated at the palleting stage and uploaded to the blockchain.  Tracking continues for onward transportation by associating the smaller package Bar/QR Codes with the pallets (or equal) they are riding on or in until final delivery to the retail store. (This is in the case of fish, similar sequences apply for other products).  We can bribe the retail consumer with a few AXO's to scan and report their purchase or oonsumption of the fish with our smart phone "Report App" that signals to the Oracle that the supply chain is complete.  When the retail store receives the shipment payment can be triggered via a number of possible events all of which are reported by the oracle to the blockchain.  One possible event is crossing a "geofence" our user would set up on our platform.  (The geofence comes to us via an API from our GPS and cell network signal partner.
+
+[05-Dec-18 03:25 AM] blackjok3r#3181
+@Bar_F1sh_Rel  Sorry man, I fell back asleep, only 3H sleep last night ha.
+```#!/bin/bash
+address=RPwJrLiBX7nxXSa13Rwmr4aLS22LVw4Za6
+num=100
+JSON='"{\"'
+JSON2='\":1,\"'
+
+for i in `seq 1 $num`; do
+     JSON+=$address
+     JSON+=$JSON2
+done
+JSON="${JSON%???}}\""
+echo $JSON```
+
+[05-Dec-18 03:26 AM] blackjok3r#3181
+For multiple address's :
+```#!/bin/bash
+addresslist=(
+"RTVti13NP4eeeZaCCmQxc2bnPdHxCJFP9x" 
+"RXmXeQ8LfJK6Y1aTM97cRz9Gu5f6fmR3sg" 
+"RGsQiArk5sTmjXZV9UzGMW5njyvtSnsTN8"
+"RMwEpnaVe3cesWbMqqKYPPkaLcDkooTDgZ"
+"RQVvzJ8gepCDVjhqCAc5Tia1kTmt8KDPL9"
+"RFgzxZe2P4RWKx6E9QGPK3rx3TXeWxSqa8"
+"RHq3JsvLxU45Z8ufYS6RsDpSG4wi6ucDev"
+"RN2KsQGW36Ah4NorJDxLJp2xiYJJEzk9Y6"
+"RF4HiVeuYpaznRPs7fkRAKKYqT5tuxQQTL"
+"RG28QSnYFADBg1dAVkH1uPGYS6F8ioEUM2"
+)
+
+JSON='"{\"'
+JSON2='\":100,\"'
+
+for address in ${addresslist[@]}; do
+     address="${address%\"}"
+     address="${address#\"}"
+     JSON+=$address
+     JSON+=$JSON2
+done
+JSON="${JSON%???}}\""
+echo $JSON ```
+
+[05-Dec-18 06:01 AM] ph03nix#3115
+@axo777 👍
+
+{Reactions}
+👍 
+
+[05-Dec-18 06:10 AM] zatJUM#9924
+@CrisF Definitly the black one (on dark backgrounds), but I would have prefered a bolder font for the "KMD" part, and a solid color too
+
+[05-Dec-18 06:25 AM] blackjok3r#3181
+I htink these are what we chose ... so they are final. I think they turned out good. exile did a great job on them
+
+[05-Dec-18 06:25 AM] blackjok3r#3181
+We are testing a few last things, and will have a hardfork in the next day to activate sapling on half of our chains.
+
+[05-Dec-18 06:25 AM] blackjok3r#3181
+not updating in time will mean you need to resync your chains most likely.
+
+[05-Dec-18 06:32 AM] Bar_F1sh_Rel#0834
+Hmmmm - looks like I have feked my migrate scripts somehow on the clone VPS - not a single migrate completed last night.
+a tui script just worked though - so it must be me.
+
+[05-Dec-18 06:41 AM] blackjok3r#3181
+I think I know why dude
+
+[05-Dec-18 06:41 AM] blackjok3r#3181
+the miign node is rejectg all the import txs
+
+[05-Dec-18 06:41 AM] blackjok3r#3181
+Just about to start investigating that right now
+
+[05-Dec-18 06:41 AM] Bar_F1sh_Rel#0834
+ah - thats why I got these?? ```04:03:37 ERROR: AcceptToMemoryPool: ConnectInputs failed e2be260d27e9ada5f1771414c1c762c5a392d2d78fdb3d24fcda4741f7fac399
+2018-12-05 04:03:46 ERROR: AcceptToMemoryPool: ConnectInputs failed d224f9d88659b63de1ff511151f344fe476e0437ce970dddfe0680d341bcd929
+2018-12-05 04:03:56```
+
+[05-Dec-18 06:42 AM] blackjok3r#3181
+I thik so yes
+
+[05-Dec-18 06:42 AM] blackjok3r#3181
+something is messed up
+
+[05-Dec-18 06:42 AM] blackjok3r#3181
+what branch did you use
+
+[05-Dec-18 06:42 AM] blackjok3r#3181
+master or noStreamer
+
+[05-Dec-18 06:43 AM] Bar_F1sh_Rel#0834
+everything should be on master - pulled from stakedchain
+
+[05-Dec-18 06:43 AM] blackjok3r#3181
+no worries ... I will check it out now
+
+[05-Dec-18 06:44 AM] blackjok3r#3181
+`CC Eval EVAL_IMPORTCOIN Invalid: invalid-code, dont forget to add EVAL_NEWCC to Eval::Dispatch spending tx bc577596ae240904b6b87b24569571cf10491632049027516f0f5cb5887d8748
+`
+
+[05-Dec-18 06:44 AM] Bar_F1sh_Rel#0834
+also - why is processor load so high for staking?
+
+[05-Dec-18 06:44 AM] blackjok3r#3181
+mining nodes are on sapling activated build
+
+[05-Dec-18 06:44 AM] blackjok3r#3181
+its always been like that
+
+[05-Dec-18 06:44 AM] blackjok3r#3181
+as far as I can tell, its because its calculating an equihash solution
+
+[05-Dec-18 06:44 AM] blackjok3r#3181
+only a very low dificulty one
+
+[05-Dec-18 06:45 AM] blackjok3r#3181
+but it still pegs a core, when it has utxo's that are elegible to stake.
+
+[05-Dec-18 06:45 AM] blackjok3r#3181
+should be 1 core only per daemon.
+
+[05-Dec-18 06:46 AM] blackjok3r#3181
+What ar you mighrating atm `to -> CFEKED`
+
+[05-Dec-18 06:46 AM] Bar_F1sh_Rel#0834
+yeah - just to get things running
+
+[05-Dec-18 06:46 AM] blackjok3r#3181
+ok cool.. just checking as thats where all the errors are
+
+[05-Dec-18 06:47 AM] blackjok3r#3181
+and my node went off on a 124 block reorg somehow
+
+[05-Dec-18 06:47 AM] blackjok3r#3181
+so I am guessing another node not on sapling
+
+[05-Dec-18 06:47 AM] blackjok3r#3181
+mined a block
+
+[05-Dec-18 06:47 AM] blackjok3r#3181
+and it all went haywire.
+
+[05-Dec-18 06:47 AM] blackjok3r#3181
+it seems import txs maybe are not sapling activated.
+
+[05-Dec-18 06:48 AM] blackjok3r#3181
+should be able to get that fixed
+
+[05-Dec-18 06:48 AM] Bar_F1sh_Rel#0834
+hmmm - so random imports will work depending on miner?
+
+[05-Dec-18 06:49 AM] blackjok3r#3181
+I think so yes... but you will find that after 1 confirm ... they will reorg
+
+[05-Dec-18 06:49 AM] blackjok3r#3181
+and no longer be there
+
+[05-Dec-18 06:49 AM] blackjok3r#3181
+so the sciptt will say
+
+[05-Dec-18 06:49 AM] blackjok3r#3181
+import confirmed
+
+[05-Dec-18 06:49 AM] blackjok3r#3181
+but hen a block later
+
+[05-Dec-18 06:49 AM] blackjok3r#3181
+it wont be confirmed any more
+
+[05-Dec-18 06:49 AM] blackjok3r#3181
+and the tx will get orphaned.
+

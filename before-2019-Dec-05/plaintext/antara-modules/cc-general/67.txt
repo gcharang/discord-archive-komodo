@@ -1,0 +1,480 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[17-Aug-18 08:11 PM] libscott#8867
+i guess so!
+
+[17-Aug-18 08:11 PM] SHossain#0007
+i already have libevent 2.1.8 installed in my mac
+
+[17-Aug-18 08:16 PM] libscott#8867
+you can try modifying line 3 in depends/packages/libevent.mk
+
+[17-Aug-18 08:17 PM] libscott#8867
+but its strange...
+
+[17-Aug-18 08:17 PM] SHossain#0007
+it seems the compile configs weren't changed and they were working earlier
+
+[17-Aug-18 08:22 PM] libscott#8867
+maybe github changed lol
+
+[17-Aug-18 08:22 PM] libscott#8867
+no more broken url redirects!
+
+[17-Aug-18 08:22 PM] SHossain#0007
+https://github.com/libevent/libevent/releases/download/release-2.1.8-stable/libevent-2.1.8-stable.tar.gz
+
+[17-Aug-18 08:22 PM] libscott#8867
+still... when I tried that url with curl here it didnt give me a 404
+
+[17-Aug-18 08:26 PM] SHossain#0007
+very strange indeed
+
+[17-Aug-18 11:14 PM] Alright#0419
+The way `rewardsunlock` works currently is that if the plan doesn't have enough funding, the remaining coins are stuck in the contract.
+
+[17-Aug-18 11:16 PM] Alright#0419
+```
+./komodo-cli -ac_name=ATX rewardsinfo e960de2c4261736291127e9ebfe7b29bd31c6678ec39b17d90f710b0e200e523
+{
+  "result": "success",
+  "fundingtxid": "e960de2c4261736291127e9ebfe7b29bd31c6678ec39b17d90f710b0e200e523",
+  "name": "overdraf",
+  "sbits": 7377303440351131247,
+  "APR": "25.00000000",
+  "minseconds": 0,
+  "maxseconds": 864000,
+  "mindeposit": "1.00000000",
+  "funding": "0.15298333",
+  "locked": "5842000.00000000"
+}
+```
+```
+./komodo-cli -ac_name=ATX rewardsunlock overdraf e960de2c4261736291127e9ebfe7b29bd31c6678ec39b17d90f710b0e200e523
+
+./rawsend 01000000022fd29cb80ea93d2072b9cac2c0e2ddfb20dfec3b9c5eca7fa07ff4cec709ae3c000000007b4c79a276a072a26ba067a565802103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb9814054ad67cc4900c2155d7ac8a0f3ce864bee485b3196ffa2d639463a3df898d2cd0f0e268091d8cec0bce721518c0f1dac06ae8013aeb705aa35edbc5baf18f41da100af038001e5a10001ffffffffa99d730733404eba55611ba0f498aac071e0a37bf839eae686e7c489b90ce83d000000007b4c79a276a072a26ba067a565802103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb98140b47675e5eec042d6d93c3cc03f2376d4a4b894f740cea88c3e05d3af83b3ab1525c279328cd609d20719a71aab47709d7bc61a737bb9a5db80249a8a6280855ba100af038001e5a10001ffffffff030000000000000000302ea22c802065686d47a4049c2c845a71895a915eb84c04445896eec5dc0be40df0b31372da8103120c008203000401cc192c264d170000002321027dc7b5cfb5efca96674b45e9fda18df069d040b9fd9ff32c35df56005e330392ac00000000000000002c6a2ae5556f7665726472616623e500e2b010f7907db139ec78661cd39bb2e7bf9e7e1291627361422cde60e900000000
+error code: -26
+error message:
+16: bad-txns-in-belowout
+```
+
+[17-Aug-18 11:16 PM] Alright#0419
+```
+APR 25.00000000 minseconds.0 maxseconds.864000 mindeposit 1.00000000
+maxseconds.864000 (L) 1000.00000000 1000.00000000
+duration 99143 (1534547700 - 1534448557) numblocks 1664 (2286 - 622)
+amount 1000.00000000 2500000000000.00000000 3231 -> duration.99143 reward 0.78595097 vals 3.14380390 7859.50975000
+maxseconds.0 (U) 0.15298333 0.15298333
+search mempool for unlocked and unspent CC rewards output for 0.63306764
+inputs 0.15298333 CCchange 0.00000000 amount 1000.00000000 reward 0.78595097
+spentheight.2287 valuein 1000.15298333 vs 1000.78595097 error
+```
+
+[17-Aug-18 11:16 PM] Alright#0419
+```
+2018-08-17 23:16:31 ERROR: CheckInputs(): e9980cf4691b5aa831dd46addbf8260c1a44ff4e4c5774a8a72fbde0ecdc062f value in (1000.15298333) < value out (1000.78595097) diff -0.63296764
+2018-08-17 23:16:31 ERROR: AcceptToMemoryPool: ConnectInputs failed e9980cf4691b5aa831dd46addbf8260c1a44ff4e4c5774a8a72fbde0ecdc062f
+```
+
+[18-Aug-18 07:02 AM] dukeleto#7326
+should it work a different way?
+
+[18-Aug-18 08:21 AM] jl777c#5810
+maybe I can just allow it to be redeemed without any rewards so it can never be stuck
+
+[18-Aug-18 10:09 AM] jl777c#5810
+@Alright pushed a change, it will be rejected by the old versions, but it solves the various issues with rewards. basically if there isnt enough funds at the time of unlock, it goes into recover mode and allows a simple tx with the locked funds as vin.0 and a single output to the unlock address. it can be for less than the locked amount so people can effectively donate funds into the rewards fund if they want.
+
+[18-Aug-18 10:10 AM] jl777c#5810
+the issue is there is no way to know ahead of time when locking whether there will be enough funds when unlocking. The hueristic I use is to make sure there is enough rewards to cover the deposit amount. Not that 100% return will be expected, just that if there isnt enough in the rewards funds to cover the deposit amount, it seems likely that there wont be enough when time comes to unlock
+
+[18-Aug-18 10:10 AM] jl777c#5810
+with the recover mode tx, at least the funds are not stuck
+
+{Reactions}
+👍🏽 
+
+[18-Aug-18 11:20 AM] SHossain#0007
+@dukeleto please let me know if you have a fix for this
+
+[18-Aug-18 11:20 AM] SHossain#0007
+```
+rm -f /Users/user/komodo/depends/sources/download-stamps/.stamp_fetched-libevent-libevent-2.1.8.tar.gz.hash
+touch /Users/user/komodo/depends/sources/download-stamps/.stamp_fetched-libevent-libevent-2.1.8.tar.gz.hash
+cd /Users/user/komodo/depends/sources/download-stamps; (test -f /Users/user/komodo/depends/sources/libevent-2.1.8.tar.gz || ( mkdir -p /Users/user/komodo/depends/work/download/libevent-2.1.8 && echo Fetching libevent... && ( curl --connect-timeout 10 --retry 3 -L -f -o "/Users/user/komodo/depends/work/download/libevent-2.1.8/libevent-2.1.8.tar.gz.temp" "/libevent-2.1.8.tar.gz" || curl --connect-timeout 10 --retry 3 -L -f -o "/Users/user/komodo/depends/work/download/libevent-2.1.8/libevent-2.1.8.tar.gz.temp" "https://github.com/libevent/libevent/archive//release-2.1.8-stable.tar.gz" ) && echo "316ddb401745ac5d222d7c529ef1eada12f58f6376a66c1118eee803cb70f83d  /Users/user/komodo/depends/work/download/libevent-2.1.8/libevent-2.1.8.tar.gz.temp" > /Users/user/komodo/depends/work/download/libevent-2.1.8/.libevent-2.1.8.tar.gz.hash && shasum -a 256 -c /Users/user/komodo/depends/work/download/libevent-2.1.8/.libevent-2.1.8.tar.gz.hash && mv /Users/user/komodo/depends/work/download/libevent-2.1.8/libevent-2.1.8.tar.gz.temp /Users/user/komodo/depends/sources/libevent-2.1.8.tar.gz && rm -rf /Users/user/komodo/depends/work/download/libevent-2.1.8 ))
+Fetching libevent...
+curl: (3) <url> malformed
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+curl: (22) The requested URL returned error: 404 Not Found
+make: *** [/Users/user/komodo/depends/sources/download-stamps/.stamp_fetched-libevent-libevent-2.1.8.tar.gz.hash] Error 22
+```
+
+[18-Aug-18 11:42 AM] SHossain#0007
+fixed. please ignore my message above
+
+[18-Aug-18 02:21 PM] SHossain#0007
+@jl777c fixed the issues for macOS. requires further testing. i'll be compiling and testing the Win builds
+
+[18-Aug-18 02:21 PM] jl777c#5810
+best to post a version without all the debugs
+
+[18-Aug-18 02:21 PM] grewalsatinder#9653
+@SHossain  if you have a github repo, I think best is to post there.
+
+[18-Aug-18 02:22 PM] grewalsatinder#9653
+less chances an imposter can scam ppl here.
+
+[18-Aug-18 02:23 PM] SHossain#0007
+Thanks @grewalsatinder
+
+[18-Aug-18 02:23 PM] SHossain#0007
+will do.
+
+[18-Aug-18 02:24 PM] grewalsatinder#9653
+👍
+
+[18-Aug-18 02:39 PM] SHossain#0007
+took 12 minutes to cross-compile for Windows
+
+[18-Aug-18 02:39 PM] SHossain#0007
+using 8 threads
+
+{Reactions}
+👌 
+
+[18-Aug-18 02:50 PM] SHossain#0007
+Here is the CCFix-OSX verion of komodo binaries with sha256 and virustotal checked https://github.com/himu007/komodo/releases/tag/ccfix-18082018
+
+{Embed}
+https://github.com/himu007/komodo/releases/tag/ccfix-18082018
+himu007/komodo
+komodo - Komodo
+https://avatars2.githubusercontent.com/u/8881040?s=400&v=4
+
+[18-Aug-18 02:54 PM] Alright#0419
+going to hard fork ATX in a couple minutes
+
+[18-Aug-18 03:02 PM] Alright#0419
+oh maybe not 😛
+
+[18-Aug-18 03:02 PM] Alright#0419
+@jl777c should recovery mode work with an existing overdrafted plan?
+
+[18-Aug-18 03:03 PM] jl777c#5810
+yes, as long as latest version is used
+
+[18-Aug-18 03:04 PM] jl777c#5810
+also make sure you cant unlock funds to a different address than locked it, that would be a bad bug
+
+[18-Aug-18 03:04 PM] Alright#0419
+```
+./komodo-cli -ac_name=ATX rewardsunlock overdraf e960de2c4261736291127e9ebfe7b29bd31c6678ec39b17d90f710b0e200e523
+{
+  "result": "success",
+  "hex": "01000000022fd29cb80ea93d2072b9cac2c0e2ddfb20dfec3b9c5eca7fa07ff4cec709ae3c000000007b4c79a276a072a26ba067a565802103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb981407bd333f4b04d5f2840ff3d2b0405325ecf2f35679c000b6225c25b0856c0592314e633754164ec802b960f74e6f92f38209467342745cc745d2eb290e1fed348a100af038001e5a10001ffffffffa99d730733404eba55611ba0f498aac071e0a37bf839eae686e7c489b90ce83d000000007b4c79a276a072a26ba067a565802103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb981409b711ed4367d0f0259a8587262f89de14004e8be75a02c3a77209a855bf69fcd41a46a0c83404bed1f69c56c75ec3d3747178fbc75edfce8c5e42ff928ebf766a100af038001e5a10001ffffffff030000000000000000302ea22c802065686d47a4049c2c845a71895a915eb84c04445896eec5dc0be40df0b31372da8103120c008203000401cc65ffd34f170000002321027dc7b5cfb5efca96674b45e9fda18df069d040b9fd9ff32c35df56005e330392ac00000000000000002c6a2ae5556f7665726472616623e500e2b010f7907db139ec78661cd39bb2e7bf9e7e1291627361422cde60e900000000"
+}
+```
+```
+APR 25.00000000 minseconds.0 maxseconds.864000 mindeposit 1.00000000
+maxseconds.864000 (L) 1000.00000000 1000.00000000
+duration 155840 (1534604397 - 1534448557) numblocks 2599 (3221 - 622)
+amount 1000.00000000 2500000000000.00000000 3231 -> duration.155840 reward 1.23541349 vals 4.94165398 12354.13495000
+maxseconds.0 (U) 0.15298333 0.15298333
+search mempool for unlocked and unspent CC rewards output for 1.08253016
+inputs 0.15298333 CCchange 0.00000000 amount 1000.00000000 reward 1.23541349
+spentheight.3223 valuein 1000.15298333 vs 1001.23541349 error
+```
+
+[18-Aug-18 03:05 PM] Alright#0419
+vin0 is 1000 coins from a `rewardslock`
+vin1 is  0.15298333 coins from a `rewardsunlock` change
+
+[18-Aug-18 03:06 PM] Alright#0419
+vout0 is 0 coin change to CC 
+vout1 is 1001.23541349 coins to `rewardslock` address
+vout2 is OP_RETURN
+
+[18-Aug-18 03:07 PM] jl777c#5810
+it seems it tried to spend a lot more than it should have
+
+[18-Aug-18 03:08 PM] jl777c#5810
+or maybe the vin was too small
+
+[18-Aug-18 03:08 PM] Alright#0419
+I'll fund the plan a small amount then try a couple more `rewardsunlock`s
+
+[18-Aug-18 03:08 PM] jl777c#5810
+no
+
+[18-Aug-18 03:08 PM] jl777c#5810
+this is a bug I want to fix while it is reproducing
+
+[18-Aug-18 03:08 PM] jl777c#5810
+I think i know the reason
+
+[18-Aug-18 03:09 PM] Alright#0419
+the output is too large
+
+[18-Aug-18 03:09 PM] jl777c#5810
+pushed fix. it should now generate the recover funds path
+
+[18-Aug-18 03:10 PM] jl777c#5810
+1.23541349 seems like a resonable size rewared for the time and APR
+
+[18-Aug-18 03:10 PM] jl777c#5810
+it just found some funds, butnot enough and it tried to make a normal tx, which is underfunded
+
+[18-Aug-18 03:10 PM] Alright#0419
+yep
+
+[18-Aug-18 03:10 PM] Alright#0419
+building
+
+[18-Aug-18 03:19 PM] Alright#0419
+```
+01000000022fd29cb80ea93d2072b9cac2c0e2ddfb20dfec3b9c5eca7fa07ff4cec709ae3c000000007b4c79a276a072a26ba067a565802103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb981406a59d48ff895728a7641686b8c75616a903752b71d207642108d7b937544893e79bfa7328378229c7b315ab5c830efc025a9a5e2df8c335cb3b77b7452db387da100af038001e5a10001ffffffffa99d730733404eba55611ba0f498aac071e0a37bf839eae686e7c489b90ce83d000000007b4c79a276a072a26ba067a565802103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb98140952fd645dd64c742666760dafbe347f15e16837929af9e64776cd0767618450b0e3b54379483673866c01c92d96076c262319e4a37bcf8f59059b5cd7651fe00a100af038001e5a10001ffffffff02f0c07648170000002321027dc7b5cfb5efca96674b45e9fda18df069d040b9fd9ff32c35df56005e330392ac1d6fe90000000000232102c43473c970e24f37f7d351ea4c3d208c40ec4e7cbfe344a81a2de2d4ffdbbb22ac00000000
+```
+
+[18-Aug-18 03:19 PM] Alright#0419
+was confirmed, but something may be off here
+
+[18-Aug-18 03:20 PM] Alright#0419
+the address that locked 1000 coins, RNv5ppQ2G7BLA2EFhFj86upZJr9tzwuuvi, received 999.9999
+
+[18-Aug-18 03:20 PM] Alright#0419
+another address, RH95ci4FtxMRj7iXBdgjB3ZtyNe4jpJqP9 received 0.15298333, the rest of the funding
+
+[18-Aug-18 03:21 PM] Alright#0419
+RH95ci4FtxMRj7iXBdgjB3ZtyNe4jpJqP9 is the `-pubkey=` address of the node that created the tx
+
+[18-Aug-18 03:22 PM] Alright#0419
+Although, once the funding is 0, it works as expected
+
+[18-Aug-18 03:24 PM] jl777c#5810
+yes, my bad. I forgot to reset the mtx. fixing
+
+[18-Aug-18 03:25 PM] jl777c#5810
+it shouldnt have been confirmed...
+
+[18-Aug-18 03:26 PM] jl777c#5810
+it wasnt a proper recover tx and it shouldnt have passed the test for being a valid unlock. investigatint
+
+[18-Aug-18 03:27 PM] Alright#0419
+http://cctest.explorer.dexstats.info/tx/9fe25426176579f62d9afe70ca1bc4e42244618a88e3c2911b52a65bd9fca770
+
+[18-Aug-18 03:28 PM] jl777c#5810
+what console prints did you get when you broadcast that?
+
+[18-Aug-18 03:33 PM] jl777c#5810
+pushed fix for having some rewards funds but not enough and tightened the error checking. a 2 vin/2 vout tx should have been rejected before. no idea how it got confirmed
+
+[18-Aug-18 03:36 PM] Alright#0419
+```
+APR 25.00000000 minseconds.0 maxseconds.864000 mindeposit 1.00000000
+maxseconds.864000 (L) 1000.00000000 1000.00000000
+duration 156697 (1534605254 - 1534448557) numblocks 2623 (3245 - 622)
+amount 1000.00000000 2500000000000.00000000 3231 -> duration.156697 reward 1.24220731 vals 4.96882927 12422.07317500
+maxseconds.0 (U) 0.15298333 0.15298333
+search mempool for unlocked and unspent CC rewards output for 1.08932398
+not enough rewards funds to payout 1.24230731, recover mode tx
+not enough opret.[0]
+not enough opret.[0]
+not enough opret.[0]
+not enough opret.[0]
+not enough opret.[0]
+not enough opret.[0]
+not enough opret.[0]
+not enough opret.[0]
+not enough opret.[0]
+not enough opret.[0]
+not enough opret.[0]
+not enough opret.[0]
+not enough opret.[0]
+not enough opret.[0]
+```
+
+[18-Aug-18 03:37 PM] Alright#0419
+nothing in debug.log
+
+[18-Aug-18 03:40 PM] jl777c#5810
+pushed fix
+
+[18-Aug-18 03:40 PM] TonyL#3577
+Just wonder - are these warnings normal during Windows build?
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/480400667442413588/unknown.png
+
+[18-Aug-18 03:42 PM] jl777c#5810
+its boost. seems possible but not sure
+
+[18-Aug-18 03:50 PM] SHossain#0007
+```
+C:\win64>komodo-cli.exe -ac_name=ATX faucetinfo
+{
+  "result": "success",
+  "name": "Faucet",
+  "funding": "999.69970000"
+}
+
+C:\win64>komodo-cli.exe -ac_name=ATX faucetget
+error: couldn't connect to server: EOF reached (code 1)
+(make sure server is running and you are connecting to the correct RPC port)
+```
+
+[18-Aug-18 03:50 PM] SHossain#0007
+stdout
+```
+start at 1534607332
+Could not read 32 bytes entropy from system
+```
+
+[18-Aug-18 03:51 PM] SHossain#0007
+faucetget crashed the daemon
+
+[18-Aug-18 03:51 PM] SHossain#0007
+syncd 100%
+
+[18-Aug-18 03:51 PM] jl777c#5810
+actually it seems windows RNG needs some work
+
+[18-Aug-18 03:53 PM] SHossain#0007
+with these crashes, db gets corrupted and start syncing from 0 upon next start
+
+[18-Aug-18 03:54 PM] jl777c#5810
+pushed a patch, but libscott will need to make a proper fix
+
+[18-Aug-18 03:55 PM] SHossain#0007
+updating
+
+[18-Aug-18 04:01 PM] Alright#0419
+```
+./komodo-cli -ac_name=ATX rewardsunlock overdraf e960de2c4261736291127e9ebfe7b29bd31c6678ec39b17d90f710b0e200e523
+./rawsend 01000000012fded29822345dd437d31bbc1a04d86751274bc94e590d6f9dda765a4f822750000000007b4c79a276a072a26ba067a565802103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb98140d65fccbcc6b4bd2fe0306f01fba9a0033e7f51ce02052aa3b686def65a4b42c76e9a7d74fffa15508020cfc0af7d37ae9d60d0c5e6cdf681af10af4fba6a44b8a100af038001e5a10001ffffffff02f0c0764817000000232103941584892cf2399715553f4d5a30406b3ddca65cea5c967c4cd367f4ee7e9271ac00000000000000002c6a2ae5556f7665726472616623e500e2b010f7907db139ec78661cd39bb2e7bf9e7e1291627361422cde60e900000000
+error code: -26
+error message:
+16: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)
+```
+
+[18-Aug-18 04:01 PM] Alright#0419
+```
+APR 25.00000000 minseconds.0 maxseconds.864000 mindeposit 1.00000000
+maxseconds.864000 (L) 1000.00000000 1000.00000000
+duration 156706 (1534607758 - 1534451052) numblocks 2614 (3296 - 682)
+amount 1000.00000000 2500000000000.00000000 3231 -> duration.156706 reward 1.24227866 vals 4.96911466 12422.78665000
+search mempool for unlocked and unspent CC rewards output for 1.24237866
+not enough rewards funds to payout 1.24237866, recover mode tx
+CC Eval EVAL_REWARDS Invalid: unlock tx wrong number of vouts spending tx 5027824f5a76da9d6f0d594ec94b275167d8041abc1bd337d45d342298d2de2f
+CC Eval EVAL_REWARDS Invalid: unlock tx wrong number of vouts spending tx 5027824f5a76da9d6f0d594ec94b275167d8041abc1bd337d45d342298d2de2f
+```
+
+[18-Aug-18 04:01 PM] Alright#0419
+```
+2018-08-18 15:58:44 ERROR: CScriptCheck(): 85d3ec0670606f3efd79a978726b3a90eaa1a5ac0e9d9fa38476867f67596eaf:0 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+2018-08-18 15:58:44 ERROR: CScriptCheck(): 85d3ec0670606f3efd79a978726b3a90eaa1a5ac0e9d9fa38476867f67596eaf:0 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+2018-08-18 15:58:44 ERROR: AcceptToMemoryPool: ConnectInputs failed 85d3ec0670606f3efd79a978726b3a90eaa1a5ac0e9d9fa38476867f67596eaf
+```
+
+[18-Aug-18 04:01 PM] Alright#0419
+the inputs/outputs add up correctly and the input is not spent
+
+[18-Aug-18 04:04 PM] jl777c#5810
+fixing. at least it is detecting it is not good
+
+[18-Aug-18 04:04 PM] Alright#0419
+Is trying to pay the correct address also
+
+[18-Aug-18 04:04 PM] Alright#0419
+that's with 0 funding in the plan
+
+[18-Aug-18 04:04 PM] jl777c#5810
+yes it violated the 1 vout rule, as I added opreturn to get pas the prior error
+
+[18-Aug-18 04:05 PM] Alright#0419
+I can rollback my chain to test the same scenario of ~.15 left funded in it
+
+[18-Aug-18 04:05 PM] Alright#0419
+or just add funding
+
+[18-Aug-18 04:06 PM] jl777c#5810
+ok, new version there. hopefully will work
+
+[18-Aug-18 04:09 PM] SHossain#0007
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/480407918999765004/calling-libscott.png
+
+[18-Aug-18 04:10 PM] jl777c#5810
+i removed that print in the latest version
+
+[18-Aug-18 04:10 PM] jl777c#5810
+but it should be working other than the annoying print
+
+[18-Aug-18 04:10 PM] SHossain#0007
+it did work
+
+[18-Aug-18 04:11 PM] SHossain#0007
+```
+C:\win64>komodo-cli.exe -ac_name=ATX faucetget
+{
+  "result": "success",
+  "hex": "01000000010028b09e72b4fca90632f100986a328d2262aa0e7feecdcafeec88db428bbc00000000007b4c79a276a072a26ba067a565802103682b255c40d0cde8faee381a1a50bbb89980ff24539cb8518e294d3a63cefe1281405529238058a245b87d4dd5e48210888c4fe53fa955c1ce78592b287e19c05491085bd9e60ced519b8e6338ea919ad9028f89c955d8847114ef0c6904be04bf7aa100af038001e4a10001ffffffff03c0f1134617000000302ea22c8020e029c511da55523565835887e412e5a0c9b920801b007000df45e545f25028248103120c008203000401cc809698000000000023210343ce7e622e3865cabfbac21814fe6c8d87ddfe7a52d786fa078b75b88a56983fac0000000000000000086a06e447986a000000000000"
+}
+```
+
+[18-Aug-18 04:11 PM] SHossain#0007
+```
+C:\win64>komodo-cli.exe -ac_name=ATX sendrawtransaction 01000000010028b09e72b4fca90632f100986a328d2262aa0e7feecdcafeec88db428bbc00000000007b4c79a276a072a26ba067a565802103682b255c40d0cde8faee381a1a50bbb89980ff24539cb8518e294d3a63cefe1281405529238058a245b87d4dd5e48210888c4fe53fa955c1ce78592b287e19c05491085bd9e60ced519b8e6338ea919ad9028f89c955d8847114ef0c6904be04bf7aa100af038001e4a10001ffffffff03c0f1134617000000302ea22c8020e029c511da55523565835887e412e5a0c9b920801b007000df45e545f25028248103120c008203000401cc809698000000000023210343ce7e622e3865cabfbac21814fe6c8d87ddfe7a52d786fa078b75b88a56983fac0000000000000000086a06e447986a000000000000
+00324ee372d4241bb91cf00dc51f30316e746fcd23b1805bd4f889a472d12b00
+```
+
+[18-Aug-18 04:11 PM] SHossain#0007
+`found valid txid after 27247 iterations 1534608544`
+
+[18-Aug-18 04:12 PM] SHossain#0007
+waiting for mempool to be cleared to verify 0.1 ATX received
+
+[18-Aug-18 04:13 PM] SHossain#0007
+```
+C:\win64>komodo-cli.exe -ac_name=ATX rewardslist
+[
+  "288df341df135d1f2137f6940f586c084314c22aadbf9aa835a61b16c23637c4",
+  "e960de2c4261736291127e9ebfe7b29bd31c6678ec39b17d90f710b0e200e523",
+  "449e41341b20ead8a84191880b350af5bcc13c8cac0541ebb46229b9bb679dd2"
+]
+
+C:\win64>komodo-cli.exe -ac_name=ATX rewardsinfo 288df341df135d1f2137f6940f586c084314c22aadbf9aa835a61b16c23637c4
+{
+  "result": "success",
+  "fundingtxid": "288df341df135d1f2137f6940f586c084314c22aadbf9aa835a61b16c23637c4",
+  "name": "RW",
+  "sbits": 22354,
+  "APR": "25.00000000",
+  "minseconds": 0,
+  "maxseconds": 86400,
+  "mindeposit": "10000.00000000",
+  "funding": "15.00000000",
+  "locked": "0.00000000"
+}
+```
+
+[18-Aug-18 04:16 PM] Alright#0419
+Can I unlock that?
+
+[18-Aug-18 04:16 PM] Alright#0419
+Wanted to test that a normal rewardsunlock still works properly
+
+[18-Aug-18 04:16 PM] Alright#0419
+Oh not, that one
+

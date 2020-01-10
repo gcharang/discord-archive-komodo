@@ -1,0 +1,320 @@
+==============================================================
+Guild: Komodo
+Channel: cc-prices
+Topic: ./komodod -ac_cbopret=7 -ac_prices="LTC, BCHABC, XMR, IOTA, ZEC, WAVES, LSK, DCR, RVN, DASH, XEM, BTS, ICX, HOT, STEEM, ENJ, STRAT" -pubkey=<yourpubkey> -ac_name=REKT0 -ac_cclib=prices -ac_cc=10777 -ac_reward=3000000000 -ac_supply=120000000 -ac_pubkey=039433dc3749aece1bd568f374a45da3b0bc6856990d7da3cd175399577940a775 -ac_perc=77777 -ac_blocktime=600 -addnode=5.9.102.210 &
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[07-May-19 07:36 AM] jl777c#5810
+or limit leverage to very small amount for low liquidity
+
+[07-May-19 07:36 AM] TonyL#3577
+Maybe separate tiers
+
+[07-May-19 07:37 AM] TonyL#3577
+First tier markets - bankroll in game 100x, second tier markets - bankroll in game 1x
+
+[07-May-19 07:37 AM] TonyL#3577
+Tier depends of volumes
+
+[07-May-19 07:37 AM] jl777c#5810
+for start maybe we just allow bets on first tier markets
+
+[07-May-19 07:37 AM] jl777c#5810
+we can then see how it actually works with real money at stake
+
+[07-May-19 07:38 AM] TonyL#3577
+Thats what bookmakers do actually - on NBA match I can bet 100k USD without problems because it's deeply analyzed and hardly to maniplulate (buy match lets say) but on some low league in same bookmaker my limit can be 100 usd
+
+[07-May-19 07:38 AM] jl777c#5810
+then iterate, adding lower and lower volume things as we see how things work
+
+[07-May-19 07:39 AM] jl777c#5810
+so globally, if we have the total exposure calculation, we can scale the maxbet/leverage allowed based on that and the tier of the synthetic, initially only dealing with first tiers to simplify
+
+[07-May-19 07:40 AM] TonyL#3577
+Problem is that in "centralized" world KYC handling this maxbet issue - security depts trying to make process of multiaccounting as hard as possible but in such decentralized thing if you want to place `100x * maxbet` you just need script which create 100 wallets
+
+[07-May-19 07:42 AM] TonyL#3577
+It's super intetesting what happens when real money will be at stake
+
+[07-May-19 07:52 AM] dimxy#2587
+so the simplest case is to calculate the current volume for  this kind of synthetic (and maybe totally for those pairs which form the synthetic) and allow a bet for no more than for example 1% from it. 
+Plus we need a way to define  tiers (it is some amount scale hard coded in the cc)
+
+[07-May-19 07:56 AM] jl777c#5810
+what you can do is cancel out all the positive vs negative positions for each coin
+
+[07-May-19 07:56 AM] jl777c#5810
+the net exposure is the sum of exposure of each coin
+
+[07-May-19 07:56 AM] jl777c#5810
+meaning, a long XYZ/BTC vs short ZBC/BTC cancel out
+
+[07-May-19 07:57 AM] jl777c#5810
+also long ZYX/BTC and long BTC/ABC also cancel out the BTC exposure
+
+[07-May-19 07:57 AM] jl777c#5810
+we would need to have a requirement that all bets must be for a A/B synthetic
+
+[07-May-19 07:58 AM] jl777c#5810
+then this net balancing can be done and typically a good percentage of positions cancel out other positions
+
+[07-May-19 08:32 AM] TonyL#3577
+I tested some positons with different coeffetients multiply stacks - price looks believable. Just thinking maybe for debugging/testing it might be helpful to see somewhere intermediate calculations results (price of each stack, coeff for each stack)
+
+[07-May-19 08:41 AM] dimxy#2587
+yes I already output most if them, maybe should mark them better  in debug
+
+[07-May-19 08:43 AM] jl777c#5810
+this is idea based on what tony said to me
+
+[07-May-19 08:43 AM] jl777c#5810
+we can dramatically limit system risk, by selling the positions to other players
+
+[07-May-19 08:44 AM] jl777c#5810
+delta neutral portfolio is the balancing concept
+
+[07-May-19 08:44 AM] jl777c#5810
+a delta neutral portfolio doesnt care if the price goes up or down as all positions are hedged
+
+[07-May-19 08:45 AM] jl777c#5810
+of course we cant practically achieve 100% delta neutrality... however we can push things to come close to it
+
+[07-May-19 08:45 AM] jl777c#5810
+so, lets imagine we add the ability for all existing positions to have their opposite bet listed
+
+[07-May-19 08:46 AM] jl777c#5810
+covering the opposite position would be offered at some discount, or we charge a bigger premium to create an initial position
+
+[07-May-19 08:47 AM] jl777c#5810
+the house edge can simply be the 24hr min/max, so the initial position and covered position will have different costbasis and this difference is the house profit margin
+
+[07-May-19 08:48 AM] jl777c#5810
+maybe this allows us to offer covering an existing position without any fee
+
+[07-May-19 08:48 AM] jl777c#5810
+and we charge something like a 1% fee to create a new position
+
+[07-May-19 08:49 AM] jl777c#5810
+this then creates an "orderbook" of unbalanced bets that people can choose to make, it should be displayed in the reversed form so people can just see what bet they can make without a fee, they still need the deposit of course
+
+[07-May-19 08:50 AM] jl777c#5810
+a complication is that as funds are added, it seems such adding of funds creates the opposite orderbook entry for the amount of new funds
+
+[07-May-19 08:51 AM] jl777c#5810
+with this, we can see the total exposure is the sum of the unfilled "orderbook"
+
+[07-May-19 08:51 AM] jl777c#5810
+and that due to not needing a fee, people will naturally tend to balance the portfolio over creating a new position
+
+[07-May-19 08:52 AM] jl777c#5810
+with such a total exposure that is constantly reduced with the opposite orderbook, we can then cap the amount of new positions allowed, ie. once the max net exposure is reached, no new positions are allowed, only bets that reduce the exposure via opposite orderbook
+
+[07-May-19 08:54 AM] jl777c#5810
+please explore this avenue of a balancing opposite orderbook. make it 10x easier to balance an existing position that creating a new one, and more expensive too
+
+[07-May-19 08:55 AM] jl777c#5810
+@TonyL @dimxy does this make sense?
+
+[07-May-19 08:56 AM] jl777c#5810
+for example, creating a new position can be limited to 10x leverage, but that can be matched by a 100x leverage using 10% of funds. if it gets rekt, then the original amount is available for the opposite orderbook again
+
+[07-May-19 08:56 AM] jl777c#5810
+maybe 5x leverage is the max for creating a new position, not sure what is best
+
+[07-May-19 08:57 AM] jl777c#5810
+enough to offer a unique value, not too much so that the system gets capital. As soon as a position is fully balanced, then the system is guaranteed to gain some amount of winnings as both sides cannot win at the same time, one of them will usually get rekt or at least have balancing losses
+
+[07-May-19 08:59 AM] jl777c#5810
+this reduces the risk management problem (very hard in the abstract) to more of an incentivized ordermatching, which seems a lower degree of difficulty. for anything but the most common synthetic, we can even make the max leverage 1x
+
+[07-May-19 08:59 AM] jl777c#5810
+it would just be covered by the overall system capital as it grows
+
+[07-May-19 08:59 AM] TonyL#3577
+Have some crazy idea: what if to make positions as NFTs
+
+[07-May-19 09:00 AM] jl777c#5810
+aha! then whoever owns it needs to be the "house" for that position? but that would require to match the leverage exactly
+
+[07-May-19 09:01 AM] jl777c#5810
+it seems a needless complication, though the orderbook is automatically gained
+
+[07-May-19 09:01 AM] jl777c#5810
+for the BET sidechain, the BET fee address should be a snapshot payments CC script
+
+[07-May-19 09:01 AM] TonyL#3577
+I think it can open interesting possibilities because of native tokendex, and can collect fees on position withdraw to NFT and deposit from NFT
+
+[07-May-19 09:02 AM] TonyL#3577
+So like a inside of platform trading might be free
+
+[07-May-19 09:02 AM] jl777c#5810
+lets do NFT of positions later, the complexity of enforcing leverage, costbasis inside an NFT...
+
+[07-May-19 09:02 AM] TonyL#3577
+But if you want to trade on secondary market - you have to pay for position withdrawal into token
+
+[07-May-19 09:02 AM] TonyL#3577
+Oh yes sure, just a conceptual idea 😃
+
+[07-May-19 09:02 AM] jl777c#5810
+we want to incentivize trading on secondary market
+
+[07-May-19 09:03 AM] jl777c#5810
+any trade that lowers system risk is guaranteed profits
+
+[07-May-19 09:07 AM] jl777c#5810
+with the snapshot CC as the destination for fees, as you win your bets, you then get a bigger share of the overall trading fees
+
+[07-May-19 09:08 AM] TonyL#3577
+`BETS` coin have revenue share from sidechains trading CCs ?
+
+[07-May-19 09:08 AM] jl777c#5810
+the prices CC monetization is to go to a BET address, but that requires accumulating and distributing it out manually
+
+[07-May-19 09:09 AM] jl777c#5810
+by making a BET sidechain and then paying the BET monetization to the snapshot CC script, it automates the process
+
+[07-May-19 09:09 AM] jl777c#5810
+the more BET (sidechain) you have, the larger percentage of the revshare payments you get
+
+[07-May-19 09:10 AM] jl777c#5810
+totally blockchain enforced, from the creation of the BET fees to the airdropping of the collected revshares
+
+[07-May-19 09:10 AM] jl777c#5810
+BET might become the first actual DAO
+
+{Reactions}
+🌝 
+
+[07-May-19 09:16 AM] TonyL#3577
+`for example, creating a new position can be limited to 10x leverage, but that can be matched by a 100x leverage using 10% of funds. if it gets rekt, then the original amount is available for the opposite orderbook again` - such dynamic hedging definetly got sense
+
+[07-May-19 09:19 AM] TonyL#3577
+Maybe we can start from simple thing first:  
+some `marketstat` call which output bets directions (like a: market: BTC_USD,  total_longs: 100, total_shorts: 50, spread: -50)
+So with such current spread it's possible to open longs with leverage only x5 or x10 lets say but shorts possible to open with leverage up to x100 (in sizes less than moving spread to another side)
+
+[07-May-19 09:21 AM] jl777c#5810
+to calculate system exposure the "opposite orderbook" must be calculated anyway
+
+[07-May-19 09:21 AM] jl777c#5810
+rpc calls can be made to display just the ones that match a specific synthetic
+
+[07-May-19 09:21 AM] jl777c#5810
+so it would be a matter to select an orderbook item, set leverage and fund it
+
+[07-May-19 09:21 AM] TonyL#3577
+Yes, I'm just explaining on visible example because can't correctly explain what needs to be done on consensus level
+
+[07-May-19 09:22 AM] jl777c#5810
+for all bets, find ones without a balancing trade (maybe using baton) and add to opposite orderbook list (or just sum the relevant details)
+
+[07-May-19 09:23 AM] jl777c#5810
+from the rpc side, you just need to get a list of available things to match
+
+[07-May-19 09:23 AM] jl777c#5810
+and a way to match an orderbook item with a specified leverage
+
+[07-May-19 09:25 AM] jl777c#5810
+other than changing max leverage allowed and linking balancing bets, it seems not so much change on the consensus side
+
+[07-May-19 09:25 AM] jl777c#5810
+and this avoids having to make many iterations on risk management
+
+[07-May-19 09:25 AM] jl777c#5810
+decentralize the risk
+
+[07-May-19 09:25 AM] jl777c#5810
+so the system does its best to minimize the net exposure
+
+[07-May-19 09:26 AM] TonyL#3577
+But from risk side: 500 with x1 leverage as I see is almost the same as 5 with x100 leverage (500 vs 500). Why we cant just summarize longs and shorts risk amount (bet amonut * leverage) on market and stimulate equalizing?
+
+[07-May-19 09:26 AM] jl777c#5810
+and this net exposure is limited to some sane maximum based on system capital
+
+[07-May-19 09:27 AM] TonyL#3577
+Balance each positon is complicated but balance whole market should be positions_amount easier
+
+[07-May-19 09:27 AM] jl777c#5810
+yes, ultimately that is what the system does, but we have specific utxo and not a balance based system, so how would you deal with 1000 bets made in mempool?
+
+[07-May-19 09:27 AM] jl777c#5810
+i disagree
+
+[07-May-19 09:27 AM] jl777c#5810
+i think balancing each position is much simpler
+
+[07-May-19 09:27 AM] jl777c#5810
+maybe more complex for GUI
+
+[07-May-19 09:27 AM] jl777c#5810
+but GUI can treat the possible bets as "utxo" and present a balance based display
+
+[07-May-19 09:28 AM] jl777c#5810
+maybe if we change the entire internals to be oriented toward a specific synthetic and all its positions, a balance based method makes sense
+
+[07-May-19 09:28 AM] jl777c#5810
+so this is more an implementation question than a design
+
+[07-May-19 09:29 AM] jl777c#5810
+the goal is clear, decentralize the risk exposure by incentivizing opposite positions
+
+{Reactions}
+👍 
+
+[07-May-19 09:29 AM] jl777c#5810
+and yes, the display to user can simply show the max leverage allowed for a synthetic, will be different for long maxleverage and short maxleverage
+
+[07-May-19 09:30 AM] TonyL#3577
+Yep that what my thought - for GUI it might be complicated to show "unbalanced" positions with offer to balance in case of endless markets amount
+
+[07-May-19 09:30 AM] jl777c#5810
+based on amount bet, N total bets can be made that add up to the desired exposure
+
+[07-May-19 09:31 AM] TonyL#3577
+So in GUI might be abstracted just to leverage allowed to choose, yep just implementation question
+
+[07-May-19 09:31 AM] jl777c#5810
+it could be that 20% of the bets cant be made due to someone else getting the baton
+
+[07-May-19 09:32 AM] jl777c#5810
+so the GUI should show a maximum amount that wants to be bet at the specified leverage, and then it shows how much actually was able to be submitted to mempool (and then confirmed)
+
+[07-May-19 09:32 AM] TonyL#3577
+GUI should be quite clever this time hehe
+
+[07-May-19 09:36 AM] jl777c#5810
+i think we can name the BET sidechain BETS, so for testing the first one can be BETS0
+
+[07-May-19 09:37 AM] jl777c#5810
+make it so it can do the snapshot payments CC using some reasonable amount of accumulated profits, blackjok8r is the one to ask on how to set it up
+
+[07-May-19 09:38 AM] jl777c#5810
+i have a feeling there will be some sidechain specific issues, and maybe snapshot issues too. we can do a single node gateways CC for BETS0
+
+[07-May-19 09:39 AM] jl777c#5810
+let me know when it is setup and I can fund it with some BET
+
+[07-May-19 09:41 AM] TonyL#3577
+Ok, will wrap head a little over paymentsCC, consult with jok3r and go ahead 👍
+
+[07-May-19 09:43 AM] jl777c#5810
+since it will be based on BET fees, it doesnt need to do the bootstrapping, well other than getting the right CC vout to hardcode the BET fees to
+
+[07-May-19 09:45 AM] blackjok3r#3181
+payments seems to be keeping consensus in my game so far. I'm not 100% sure merge RPC stuff is perfectly stable. Need to get a chain up for Alright to test that, however fo test chain, we should just use it and see if any bugs arise.
+
+[07-May-19 09:46 AM] jl777c#5810
+yes, BETS0 is just a test chain, dimxy will need the scriptPubKey that sends to a snapshot CC, maybe we need to make a tx with opret first and then update the prices CC, not sure
+
+{Reactions}
+👌 
+
+[07-May-19 09:47 AM] dimxy#2587
+I think I get the whole idea that we introduce an opposite position and stimulate to use it to get the fund balanced. More details will be discovered while implementing.  I think probably we  might need to calculate the balance for every block (otherwise it is going to be too many calculations for a single rpc call)
+

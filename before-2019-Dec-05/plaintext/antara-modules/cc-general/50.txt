@@ -1,0 +1,401 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[14-Aug-18 04:16 PM] siu - Chainmakers#3920
+i did a call for the other diceplan too
+
+[14-Aug-18 04:16 PM] siu - Chainmakers#3920
+it was two separate commands
+
+[14-Aug-18 04:19 PM] siu - Chainmakers#3920
+this is a breakthrough
+
+[14-Aug-18 04:19 PM] siu - Chainmakers#3920
+if this is fixed, dice is pretty much complete imo
+
+[14-Aug-18 04:20 PM] jl777c#5810
+is it fixed? what is broken?
+
+[14-Aug-18 04:20 PM] Alright#0419
+((lock_amount`*`APR%)/365)*days locked would be the formula for rewards, yes?
+
+[14-Aug-18 04:20 PM] jl777c#5810
+something like that
+
+[14-Aug-18 04:20 PM] jl777c#5810
+could have some overflows
+
+[14-Aug-18 04:21 PM] jl777c#5810
+though I thought I calculated the interest 64 bit safe
+
+[14-Aug-18 04:21 PM] Alright#0419
+and is 1 day 1440 blocks or based on timestamp
+
+[14-Aug-18 04:23 PM] jl777c#5810
+i use timestamp of the block the tx is in to the current chaintip's nTime
+
+[14-Aug-18 04:26 PM] Alright#0419
+minseconds 0 maxseconds 172800
+duration 239658 (1534263604 - 1534023946) numblocks 3750 (3800 - 50)
+amount 10.00000000 20000000000.00000000 634 -> duration.172800 reward 0.01095890
+
+239658 seconds = 2.77423611 days
+20% APR, 10 coins, locked for 3750 blocks
+
+((10`*`0.2)/365)*2.77423611
+=0.015201294
+
+[14-Aug-18 04:27 PM] Alright#0419
+```
+{
+  "result": "success",
+  "fundingtxid": "088a9d869faaea88858a8e2e22015955111916c83d7f78bd9fe807649a1e9f81",
+  "name": "0time",
+  "sbits": 435627324464,
+  "APR": "20.00000000",
+  "minseconds": 0,
+  "maxseconds": 172800,
+  "mindeposit": "1.00000000",
+  "funding": "10000.00000000"
+}
+```
+
+[14-Aug-18 04:27 PM] Alright#0419
+```
+./komodo-cli -ac_name=AT3 rewardsunlock 0time 088a9d869faaea88858a8e2e22015955111916c83d7f78bd9fe807649a1e9f81{
+  "result": "success",
+  "hex": "0100000002007fd48e818fe235df22961247adb97cb1eed74c31eb704e31c981233842340d000000007b4c79a276a072a26ba067a565802103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb98140fe5018001358bb24b385c14c1030f8cf501c6b6d20df0ce4705605b5aae073ca204f7a06824845b91ea7e828e434fb5a2899cb8dc6fba0008887eea93bd551ffa100af038001e5a10001fffffffffa2623354792f01c5b551e6a82ad39ba2d460d1d8fab2726dea42f619e21be12000000007b4c79a276a072a26ba067a565802103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb981407c4edd95b803b2f124c83c7d544654df544acb1cdc9e120a973ef94502f4d0ce2784c235cba0e7c5fdfebb2a8ead50ab8168863c4259744149ebcaa23466317ea100af038001e5a10001ffffffff035a7072d4e8000000302ea22c802065686d47a4049c2c845a71895a915eb84c04445896eec5dc0be40df0b31372da8103120c008203000401ccd282ab3b0000000023210298b7c53af97ae93d7ad7c93ca39aa651ccb458e6109f3eb11258120fdf41b560ac00000000000000002c6a2ae5553074696d65000000819f1e9a6407e89fbd787f3dc8161911555901222e8e8a8588eaaa9f869d8a0800000000"
+}
+```
+
+[14-Aug-18 04:34 PM] jl777c#5810
+so it is close, but the dureation seems to be reduced
+
+[14-Aug-18 04:35 PM] Alright#0419
+Also, can the vout0 of rewardsunlock be spent from the mempool?
+
+[14-Aug-18 04:35 PM] jl777c#5810
+oh,it just went above maxseconds
+
+[14-Aug-18 04:35 PM] jl777c#5810
+it is correct, it got clipped due to maxseconds
+
+[14-Aug-18 04:36 PM] Alright#0419
+ahh sorry
+
+[14-Aug-18 04:36 PM] Alright#0419
+If the CC change of a rewardsunlock tx can't be spent from mempool, someone could lock tons of small amounts in a plan then spam  rewardsunlock similar to what people are doing to the faucet on STAKED1
+
+[14-Aug-18 04:36 PM] jl777c#5810
+there was an anectdotal report of wrong reward for very large amount locked
+
+[14-Aug-18 04:37 PM] Alright#0419
+stop people from claiming rewards
+
+[14-Aug-18 04:37 PM] siu - Chainmakers#3920
+i locked 100000
+
+[14-Aug-18 04:37 PM] jl777c#5810
+i didnt put any restructions on mempool spending
+
+[14-Aug-18 04:37 PM] siu - Chainmakers#3920
+one day at 20% APR
+
+[14-Aug-18 04:37 PM] siu - Chainmakers#3920
+only got 100000.011 back
+
+[14-Aug-18 04:37 PM] jl777c#5810
+without the printout,
+minseconds 0 maxseconds 172800
+duration 239658 (1534263604 - 1534023946) numblocks 3750 (3800 - 50)
+amount 10.00000000 20000000000.00000000 634 -> duration.172800 reward 0.01095890
+
+[14-Aug-18 04:38 PM] jl777c#5810
+I canomnly guess what it calculated
+
+[14-Aug-18 04:38 PM] jl777c#5810
+I put the printouts there to help debug
+
+[14-Aug-18 04:38 PM] siu - Chainmakers#3920
+i didnt get that :/
+
+[14-Aug-18 04:38 PM] Alright#0419
+getting 
+```
+fundsflag.1 (L) 10.00000000 10.00000000
+cant find enough rewards inputs
+amount 10.00000000 -> reward 0.01095890
+```
+when I try to claim more than a couple rewardsunlock in a single block
+
+[14-Aug-18 04:38 PM] jl777c#5810
+without all the data, we dont have all the data
+
+[14-Aug-18 04:38 PM] Alright#0419
+seems I can only do 2-3 in each block
+
+[14-Aug-18 04:38 PM] siu - Chainmakers#3920
+i locked another one, will let you know when its unlocked
+
+[14-Aug-18 04:39 PM] jl777c#5810
+i guess it isnt looking in the mempool for utxo
+
+[14-Aug-18 04:39 PM] jl777c#5810
+I will have to specifially add that
+
+[14-Aug-18 04:41 PM] siu - Chainmakers#3920
+```3aade9fcb14c2cdac22c2c4f255719811ec6744a79fd6f94595630f2aee7ac18 winnings 16000.00000000 bet 1000.00000000 at odds 15:1
+3aade9fcb14c2cdac22c2c4f255719811ec6744a79fd6f94595630f2aee7ac18 winnings 16000.00000000 bet 1000.00000000 at odds 15:1
+3aade9fcb14c2cdac22c2c4f255719811ec6744a79fd6f94595630f2aee7ac18 winnings 16000.00000000 bet 1000.00000000 at odds 15:1
+01000000031062ec90b1bcbe3478b827cb1422623f8a3a68da9f967c0cb329dd4d7dd394e901000000494830450221009cb02be87828aa27349954eb313fb5b09f5334c82fc65457e120566498798d6a02201a8ce7da897be98a689b454b7309fea9353dec280e1e47790bc343a913ad42fe01ffffffff18ace7aef2305659946ffd794a74c61e811957254f2c2cc2da2c4cb1fce9ad3a000000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e81409eb8266a1e06991f92cdc253ff78947ac13264b5500e5c543cb0348e6e9061d419b4e64523268987ac5f69769e7be55dd8775ba11a0bdfd318a2e924d4d6ddf0a100af038001e6a10001ffffffff18ace7aef2305659946ffd794a74c61e811957254f2c2cc2da2c4cb1fce9ad3a010000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e81407b94e6bad05df63d11beebaac9f7488e3619b8bb0f161c7dc36d5fed3e1e37585f26ede919d94b848a76a7d3883500d1a3e6b11237dcd0835625b9a07f0ee70ba100af038001e6a10001ffffffff04e0b97a0fbb070000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc102700000000000023210225583e18a48116c4c9571f530240f22affe00f95804f1947d59fbc7b825763f6ac00806e877401000023210225583e18a48116c4c9571f530240f22affe00f95804f1947d59fbc7b825763f6ac00000000000000006d6a4c6ae6575349553100000000d4074e546a5585f354201980e38597a1382741b863af8df76993a1d4472fdccc0f5c7333954121d8e55246d5c3e449b15a87a833929ac7017bcff851db924aa3e1490b5afc8275c1ea66d40832a763f0afd8df146a2febbb4f3f7dc16022c19100000000
+0dc699fb8be106b486513b63719371f6b0dd549834c64e3141ef56474c4af550
+```
+
+[14-Aug-18 04:41 PM] siu - Chainmakers#3920
+i got this printout in dice
+
+[14-Aug-18 04:41 PM] siu - Chainmakers#3920
+``` ./komodo-cli -ac_name=AT3 dicestatus SIU1 ccdc2f47d4a19369f78daf63b8412738a19785e380192054f385556a544e07d4 3aade9fcb14c2cdac22c2c4f255719811ec6744a79fd6f94595630f2aee7ac18
+{
+  "result": "success",
+  "status": "loss"
+}
+```
+
+[14-Aug-18 04:41 PM] siu - Chainmakers#3920
+but dice status says i lost 😦
+
+[14-Aug-18 04:42 PM] jl777c#5810
+attention to detail will help you
+
+[14-Aug-18 04:43 PM] jl777c#5810
+0dc699fb8be106b486513b63719371f6b0dd549834c64e3141ef56474c4af550 <- winning txid
+
+[14-Aug-18 04:43 PM] jl777c#5810
+3aade9fcb14c2cdac22c2c4f255719811ec6744a79fd6f94595630f2aee7ac18 <- dicestatus
+
+[14-Aug-18 04:43 PM] jl777c#5810
+not sure why a losing 3aade9fcb14c2cdac22c2c4f255719811ec6744a79fd6f94595630f2aee7ac18 should match  result of 0dc699fb8be106b486513b63719371f6b0dd549834c64e3141ef56474c4af550
+
+[14-Aug-18 04:43 PM] jl777c#5810
+this is what I deduce from what you posted
+
+[14-Aug-18 04:44 PM] siu - Chainmakers#3920
+both show loss
+
+[14-Aug-18 04:44 PM] siu - Chainmakers#3920
+but the output says winning 16000
+
+[14-Aug-18 04:46 PM] siu - Chainmakers#3920
+i did get the 16000 though
+
+[14-Aug-18 04:46 PM] jl777c#5810
+?
+
+[14-Aug-18 04:47 PM] jl777c#5810
+do you understand that when you ask dicestatus for a different txid, it returns in fo on a different txid
+
+[14-Aug-18 04:47 PM] jl777c#5810
+what if you do a dicestatus on the winning txid? does it say losing?
+
+[14-Aug-18 04:48 PM] jl777c#5810
+oh it was the dicefinish txid?
+
+[14-Aug-18 04:48 PM] jl777c#5810
+dicestatus was run on which node?
+
+[14-Aug-18 04:51 PM] SHossain#0007
+6 bets, all lost...will keep betting
+
+[14-Aug-18 04:59 PM] SHossain#0007
+one win after 9 lost
+`b67f76011c37c3c611031301cca97bd4e208e06eafb811884c1500a3a6d64221 winnings 20.00000000 bet 10.00000000 at odds 1:1`
+
+[14-Aug-18 05:02 PM] SHossain#0007
+```
+./komodo-cli -ac_name=AT3 dicestatus Dice3 48937c74c07d7202bf4727a595fb2aab297af74f2ecff77c5e422ce194d37d8f b67f76011c37c3c611031301cca97bd4e208e06eafb811884c1500a3a6d64221
+{
+  "result": "success",
+  "status": "loss"
+}
+```
+
+[14-Aug-18 05:02 PM] SHossain#0007
+dicestatus with winning tx on dealer node.
+
+[14-Aug-18 05:06 PM] SHossain#0007
+another win
+`6e050826a11ebf4917b7d8bcaed7b29e2e75372f4ba9f3dc675e81fcfbed87ec winnings 20.00000000 bet 10.00000000 at odds 1:1`
+
+[14-Aug-18 05:10 PM] SHossain#0007
+```
+before winning 20 on bet:
+"balance": 151265941.53900542
+"funding": 111381.99980000
+numentropy tx 13: 111381.99980000
+
+after winning 20
+"balance": 151265951.53890542
+"funding": "111371.99970000"
+numentropy tx 13: 111371.99970000
+```
+numbers matches up
+
+[14-Aug-18 05:15 PM] SHossain#0007
+another win
+`c468422ac8007803588a20da47b20d1c1286e6340201646317d8a08cc3fe50a4 winnings 20.00000000 bet 10.00000000 at odds 1:1`
+
+[14-Aug-18 05:17 PM] SHossain#0007
+house funding is now 10 less
+
+[14-Aug-18 05:17 PM] SHossain#0007
+`"funding": "111361.99960000"`
+
+[14-Aug-18 05:18 PM] SHossain#0007
+another win
+`cefdb3fd7b7f702d698975282d634f6523734f98c1e9709146fc3e0c3407ef2c winnings 20.00000000 bet 10.00000000 at odds 1:1`
+
+[14-Aug-18 05:19 PM] SHossain#0007
+antoher win
+`efaf2ae2d18927fa728986179114e8785884fe850040fefd7df89f1d7bdc4354 winnings 20.00000000 bet 10.00000000 at odds 1:1`
+
+[14-Aug-18 05:21 PM] SHossain#0007
+another win
+`b63429627bdc101ea499b78a056f60fce097397ddd967ce5856daba8b1fb2364 winnings 20.00000000 bet 10.00000000 at odds 1:1`
+
+[14-Aug-18 05:22 PM] SHossain#0007
+another win
+`b3361bc0e58d3b6c66e4d725f292a3ca638bfee9dd6d85374b96b09b8491ac13 winnings 20.00000000 bet 10.00000000 at odds 1:1`
+
+[14-Aug-18 05:22 PM] SHossain#0007
+let's see how many more i win with same bet 😄
+
+[14-Aug-18 05:23 PM] SHossain#0007
+luck ran out. a lost bet
+`62b09c27ee5915937a97235b18f2c22a755689b1d3bfcffc1eae4b626cc88ad6 winnings 0.00000000 bet 10.00000000 at odds 1:1`
+
+[14-Aug-18 05:25 PM] SHossain#0007
+so far, i see winning and lost bets are debited or credited automatically without calling dicestatus or dicefinish
+
+[14-Aug-18 05:30 PM] dan.#2473
+side note, martingale theory would be fun to test with dice
+
+[14-Aug-18 05:31 PM] dan.#2473
+tl;dr: if you lose, double your bet, if you lose, double your bet, if you win, go back to original 1x bet and repeat
+
+[14-Aug-18 05:32 PM] dan.#2473
+gaurentee bankruptcy but its fun to have at least 20x of original bets on hand
+
+[14-Aug-18 05:33 PM] SHossain#0007
+ok. testing this
+
+[14-Aug-18 05:33 PM] siu - Chainmakers#3920
+@jl777c i checked dicestatus for both txids, both show `status:loss`
+
+[14-Aug-18 05:34 PM] siu - Chainmakers#3920
+```siu@T460:~/komodo/src$ ./komodo-cli -ac_name=AT3 dicestatus SIU1 ccdc2f47d4a19369f78daf63b8412738a19785e380192054f385556a544e07d4 0dc699fb8be106b486513b63719371f6b0dd549834c64e3141ef56474c4af550
+{
+  "result": "success",
+  "status": "loss"
+}
+```
+
+[14-Aug-18 05:34 PM] dan.#2473
+i made a simulator for martingale betting, sometimes you got filthy rich, but with time, always go bankrupt
+
+[14-Aug-18 05:34 PM] siu - Chainmakers#3920
+```siu@T460:~/komodo/src$ ./komodo-cli -ac_name=AT3 dicestatus SIU1 ccdc2f47d4a19369f78daf63b8412738a19785e380192054f385556a544e07d4 3aade9fcb14c2cdac22c2c4f255719811ec6744a79fd6f94595630f2aee7ac18
+{
+  "result": "success",
+  "status": "loss"
+}
+```
+
+[14-Aug-18 05:42 PM] SHossain#0007
+did 10, 20, 40, 80, 160...lost
+
+[14-Aug-18 05:43 PM] dan.#2473
+😂  its fun.. as long as you have enough to cover yourself until you win
+
+[14-Aug-18 05:43 PM] SHossain#0007
+but 320 is winner
+`3ea7451a32ccbe80e4d46edd83348604b51b5e1fe0af09c7392563c0cb6dd550 winnings 640.00000000 bet 320.00000000 at odds 1:1`
+
+[14-Aug-18 05:43 PM] SHossain#0007
+going back to 160 now
+
+[14-Aug-18 05:44 PM] SHossain#0007
+another winner
+`80906511b935b21619d94b19cedc5ba373a050f1ed9b947ee7cf958adb943dfd winnings 320.00000000 bet 160.00000000 at odds 1:1`
+
+[14-Aug-18 05:44 PM] dan.#2473
+with martingale after you win you should go back to 10- its a slow process but doing that way keeps you a float, until youre not
+
+[14-Aug-18 05:44 PM] SHossain#0007
+interesting
+
+[14-Aug-18 05:44 PM] dan.#2473
+the chance of losing x in a row is `.5*.5*.5*.5` etc
+
+[14-Aug-18 05:45 PM] dan.#2473
+so .25 chance of losing 2x in a row, .125 of 3x in a row, etc
+
+[14-Aug-18 05:45 PM] dan.#2473
+(at 50/50 odds)
+
+[14-Aug-18 05:46 PM] dan.#2473
+the problem with martingale, losing 20x in a row will happen eventually
+
+[14-Aug-18 05:46 PM] dan.#2473
+albeit might takes ages
+
+[14-Aug-18 05:46 PM] dan.#2473
+and then you broked
+
+[14-Aug-18 05:47 PM] Alright#0419
+@jl777c a rewards plan with minimum time as 0 doesn't work properly. I had a separate plan that I just claimed after a couple days that had 0 minimum and was able to claim it. Just created a new one, and tried to claim it a couple minutes later and it fails.
+
+[14-Aug-18 05:47 PM] Alright#0419
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/478982992346349579/0timefail
+
+[14-Aug-18 05:48 PM] SHossain#0007
+@jl777c here is an observation https://gist.github.com/himu007/34c127cf89acdaefead96b379eb37935
+
+{Embed}
+https://gist.github.com/himu007/34c127cf89acdaefead96b379eb37935
+gist:34c127cf89acdaefead96b379eb37935
+https://avatars2.githubusercontent.com/u/8881040?s=400&v=4
+
+[14-Aug-18 05:52 PM] dan.#2473
+yes, it could work with a bit of luck and perseverance.
+
+[14-Aug-18 05:52 PM] dan.#2473
+in my simulator i always liked to have at LEAST X^10 the original bet on hand
+
+[14-Aug-18 05:52 PM] dan.#2473
+i could last a long time with that
+
+[14-Aug-18 05:52 PM] dan.#2473
+as .5^10 is pretty low
+
+[14-Aug-18 05:53 PM] dan.#2473
+`0.0009765625` = .5^10
+
+[14-Aug-18 05:53 PM] dan.#2473
+but, it always happens 😛
+
+[14-Aug-18 05:54 PM] dan.#2473
+what do you mean as a self-assurance fund? money set aside?
+
+{Reactions}
+💯 
+

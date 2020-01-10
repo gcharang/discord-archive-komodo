@@ -1,0 +1,381 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[24-Sep-18 02:38 PM] TonyL#3577
+Ask for a not whole supply can not fill as well
+
+[24-Sep-18 02:39 PM] TonyL#3577
+Oh nevermind I executed not correct transaction
+
+[24-Sep-18 02:40 PM] TonyL#3577
+For 100 tokens it's worked as expected. So looks like `tokefillask` not works when  you trying to sell whole token supply in one order. But possible to cancel this order. Not connected to gatewaysCC at all
+
+[24-Sep-18 02:45 PM] jl777c#5810
+pushed fix for gatewaysclaim
+
+[24-Sep-18 02:45 PM] jl777c#5810
+it used to not check the claimpubkey
+
+[24-Sep-18 02:46 PM] jl777c#5810
+now it makes sure the claimpubkey matches your pubkey, so that should prevent what happened
+
+[24-Sep-18 02:46 PM] jl777c#5810
+strange thing is that you got an error on the node it was supposed to go to?
+
+[24-Sep-18 03:07 PM] TonyL#3577
+Yes I've got an error on node which supposed to claim
+
+[24-Sep-18 03:07 PM] TonyL#3577
+But no error on "illegal" node
+
+[24-Sep-18 03:07 PM] TonyL#3577
+"illegal" in spot of rights to claim depo
+
+[24-Sep-18 03:11 PM] jl777c#5810
+next time dont broadcast the claim
+
+[24-Sep-18 03:11 PM] jl777c#5810
+I need to reproduce it and fix it
+
+[24-Sep-18 03:23 PM] TonyL#3577
+Ok, so in test checklist:
+- test of gatewayswithdraw
+- re-test of gatewaysclaim process with latest fix (have to not broadcast tx if get same error for valid for claim node )
+
+[24-Sep-18 03:28 PM] jl777c#5810
+yes and it should fail on all nodes that arent for the claimpubkey
+
+{Reactions}
+👌 
+
+[25-Sep-18 04:39 AM] TonyL#3577
+@jl777c just wonder how handling gatewayswithdraw cases in spot of txfee? If lets say initially were deposited 100 KMD but gatewayswithdraw using a lot of times by secondary traders. Is transaction fee spending from gateway balance? If yes on some moment might be a situation when gateways coins balance significantly not match issued tokens amount.
+
+[25-Sep-18 04:45 AM] TonyL#3577
+After secondary trading have 100 KMD tokens:
+```./komodo-cli -ac_name=ORCL1 tokenbalance 3852b3e1b24bc927758f49ded16114437ab52e5fb9afa201c47bb85e28372ea8
+{
+  "result": "success",
+  "CCaddress": "RWkCyZfZC5Qyak22nYVghZikiC6hbUck7f",
+  "tokenid": "3852b3e1b24bc927758f49ded16114437ab52e5fb9afa201c47bb85e28372ea8",
+  "balance": 100
+}
+```
+
+[25-Sep-18 04:45 AM] TonyL#3577
+Converted it:
+```./komodo-cli -ac_name=ORCL1 tokenconvert 241 3852b3e1b24bc927758f49ded16114437ab52e5fb9afa201c47bb85e28372ea8 03ea9c062b9652d8eff34879b504eda0717895d27597aaeb60347d65eed96ccb40 100
+{
+  "result": "success",
+  "hex": "0100000002170a3bfff4f8284aa374d7e2a2bc79b06688ec0c642f7e9b2b056e4880f95d310300000049483045022100b1063ba3a27eceb83ee8a08aeb4d8e926f071f1ef67a0a18642126c80471f0f1022079c7dc51f6becc3e6dce38564b08d72615cfb5cb759e32e967703681c24cd63701ffffffff8e124f3a8d0665adc800aac15e38ee59b546856f69af9b86e744363131b43ed6010000007b4c79a276a072a26ba067a565802103431a95c761c491e38a891425009cff5f9eaa3aa3d3d4945dd17f3d0bfcff259081408d6552c07b7ca92d3e6d9a2316fab0dc7a457fc4b8de98aefce7ede86c90f00f1971ae74f4e0818f0e1b2710983599f91372530d1f2389a256b88ad4907e6352a100af038001e3a10001ffffffff030000000000000000302ea22c80208eb0bbd9c4cd4e66c80b3873149532b451a9ef1490301ff6b4d956ce15a287388103120c008203000401cc6400000000000000302ea22c802091abda62a548f9c7f5beb19d16f01714ae3d4e526f3266fc8d347d6123f3d77b8103120c008203000401cc0000000000000000246a22e3743852b3e1b24bc927758f49ded16114437ab52e5fb9afa201c47bb85e28372ea800000000"
+}
+```
+
+[25-Sep-18 04:47 AM] TonyL#3577
+No luck with withdraw (tried different number pow), I think I definitely doing something wrong but don't have any printouts 
+```./komodo-cli -ac_name=ORCL1 gatewayswithdraw 1023f2c31f8d5e06854cd8c3ef103679b8d2af2c4ba14ea16646dd2a10332c55 KMD 030cb918b90dc084cdb08fcda4297d0db9c86422987df0cafa47ffef57eb6ef647 0.0000000000000001
+{
+  "result": "error",
+  "error": "couldnt gatewayswithdraw"
+}
+```
+
+[25-Sep-18 04:50 AM] TonyL#3577
+What is the logic for `tokencovert` execution in case of `gatewayswithdraw`? Is anybody who owns some token allowed to convert some/all tokens which belongs to him or tokens creator have to convert whole supply before each withdraw?
+
+[25-Sep-18 07:21 AM] jl777c#5810
+tokens should never be used up for txfees, the txfees come from whoever is doing the transactions
+
+[25-Sep-18 07:21 AM] jl777c#5810
+0.0000000000000001 that is a very suspicious number
+
+[25-Sep-18 07:22 AM] jl777c#5810
+it would end up as 0, as nothing has more precision than 0.00000001 and that is illegal param
+
+[25-Sep-18 07:24 AM] TonyL#3577
+Oh yes, it should be like this I guess: 100 * 10^(-8)
+```./komodo-cli -ac_name=ORCL1 gatewayswithdraw 1023f2c31f8d5e06854cd8c3ef103679b8d2af2c4ba14ea16646dd2a10332c55 KMD 030cb918b90dc084cdb08fcda4297d0db9c86422987df0cafa47ffef57eb6ef647 0.000001
+{
+  "result": "error",
+  "error": "couldnt gatewayswithdraw"
+}
+```
+
+[25-Sep-18 07:38 AM] jl777c#5810
+let me look at the code, this is something you should do also. rpcwallet.cpp gatewayswithdraw
+
+[25-Sep-18 07:38 AM] jl777c#5810
+yes, the 0.000001 is matching the 100 that was converted
+
+[25-Sep-18 07:39 AM] jl777c#5810
+you are doing the withdraw from the node with -pubkey= 03ea9c062b9652d8eff34879b504eda0717895d27597aaeb60347d65eed96ccb40 ?
+
+[25-Sep-18 07:39 AM] jl777c#5810
+I get printouts:
+check RGT2bWyMAYGr1teAbzYXSvGhFqkuVqcXQ3 for gateway inputs
+cant find enough inputs or mismatched total
+
+[25-Sep-18 07:40 AM] jl777c#5810
+you need to find the console for that instance! without console prints it is like being blind
+
+[25-Sep-18 07:40 AM] jl777c#5810
+check the balance of RGT2bWyMAYGr1teAbzYXSvGhFqkuVqcXQ3 (use addressbalance)
+
+[25-Sep-18 07:41 AM] TonyL#3577
+`-pubkey=03431a95c761c491e38a891425009cff5f9eaa3aa3d3d4945dd17f3d0bfcff2590` for node on which I'm calling `gatewyswithdraw`
+
+[25-Sep-18 07:42 AM] jl777c#5810
+but you did: ./komodo-cli -ac_name=ORCL1 tokenconvert 241 3852b3e1b24bc927758f49ded16114437ab52e5fb9afa201c47bb85e28372ea8 03ea9c062b9652d8eff34879b504eda0717895d27597aaeb60347d65eed96ccb40 100
+
+[25-Sep-18 07:42 AM] TonyL#3577
+I want to withdraw to other pubkey
+
+[25-Sep-18 07:42 AM] jl777c#5810
+that converts the tokens and sends it to pubkey 03ea9c062b9652d8eff34879b504eda0717895d27597aaeb60347d65eed96ccb40
+
+[25-Sep-18 07:42 AM] TonyL#3577
+Ohh
+
+[25-Sep-18 07:42 AM] jl777c#5810
+so now the assets are in that pubkey
+
+[25-Sep-18 07:42 AM] jl777c#5810
+do a tokenbalance to make sure
+
+[25-Sep-18 07:42 AM] jl777c#5810
+sorry addressbalance
+
+[25-Sep-18 07:43 AM] TonyL#3577
+It's a  "GatewaysPubkey"
+
+[25-Sep-18 07:43 AM] jl777c#5810
+if you dont own the tokens you cant withdraw them, for obvious reasons
+
+[25-Sep-18 07:43 AM] TonyL#3577
+Shouldn't I convert to GatewaysPubkey before performing the withdrawal?
+
+[25-Sep-18 07:44 AM] jl777c#5810
+if you dont mind random strangers on the internet racing to do the withdraw for those tokens
+
+[25-Sep-18 07:44 AM] jl777c#5810
+it would be a cool game
+
+[25-Sep-18 07:44 AM] jl777c#5810
+but if you want to keep your tokens, it is best to convert to your own pubkey and then withdraw from that pubkey
+
+[25-Sep-18 07:45 AM] jl777c#5810
+this is an extra step that was added due to the need for enforcement of gateways validation rules
+
+[25-Sep-18 07:45 AM] TonyL#3577
+Got the concept now. Bye bye 100 tokens
+
+[25-Sep-18 07:45 AM] jl777c#5810
+well i think they are still there
+
+[25-Sep-18 07:46 AM] jl777c#5810
+you could start an instance with -pubkey=<gatewayspubkey> but that probably gets into the territory of breaking things and is for after things are working stable, ie. the trying to break it phase
+
+[25-Sep-18 07:46 AM] TonyL#3577
+It's worth to pay 100 tokens to not get this scary place atm
+
+[25-Sep-18 07:47 AM] TonyL#3577
+Let me try to withdraw with correct convert
+
+[25-Sep-18 08:03 AM] TonyL#3577
+```./komodo-cli -ac_name=ORCL1 tokenconvert 241 3852b3e1b24bc927758f49ded16114437ab52e5fb9afa201c47bb85e28372ea8 030cb918b90dc084cdb08fcda4297d0db9c86422987df0cafa47ffef57eb6ef647 100```
+
+```./komodo-cli -ac_name=ORCL1 gatewayswithdraw 1023f2c31f8d5e06854cd8c3ef103679b8d2af2c4ba14ea16646dd2a10332c55 KMD 030cb918b90dc084cdb08fcda4297d0db9c86422987df0cafa47ffef57eb6ef647 0.000001
+check RMEdqjz6AyE5he7WXxD2Yf1mCVjUkxGQar for gateway inputs
+cant find enough inputs or mismatched total
+{
+  "result": "error",
+  "error": "couldnt gatewayswithdraw"
+}
+```
+Should it be an address which belongs to recipient pubkey? I checked and it's not belongs to both sending and receiving node pubkey
+
+[25-Sep-18 08:07 AM] TonyL#3577
+```./komodo-cli -ac_name=ORCL1 getreceivedbyaddress RMEdqjz6AyE5he7WXxD2Yf1mCVjUkxGQar
+0
+```
+
+[25-Sep-18 08:16 AM] jl777c#5810
+what address did the tokenconvert send the assets to?
+
+[25-Sep-18 08:17 AM] jl777c#5810
+txid will help me look too
+
+[25-Sep-18 08:17 AM] TonyL#3577
+`d3e37e2ba83cfc0191189ba3316079157c513845d01e9c30253c59ec10e7921f`
+
+[25-Sep-18 08:18 AM] jl777c#5810
+RBrAQDMJrWf6b7dqsNg8CmHL6ePTPkxzs8
+
+[25-Sep-18 08:18 AM] jl777c#5810
+investigating why the address is different
+
+[25-Sep-18 08:18 AM] jl777c#5810
+for now maybe you can start making automated stuff to help make this a more sane process
+
+[25-Sep-18 08:18 AM] jl777c#5810
+from deposit
+
+[25-Sep-18 08:19 AM] jl777c#5810
+and you are doing withdraw from -pubkey= 030cb918b90dc084cdb08fcda4297d0db9c86422987df0cafa47ffef57eb6ef647 node?
+
+[25-Sep-18 08:19 AM] TonyL#3577
+Yes, sounds like a very good idea. Anyway have to doublecheck it
+
+[25-Sep-18 08:20 AM] TonyL#3577
+Nope, from this one `-pubkey=03431a95c761c491e38a891425009cff5f9eaa3aa3d3d4945dd17f3d0bfcff2590`
+
+[25-Sep-18 08:20 AM] TonyL#3577
+Oh I'm able to convert
+
+[25-Sep-18 08:20 AM] TonyL#3577
+But not able to withdraw I guess
+
+[25-Sep-18 08:20 AM] TonyL#3577
+Because now it's not on my pubkey
+
+[25-Sep-18 08:20 AM] jl777c#5810
+but you converted to 030cb918b90dc084cdb08fcda4297d0db9c86422987df0cafa47ffef57eb6ef647
+
+[25-Sep-18 08:20 AM] jl777c#5810
+now 030cb918b90dc084cdb08fcda4297d0db9c86422987df0cafa47ffef57eb6ef647 owns them
+
+[25-Sep-18 08:20 AM] jl777c#5810
+it is a convert and transfer
+
+[25-Sep-18 08:20 AM] TonyL#3577
+Yes I want to allow let's say my customer to withdraw
+
+[25-Sep-18 08:21 AM] TonyL#3577
+Like a SPV model
+
+[25-Sep-18 08:21 AM] TonyL#3577
+So now I have to claim withdraw from `pubkey= 030cb918b90dc084cdb08fcda4297d0db9c86422987df0cafa47ffef57eb6ef647`
+
+[25-Sep-18 08:21 AM] jl777c#5810
+not sure where these customers came from, for now you are converting to different pubkey and so cant withdraw
+
+[25-Sep-18 08:21 AM] jl777c#5810
+only the one that owns the coins can withdraw
+
+[25-Sep-18 08:21 AM] jl777c#5810
+tokenconvert changes who owns it
+
+[25-Sep-18 08:21 AM] jl777c#5810
+unless you send to your own pubkey
+
+[25-Sep-18 08:22 AM] TonyL#3577
+So in theory I should able to gatewayswithdraw these 100 tokens now from node with pubkey= 030cb918b90dc084cdb08fcda4297d0db9c86422987df0cafa47ffef57eb6ef647 ?
+
+[25-Sep-18 08:22 AM] jl777c#5810
+yes
+
+[25-Sep-18 08:23 AM] TonyL#3577
+Ok, let me rebuild komodod on these node from latest and test (can take a while since this node is Macbook air :trollface: )
+
+[25-Sep-18 08:24 AM] jl777c#5810
+or can just convert another 100 tokens
+
+[25-Sep-18 08:24 AM] TonyL#3577
+All fun killed :/
+
+[25-Sep-18 08:25 AM] jl777c#5810
+you can recover the KMD as it is controlled by single address. just for testing, so dont do KMD tx from that same pubkey that is the gateway deposit address
+
+[25-Sep-18 08:28 AM] jl777c#5810
+I think on the automation side, it would be possible to make the gatewaysdeposit and gatewaysclaim be able to be done by anybody as it is hardcoded into the cointxid where the funds must end up. so the users would only have to do the sendmany and then automatically the tokens appear. I will look into adding this automated deposit processing into oraclefeed. however we need to make sure there is a way to manually process any deposits that are missed by oraclefeed
+
+[25-Sep-18 08:29 AM] jl777c#5810
+ultimately it should be user makes cointxid using sendmany, tokens appear. for withdraw a similar process of doing a redeem of token and the rest should be automatically processed now
+
+[25-Sep-18 08:31 AM] TonyL#3577
+Sounds clear - I'll just ask params for sendmany with explanation. Then ask let's say how many they want to withdraw and convert it, hardcode the needed pubkey and claim gatewaywithdraw with some notification if it's not evaluated automatically by node in some period of time
+
+[25-Sep-18 08:32 AM] TonyL#3577
+All these `gettxoutproof` and `getrawtransaction` will grab automatically so should be quite easy to operate if compare with manual playing
+
+[25-Sep-18 08:33 AM] TonyL#3577
+Can log everything also to separate files
+
+[25-Sep-18 08:33 AM] jl777c#5810
+yes, i guess that is the next step of automation. really it is best to be done on the user node
+
+[25-Sep-18 08:34 AM] jl777c#5810
+tl:dr no known bugs at the moment, withdraw needs to be tested
+
+{Reactions}
+👌 
+
+[25-Sep-18 08:37 AM] TonyL#3577
+```./komodo-cli -ac_name=ORCL1 gatewayswithdraw 1023f2c31f8d5e06854cd8c3ef103679b8d2af2c4ba14ea16646dd2a10332c55 KMD 0.000001
+check RBrAQDMJrWf6b7dqsNg8CmHL6ePTPkxzs8 for gateway inputs
+cant find enough inputs or mismatched total
+{
+  "result": "error",
+  "error": "couldnt gatewayswithdraw"
+}
+```
+Same on node with `pubkey=030cb918b90dc084cdb08fcda4297d0db9c86422987df0cafa47ffef57eb6ef647` but looking for a different address this time
+
+[25-Sep-18 08:39 AM] TonyL#3577
+It's same try with tokens converted on different node for node with `pubkey=030cb918b90dc084cdb08fcda4297d0db9c86422987df0cafa47ffef57eb6ef647`
+With txid of tokenconvert d3e37e2ba83cfc0191189ba3316079157c513845d01e9c30253c59ec10e7921f
+
+[25-Sep-18 08:40 AM] jl777c#5810
+RBrAQDMJrWf6b7dqsNg8CmHL6ePTPkxzs8 is the correct address
+
+[25-Sep-18 08:40 AM] jl777c#5810
+what does addressbalance for RBrAQDMJrWf6b7dqsNg8CmHL6ePTPkxzs8 return?
+
+[25-Sep-18 08:41 AM] TonyL#3577
+```./komodo-cli -ac_name=ORCL1 addressbalance RBrAQDMJrWf6b7dqsNg8CmHL6ePTPkxzs8
+error code: -32601
+error message:
+Method not found```
+
+[25-Sep-18 08:41 AM] TonyL#3577
+Is this call not works for ACs?
+
+[25-Sep-18 08:41 AM] jl777c#5810
+getaddressbalance
+
+{Reactions}
+😊 
+
+[25-Sep-18 08:43 AM] TonyL#3577
+```./komodo-cli -ac_name=ORCL1 getaddressbalance '{"addresses": ["RBrAQDMJrWf6b7dqsNg8CmHL6ePTPkxzs8"]}'
+{
+  "balance": 0,
+  "received": 0
+}
+```
+
+[25-Sep-18 08:46 AM] jl777c#5810
+did d3e37e2ba83cfc0191189ba3316079157c513845d01e9c30253c59ec10e7921f confirm?
+
+[25-Sep-18 08:46 AM] jl777c#5810
+i guess not yet
+
+[25-Sep-18 08:46 AM] jl777c#5810
+which tokenconvert to RBrAQDMJrWf6b7dqsNg8CmHL6ePTPkxzs8 has confirmed?
+
+[25-Sep-18 08:49 AM] TonyL#3577
+```./komodo-cli -ac_name=ORCL1 getrawmempool
+[
+]
+```
+
+[25-Sep-18 08:49 AM] jl777c#5810
+maybe broadcast it again, mining node maybe didnt see it
+

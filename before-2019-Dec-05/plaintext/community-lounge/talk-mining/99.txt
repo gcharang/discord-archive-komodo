@@ -1,0 +1,369 @@
+==============================================================
+Guild: Komodo
+Channel: talk-mining
+Topic: ./komodod -ac_name=ZAWY24 -ac_adaptivepow=1 -ac_supply=1000000 -ac_reward=10000000000 -ac_cc=2 -addnode=5.9.102.210 &
+
+A channel to discuss mining. For useful links and more info click the pinned messages to the right.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[15-Feb-19 04:14 PM] dukeleto#7326
+FPGA's are much more power efficient, too. So if some miners are not mining because your power is too expensive, FPGA's change the numbers. The people who sell the blackminer F1 have a hosted solution where they charge 10 cents per kw/h for power and evidently it's still profitable and many people go that route
+
+[15-Feb-19 04:21 PM] ComputerGenie 👴🏼📢#7004
+tnks, will definitely look into it
+tbh I wrote FPGAs off for the longest time because in my mind it was like reverting back to 2010, but I've seen that some of them have come a long way
+
+[16-Feb-19 05:42 PM] Jules - coinblockers.com#8043
+We are happy to announce that our central Infrastructure is now fully Anti-DDOS protected by Voxility.
+Please consider your Failover Stratum to be: kmd-eu.coinblockers.com
+
+[16-Feb-19 06:48 PM] Alright#0419
+@Jules - coinblockers.com I can show you how to prevent tx spam ddos as well if you like 😃
+
+[16-Feb-19 11:20 PM] ComputerGenie 👴🏼📢#7004
+From the prices I saw, it looked like it'd be cheaper to have a different server for every wallet than to pay for that 😕
+
+[18-Feb-19 09:06 PM] jorian#4555
+can anyone enlighten me why in 3 seconds, 22 transactions are mined?
+
+{Attachments}
+https://cdn.discordapp.com/attachments/456900588018597918/547162068650819626/unknown.png
+
+[18-Feb-19 09:08 PM] jorian#4555
+
+{Attachments}
+https://cdn.discordapp.com/attachments/456900588018597918/547162518746038272/unknown.png
+
+[18-Feb-19 09:17 PM] ComputerGenie 👴🏼📢#7004
+because not everyone always has the "whole" mempool
+
+[18-Feb-19 10:09 PM] blackjok3r#3181
+Mempool isn't as sending around so well I think, I've been noticing this more and more, not sure of how its supposed to work, but it appears that txs don't really propagate once they have been sent the one time... I had to fetch them with raw tx and then resend on another node to get them to actually propagate to a node that was restarted. Dunno if this is expected behaviour or not, but its darn annoying when trying g to test mining prioritys n things.
+
+[19-Feb-19 02:49 AM] Alright#0419
+@blackjok3r I noticed this too, seems it started around the Dec hardfork
+
+[19-Feb-19 02:50 AM] Alright#0419
+I haven't been able to pinpoint what exactly changed, but spamming transactions that spend the previous tx's outputs causes problems now
+
+[19-Feb-19 02:50 AM] Alright#0419
+RejectToMemoryPool "input not found" thing
+
+[19-Feb-19 03:31 AM] blackjok3r#3181
+I was watching KMD debug.log this morning just for a bit... lots of these:
+```:15:48 progress=1.000000  cache=48.7MiB(142238tx)
+2019-02-19 02:16:05 ERROR: ContextualCheckTransaction(): transaction is expired
+2019-02-19 02:16:05 ERROR: AcceptToMemoryPool: ContextualCheckTransaction failed
+2019-02-19 02:16:05 Misbehaving: 82.202.193.98:7770 (10 -> 20)
+2019-02-19 02:16:56 ConnectBlock: wrote 2 block notarisations in block: 0700d80db8a30af1524a0e115dd5adfd979b0403fff70d58b2872b878aaa916b
+2019-02-19 02:16:56 UpdateTip: new best=0700d80db8a30af1524a0e115dd5adfd979b0403fff70d58b2872b878aaa916b  height=1234907  log2_work=48.965125  log2_stake=-inf  tx=4353779
+ date=2019-02-19 02:16:57 progress=1.000000  cache=48.7MiB(142245tx)
+2019-02-19 02:17:57 UpdateTip: new best=0c3e4449a9daf8047cb064aa83e746a854880dac077dc8ae53a67618f7eb9fa6  height=1234908  log2_work=48.965132  log2_stake=-inf  tx=4353785
+ date=2019-02-19 02:17:57 progress=1.000000  cache=48.7MiB(142251tx)
+2019-02-19 02:18:05 ERROR: ContextualCheckTransaction(): transaction is expired
+2019-02-19 02:18:05 ERROR: AcceptToMemoryPool: ContextualCheckTransaction failed
+2019-02-19 02:18:05 Misbehaving: 177.54.148.18:7770 (20 -> 30)
+```
+
+[19-Feb-19 03:31 AM] blackjok3r#3181
+Seems possible bug with the transaction expiry maybe being too short on some txns?
+
+[19-Feb-19 03:32 AM] blackjok3r#3181
+Definatly isnt because of CC chains mempool fix that I fixed, as it does it on non CC chains aswell
+
+[19-Feb-19 03:32 AM] Alright#0419
+system clock of node may not be NTP'd
+
+[19-Feb-19 03:32 AM] blackjok3r#3181
+hmm... dont think htats the case, its a VM on my PC which is on ntp auto sync...  and its showing the correct time
+
+[19-Feb-19 03:33 AM] Alright#0419
+it could be the nodes broadcasting it are not NTP'd
+
+[19-Feb-19 03:33 AM] blackjok3r#3181
+` ERROR: AcceptToMemoryPool: inputs already spent`
+
+[19-Feb-19 03:33 AM] Alright#0419
+or whatever dapp is creating it is bugged
+
+[19-Feb-19 03:34 AM] blackjok3r#3181
+usually comes before it... It seems like some nodes are a few vblocks behind or something and trying to rebroadcast... Also I found a bug, where on node start it spams the wallet txns into the local mempool. but those are rejected.... locally so dont think its that.
+
+[19-Feb-19 03:35 AM] blackjok3r#3181
+maybe we need to add some extra info to those debug prints saying why they are expired... like the times etc?
+
+[19-Feb-19 03:40 AM] Alright#0419
+would probably help
+
+[19-Feb-19 03:41 AM] Alright#0419
+if you could add txid to all AcceptToMemoryPool prints, that'd be very useful
+
+[19-Feb-19 03:41 AM] Alright#0419
+although sometimes not so useful, might need full hex in some situations
+
+[19-Feb-19 03:41 AM] blackjok3r#3181
+I can add this to labs soon in master branch. Will add as much info as I cna get. 😃
+
+[19-Feb-19 03:41 AM] blackjok3r#3181
+I think full hex is even possible, just might take a little longer to work out how to get it into a string to print
+
+[19-Feb-19 03:42 AM] Alright#0419
+not a big deal
+
+[19-Feb-19 03:42 AM] Alright#0419
+don't bother if it's too much work
+
+[19-Feb-19 03:43 AM] blackjok3r#3181
+seems like a decent thing to learn how to do... I was going to start a dual wallet staker today, but might not now. See how it goes. Will do this now though, as it seems like an actual problem. Things work, but its strange that it is happening.
+
+[19-Feb-19 04:26 AM] blackjok3r#3181
+lol... added prints, but now its not happening. It compiles so will just push it. and leave it running locally all day.
+
+[19-Feb-19 05:47 PM] ComputerGenie 👴🏼📢#7004
+anyone mining on chickenpool.com please be sure to set failovers, chickenpool will be down for 10-30 minutes  in about 2 hrs for wallet maintenance
+
+[19-Feb-19 05:47 PM] ComputerGenie 👴🏼📢#7004
+@FishyGuts if you're still mining 👆🏽
+
+[19-Feb-19 05:53 PM] FishyGuts#5085
+Done - Thanks.
+
+[20-Feb-19 01:07 AM] FishyGuts#5085
+It's been a good block finding day.   No Interest blocks though 😦
+
+[20-Feb-19 01:09 AM] ComputerGenie 👴🏼📢#7004
+on 2/9 was the last one 🐔s found ☹
+
+[20-Feb-19 06:34 AM] blackjok3r#3181
+I wonder if clean wallet transactions RPC works for pools :PeepoThink:
+
+[20-Feb-19 07:58 AM] rob#8269
+Hi any pool with Asian presence?
+
+[20-Feb-19 11:17 AM] ComputerGenie 👴🏼📢#7004
+@blackjok3r it does if they used a daemon with that in it 😛
+
+[20-Feb-19 05:20 PM] FishyGuts#5085
+Fair # of blocks in the last 12 hours, no interest ones 😦
+
+[20-Feb-19 05:20 PM] FishyGuts#5085
+Oh well.  I gotta stop looking.  That's why.
+
+[20-Feb-19 10:09 PM] ComputerGenie 👴🏼📢#7004
+@Ederwa do you have a log of what you pool was trying to send?
+`RPC_WALLET_ERROR                = -4,  //! Unspecified problem with wallet`
+so you're going to have to have some detail on your end in order for anyone to help you
+
+[20-Feb-19 10:15 PM] FishyGuts#5085
+https://tenor.com/view/predator-handshake-gif-5783927
+
+{Embed}
+https://tenor.com/view/predator-handshake-gif-5783927
+predator
+https://media.tenor.co/images/324d055a76f9605008ce7a2729814b69/raw
+
+{Reactions}
+🤣 
+
+[20-Feb-19 10:16 PM] FishyGuts#5085
+TFW you are mining on a pool with @ComputerGenie 👴🏼📢 and you find successive blocks.
+
+[20-Feb-19 10:18 PM] FishyGuts#5085
+*and the number 69 is in both
+
+[20-Feb-19 10:18 PM] FishyGuts#5085
+https://tenor.com/view/minigun-arnold-schwarzenegger-smile-creepy-gif-9475135
+
+{Embed}
+https://tenor.com/view/minigun-arnold-schwarzenegger-smile-creepy-gif-9475135
+https://media.tenor.co/images/4333b288c40aee3a97f92b1bc2b29fa1/tenor.png
+
+[20-Feb-19 10:38 PM] ComputerGenie 👴🏼📢#7004
+`and the number 69 is in both` @FishyGuts what '69'?
+
+[20-Feb-19 11:01 PM] dukeleto#7326
+@ComputerGenie 👴🏼📢 @FishyGuts do you know the square root of 69? || Ate something, or 8 something or 8.3.... ||
+
+{Reactions}
+🤦🏽 
+
+[21-Feb-19 12:23 AM] FishyGuts#5085
+The block number was xxx69xx
+
+[21-Feb-19 01:04 AM] ComputerGenie 👴🏼📢#7004
+lol that was like 10 hrs before you posted, I wasn't even looking that far down the list 😛
+
+[21-Feb-19 01:40 AM] Ederwa#9659
+Guys, my KMD pool has been suffering a payment problem and getting an error said "[komodo] Error sending payments {"code":-4,"message":"Transaction commit failed"}"
+If anyone has this kind of experience or knows the root cause, please let me know.
+
+[21-Feb-19 03:30 AM] ComputerGenie 👴🏼📢#7004
+ComputerGenie 凸(⊙▂⊙ )凸Today at 4:09 PM
+@Ederwa do you have a log of what you pool was trying to send? RPC_WALLET_ERROR                = -4,  //! Unspecified problem with wallet so you're going to have to have some detail on your end in order for anyone to help you
+
+[21-Feb-19 03:32 AM] Ederwa#9659
+2019-02-21 03:28:45 [Payments]    [komodo] sendmany "" {"xxxxxxxxxxxxxxxxxxx":5.71552122,"yyyyyyyyyyyyyyyyy":0.39643132}
+ 2019-02-21 03:28:45 [Payments]    [komodo] Error sending payments {"code":-4,"message":"Transaction commit failed"}
+
+[21-Feb-19 06:37 AM] Ederwa#9659
+And I noticed that 'notify' pushed "unexpected null pwallet in RelayWalletTransaction" on the console. What should I do?
+
+[21-Feb-19 07:47 AM] blackjok3r#3181
+that error seems to be ingorable. I have tried to work it out on many occasions. I thaught it only happens on staking nodes though?
+
+[21-Feb-19 08:13 AM] Ederwa#9659
+I don't know where is the real problem located in the Komodo core, but after restarting the coin daemon with 'rescan', I got the service back to normal
+
+[21-Feb-19 08:43 AM] blackjok3r#3181
+Yeah it seems to do it when it loses a tx somehow, its realted to a wallet corrution problem aswell.
+
+[21-Feb-19 08:43 AM] blackjok3r#3181
+Not sure its entirly KMD problem, but something BTC or zcash wallet related that only shows up when you ahev vast amounts of tx in the wallet DB
+
+[21-Feb-19 09:39 AM] Ederwa#9659
+got it.
+
+[21-Feb-19 02:43 PM] ComputerGenie 👴🏼📢#7004
+maybe advert in the eth realm?
+
+[21-Feb-19 02:43 PM] ComputerGenie 👴🏼📢#7004
+GPUs aren't all that great in 200,9; AMD even worse
+
+[21-Feb-19 06:23 PM] ComputerGenie 👴🏼📢#7004
+```$ ./oclvanitygen -d 0:1 -C KMD -o results.txt -i -k Rchickenpool
+Generating KMD Address
+Difficulty: 157095351787107338
+[102.81 Mkey/s][total 1585446912][Prob 0.0%][50% in 33.6y]```
+
+[21-Feb-19 06:23 PM] ComputerGenie 👴🏼📢#7004
+LOL
+
+[21-Feb-19 06:27 PM] FishyGuts#5085
+Hah  Start now.
+
+[22-Feb-19 12:35 AM] ComputerGenie 👴🏼📢#7004
+🐔 http://chickenpool.com/ 🐔 
+666 Blocks Found  Paid: 1974.07446582 KMD
+🙈
+
+{Reactions}
+🤘 (2) 
+
+[22-Feb-19 08:40 PM] NO_CPU#3689
+anyone know what happened to http://komodominingpool.com/
+
+[22-Feb-19 08:45 PM] metaphilibert#0926
+Hey fellows, a (good) guy I know is asking if there is an open source miner for zcash / komodo
+
+[22-Feb-19 08:46 PM] metaphilibert#0926
+For info he's trying to fix the (re)integration of equihash in yiimp (since sapling / overwinter the blocks are rejected)
+
+[22-Feb-19 09:22 PM] ComputerGenie 👴🏼📢#7004
+@NO_CPU iirc he said it cost too much $ for him to run it
+🐔 http://chickenpool.com/ 🐔  works well though
+
+[22-Feb-19 09:23 PM] ComputerGenie 👴🏼📢#7004
+@metaphilibert If it's crakers, it's on my TODO list, just haven't got there yet
+
+[22-Feb-19 09:27 PM] metaphilibert#0926
+aaaah this is interesting, it is a guy i met a few times in some meetups in Belgium and it appeared he and crakers knows each other for a long time (around yiimp)
+
+[22-Feb-19 09:27 PM] ComputerGenie 👴🏼📢#7004
+kool
+
+[22-Feb-19 09:28 PM] ComputerGenie 👴🏼📢#7004
+I don't know if anyone else has tried or not, but I do have it on my list if no one does it before me
+
+[22-Feb-19 09:29 PM] metaphilibert#0926
+nice, i will try convince him to come here
+
+[23-Feb-19 12:55 AM] phm87#7395
+hello I'm the guy looking for an open source miner for zcash / komodo. Sorry for the delay, I was busy. Thank you for the invitation.
+
+[23-Feb-19 12:59 AM] phm87#7395
+on chickenpool.com I think it is a nomp adapted for komodo, I found on github kmd-nomp (s nomp adapted for komodo) but I didn't find source of miner part (ccminer or sth else)
+
+[23-Feb-19 01:00 AM] phm87#7395
+https://github.com/komodoservices/kmd-nomp
+
+{Embed}
+https://github.com/komodoservices/kmd-nomp
+komodoservices/kmd-nomp
+kmd-nomp is mining pool software for Komodo/Assetchains so you can mine in your home! - komodoservices/kmd-nomp
+https://avatars1.githubusercontent.com/u/40410867?s=400&v=4
+
+[23-Feb-19 01:01 AM] ComputerGenie 👴🏼📢#7004
+if you find an open-source miner that's as efficient as EWBF's closed-sore miner, please let me know too
+
+[23-Feb-19 01:03 AM] phm87#7395
+ok I'll ask around as I'm not an expert in this
+
+[23-Feb-19 01:05 AM] phm87#7395
+before sapling (and overwinter), I think that ccminer was not able to work on kmd-nomp or z-nomp so miners can't be compared directly
+
+[23-Feb-19 01:06 AM] phm87#7395
+I had a look at the commits about sapling in kmd-nomp it doesn't seem very complicated on pool side
+
+[23-Feb-19 01:08 AM] phm87#7395
+but I don't know for miner's side : there is a miner included into komodo daemon itself, I had a look at the sapling code inside it but it is still hard to know exactly what to do into ccminer
+
+[23-Feb-19 05:55 AM] ComputerGenie 👴🏼📢#7004
+@phm87 for CPU, the one in the daemon is pretty well your best bet
+
+[23-Feb-19 10:01 AM] dukeleto#7326
+@phm87 what are you actually trying to do?
+
+[23-Feb-19 12:21 PM] phm87#7395
+I am trying to add sapling into yiimp mining pool (on zpool) to be able to mine kmd/zcash again
+
+[23-Feb-19 12:26 PM] dukeleto#7326
+yiimp is some crazy ass C++ stratum code. I understand stratum protocol, but writing it in C++ makes me un-understand it. Maybe something to do with the fact that I maintain a Perl stratum implementation, which is used by hushwebminer. It's just a few lines of Perl to implement stratum, C++ implementation is a monstrosity to behold
+
+[23-Feb-19 01:05 PM] ComputerGenie 👴🏼📢#7004
+@phm87 if you want to add sapling to yiimp, how does the miner come into play? Or are you wanting that also?
+
+[23-Feb-19 01:20 PM] phm87#7395
+I think that with sapling the miner receive the finalsaplingroothash given by stratum. But then I am not sure what calculation the miner must perform with the finalsaplingroothash
+
+[23-Feb-19 01:23 PM] ComputerGenie 👴🏼📢#7004
+ahhhh
+
+[23-Feb-19 01:25 PM] ComputerGenie 👴🏼📢#7004
+the miners do not need any change from sprout to sapling
+the stratum itself need the update and the changes are small enough that the miners will not be effected
+
+[23-Feb-19 01:26 PM] ComputerGenie 👴🏼📢#7004
+nothing in the algorithm changed, just the design of the block template
+
+[23-Feb-19 01:29 PM] ComputerGenie 👴🏼📢#7004
+I will start on a yiimp patch and, depending on how long it takes me to get an instance of yiimp up and running, I should have a fix in the next day or 2 (for a nominal fee)
+
+[23-Feb-19 01:34 PM] dukeleto#7326
+glad to hear CG is on it like dust on miners
+
+[23-Feb-19 01:35 PM] dukeleto#7326
+@ComputerGenie 👴🏼📢 is it a really bad idea to buy used miners on Ebay? Any war stories?
+
+[23-Feb-19 01:35 PM] dukeleto#7326
+these ebay ads are just fucking wild, people are elevating the mining advertising game
+
+[23-Feb-19 01:36 PM] dukeleto#7326
+An ad to buy L3+ mining rentals, lulz
+
+{Attachments}
+https://cdn.discordapp.com/attachments/456900588018597918/548860605394583553/asic-models.png
+
+[23-Feb-19 01:36 PM] phm87#7395
+Ok thx
+
+[23-Feb-19 01:36 PM] ComputerGenie 👴🏼📢#7004
+I rarely buy used miners and I trust ebay ads only moderately more than craigslist
+
+[23-Feb-19 01:36 PM] dukeleto#7326
+mostly I worry about being scammed, or sent HW that has been abused
+
+[23-Feb-19 01:37 PM] dukeleto#7326
+i was going to buy a miner from somebody, but they only take COINBASE COMMERCE (brain implant coming soon), and I don't like coinbase
+

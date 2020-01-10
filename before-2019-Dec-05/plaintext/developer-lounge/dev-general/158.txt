@@ -1,0 +1,420 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[26-Mar-19 09:09 AM] CHMEX#0686
+I think there was something like that in jumblr
+
+[26-Mar-19 09:10 AM] dukeleto#7326
+@pbca26 could you shed some light on how agama GUI wallet generates the new bip39 seed phrase, for a new wallet?
+
+[26-Mar-19 09:10 AM] dukeleto#7326
+i think Decker has a script that does this
+
+[26-Mar-19 09:10 AM] CHMEX#0686
+it used a seed and than added 1
+2
+3
+etc to get different destination addresses
+
+[26-Mar-19 09:11 AM] dukeleto#7326
+I thought maybe this script had seed phrase stuff but it does not seem to: https://github.com/DeckerSU/komodo_scripts/blob/master/genkomodo.php
+
+{Embed}
+https://github.com/DeckerSU/komodo_scripts/blob/master/genkomodo.php
+DeckerSU/komodo_scripts
+set of komodo helper scripts. Contribute to DeckerSU/komodo_scripts development by creating an account on GitHub.
+https://avatars3.githubusercontent.com/u/22120003?s=400&v=4
+
+[26-Mar-19 09:13 AM] pbca26#5430
+https://github.com/bitcoinjs/bip39
+i guess you can use something like https://github.com/trezor/trezor-crypto/blob/master/bip39.c for cli
+
+{Embed}
+https://github.com/bitcoinjs/bip39
+bitcoinjs/bip39
+JavaScript implementation of Bitcoin BIP39: Mnemonic code for generating deterministic keys - bitcoinjs/bip39
+https://avatars3.githubusercontent.com/u/756696?s=400&v=4
+
+{Embed}
+https://github.com/trezor/trezor-crypto/blob/master/bip39.c
+trezor/trezor-crypto
+:orange_book: Heavily optimized cryptography algorithms for embedded devices. - trezor/trezor-crypto
+https://avatars0.githubusercontent.com/u/4146447?s=400&v=4
+
+[26-Mar-19 09:14 AM] dukeleto#7326
+it's already part of Agama and KMD stuff
+
+[26-Mar-19 09:14 AM] dukeleto#7326
+i am using the debug tools to see what agama does to generate this stuff
+
+[26-Mar-19 09:15 AM] dukeleto#7326
+hmm, no web api requests, which makes sense. there is no web api for this, it must be doing something else to get the data
+
+[26-Mar-19 09:16 AM] dukeleto#7326
+agama *does* allow custom WIF (which I call a seed phrase)
+
+[26-Mar-19 09:16 AM] dukeleto#7326
+WIF I thought only meant the base58 representation of a private key, but all these terms have fluid meanings
+
+[26-Mar-19 09:17 AM] dukeleto#7326
+clicking the "custom seed phrase" button on and off gives me a new seed phrase instantly every time in the GUI
+
+[26-Mar-19 09:17 AM] dukeleto#7326
+I just want to have that on the CLI
+
+[26-Mar-19 09:17 AM] dukeleto#7326
+"custom wallet seed" is what Agama GUI calls it
+
+[26-Mar-19 09:17 AM] jl777c#5810
+sha256(origseed + %d)
+
+[26-Mar-19 09:19 AM] jl777c#5810
+knowing any specific sha256 value wont let you calculate any other. the origseed of course is critical and generates all the privkeys
+
+[26-Mar-19 09:20 AM] jl777c#5810
+replace sha256 with whatever other crypto strength hashing, you can also make origseed composed out of multiple parts, each of them hashes
+
+[26-Mar-19 09:20 AM] jl777c#5810
+just depends on how far you want to go
+
+[26-Mar-19 09:21 AM] jl777c#5810
+I had one idea where you made a single passphrase and then randomly flipped bits in it. then you dont directly know where the coins are, but given the origseed you are able to mine them
+
+[26-Mar-19 09:22 AM] jl777c#5810
+so put a small amount in the direct address from the original seed and the rest in the mineable addresses
+
+[26-Mar-19 09:30 AM] dukeleto#7326
+I like it. Sounds kind of like giving yourself a map and burying treasure
+
+[26-Mar-19 09:33 AM] mrlynch#5735
+thanks for the mention @dukeleto
+if invoice cc is not required urgently i'd love to try my hand at it.. i'm recapping my c/c++ for now, but i'll be full time on kmd & pirate sometime after the nn election 
+finally leaving the corp world to do something useful 🤞
+
+[26-Mar-19 09:35 AM] dukeleto#7326
+@mrlynch invoice CC might be a good stepping stone to the vault CC which my gut tells me could have more moving parts, but who knows. Both are very interesting
+
+[26-Mar-19 09:40 AM] mrlynch#5735
+from the spec i read for vaults, they're proposing a new primitive called covenants 😬 
+
+it all depends on what deadlines are expected by the community, but as i said, i'll have plenty of time shortly 😁
+
+[26-Mar-19 09:40 AM] dukeleto#7326
+@pbca26 i am seeing `window.state.randomSeed` which stores the output of the latest generated wallet seed
+
+[26-Mar-19 09:41 AM] dukeleto#7326
+@mrlynch keep things simpler than you think you need to, is my life motto
+
+[26-Mar-19 09:41 AM] dukeleto#7326
+because life has a way of exponentially making things more complex in ways we never can imagine
+
+[26-Mar-19 09:42 AM] mrlynch#5735
+that's my model as well.. there's never a need to over complicate things
+more study is required from my behalf tho
+
+[26-Mar-19 09:43 AM] dukeleto#7326
+@pbca26 ` randomSeed: passphraseGenerator.generatePassPhrase(256)` might be what i am looking for
+
+[26-Mar-19 09:43 AM] dukeleto#7326
+i feel dirty when i crawl thru nodeJS codebases searching for what I need
+
+[26-Mar-19 09:44 AM] dukeleto#7326
+but it's still better than Java
+
+[26-Mar-19 09:45 AM] dukeleto#7326
+`import passphraseGenerator from 'agama-wallet-lib/src/crypto/passphrasegenerator';`
+
+[26-Mar-19 09:45 AM] dukeleto#7326
+where does this magical unicorn live?
+
+[26-Mar-19 09:46 AM] dukeleto#7326
+maybe https://github.com/pbca26/agama-wallet-lib
+
+{Embed}
+https://github.com/pbca26/agama-wallet-lib
+pbca26/agama-wallet-lib
+Common library for cryptocurrencies. Contribute to pbca26/agama-wallet-lib development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/7769879?s=400&v=4
+
+[26-Mar-19 09:47 AM] dukeleto#7326
+https://github.com/pbca26/agama-wallet-lib/blob/dev/src/crypto/passphrasegenerator.js
+
+{Embed}
+https://github.com/pbca26/agama-wallet-lib/blob/dev/src/crypto/passphrasegenerator.js
+pbca26/agama-wallet-lib
+Common library for cryptocurrencies. Contribute to pbca26/agama-wallet-lib development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/7769879?s=400&v=4
+
+[26-Mar-19 09:47 AM] ComputerGenie 👴🏼📢#7004
+```the above GUI needed no RPC changes at all in ZEC, I don't think
+it's purely a GUI wallet feature```
+@dukeleto unless they've changed something there is not such thing, that hideous thing with the heart on it is a layer app
+
+[26-Mar-19 09:48 AM] dukeleto#7326
+@pbca26 your lib is a very tiny wrapper around bip39.js, i see now
+
+[26-Mar-19 09:48 AM] pbca26#5430
+@dukeleto all you need is bip39
+
+[26-Mar-19 09:48 AM] dukeleto#7326
+@ComputerGenie 👴🏼📢 no comprendo
+
+[26-Mar-19 09:49 AM] dukeleto#7326
+@pbca26 i see now that the bip39.c link you gave is pretty nice standalone way to do it from the CLI
+
+[26-Mar-19 09:49 AM] dukeleto#7326
+at least now I understand more about how the sausage is made
+
+[26-Mar-19 09:49 AM] ComputerGenie 👴🏼📢#7004
+Zec's QT wallet is pure RPC, it's not like Ocean where the daemon is part of it
+
+[26-Mar-19 09:49 AM] dukeleto#7326
+agreed
+
+[26-Mar-19 09:50 AM] dukeleto#7326
+payment requests are purely a GUI feature, which use memo fields in nice ways
+
+[26-Mar-19 09:51 AM] dukeleto#7326
+they are kind of like super simple one-time use HushLists, where there is a message that says "pay me" and you might pay them. It's just nice to see the memo field actually being used
+
+[26-Mar-19 09:52 AM] ComputerGenie 👴🏼📢#7004
+but that's what I'm saying, it can't be "purely a GUI feature", because their GUI makes RPC calls; whatever you can send through that GUI, you can send cli
+
+[26-Mar-19 09:52 AM] dukeleto#7326
+i think we are just confusing each other with terminology
+
+[26-Mar-19 09:52 AM] ComputerGenie 👴🏼📢#7004
+😛
+
+[26-Mar-19 09:53 AM] dukeleto#7326
+what I mean to say, is that the wallet is customizing the full node, changing RPCs, adding RPCs, etc.. It just uses the RPC interface
+
+[26-Mar-19 09:53 AM] dukeleto#7326
+Hush is looking for a new wallet to fork for GUI stuff, and KomodoOcean and Zec Wallet are the 2 current contenders
+
+[26-Mar-19 09:54 AM] ComputerGenie 👴🏼📢#7004
+to me, that which is "purely a GUI feature" is something that you can do in the GUI and cannot duplicate with `zcash-cli.....`
+
+[26-Mar-19 09:54 AM] dukeleto#7326
+that doesn't exist, all features must boil down to cli or RPC calls, which are isomorphic
+
+[26-Mar-19 09:54 AM] dukeleto#7326
+i mean to say, it's "purely *implemented* in the GUI"
+
+[26-Mar-19 09:55 AM] dukeleto#7326
+no implementation in internals
+
+[26-Mar-19 09:55 AM] dukeleto#7326
+no full node implementation
+
+[26-Mar-19 09:55 AM] dukeleto#7326
+no C/C++ implementation
+
+[26-Mar-19 09:55 AM] dukeleto#7326
+purely in the GUI
+
+[26-Mar-19 09:55 AM] ComputerGenie 👴🏼📢#7004
+`that doesn't exist, all features must boil down to cli or RPC calls,`correct, that's what I was saying 😛
+
+[26-Mar-19 09:55 AM] dukeleto#7326
+words are confusing
+
+[26-Mar-19 09:55 AM] dukeleto#7326
+let's just use math
+
+[26-Mar-19 09:55 AM] ComputerGenie 👴🏼📢#7004
+lol
+
+[26-Mar-19 09:56 AM] ComputerGenie 👴🏼📢#7004
+_goes back to reading the rest of the conversation_
+
+[26-Mar-19 09:56 AM] CHMEX#0686
+a quote to remember    'words are confusing let's just use math'  - dukeleto 2019
+
+{Reactions}
+treasure rum (2) 
+
+[26-Mar-19 09:58 AM] dukeleto#7326
+nodeJS wallets look cool, but the security issues really do concern me. I don't think I want to maintain the hush-ng nodeJS codebase and I want switch to a QT+RPC codebase. So I am looking at all my options, and making my upstream something that is funded by Zcash foundation doesn't sound like a horrible idea
+
+[26-Mar-19 10:03 AM] jl777c#5810
+@mrlynch there is no rush for invoice CC, until just now, didnt even have it on the actively developed list. before you start in on it, make sure it has some cool features, like automatic payments to authorized invoicers (up to a cap per time period)
+
+[26-Mar-19 10:04 AM] jl777c#5810
+that way, it can be used to authorize payments of monthly bills and the burden of invoicing and collecting is on the billings side. which means the biller would need to be able to create the transaction
+
+{Reactions}
+👍 
+
+[26-Mar-19 10:34 AM] mrlynch#5735
+thanks for the ideas.. sort of crypto direct debit
+
+[26-Mar-19 10:38 AM] mrlynch#5735
+i'll make a rough design (sketch) with what rpc calls would be useful to have
+
+[26-Mar-19 10:38 AM] mrlynch#5735
+you pretty much listed them tho 😁
+
+[26-Mar-19 01:38 PM] Regnar#6164
+Curious but who's running Komodod.com? Just came across it and it looks nice!
+
+{Reactions}
+💯 
+
+[26-Mar-19 01:39 PM] blackjok3r#3181
+@MadMaX
+
+{Reactions}
+💯 
+
+[26-Mar-19 01:40 PM] Regnar#6164
+Super mobile friendly too
+
+[26-Mar-19 01:40 PM] ComputerGenie 👴🏼📢#7004
+he posted a link to it the other day and I really liked it too
+
+[26-Mar-19 01:41 PM] ComputerGenie 👴🏼📢#7004
+and as a bonus, he has chickenpool tagged 😛
+
+{Reactions}
+🐔 (2) 
+
+[26-Mar-19 01:51 PM] Regnar#6164
+I was thinking it would be cool to add some time series charts to the Stats page. Like Txs/block. Idk JS but found this
+<https://canvasjs.com/html5-javascript-dynamic-chart/>
+
+[26-Mar-19 01:51 PM] Regnar#6164
+people love visuals 😛
+
+[26-Mar-19 06:31 PM] dukeleto#7326
+i made a nice little CLI util that generates bip39 wallet seed phrases in 0.005s with secure entropy provided by libsodium
+
+{Reactions}
+3040_kingpeepo 
+
+[26-Mar-19 06:37 PM] dukeleto#7326
+trezor-crypto and libsodium does all the heavy lifting, but it taught me some good stuff
+
+[26-Mar-19 06:39 PM] dukeleto#7326
+i was getting RNG data incorrectly and my seed phrases, every one, had the word abandon 4 times in them, and always started with a word that started with `sc`, weird stuff like that. Taught me a lesson. If I hadn't generated a bunch of seed phrases and looked at them, it would have looked like a "random" seed, but it had a very definite pattern because of my bug
+
+[26-Mar-19 06:41 PM] dukeleto#7326
+https://github.com/leto/trezor-crypto/commit/edacc1c8f4022e0b017ca0bc22b2145989f34ec7
+
+{Embed}
+https://github.com/leto/trezor-crypto/commit/edacc1c8f4022e0b017ca0bc22b2145989f34ec7
+Generate bip39 seeds on the CLI via bip39_mnemonic · leto/trezor-...
+https://avatars3.githubusercontent.com/u/30298?s=200&v=4
+
+[26-Mar-19 06:42 PM] dukeleto#7326
+PROTIP: Don't use this seed: ```
+$ time ./tools/bip39_mnemonic
+pulse useful way cinnamon hen item cause sad vehicle more tortoise bubble unit maple image girl family top blade destroy cross pottery boss again
+
+real    0m0.005s
+user    0m0.002s
+sys    0m0.002s
+```
+
+[26-Mar-19 06:43 PM] dukeleto#7326
+don't get much easier than that for making seeds. And you can compile this and run it on crazy low-end embedded systems as well
+
+[26-Mar-19 07:19 PM] Deleted User#0000
+is anyone from the dev team around?
+
+[27-Mar-19 02:04 AM] dukeleto#7326
+@Deleted User ask your question and somebody will answer it
+
+[27-Mar-19 02:53 AM] grewalsatinder#9653
+that issue I was trying to solved, isn't solved, 😦
+https://stackoverflow.com/questions/55094133/how-to-send-some-event-update-from-http-handler-to-a-websocket-handler
+
+{Embed}
+https://stackoverflow.com/questions/55094133/how-to-send-some-event-update-from-http-handler-to-a-websocket-handler
+How to send some event update from http Handler to a WebSocket Handler
+I'm very new to Go language and trying to wrap my head around channels. To clear my understanding I have watched video tutorials, read some books, but I'm still feeling confused when comes to pract...
+https://cdn.sstatic.net/Sites/stackoverflow/img/apple-touch-icon@2.png?v=73d79a89bded
+
+[27-Mar-19 02:53 AM] grewalsatinder#9653
+Anyway, I'll just start building whatever half understanding I have and just build something and publish it.
+
+[27-Mar-19 02:53 AM] grewalsatinder#9653
+but troubleshooting due to this taught me few more things that I didn't knew before it 🙂
+
+[27-Mar-19 02:53 AM] grewalsatinder#9653
+so that's a little +
+
+[27-Mar-19 07:14 PM] Deleted User#0000
+I wanted to know were I could for gathering information on working with the team in adding Komodo onto a chain to help stop from a 51% attack.
+
+[27-Mar-19 07:15 PM] FishyGuts#5085
+@Audo I believe is the person to chat with.
+
+[27-Mar-19 07:15 PM] PTYX#6840
+
+{Attachments}
+https://cdn.discordapp.com/attachments/463445317136809984/560542544891740172/e9ea098.jpg
+
+{Reactions}
+😂 (5) 💯 (3) 
+
+[27-Mar-19 07:50 PM] Regnar#6164
+@Deleted User  you can also contact @PTYX of ChainZilla (<https://chainzilla.io>)and @siu - Chainmakers of Chainmakers (<https://chainmakers.co/>) those are two providers who can help integrate dPoW into your chain
+
+{Reactions}
+👍 
+
+[27-Mar-19 08:00 PM] PTYX#6840
+Yes feel free to write us at  hello@chainzilla.io and we'll answer any questions that you might have or just ask them here
+
+[27-Mar-19 08:08 PM] Deleted User#0000
+ok ty
+
+[27-Mar-19 08:09 PM] siu - Chainmakers#3920
+Same here. You can contact us through support@chainmake.rs and we can work from there on.
+
+[27-Mar-19 08:11 PM] ronyi#5719
+https://imgur.com/a/gYSCwK2
+
+{Embed}
+https://imgur.com/a/gYSCwK2
+https://i.imgur.com/Ugqnozmh.jpg
+
+{Reactions}
+😂 
+
+[27-Mar-19 10:14 PM] Audo#5667
+this is a good place to point people to: https://komodoplatform.com/blockchain-security-service/
+
+and indeed, the service providers are the point of contact
+
+{Embed}
+https://komodoplatform.com/blockchain-security-service/
+Blockchain Security Service - Komodo
+Komodo's industry-leading blockchain security service can protect any UTXO-based blockchain with the power of the Bitcoin network. Learn more here.
+https://komodoplatform.com/wp-content/uploads/2018/07/redefining-blockchain-architecture.jpg
+
+[27-Mar-19 10:29 PM] mrlynch#5735
+lol @ lisp ... after a week of living in C i find it very hard not putting ; in python code 😂
+
+{Reactions}
+👌 
+
+[28-Mar-19 12:22 AM] blackjok3r#3181
+Lol I'm the same
+
+[28-Mar-19 10:53 AM] grewalsatinder#9653
+feeling uneasy until this issue is solved. Still trying to solve:
+https://stackoverflow.com/questions/55094133/how-to-send-some-event-update-from-http-handler-to-a-websocket-handler
+
+{Embed}
+https://stackoverflow.com/questions/55094133/how-to-send-some-event-update-from-http-handler-to-a-websocket-handler
+How to send some event update from http Handler to a WebSocket Handler
+I'm very new to Go language and trying to wrap my head around channels. To clear my understanding I have watched video tutorials, read some books, but I'm still feeling confused when comes to pract...
+https://cdn.sstatic.net/Sites/stackoverflow/img/apple-touch-icon@2.png?v=73d79a89bded
+

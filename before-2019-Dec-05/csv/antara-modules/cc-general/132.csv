@@ -1,0 +1,183 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"424224648889106444";"Mihailo#5902";"26-Nov-18 08:47 AM";"👍";"";"";
+"495184910181466124";"KNOX#9338";"26-Nov-18 01:04 PM";"**Test CC on a Sapling Activated Chain**
+
+**1.** Clone, fetch zcash sapling params and compile
+```
+git clone https://github.com/PirateNetwork/komodo
+cd komodo
+git checkout FSM
+./zcutil/fetch-params.sh
+./zcutil/build.sh -j$(nproc)
+```
+**2.** Chain params
+```
+./komodod -ac_name=SPLTEST -pubkey=<yourpubkey> -ac_supply=5555555 -ac_reward=10000000000000 -ac_cc=2 -addressindex=1 -spentindex=1 -addnode=54.36.126.42 -addnode=94.130.224.11 &
+```
+
+**3.** Start CC testing as you did before. Sapling is already activated on this chain. Just mine a block or two and use the funds.
+
+P.S.: Make sure you use this specific repo as this already contains sapling activation code and no need for you to manually edit source and compile.
+
+Can, anyone pin this please?";"";"👌 (2)";
+"495184910181466124";"KNOX#9338";"26-Nov-18 01:05 PM";"@TonyL @Mihailo @dukeleto @siu - Chainmakers @Alright ^^";"";"";
+"412323938782150658";"SHossain#0007";"26-Nov-18 01:43 PM";"@CHMEX do you mind to setup an explorer for SPLTEST chain as well? it would be beneficial for the CC testing on sapling activated chain";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"26-Nov-18 01:43 PM";"testing";"";"";
+"412323938782150658";"SHossain#0007";"26-Nov-18 01:50 PM";"```
+./komodo-cli -ac_name=SPLTEST faucetfund 10000
+{
+  ""result"": ""success"",
+  ""hex"": ""01000000010227e4541ebe730fa14c48c8bfdf41348c495de676c3db36a5d48cfed949e347000000004847304402204872e032960e1c441219e5c0121786e2001d136749d7cacbd86a0f99d51ab1bc0220562044dbbdcb7de1d9cf53fc3fc7b1cde7d2a8181ee1bff8ae9da29ccfd4946d01ffffffff020010a5d4e8000000302ea22c8020e029c511da55523565835887e412e5a0c9b920801b007000df45e545f25028248103120c008203000401ccf068cd792f0800002321023bf8ba872e3e4a6d60455354efc1b7daf4f87e942d8d9f2c2b9942ff91df6e0fac00000000""
+}
+```";"";"";
+"412323938782150658";"SHossain#0007";"26-Nov-18 01:50 PM";"```
+./komodo-cli -ac_name=SPLTEST sendrawtransaction 01000000010227e4541ebe730fa14c48c8bfdf41348c495de676c3db36a5d48cfed949e347000000004847304402204872e032960e1c441219e5c0121786e2001d136749d7cacbd86a0f99d51ab1bc0220562044dbbdcb7de1d9cf53fc3fc7b1cde7d2a8181ee1bff8ae9da29ccfd4946d01ffffffff020010a5d4e8000000302ea22c8020e029c511da55523565835887e412e5a0c9b920801b007000df45e545f25028248103120c008203000401ccf068cd792f0800002321023bf8ba872e3e4a6d60455354efc1b7daf4f87e942d8d9f2c2b9942ff91df6e0fac00000000
+error code: -26
+error message:
+16: tx-overwinter-active
+```";"";"";
+"412323938782150658";"SHossain#0007";"26-Nov-18 01:50 PM";"@jl777c ^^";"";"";
+"455741312273219595";"jl777c#5810";"26-Nov-18 01:54 PM";"it is good we tested this, yes it needs to be type 4 tx";"";"👍🏽 (1)";
+"412323938782150658";"SHossain#0007";"26-Nov-18 01:55 PM";"decoderawtransacion says version 1";"";"";
+"412323938782150658";"SHossain#0007";"26-Nov-18 01:55 PM";"```
+./komodo-cli -ac_name=SPLTEST decoderawtransaction 01000000010227e4541ebe730fa14c48c8bfdf41348c495de676c3db36a5d48cfed949e347000000004847304402204872e032960e1c441219e5c0121786e2001d136749d7cacbd86a0f99d51ab1bc0220562044dbbdcb7de1d9cf53fc3fc7b1cde7d2a8181ee1bff8ae9da29ccfd4946d01ffffffff020010a5d4e8000000302ea22c8020e029c511da55523565835887e412e5a0c9b920801b007000df45e545f25028248103120c008203000401ccf068cd792f0800002321023bf8ba872e3e4a6d60455354efc1b7daf4f87e942d8d9f2c2b9942ff91df6e0fac00000000
+{
+  ""txid"": ""27e0a64887dcb8a190d8577e69f271b246c4778bac7ac060216015e07b3a3ebd"",
+  ""overwintered"": false,
+  ""version"": 1,
+  ""locktime"": 0,
+```";"";"";
+"455741312273219595";"jl777c#5810";"26-Nov-18 01:57 PM";"@Decker can you look at cc/CCtx.cpp? it uses the built infunctions to make a tx, so hopefully it is a matter of changing a setting in the CMutableTransaction";"";"";
+"455741312273219595";"jl777c#5810";"26-Nov-18 01:59 PM";"the CC vouts are signed using the same cryptoconditions signing, so it must be the tx version (and the normal vouts that are not signed using sapling)";"";"";
+"272003866906722306";"TonyL#3577";"26-Nov-18 02:04 PM";"Seems all CC transactions have same 1 version now.
+So seems `-regtest`  chain wasn't the best way to test CCs on sapling 🤕";"";"";
+"455741312273219595";"jl777c#5810";"26-Nov-18 02:04 PM";"@Decker I think the problem is     auto consensusBranchId = CurrentEpochBranchId(chainActive.Height() + 1, Params().GetConsensus());
+it isnt updating based on the ASSETCHAINS_SAPLING, need to add a new epoch or something like that";"";"";
+"420119978138664961";"CHMEX#0686";"26-Nov-18 02:09 PM";"@SHossain spltest.explorer.dexstats.info/
+Ping me when it needs a new one / new parameters";"";"";
+"412323938782150658";"SHossain#0007";"26-Nov-18 02:10 PM";"Thank you very much again. Much appriciated 😃";"";"";
+"412323938782150658";"SHossain#0007";"26-Nov-18 02:10 PM";"you may need to update the daemon once we have fixes for the bug found.";"";"";
+"272003866906722306";"TonyL#3577";"26-Nov-18 02:38 PM";"CC tests passing on `PirateNetwork`without errors as well, and daemon told me that sapling activated:
+```SET SAPLING ACTIVATION height.61
+REGTEST sapling activation at 61```
++ when I started `-regtest` not in tests framework (when daemon crashed) CCs worked fine. 
+Just checked and sapling activating fine (transactions ""version"": 4) in regtest mode";"";"";
+"272003866906722306";"TonyL#3577";"26-Nov-18 02:39 PM";"So `regtest` seems fooled me 😰";"";"";
+"455741312273219595";"jl777c#5810";"26-Nov-18 02:43 PM";"wait, so without -regtest, is there a problem or no?";"";"";
+"412323938782150658";"SHossain#0007";"26-Nov-18 02:46 PM";"the output i provided with normal mode. no regtest";"";"";
+"424224648889106444";"Mihailo#5902";"26-Nov-18 03:07 PM";"Hey guys, I have built KMD from master branch in order to run KMD node (I wanted to avoid sapling changes to maybe make some problems). But when I start the daemon I get :
+`komodod: main.cpp:3640: void PruneBlockIndexCandidates(): Assertion `!setBlockIndexCandidates.empty()' failed.`";"";"";
+"424224648889106444";"Mihailo#5902";"26-Nov-18 03:08 PM";"Even tried with FSM branch to run pure KMD node: `komodod: chain.cpp:147: CBlockIndex* CBlockIndex::GetAncestor(int): Assertion `pindexWalk->pprev' failed.`";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Nov-18 03:08 PM";"You need to -reindex it";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Nov-18 03:08 PM";"long standing bug, unreproducable";"";"";
+"424224648889106444";"Mihailo#5902";"26-Nov-18 03:09 PM";"Ok, will try to trnasfer chain from other node where it works. Reindex will last too long";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Nov-18 03:09 PM";"Usually happens syncing on system with too low ram, or a bad quality VPS where ram was over provisioned and runs out.";"";"";
+"424224648889106444";"Mihailo#5902";"26-Nov-18 03:09 PM";"Thnx 👍";"";"";
+"424224648889106444";"Mihailo#5902";"26-Nov-18 03:10 PM";"Hmmm, interesting. I have 4GB ram on that VPS, but I was compling while chain synced and was out of memory on build, and also saw in get info something about memory. Good I have one node which synced good";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Nov-18 03:10 PM";"Just use a boot strap yeah.. thats how we been doing staked notaries msotly, as they dont need that much ram to run.";"";"";
+"424224648889106444";"Mihailo#5902";"26-Nov-18 03:11 PM";"Bootstrap? Like transfering chain from other node?";"";"";
+"423176312354635779";"gcharang#6833";"26-Nov-18 03:12 PM";"https://bootstrap.0x03.services/komodo/KMD.html theres a tar file of KMD chain here";"";"👍 (2)";
+"232679450301431808";"blackjok3r#3181";"26-Nov-18 03:12 PM";"beat me to it";"";"";
+"424224648889106444";"Mihailo#5902";"26-Nov-18 03:17 PM";"Great, didn't knew we had that!";"";"";
+"412323938782150658";"SHossain#0007";"26-Nov-18 03:22 PM";"@gcharang it would be better if you please put that bootstrap link to compile komodo doc";"";"👍 (1)";
+"423176312354635779";"gcharang#6833";"26-Nov-18 03:23 PM";"But do we wnat to provide a bootstrap through official resources?";"";"";
+"412323938782150658";"SHossain#0007";"26-Nov-18 03:25 PM";"🤔";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Nov-18 03:27 PM";"Probably not IMO ... its not liek it takes 48H to sync";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Nov-18 03:27 PM";"its really good for testing";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Nov-18 03:27 PM";"but everyone should not use bootstrap...";"";"";
+"412323938782150658";"SHossain#0007";"26-Nov-18 03:27 PM";"ok. ignore my lpost then";"";"";
+"412323938782150658";"SHossain#0007";"26-Nov-18 03:28 PM";"actually, it takes about 1.5 - 2 hours for a full sync for me";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Nov-18 03:29 PM";"Yes with very fast internet its not bad ... I was inernet limited at 50Mibt on last sync here, and it took many hours... for a ~10GB chain, it pulled in somehting lilke 100GB or more of traffic...";"";"";
+"422858760898215937";"siu - Chainmakers#3920";"26-Nov-18 04:02 PM";"```komodo_activate_sapling.31 starting blocktime 1543234307 cmp.1
+SPLTEST transition at 1 (0, 1231006505) -> (1, 1543234150)
+SET SAPLING ACTIVATION height.61
+SPLTEST sapling activation at 61
+```";"";"";
+"412323938782150658";"SHossain#0007";"26-Nov-18 04:02 PM";"yes, it has already been activated";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:11 PM";"@KNOX this is a good time to run the automated python tests in the PirateChain fork of komodo: `./qa/pull-tester/rpc-tests.sh cryptoconditions --tracerpc`";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:11 PM";"if they don't pass, something is wrong";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:18 PM";"@KNOX just some advice, that renaming the repo to `pirate-komodo` or `pirate` makes more sense, so that somebody can clone `komodo` and this pirate version of KMD into the same directory. Right now, I have to choose a custom name for it. And because I already have hundreds of repos, and every person will make their own name for the repo, it's just not ideal";"";"";
+"424224648889106444";"Mihailo#5902";"26-Nov-18 04:19 PM";"@jl777c @miketout Hey guys, I just figured out tokenconvert RPC is missing from the new FSM after sapling changes are added. Before there was rpcserver.cpp in src directory, but now I see it is moved to rpc/server.cpp and tokenconvert is not there. I'm worried that maybe something else is could also slipped with new changes...
+https://github.com/jl777/komodo/blob/FSM/src/rpc/server.cpp
+
+https://github.com/jl777/komodo/blob/572db45f9d5c80aceb2754964b40f628d57ad090/src/rpcserver.cpp";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:20 PM";"maybe it was removed on purpose";"";"";
+"455741312273219595";"jl777c#5810";"26-Nov-18 04:21 PM";"i think when you do a pull request, anything else missing will come back?";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:21 PM";"depends on how branches branched from each other, and which branch you are sending the PR to";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:22 PM";"```src/wallet/rpcwallet.cpp
+6864:UniValue tokenconvert(const UniValue& params, bool fHelp)
+6868:        throw runtime_error(""tokenconvert evalcode tokenid pubkey amount\n"");```";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:22 PM";"latest KMD FSM branch, it's right there";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:22 PM";"let me introduce people to a think called `grep -r`, or even better `ack` 😃";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:22 PM";"also, if we had a test for it, you could run the test to see if it works 😃";"";"";
+"424224648889106444";"Mihailo#5902";"26-Nov-18 04:22 PM";"@dukeleto, it is in rpcwallet.cpp, but not server.cpp where all other commands are...";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:23 PM";"@Mihailo and if you understand why, you will reach enlightenment";"";"";
+"424224648889106444";"Mihailo#5902";"26-Nov-18 04:23 PM";"@jl777c I rebased my changes on latest FSM so I do not have it either";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:23 PM";"@Mihailo things are put in places that make the compilation work, that is all";"";"";
+"455741312273219595";"jl777c#5810";"26-Nov-18 04:23 PM";"tokenconvert is in my tree";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:23 PM";"any other logic or sanity or ""order"" is an accident 😃";"";"";
+"455741312273219595";"jl777c#5810";"26-Nov-18 04:23 PM";"from jl777 repo?";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:24 PM";"jl777/komodo has that RPC, I don't think there is an issue";"";"";
+"424224648889106444";"Mihailo#5902";"26-Nov-18 04:25 PM";"Hmmm, I'm looking at correct repo I think: https://github.com/jl777/komodo/blob/FSM/src/rpc/server.cpp";"";"";
+"455741312273219595";"jl777c#5810";"26-Nov-18 04:26 PM";"oh. the code is there, but you are right not in the list of rpc calls!";"";"";
+"424224648889106444";"Mihailo#5902";"26-Nov-18 04:26 PM";"Yep";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:27 PM";"oh, it was lost from the rpc method list, so it won't be found";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:27 PM";"@Mihailo good find. something that could be easily caught with automated tests.... Yes, I will be the broken record about automated tests 🤓";"";"";
+"424224648889106444";"Mihailo#5902";"26-Nov-18 04:28 PM";"My worries are that merging the changes for sapling was used from some other branch that could had some other stuff missing...";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:29 PM";"yes, if it happened to 1 RPC, it probably happened to more than 1";"";"";
+"424224648889106444";"Mihailo#5902";"26-Nov-18 04:29 PM";"And not just RPC...";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:29 PM";"verus does not have many RPCs that KMD does";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:29 PM";"@Mihailo shouldn't be too hard to diff the file that lists all RPCs";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:29 PM";"and see if there is anything missing";"";"";
+"455741312273219595";"jl777c#5810";"26-Nov-18 04:31 PM";"so far, most all the tests are working. signing CC is the only known issue, other than missing rpc def";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:36 PM";"I am syncing SPLTEST now";"";"";
+"412323938782150658";"SHossain#0007";"26-Nov-18 04:37 PM";"@dukeleto you need to use FSM branch from PirateNetwork repo";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:37 PM";"yup, I did, as described above";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:37 PM";"```  ""blocks"": 397,
+  ""longestchain"": 397,```";"";"👍🏽 (1)";
+"412323938782150658";"SHossain#0007";"26-Nov-18 04:37 PM";"hope you already know 😃";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:39 PM";"i am running the CC tests now, on pirate-komodo";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:40 PM";"we really need to setup Travis CI to report this stuff, maybe even on Discord, but on a ""badge"" on Github would be a huge improvement too";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:40 PM";"sapling activated correctly in regtest, yay";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:42 PM";"`./qa/pull-tester/rpc-tests.sh cryptoconditions.py --tracerpc`";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:42 PM";"```Tests successful
+--- Success: cryptoconditions.py ---
+
+Tests completed: 1
+successes 1; failures: 0```";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:43 PM";"sweet, the tests pass";"";"";
+"424224648889106444";"Mihailo#5902";"26-Nov-18 04:43 PM";"Am I retarded or what? I have added the tokenconvert in RPClist and I cannot get it to show up in komodo-cli help or for komodo-cli to execute it. I've even done make clean and then make....
+```
+// tokens
+    { ""tokens"",       ""tokeninfo"",        &tokeninfo,         true },
+    { ""tokens"",       ""tokenlist"",        &tokenlist,         true },
+    { ""tokens"",       ""tokenorders"",      &tokenorders,       true },
+    { ""tokens"",       ""tokenaddress"",     &tokenaddress,      true },
+    { ""tokens"",       ""tokenbalance"",     &tokenbalance,      true },
+    { ""tokens"",       ""tokencreate"",      &tokencreate,       true },
+    { ""tokens"",       ""tokentransfer"",    &tokentransfer,     true },
+    { ""tokens"",       ""tokenbid"",         &tokenbid,          true },
+    { ""tokens"",       ""tokencancelbid"",   &tokencancelbid,    true },
+    { ""tokens"",       ""tokenfillbid"",     &tokenfillbid,      true },
+    { ""tokens"",       ""tokenask"",         &tokenask,          true },
+    //{ ""tokens"",       ""tokenswapask"",     &tokenswapask,      true },
+    { ""tokens"",       ""tokencancelask"",   &tokencancelask,    true },
+    { ""tokens"",       ""tokenfillask"",     &tokenfillask,      true },
+    //{ ""tokens"",       ""tokenfillswap"",    &tokenfillswap,     true },
+    { ""tokens"",       ""tokenconvert"",     &tokenconvert,      true },
+```";"";"";
+"424224648889106444";"Mihailo#5902";"26-Nov-18 04:43 PM";"I hope I'm ""what""... 😃";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:43 PM";"there is another place where you have to specify how many arguments the RPC gets";"";"";
+"424224648889106444";"Mihailo#5902";"26-Nov-18 04:43 PM";"Oh, ok.";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:44 PM";"and/or if special things happen to some arguments, like integer or stringification. It's confusing";"";"";
+"424224648889106444";"Mihailo#5902";"26-Nov-18 04:45 PM";"Do you happen to know by heart where is that place? 😉";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:45 PM";"@Mihailo src/rpc/client.cpp";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:45 PM";"vRPCConvertCommands";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:45 PM";"only RPCs that require conversion need to be listed. If you are getting an error about method not found, that is not it.";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:46 PM";"exactly what error do you get?";"";"";
+"424224648889106444";"Mihailo#5902";"26-Nov-18 04:46 PM";"```
+error code: -32601
+error message:
+Method not found
+```";"";"";
+"365714438864633856";"dukeleto#7326";"26-Nov-18 04:46 PM";"ok, that is not related to not being in that conversion list";"";"";

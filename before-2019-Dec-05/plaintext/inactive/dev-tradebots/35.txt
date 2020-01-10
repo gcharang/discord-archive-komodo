@@ -1,0 +1,410 @@
+==============================================================
+Guild: Komodo
+Channel: dev-tradebots
+Topic: Linked with 'KMD-Tradebots' on Matrix
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[14-Dec-18 03:30 PM] artem.pikulin#0794
+@jl777c But with old protocol if nobody puts up the liquidity no fees would be paid still. Maybe I didn't understand something correct? Do we consider the fee as something that affects liquidity?
+
+[14-Dec-18 03:30 PM] jl777c#5810
+the 200%+ affected liquidity the most
+
+[14-Dec-18 03:31 PM] jl777c#5810
+the concern is that without any dexfee at stake, what incentive does bob side have for completing a swap, especially the refund cases
+
+[14-Dec-18 03:33 PM] artem.pikulin#0794
+The bob could not send deposit after Afee, there was no incentive for him to do it if he's malicious and just wants the Alice to spend some funds and time for useless swap.
+
+[14-Dec-18 03:33 PM] jl777c#5810
+yes. but now we need to make sure that at every step in all other cases, bob has incentive to complete the next step
+
+[14-Dec-18 03:40 PM] artem.pikulin#0794
+Maybe I miss something but nothing really changes, there is always a case that someone loses the fee if other side doesn't follow the protocol. I think the "incentive" to complete the trade is somewhere outside the atomic swap protocol: e.g. Bob wants to buy some beer for KMD, but beerstore accepts only ETH so Bob opens HyperDEX and puts the order to exchange his KMD to ETH.
+
+[14-Dec-18 03:40 PM] jl777c#5810
+i guess we eliminate a lot of the deposits coming back cases, without the deposits
+
+[14-Dec-18 03:41 PM] jl777c#5810
+and once the first spend using secret is done, the trade is done other than the other side doing their half, which they are fully motivated to do
+
+[14-Dec-18 03:47 PM] artem.pikulin#0794
+1 side always have to start the swap, let's compare a couple of cases:
+1. Alice doesn't send the fee - swap is aborted (both versions). There is no incentive that might force the malicious Alice to send the fee.
+2. Alice sends fee - but then Bob doesn't send the deposit (old version) or payment (new version) - actually nothing changed. Alice loses fee in both cases. There is no incentive that might force the malicious Bob to send deposit/payment.
+
+[14-Dec-18 03:49 PM] artem.pikulin#0794
+The only incentive might be reputation system: nobody will soon trade with malicious keypair owner, however it's not hard to generate a new one and keep cheating.
+
+[14-Dec-18 03:52 PM] ComputerGenie 👴🏼📢#7004
+`Bob opens HyperDEX and puts the order to exchange his KMD to ETH.`
+And if Bob lives in a rural area Bob gets his beer 3 weeks later...
+
+[14-Dec-18 03:52 PM] artem.pikulin#0794
+@ComputerGenie 👴🏼📢 Wanna increase KMD blocktime to 3 weeks to make it real?)
+
+[14-Dec-18 03:54 PM] ComputerGenie 👴🏼📢#7004
+block times have no impact on how well SPV interaction does/doesn't work for a large percentage of the population
+
+[14-Dec-18 04:04 PM] artem.pikulin#0794
+The other important thing to mention: we want to eliminate the difference between liquidity provider and taker (like it is on centralized exchanges). So the user downloads the app, puts an order and might just wait until someone comes to take it. Of course he needs his app to be running until trade completes, but imagine this on mobile devices: these are actually always on so (maybe, I'm not sure about the background apps limitations on mobile OS) in ideal situation he puts an order on his phone and goes to sleep like he can do with centralized exchange.
+
+{Reactions}
+👍 (3) 
+
+[14-Dec-18 04:07 PM] jl777c#5810
+sounds good
+
+[14-Dec-18 11:03 PM] ABP brewmaster#0177
+Hey @cipi can you help me out with this I followed what you told me to do in the last email we shared together, and I have restarted marketmaker and now getting this output when running `./enable_my` ```{"error":"couldnt find coin locally installed","coin":"ABP"}```
+
+[15-Dec-18 01:07 AM] cipi#4502
+the coin daemon must run and the config file needs at least his entries
+```server=1
+rpcuser=xxxx
+rpcpassword=xxxx```
+
+[15-Dec-18 01:17 AM] Mylo#8306
+Can bob put the fee at first, then during the swap Alice repays the fee @artem.pikulin ?
+
+[15-Dec-18 02:25 AM] ComputerGenie 👴🏼📢#7004
+If Bob went first then Bob would be Alice; because A B C...
+
+[15-Dec-18 10:19 AM] artem.pikulin#0794
+@Mylo Hi, could you please describe in more details the idea of `Alice repays the fee`? It's mentioned as `benefit` at wiki that Liquidity provider doesn't need to pay the fee: https://github.com/KomodoPlatform/KomodoPlatform/wiki/Be-a-marketmaker-or-bob-using-barterDEX-CLI#benefits-of-being-an-lp-node.
+
+{Embed}
+https://github.com/KomodoPlatform/KomodoPlatform/wiki/Be-a-marketmaker-or-bob-using-barterDEX-CLI
+KomodoPlatform/KomodoPlatform
+Contribute to KomodoPlatform/KomodoPlatform development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[16-Dec-18 01:47 AM] Mylo#8306
+@artem.pikulin let me try. 
+Currently Alice pays dexfee in v1.  Bob puts a deposit.  To deter spammy traders.
+
+Reading how you are trying to remove the Alice and bob -ness of a trade, and to remove the need for bob to have extra deposit.  Yes benefit of no fee to LP is there in v1 but requiring extra deposit exists.
+
+Instead, bob puts order with dexfee paid.  When Alice comes to buy bobs order, Alice pays dexfee back to bob from Alice funds during trade.  Bob still has no fee trade, Alice still pays dexfee, bob doesn’t need deposit.
+
+Bob 10xdexfee
+Alice trade
+Bob trade
+Alice dexfee
+Bob refund10xdexfee
+
+OR
+Bob dexfee
+Bob trade
+Alice trade+repaydexfee
+
+Or some other combination where one party cannot inconvenience the other by canceling mid trade.
+
+Maybe zeroconf deposits can be used by LP for dexfee in the protocol refactor?
+
+[17-Dec-18 04:44 AM] artem.pikulin#0794
+@Mylo Hi, the main purpose of previous protocol was to allow the swap of coins that do not support CLTV opcode as there were just few of them at the moment of discussion. I might be wrong but there is `always` a way for one of the parties to not follow the protocol making other side loosing the fee (or there might be the case that fee is not collected), examples:
+Bob 10xdexfee -> Alice trade -> Bob trade -> There is no incentive for Alice to send the dexfee as Bpayment is already done and she can spend it.
+Bob dexfee -> Bob trade -> Alice trade + repaydexfee -> Bob doesn't spend the Alice payment, both sides refund the payments after locktime passes, but fee is lost.
+`Maybe zeroconf deposits can be used by LP for dexfee in the protocol refactor?` - the goal of protocol refactor is to eliminate the requirement to have much more funds that is really required to trade (212% for bob). We should start to think very different about it, just imagine centralized exchange that forces you to make `2xdeposit` to trade, I guess nobody will use it. Or the exchange where you need run app in CLI-mode on dedicated server to be liquidity provider.
+Any additional deposits will confuse the end users (remember that we present HyperDEX as "grandma" friendly). Users shouldn't have a questions like "why do I need to put the additional deposit to start the trade?", because it's irritating them. If we irritate the user there is more chance that he closes the app and never comes back making the DEX platform using the liquidity.
+
+[17-Dec-18 04:59 AM] Mylo#8306
+Ok thanks @artem.pikulin so it’s a balancing act of usability and losing fee scenarios.  It’s nice to read the github comments and continuing development thoughts and goals 😃
+
+[17-Dec-18 11:06 AM] ComputerGenie 👴🏼📢#7004
+`remember that we present HyperDEX as "grandma" friendly`
+And one iteration of one GUI is now the base concept for the protocol? The new thought is that grandma is going to be a liquidity provider?
+
+[17-Dec-18 10:41 PM] tolken#2655
+I believe in gramma, just give her the tools. Imagine a million grammas providing liquidity, with not a single technical support issue/ticket opened. We’d be unstoppable.
+
+[17-Dec-18 11:01 PM] ComputerGenie 👴🏼📢#7004
+lol @tolken 
+the point I was getting at was that I'm all for making the protocol simpler because it needs to be simpler; making the protocol simpler because gradma's simpler GUI needs it to be simpler, not so much
+
+[18-Dec-18 07:11 AM] artem.pikulin#0794
+@ComputerGenie 👴🏼📢 Actually yes, it's a kind of recursion, we want to make things simpler just to make some other things simpler:
+1. Makes users life simpler - they don't need to understand why they need the 212% to trade.
+2. Makes programmer life simpler - less steps are easier to code, the less code you have less errors you have in it.
+Main motivation was to remove the 212% stuff. One of the MM2 essential goals is `UX similar to centralized exchange`. Did you see any CEX that requires you to deposit 212KMD to trade just 100?
+
+[18-Dec-18 07:29 AM] ComputerGenie 👴🏼📢#7004
+@artem.pikulin You seem to still be missing my point, so I'll try to be more blunt...
+There should be no mention of HyperDEX as it pertains to the protocol level of mm/barterdex, unless HyperDEX is the official GUI for the protocol.
+
+[18-Dec-18 07:38 AM] artem.pikulin#0794
+It was just one of arguments, and yes the idea is actually `new thought is that grandma is going to be a liquidity provider?` because `anyone` that uses DEX should be able to act as LP, not just IT experienced person that has VPS with public IP.
+
+[18-Dec-18 10:07 AM] jl777c#5810
+with the torrent networking it would be possible
+
+[20-Dec-18 08:17 PM] wbradt#2043
+Is there other discussion related to the development of MM2? Is there a post or discussion of the differences between MM and MM2?
+
+[20-Dec-18 08:18 PM] jl777c#5810
+on github
+
+[20-Dec-18 08:27 PM] ComputerGenie 👴🏼📢#7004
+#dev-marketmaker ?
+
+[20-Dec-18 08:28 PM] jl777c#5810
+it used to be #etomic but somebody deleted it
+
+[20-Dec-18 08:29 PM] wbradt#2043
+which repo? @ComputerGenie 👴🏼📢
+
+[20-Dec-18 08:30 PM] ComputerGenie 👴🏼📢#7004
+¯\_(ツ)_/¯
+
+[20-Dec-18 08:30 PM] wbradt#2043
+Sorry, I meant @jl777c
+
+[20-Dec-18 08:32 PM] SHossain#0007
+https://github.com/artemii235/SuperNET
+
+{Embed}
+https://github.com/artemii235/SuperNET
+artemii235/SuperNET
+Contribute to artemii235/SuperNET development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/15745003?s=400&v=4
+
+[21-Dec-18 06:42 AM] lukechilds#2707
+Anyone have a tiny bit of DEX/JUMBLR they could send me?
+
+[21-Dec-18 06:42 AM] lukechilds#2707
+my orders aren't getting matched
+
+[21-Dec-18 06:42 AM] lukechilds#2707
+`RPxsaGNqTKzPnbm5q7QXwu7b6EZWuLxJG3`
+
+[21-Dec-18 06:43 AM] lukechilds#2707
+I can pay back in KMD
+
+[21-Dec-18 06:49 AM] lukechilds#2707
+literally a tiny bit like 0.01 is fine
+
+[21-Dec-18 07:00 AM] actionslacks#4072
+I can send some in a couple hours @lukechilds
+
+[21-Dec-18 07:22 AM] lukechilds#2707
+@actionslacks Thanks 🙌
+
+[21-Dec-18 07:49 AM] jorian#4555
+@lukechilds sent you 0.01 for both
+
+[21-Dec-18 07:51 AM] lukechilds#2707
+Thanks @jorian, not seeing your TX on the explorers
+
+[21-Dec-18 07:52 AM] lukechilds#2707
+http://dex.explorer.dexstats.info/address/RPxsaGNqTKzPnbm5q7QXwu7b6EZWuLxJG3
+
+[21-Dec-18 07:52 AM] lukechilds#2707
+http://jumblr.explorer.dexstats.info/address/RPxsaGNqTKzPnbm5q7QXwu7b6EZWuLxJG3
+
+[21-Dec-18 07:52 AM] jorian#4555
+"complete":true
+
+[21-Dec-18 07:52 AM] jorian#4555
+mmh
+
+[21-Dec-18 07:53 AM] jorian#4555
+you're right. weird, mm says it completed
+
+[21-Dec-18 07:53 AM] jorian#4555
+electrums used
+
+[21-Dec-18 08:00 AM] lukechilds#2707
+I had the same mm issue
+
+[21-Dec-18 08:02 AM] jorian#4555
+i'm updating all daemons now
+
+[21-Dec-18 08:02 AM] jorian#4555
+for my own node, not the electrums
+
+[21-Dec-18 08:10 AM] lukechilds#2707
+thanks man
+
+[21-Dec-18 08:17 AM] jorian#4555
+i can't use withdraw
+
+[21-Dec-18 08:17 AM] jorian#4555
+-26 overwinter active
+
+[21-Dec-18 08:18 AM] jorian#4555
+you're gonna have to wait for actionslacks
+
+[21-Dec-18 08:19 AM] jorian#4555
+@artem.pikulin is this issue known? i think the withdraw method doesn't add the 2 new values in the rawtx
+
+[21-Dec-18 08:32 AM] artem.pikulin#0794
+@jorian Hi, what version do you use?
+
+[21-Dec-18 08:32 AM] jorian#4555
+i think i just pull dev branch from jl777. must say i haven't looked at mm in a while
+
+[21-Dec-18 08:33 AM] jorian#4555
+i am probably using something old :p
+
+[21-Dec-18 08:39 AM] artem.pikulin#0794
+@jorian Please ensure that you either use latest `jl777/dev` or `artemii235/master` build, this error indicates that coin has Sapling activated but MM doesn't recognize it. The latest version have hardcoded Sapling support for KMD and all assetchains, if it's outdated "a bit" you might have to explicitly set `"txversion":4` in coins config. But config txversion won't help if you use too old version.
+
+[21-Dec-18 08:41 AM] jorian#4555
+my bad, was on branch jl777
+
+[21-Dec-18 08:43 AM] jorian#4555
+did anyone test this btw?
+
+[21-Dec-18 08:43 AM] jorian#4555
+or is really nobody using barterdex nowadays
+
+[21-Dec-18 08:46 AM] artem.pikulin#0794
+The Sapling support was implemented about 2 months ago and was tested at least by me on ZEC testnet. There are not many users as I can see, but according to https://dexstats.info/ few swaps are happening every day.
+
+[21-Dec-18 10:43 AM] actionslacks#4072
+sent @lukechilds
+
+[21-Dec-18 10:52 AM] lukechilds#2707
+@actionslacks Thanks, do you have any JUMBLR too by any chance?
+
+[21-Dec-18 11:09 AM] actionslacks#4072
+sent @lukechilds
+
+[21-Dec-18 11:16 AM] lukechilds#2707
+!kmdtip @actionslacks 10
+
+[21-Dec-18 11:16 AM] KMD TipBot#0077
+
+{Embed}
+TipBot
+@lukechilds (lukechilds#2707)
+You tipped @actionslacks **10 KMD**
+
+[21-Dec-18 11:17 AM] lukechilds#2707
+Legend, thankyou
+
+[21-Dec-18 11:33 AM] actionslacks#4072
+you sir, are the legend. thanks for the hard work.
+
+[21-Dec-18 11:35 AM] actionslacks#4072
+!kmdtip rain 10
+
+{Reactions}
+🕶 (2) 
+
+[21-Dec-18 11:35 AM] KMD TipBot#0077
+@Martis @smk762 -  dracocanis ominator @ChamoLapik @Exolith @+ ✪ No worries @olaszlo @Pumba @Deltazulu @Mihailo @Aerodynamic @Jules - coinblockers.com @CryptAiz @TomKai(Azkalan) @Thuerlich @vhrss @slipersty @nØx @Astronautas @Angelina @akibebi @bemco @sajala1 @Soaky @naezith @Acura @movedx @andy2761 @Muxa84 @devoo @javadth @Mr.Fisherguz @Bryan_Beus @beybietron @Txid @GlorymanRTS @Proof Of Review @goldenman @fd @alexander @discord-9LhDSask4qpuWa4Syh @Sergiobit82 @jl777c @ranfoltu @matspb @BlockTech @unbelievable_jeff @wkibbler @I_R_Ben @jahras @Flushly @jorian @That_Guy8 @DaytradeJeffrey @V9k @Serg @nille @pclind @crumb @dimxy @DrKush @badscrypto @Lazydayz137 @suburbancaveman @TVDM @jusoaresf @ciumete @Daniil @MissVi @comeon @Septimus @DerLauch @a5 @phideas @bitcoinbean @br @Crizia @The CryptoCoin Man @CMX @Hanz Mark @gcharang @KiwiDudeNZ @CryptoCurrencyAcademy @chrysophylax @Bianca_NL @Hansie @Babsoft @Twitch.KNZN @Carsen @BlackJesus @hyperDEX
+
+[21-Dec-18 11:35 AM] KMD TipBot#0077
+@cHOPE @CryptoRot @NymphiX @coinraiser @Multi21 @elfendor @HashUnlimited @Shaf @SHossain @lelonex @kp @bnorth @damodar @gjash @ted @jon008 @Flexatron @J1m @DenJohn @margarita @Joe @Van @ShadowKnight @Billy Chiam @pvnamk19 @Aywa Developers @Ederwa @FullStackDev @REX @proabiral @Silent Asassin3 @Ⴚᴌ̽̽̽ᴉᴛᴄʜ͓͓͓Xⷯᴘⷵʟøⷯɪᴛ̲̲̲я @DimSh @ahilis @ShillME @Mr. HashEm @hastrup @acven @glx @Andersen @Tan Truong @danisapfirov @JDS @cryptobytes @BonaparteV @kohb @johnyk @cascrypto @dcryptt @Hungry_BullBear @gotzi_ne @Cy_Baer @CryptoWhatElse @Oszy @Lennart @saniales @jansako @MrsRed @Selina @Magnum Wallet @Malti @Roman_P @acp @McSpirit @doomguy @kaks @FabØ @luiski @tropis @Abdelmonem @SadykovT @forkhembo @Guiguijke @TwiddleTwiggs @StrangerHereMyself @CryptoDroid @Locutus @라히키 @Anpol @Cattani @opensourceress @rob @InfoTech92 @dmitryl @EzM Parabolic @helios @sek3 @modereck @AndyW. @whalehitman
+
+[21-Dec-18 11:35 AM] KMD TipBot#0077
+@[TPUX] Djith Wattignies @paia @Patrick / Bitboy @mind @SwimedDragon @burek @Angelos | Coinomi Wallet @JVA @Cristian | Jade @Azza74 @selevanus (Rob) @alitimate @D.rabbani @Grant @Ara @poolisa01 @AΛΛBLΛCK @mGx @SW911 @xsedivy @bitcoinwiser @Bushstar @stevel @비안
+
+[21-Dec-18 11:35 AM] KMD TipBot#0077
+
+{Embed}
+TipBot
+@actionslacks (actionslacks#4072)
+You rained **10 KMD** onto 206 online user(s)
+**(0.04854368 KMD)** each
+
+[21-Dec-18 11:37 AM] Flexatron#8809
+!kmdtip @Decker 0.04854368
+
+[21-Dec-18 11:37 AM] KMD TipBot#0077
+
+{Embed}
+TipBot
+@Flexatron (Flexatron#8809)
+You tipped @Decker **0.04854368 KMD**
+
+[21-Dec-18 12:13 PM] javadth#4536
+@actionslacks thanq bro
+
+[21-Dec-18 02:07 PM] GlorymanRTS#0512
+thanks
+
+[21-Dec-18 02:07 PM] nille#9011
+great
+
+[22-Dec-18 07:15 AM] tropis#3766
+nice
+
+[24-Dec-18 01:53 PM] bartwr#6773
+@Deleted User I see that on November 23th you had the error `fatal error: /usr/local/include/nanomsg/nn.h: No such file or directory` while building/updating the SuperNET repo. What was your solution to this?
+
+Background information: I try to update the SuperNET repo after a pull. I use `cd SuperNET && ./m_unix`. I get the nn.h error above.
+
+[24-Dec-18 01:57 PM] Deleted User#0000
+It was for kmdlabs. As the install is different is was mainly because I did all manually
+
+[24-Dec-18 01:57 PM] bartwr#6773
+Ok. Will update my solution here as soon as I have it. Presumably installing libnanomsg-dev solves it
+
+[24-Dec-18 01:59 PM] Deleted User#0000
+I think there are some howto just for MM, but just in case, here s the howto for nn stuff, at least you ll see dependencies I had installed
+
+[24-Dec-18 02:01 PM] Deleted User#0000
+https://github.com/KomodoPlatform/komodo/wiki/Setup-Komodo-Notary-Node
+
+{Embed}
+https://github.com/KomodoPlatform/komodo/wiki/Setup-Komodo-Notary-Node
+KomodoPlatform/komodo
+Komodo. Contribute to KomodoPlatform/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+{Reactions}
+👍 
+
+[24-Dec-18 02:02 PM] bartwr#6773
+Thanks for your help, dwy.
+
+[24-Dec-18 02:02 PM] bartwr#6773
+_For future reference_ // While updating the SuperNET repo using `./m_unix` I got ` fatal error: /usr/local/include/nanomsg/nn.h: No such file or directory`.
+
+I could solve the error by doing this:
+
+```sudo apt-get update
+sudo apt-get install libnanomsg-dev
+
+$ whereis nanomsg
+nanomsg: /usr/include/nanomsg
+
+$ ls /usr/local/include/nanomsg
+No such file or directory
+
+$ sudo ln -s /usr/include/nanomsg /usr/local/include/
+$ ls /usr/local/include/nanomsg
+> Folder contents. Yay.
+
+$ ./m_unix 
+> Succesful update. Yay.```
+
+[24-Dec-18 02:05 PM] ComputerGenie 👴🏼📢#7004
+https://github.com/artemii235/SuperNET/tree/etomic#tldr
+
+{Embed}
+https://github.com/artemii235/SuperNET/tree/etomic
+artemii235/SuperNET
+Contribute to artemii235/SuperNET development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/15745003?s=400&v=4
+
+[24-Dec-18 02:06 PM] ComputerGenie 👴🏼📢#7004
+'sudo apt-get update; sudo apt-get install git libcurl4-openssl-dev build-essential __libnanomsg-dev__....'
+
+[24-Dec-18 02:07 PM] bartwr#6773
+@ComputerGenie 👴🏼📢 Thanks 😃 `libnanomsg-dev` was installed already; the symlink made it work in the end..
+
+[24-Dec-18 02:08 PM] ComputerGenie 👴🏼📢#7004
+ahhh
+
+[02-Jan-19 02:40 PM] wbradt#2043
+Is there rate limiting on the RPC API?
+
+[02-Jan-19 02:43 PM] ComputerGenie 👴🏼📢#7004
+rpcworkqueue
+

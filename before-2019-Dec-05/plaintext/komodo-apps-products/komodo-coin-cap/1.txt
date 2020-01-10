@@ -1,0 +1,505 @@
+==============================================================
+Guild: Komodo
+Channel: komodo-coin-cap
+Topic: 
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[08-Jul-19 03:32 PM] ca333#0118 (pinned)
+This is the dev channel for the ecosystem dashboard project. The github repo for the core API is hosted at https://github.com/KomodoPlatform/komodo-ecosysboard/ - @Slyris is the dev and implementing this.
+
+The (codename) "ecoboard" project is split into 2 subprojects:
+
+A) the backend layer (above github repo) is a (golang) service that fetches ecosystem project related infos/data from various publicly accessible APIs - this includes blockexplorers [kmdexplorer.io, vrsc.kmdexplorer.io,...], coin market APIs [coinmarketcap, coingecko,...] and other 3rd party APIs. Furthermore this system persists a specific set of data locally (last price, blockchain statistic numbers, etc.) and serves a publicly accessible API so that other 3rd party projects can utilize it. The backend  can also request realtime data from external APIs like current blockchain stats by forwarding a request to external endpoints. 
+
+B) the frontend layer is a mobile ready (responsive) website based on dashboard templates. This website interacts with the backend layer from A) - e.g. users can view data (get) or send specific requests (post) like blockexplorer queries.
+
+[08-Jul-19 03:32 PM] ca333#0118
+Pinned a message.
+
+[08-Jul-19 03:34 PM] ca333#0118 (pinned)
+@Slyris - these should be all coins we want to gather infos from: 
+https://github.com/KomodoPlatform/komodo/blob/master/src/assetchains.old
+
+[08-Jul-19 03:36 PM] Slyris#2880
+Thank you, I will finish setup golang server this evening, prepare the logger and finally began the router of the API in the backend.
+
+{Reactions}
+✅ 
+
+[08-Jul-19 03:45 PM] ca333#0118 (pinned)
+external APIs we fetch the data from:
+
+**blockexplorer data sources:** 
+`*.kmdexplorer.io` where `*` is replaced with the ticker symbol of the chain. e.g. https://vrsc.kmdexplorer.io/ or https://pirate.kmdexplorer.io/ and 
+`*.explorer.dexstats.info` resulting in https://k64.explorer.dexstats.info/ etc. - some chains aren't available on kmdexplorer.io but on the latter. 
+
+
+**market stats (prices,...):**
+https://www.coingecko.com/en/api
+https://www.coinmarketcap.com
+
+[08-Jul-19 03:46 PM] ca333#0118
+Pinned a message.
+
+[08-Jul-19 03:46 PM] ca333#0118
+Pinned a message.
+
+[08-Jul-19 06:00 PM] Slyris#2880
+@ca333 "Furthermore this system persists a specific set of data locally (last price, blockchain statistic numbers, etc.)"
+
+This means that we have to use a cache redis or a database ?
+
+[08-Jul-19 06:01 PM] ca333#0118
+yes - i think something like redis or mongo is enough for our purpose @Slyris
+
+[08-Jul-19 06:02 PM] Slyris#2880
+ok, coinmarket api is not free, do you have an api key ?
+
+[08-Jul-19 06:02 PM] Slyris#2880
+(since is not a personnal use)
+
+[08-Jul-19 06:02 PM] ca333#0118
+i see - in this case use only coingecko for now
+
+[08-Jul-19 06:02 PM] Slyris#2880
+ok
+
+[08-Jul-19 06:03 PM] Slyris#2880
+for the kmdexplorer and dexstats, do we have a documentation for those api ?
+
+[08-Jul-19 06:14 PM] ca333#0118
+they are both based on `insight` explorer and their API is pretty straight forward: https://gist.github.com/jackzampolin/da3201b89d23dd5fa3becb0185da1fb2 
+
+both API endpoits serve under `insight-api-komodo` in our case. 
+e.g. `http://kmd.explorer.dexstats.info/insight-api-komodo/addr/RSp8vhyL6hN3yqn5V1qje62pBgBE9fv3Eh`
+
+[08-Jul-19 06:18 PM] ca333#0118
+we will fetch a specific set of general blockchain infos of all chains into the persistence layer: current blockchain height, blockhash, and so on. 
+And more specific infos like the example api url from above are the user-specific requests (not for the persistence layer). So our ecosysboard backend will just forward this requests to the explorer APIs.
+
+[08-Jul-19 06:18 PM] Slyris#2880
+ok i was looking for something like a ping
+
+[08-Jul-19 06:18 PM] Slyris#2880
+Ok no problem !
+
+{Reactions}
+👍 
+
+[08-Jul-19 07:28 PM] Slyris#2880
+@ca333 I added you on the pull request, a basic http router and a ping request on the coingecko api for you to get an idea of ​​the architecture of the program.
+
+The coverage decrease, but this is not a problem, some part are just not testable since we use external apis
+
+{Reactions}
+👍🏼 
+
+[09-Jul-19 12:04 PM] Audo#5667
+great @Slyris & @ca333 !
+
+Here are few template options. We can use any other template too if these are not suitable.
+
+ - 5 templetes already paid & downloaded: https://drive.google.com/drive/folders/1dJ4I_TiXgM4I-SSeEjOXWlJBCIuXO9GP?usp=sharing
+ - a template Mylo had found earlier: https://coreui.io/demo/dark/#main.html
+
+{Embed}
+https://coreui.io/demo/dark/
+CoreUI Pro Bootstrap Admin Template
+CoreUI - Open Source Bootstrap Admin Template
+
+[09-Jul-19 03:52 PM] Slyris#2880
+Hi, the `coingecko` API is clearly according to the documentation no complete at all and only works with ethereum for most of the requests, so I started with the insight  apis of komodo, i will push my first request of `kmd dexstats explorer`
+
+For now I have no cache management, we will see how we want to manage our cache, on which elements in particular.
+
+@ca333
+
+{Reactions}
+👍 
+
+[09-Jul-19 04:09 PM] Slyris#2880
+@ca333  added you to the review
+
+{Reactions}
+✅ 
+
+[09-Jul-19 04:21 PM] Audo#5667
+with quick search I found also this: https://rapidapi.com/collection/coinmarketcap-api-alternatives
+
+that might cost somethign too
+
+How much do the paid API's cost? Like coinmarketcap API. If it's not anything too crazy we could consider paying for it.
+
+{Embed}
+https://rapidapi.com/collection/coinmarketcap-api-alternatives
+13 CoinMarketCap Alternative APIs (like: ICOWatchList) | RapidAPI
+Browse 13+ CoinMarketCap Alternative APIs available on RapidAPI.com. Top CoinMarketCap Alternative APIs include ICOWatchList, Cryptocurrency Real Time News, ICOs and more. Sign Up today for Free!
+
+[09-Jul-19 04:22 PM] Slyris#2880
+What about coincodex api ?
+
+[09-Jul-19 04:22 PM] Slyris#2880
+I dont know the price for the coinmarketcap api, but i can look
+
+[09-Jul-19 04:22 PM] Slyris#2880
+https://coinmarketcap.com/api/pricing/
+
+{Embed}
+https://coinmarketcap.com/api/pricing/
+Most Trusted Cryptocurrency Market Data API | CoinMarketCap
+Use CoinMarketCap's free crypto API to get the best, most accurate real-time, historical cryptocurrency and exchange trade data for Bitcoin, Ethereum and more
+https://pro.coinmarketcap.com/public/media/img/logo-square.png
+
+[09-Jul-19 04:23 PM] Slyris#2880
+is komodo considered as a startup lol
+
+[09-Jul-19 04:24 PM] Audo#5667
+I think so, we are also non-profit & open source project
+
+[09-Jul-19 04:24 PM] Slyris#2880
+10K call credits /mo
+ is enough ?
+
+[09-Jul-19 04:24 PM] Audo#5667
+coincodex API... sure if you think it's good!
+
+[09-Jul-19 04:25 PM] Slyris#2880
+I think coincodex api is poor, but free. and for coinmarket cap we can be limited
+
+[09-Jul-19 04:25 PM] Audo#5667
+should be, yes. What does that cost? But if we achieve the same with coincodex then we can opt-in to use that
+
+[09-Jul-19 04:25 PM] Slyris#2880
+So maybe we should just try, and look if it's fit
+
+[09-Jul-19 04:25 PM] Audo#5667
+ok
+
+[09-Jul-19 04:25 PM] Slyris#2880
+Maybe the marketing can drop a mail to coinmarketcap and ask them if we are eligibile for free usage
+
+[09-Jul-19 04:25 PM] Slyris#2880
+So we are fixed
+
+[09-Jul-19 04:27 PM] Audo#5667
+ok, I'll do that
+
+[09-Jul-19 04:29 PM] Slyris#2880
+@ca333 I will chill one hour, i think if the review is done i will receive an email, so i will continue on the Dexstats explorer api
+
+{Reactions}
+👍 
+
+[09-Jul-19 05:08 PM] ca333#0118
+thanks - reviewed @Slyris
+
+[09-Jul-19 05:42 PM] Slyris#2880
+@ca333 pushed 2 new call to the dexstats api, added you to the review
+
+[09-Jul-19 05:42 PM] Slyris#2880
+I will take a shower, brb in 15-30 min
+
+[09-Jul-19 06:28 PM] Slyris#2880
+@ca333 apparently the ci refuse my unit tests with error: `connect: connection refused`, may be i have to setup something in the yaml to solve this problem but i dont understand '_'
+
+[09-Jul-19 06:28 PM] Slyris#2880
+unit tests pass on my computer
+
+[09-Jul-19 06:29 PM] Slyris#2880
+@ca333 If you can get the project, and tell me if the units tests pass for you it's cool
+
+[09-Jul-19 06:29 PM] Slyris#2880
+That way I would know if the problem comes from travis
+
+[09-Jul-19 07:21 PM] Slyris#2880
+i'm about switching to appveyor actually, i dont find the solution '_'
+
+[09-Jul-19 07:21 PM] Audo#5667
+Hey guys,
+
+The rebranded website also has few stat boxes. IBN is asking if we will have these data points ready for the launch (this week). If not, then they will be scoped out from the rebrand release.
+
+- Last Github Commit (would have to check the details, I think it's supposed to say something like "Last commit by ca333 made 39 minutes ago"
+- Total Github Commits (we would have to add commits from multiple repos together)
+- Most Commits Placed (who has made the last commits in some given period of time, like 30 days)
+- Atomic Swaps in last 24 hours
+- 24 Hour swap volume
+- Number of Liquid KMD pairs (KMD pairs above some arbitrary treshold trading volume value)
+
+> these data points are supposed to be on the site. the best way to do this is to provide us with an API endpoint that gives us all of this data at once in one call. could you work with someone on this on your end before end of week? otherwise we will need to descope it for the launch
+
+Just let me know if we can finish any of these, if not, no problem. IBN just needs to know if they should plan it in the first version or into a post rebrand version.
+
+[09-Jul-19 08:34 PM] ca333#0118
+Hi @Audo - the github stats can be fetched from the github API. We have not included this into the current backend, but can add this in the future.
+
+The atomic swap count is not tracked right now and i am not sure if its technically possible to track the global swap count. We will figure this out.
+
+[09-Jul-19 08:36 PM] ca333#0118
+We can check the orderbook of the main netid in order to show liquid pairs - however, there could be much more ("invisible") orders up.
+
+[09-Jul-19 09:02 PM] Slyris#2880
+@ca333 Unit tests are passing, the problem was relating to : https://stackoverflow.com/questions/37706297/travis-ci-failing-when-trying-to-test-golang-http-server
+
+{Embed}
+https://stackoverflow.com/questions/37706297/travis-ci-failing-when-trying-to-test-golang-http-server
+Travis CI failing when trying to test Golang HTTP Server
+I'm very new to travis and Go. I have a test for a https server and it runs fine with I run go test -v ./... on my local machine but it will fail most of the time on Travis due to a getsocketopt:
+https://cdn.sstatic.net/Sites/stackoverflow/img/apple-touch-icon@2.png?v=73d79a89bded
+
+[09-Jul-19 09:03 PM] Slyris#2880
+so i had to add a wait after launching the server to synchronize
+
+{Reactions}
+👍 
+
+[09-Jul-19 09:03 PM] Slyris#2880
+(in the unit tests)
+
+[09-Jul-19 09:06 PM] Slyris#2880
+I changed the unit tests for the dexstats part, now I use a suite, I have a better control over the running order of the tests
+
+[09-Jul-19 09:07 PM] Slyris#2880
+There is some C code to generate a random port to in the addition
+
+[10-Jul-19 12:14 AM] ca333#0118
+great - yes, test flow/order can be as important as the actual test.
+
+[10-Jul-19 09:32 AM] Audo#5667
+Once you guys take a closer look at the templates we could see if we can also showcase our roadmap on the dashboard.
+
+I was looking at several dashboard templates yesterday and thinking about it. We could simply use 'cards' that have some heading, graphic, and a sentence description about the technology (such as  AtomicAPI), and then it has a link to a more detailed post about this specific thing.
+
+Steve has a subscription here: https://elements.envato.com/
+
+We can download anything from there for free
+
+{Embed}
+https://elements.envato.com/
+Download Stock Photos, Fonts & Templates with Envato Elements
+Browse through thousands of stock photos, fonts and web templates. With unlimited downloads of all of our items, your project will be perfect in no time.
+http://elements-assets.envato.com/static/og-default.jpg
+
+[10-Jul-19 10:57 AM] Slyris#2880
+I love this one : https://coreui.io/demo/dark/#main.html
+
+{Embed}
+https://coreui.io/demo/dark/
+CoreUI Pro Bootstrap Admin Template
+CoreUI - Open Source Bootstrap Admin Template
+
+[10-Jul-19 01:39 PM] Audo#5667
+FYI here's another potential site for market APIs: https://coinpaprika.com/
+
+[10-Jul-19 03:56 PM] Slyris#2880
+@ca333 Added you to a short review
+
+[10-Jul-19 03:57 PM] Slyris#2880
+transactions by block and address from dexstat are done
+
+{Reactions}
+✅ 
+
+[10-Jul-19 03:58 PM] ca333#0118
+will review as soon as all checks complete
+
+[10-Jul-19 03:58 PM] Slyris#2880
+Ok, should i implement: https://gist.github.com/jackzampolin/da3201b89d23dd5fa3becb0185da1fb2#current-exchange-prices
+
+{Embed}
+https://gist.github.com/jackzampolin/da3201b89d23dd5fa3becb0185da1fb2
+Insight API Queries for Explorer
+Insight API Queries for Explorer. GitHub Gist: instantly share code, notes, and snippets.
+https://avatars0.githubusercontent.com/u/7452680?s=400&v=4
+
+[10-Jul-19 03:58 PM] Slyris#2880
+?
+
+[10-Jul-19 03:58 PM] Slyris#2880
+"This endpoint is undocumented in the Insight API Docs"
+
+[10-Jul-19 04:06 PM] Slyris#2880
+all test passed @ca333  😄
+
+{Reactions}
+👍 
+
+[10-Jul-19 04:53 PM] Mylo#8306
+@Slyris what front end framework are you using?   yeah coreui is good.
+
+[10-Jul-19 04:53 PM] Slyris#2880
+i'm not using any frontend right now
+
+[10-Jul-19 04:54 PM] Slyris#2880
+i'm write the back-end actually, i can serve any frontend framework once is build (angular, vue, dartangular) etc...
+
+[10-Jul-19 04:54 PM] Mylo#8306
+understood.   ok.  thanks for clarification.
+
+[10-Jul-19 04:54 PM] ca333#0118
+prices endpoint is handy @Slyris
+
+[10-Jul-19 04:54 PM] Slyris#2880
+Yes but not documented ?
+
+[10-Jul-19 04:55 PM] Slyris#2880
+i mean i will implement it, but i have no idea of what is the behavior of this request
+
+[10-Jul-19 04:58 PM] Mylo#8306
+if useful:
+binance: https://api.binance.com/api/v3/ticker/price?symbol=KMDBTC
+hitbtc: https://api.hitbtc.com/api/2/public/ticker/ETHBTC
+bittrex: https://api.bittrex.com/api/v1.1/public/getticker?market=BTC-KMD
+
+[10-Jul-19 05:01 PM] Slyris#2880
+for the moment i will get the currency exchange price from the dexstat api, or you want me to get it from directly from binance,hitbtc,bittrex etc ?
+
+[10-Jul-19 05:14 PM] Slyris#2880
+https://gist.github.com/jackzampolin/da3201b89d23dd5fa3becb0185da1fb2#get-node-sync-staus 
+
+
+^
+
+typo, it's status alright ?
+
+{Embed}
+https://gist.github.com/jackzampolin/da3201b89d23dd5fa3becb0185da1fb2
+Insight API Queries for Explorer
+Insight API Queries for Explorer. GitHub Gist: instantly share code, notes, and snippets.
+https://avatars0.githubusercontent.com/u/7452680?s=400&v=4
+
+[10-Jul-19 05:24 PM] Slyris#2880
+I finished all the `get` requests from the `dexstats` API except one. Are post requests necessary for `ecosysboard` ?
+
+[10-Jul-19 05:27 PM] Mylo#8306
+stick to original spec, dexstat is best atm.
+
+[10-Jul-19 05:27 PM] Mylo#8306
+sorry for interference/confusion 😃
+
+[10-Jul-19 05:27 PM] Slyris#2880
+List of implemented get request with endpoint:
+
+```go
+r.GET("/api/v1/coingecko/ping", PingCoingecko)
+    r.GET("/api/v1/dexstats/:coin/addr/:addrstr", AddressDetailsDexstats)
+    r.GET("/api/v1/dexstats/:coin/tx/:txid", GetTransactionDetailsDexstats)
+    r.GET("/api/v1/dexstats/:coin/addrs/:address/utxo", UTXODetailsDexstats)
+    r.GET("/api/v1/dexstats/:coin/txsblock/:hash", TransactionByBlockDexstats)
+    r.GET("/api/v1/dexstats/:coin/txsaddress/:address", TransactionByAddressDexstats)
+    r.GET("/api/v1/dexstats/:coin/block/:hash", BlockDetailsDexstats)
+    r.GET("/api/v1/dexstats/:coin/block-index/:blockheight", BlockHashFromHeightDexstats)
+    r.GET("/api/v1/dexstats/:coin/status/:query", DiagnosticInfoFromNodeDexstats)
+    r.GET("/api/v1/dexstats/:coin/sync", NodeSyncStatusDexstats)
+    r.GET("/api/v1/dexstats/:coin/peer", NodePeerStatusDexstats)
+```
+
+{Reactions}
+👍 
+
+[10-Jul-19 05:32 PM] Slyris#2880
+coinpaprika seem's cool @Audo thank's
+
+{Reactions}
+👍 
+
+[10-Jul-19 06:37 PM] Audo#5667
+Cipi mentioned it today ;D
+
+[10-Jul-19 09:53 PM] ca333#0118
+`typo, it's status alright ?` - yes - typo
+`for the moment i will get the currency exchange price from the dexstat api, or you want me to get it from directly from binance,hitbtc,bittrex etc ?` - it would be very handy if we could fetch the prices from wherever they are available - dexstats, coingecko,... - but if the current solution is fully functional we can stick to one API (dexstats) for now and add others later. Would be also good to figure out if dexstats itself uses coingecko or other 3rd party APIs ( @Mylo can you check with CHMEX please?)
+`Are post requests necessary for ecosysboard ?` - yes, we actually wanted to add a search field to ecosysboard frontend like in https://www.kmdexplorer.io/ - users could post address, blockhash, txhash or height as input and `ecosysboard` checks if a matching record was found in insight and redirects the user to the corresponding url.
+
+{Reactions}
+👍 (2) 
+
+[11-Jul-19 04:15 AM] Slyris#2880
+Ok I will add the post request and the redirection today with dexstats once we have a fully dexstats functional ready ecosysboard backend, we can start playing with the front-end and add other APIs step by step
+
+[11-Jul-19 05:46 PM] Slyris#2880
+@ca333 Hello !
+
+[11-Jul-19 05:49 PM] Slyris#2880
+When you do a search on https://kmdexplorer.io is behind you make a request block, if it is not a block I test if it is a transaction, if it is not a transaction I test if it's an address? Or do you have some kind of parser that automatically detects it's an address, a block or a transaction, if so I guess this parsing is accessible somewhere?
+
+{Embed}
+https://kmdexplorer.io
+Komodo Explorer
+Komodo Insight. View detailed information on all komodo transactions and block. {{ $root.title + $root.titleDetail }}
+
+[11-Jul-19 10:18 PM] ca333#0118
+`you make a request block, if it is not a block I test if it is a transaction, if it is not a transaction I test if it's an address?` - lets only forward the request to the AP IF the user-input is pre-validated and filtered as best as we can to prevent explorer API spam:
+If its a decimal number <= current blockheight its a block.
+If its a 27 - 34 chars long base58 encoded string (prefix byte `60`dec / `3C`hex resulting in all KMD addresses starting with `R`) we know its an address (komodod has a `validateaddress`
+ call but you can also use any base58 lib to validate the userinput). And if its a 32 byte long HEX its likely a TX ID or blockhash - check for TX hash first since endusers are more likely going to look for TXs.
+
+[12-Jul-19 08:22 AM] Slyris#2880
+As the komodo is not the only currency to manage, the other addresses do not parse in the same way? I planned to make a register that associates a regex to a currency, so we would have the same function regardless of the currency
+
+[12-Jul-19 08:24 AM] Slyris#2880
+is all assets that's in : https://github.com/KomodoPlatform/komodo/blob/master/src/assetchains.old are Komodo address ?
+
+{Embed}
+https://github.com/KomodoPlatform/komodo/blob/master/src/assetchains.old
+KomodoPlatform/komodo
+Komodo. Contribute to KomodoPlatform/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[12-Jul-19 08:25 AM] Mylo#8306
+Yes all are kmd address in assetchains.old
+
+[12-Jul-19 08:25 AM] Slyris#2880
+Ah, great, i only need one regex
+
+[12-Jul-19 08:25 AM] Slyris#2880
+Cool
+
+[12-Jul-19 08:25 AM] Slyris#2880
+Thank's for the information
+
+[12-Jul-19 08:25 AM] Mylo#8306
+Prices from dexstats:
+
+Some I get from cmc some from cryptocompare and some from mm1 ( dead now)
+
+[12-Jul-19 08:25 AM] Slyris#2880
+So we assume that in the ecosysboard, we will only search Komodo related blockchain and currency ?
+
+[12-Jul-19 08:27 AM] ca333#0118
+yes @Slyris
+
+[12-Jul-19 08:27 AM] Slyris#2880
+Great, i'm writting some helpers now and i will push after
+
+{Reactions}
+👍🏼 
+
+[12-Jul-19 08:27 AM] Slyris#2880
+I think today we can fetch the price from coinpaprika and do some posts request
+
+{Reactions}
+👍🏼 
+
+[12-Jul-19 08:31 AM] Slyris#2880
+@ca333  are you agree with :
+
+```
+^[R][a-km-zA-HJ-NP-Z1-9]{27,34}$
+```
+
+For komodo address ?
+
+[12-Jul-19 08:34 AM] ca333#0118
+`^[R][a-km-zA-HJ-NP-Z1-9]{27,34}$`
+
+[12-Jul-19 08:35 AM] Slyris#2880
+I tested it on: https://regex101.com
+
+{Embed}
+https://regex101.com
+Regex101 - online regex editor and debugger
+Regex101 allows you to create, debug, test and have your expressions explained for PHP, PCRE, Python, Golang and JavaScript. The website also features a community where you can share useful expressions.
+

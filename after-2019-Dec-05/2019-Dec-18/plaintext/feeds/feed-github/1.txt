@@ -1,0 +1,612 @@
+==============================================================
+Guild: Komodo
+Channel: feed-github
+Topic: Auto feed for all activities in GitHub. New notification as they happen in real-time.
+After: 17-Dec-19 12:00 AM
+Before: 18-Dec-19 12:00 AM
+==============================================================
+
+[17-Dec-19 01:52 AM] GitHub#0000
+
+{Embed}
+smk762
+https://github.com/dimxy/komodo
+[dimxy/komodo] New star added
+
+[17-Dec-19 06:39 AM] GitHub#0000
+
+{Embed}
+dimxy
+https://github.com/dimxy/komodo/compare/fc6a2889c42e...bc46ee90268c
+[komodo:prices\-gold\-feed\-rebased] 2 new commits
+[`f4a8d3b`](https://github.com/dimxy/komodo/commit/f4a8d3b60711bdbcb931031024470178c1c620d2) improved var name - dimxy
+[`bc46ee9`](https://github.com/dimxy/komodo/commit/bc46ee90268cdd7db3d44a84048a61f5ea67b109) removed DAYWINDOW test value - dimxy
+
+[17-Dec-19 06:40 AM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] macOS\-latest CI success on prices\-gold\-feed\-rebased
+
+[17-Dec-19 07:00 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/373#issuecomment-566409710
+[KomodoPlatform/atomicDEX-API] New comment on issue #373: p2p for ordermatching, plans
+I've been thinking about and I guess there's a potential problem with 3rd party DHT implementation usage:
+How may we prevent malicious nodes from filling the DHT `price vector` with completely invalid values? Even when we have reputation system MM2 nodes will know that specific pubkey is banned, but how the DHT network will know that this pubkey is banned and must not have ability to place orders at all? Is this real that such pubkey(s) will be constantly filling the price vector with invali...
+
+[17-Dec-19 07:22 AM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/KomodoPlatform/atomicDEX-API/issues/373#issuecomment-566416283
+[KomodoPlatform/atomicDEX-API] New comment on issue #373: p2p for ordermatching, plans
+packets need to be signed
+pubkeys with no history only used as last resort, available coin balance can be checked
+the DHT could be filled with invalid data, but the mm2 doesnt have to query it, does it?
+
+the price vector i imagine is pubkey, prices[], signature, timestamp, bestknown price
+
+maybe a few more fields, but probably oriented toward pubkey. so other nodes can find out this pubkey has a pricevector of [...]. then the issue is which pubkeys do we care about, but that would be ba...
+
+[17-Dec-19 07:46 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/373#issuecomment-566423892
+[KomodoPlatform/atomicDEX-API] New comment on issue #373: p2p for ordermatching, plans
+`the price vector i imagine is pubkey, prices[], signature, timestamp, bestknown price` - didn't we come to conclusion that to save space due to very limited DHT chunk size we should omit everything except price itself and short order identification information for further lookup?
+So it's first something like `[price, id]`, and only then we look for order info by this id?
+According to the [Artem's comment](https://github.com/KomodoPlatform/atomicDEX-API/issues/373#issuecomment-565936892):
+...
+
+[17-Dec-19 07:48 AM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] Win Build success on prices\-gold\-feed\-rebased
+
+[17-Dec-19 07:53 AM] GitHub#0000
+
+{Embed}
+ArtemGr
+https://github.com/KomodoPlatform/atomicDEX-API/issues/373#issuecomment-566425793
+[KomodoPlatform/atomicDEX-API] New comment on issue #373: p2p for ordermatching, plans
+> I've been thinking about and I guess there's a potential problem with 3rd party DHT implementation usage
+> How may we prevent malicious nodes from filling the DHT price vector with completely invalid values?
+
+there is no theoretical difference whatsoever between a 3rd party implementation and ad-hoc implementation in terms of tampering, same attack vectors can be used on both. in practical terms an ad-hoc implementation is more likely to have flaws and shortcuts that can be used against ...
+
+[17-Dec-19 07:58 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/373#issuecomment-566427542
+[KomodoPlatform/atomicDEX-API] New comment on issue #373: p2p for ordermatching, plans
+> ad-hoc implementation is more likely to have flaws and shortcuts that can be used against it as compared to a public network that survived for a dozen years in a hostile environment.
+I'm not talking about attack on DHT itself, I'm talking about DHT doesn't know anything about our specific rules and just can't follow them by design. How will the DHT know that it must not accept the order from malicious pubkey? This pubkey won't look malicious for DHT so DHT will accept it, but it might broa...
+
+[17-Dec-19 08:05 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/373#issuecomment-566429602
+[KomodoPlatform/atomicDEX-API] New comment on issue #373: p2p for ordermatching, plans
+> there can be no conclusions in this discussions, it is not a proper media for designing complex protocols. conclusion = working implementation. conclusion = implementation that survives evolutionary process and test of time. here we are sharing priorities, ideas and concerns
+
+Ok, we came to `idea` that we might store just price and short id in price vector but then we're coming back that it should possibly contain the signature and pubkey which makes order vector item size over 100 bytes ...
+
+[17-Dec-19 08:13 AM] GitHub#0000
+
+{Embed}
+ArtemGr
+https://github.com/KomodoPlatform/atomicDEX-API/issues/373#issuecomment-566432591
+[KomodoPlatform/atomicDEX-API] New comment on issue #373: p2p for ordermatching, plans
+> DHT doesn't know anything about our specific rules
+
+most of the time you don't need to change a hashmap implementation to add rules to it. you can use a wrapper class instead
+
+and if you need to change a hashmap, you might be better of changing an existing one instead of reinventing the wheel
+
+but that's just words. if you have a good from-scratch implementation then by all means, let's use it. if you have an idea for it, I'd like you to share it
+
+> Ok, we came to idea that we might...
+
+[17-Dec-19 08:26 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/373#issuecomment-566436509
+[KomodoPlatform/atomicDEX-API] New comment on issue #373: p2p for ordermatching, plans
+> if you have an idea for it, I'd like you to share it
+
+Idea:
+
+1. There're `relayers` nodes on the network. Any node can actually be a relayer.
+1. Relayers announce themselves maybe via DHT also announcing list of coins that they support.
+1. Other nodes start, activate some coins, whenever node need to broadcast an order or receive the orderbook it chooses the relayer(s) that support both coins of a pair. Communication is made via HTTP fallback.
+1. As relayers must have selected coins ...
+
+[17-Dec-19 08:28 AM] GitHub#0000
+
+{Embed}
+ArtemGr
+https://github.com/KomodoPlatform/atomicDEX-API/issues/373#issuecomment-566436977
+[KomodoPlatform/atomicDEX-API] New comment on issue #373: p2p for ordermatching, plans
+and how this solves the tampering problem?
+
+[17-Dec-19 08:34 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/373#issuecomment-566439181
+[KomodoPlatform/atomicDEX-API] New comment on issue #373: p2p for ordermatching, plans
+The initial attack idea is about the node that doesn't have any balance at all can fill the orderbook on DHT with whatever information it wants and DHT itself has no mechanism to validate that this data is correct in specific context (e.g. check coins balance).
+
+As relayers must have coins enabled (and it also can be validated by e.g. announcing that relayer at least knows the latest block hash) they can check the balance of order creator right away and prevent the order that can't be ever ...
+
+[17-Dec-19 08:36 AM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] ubuntu\-18\.04 CI success on prices\-gold\-feed\-rebased
+
+[17-Dec-19 08:36 AM] GitHub#0000
+
+{Embed}
+https://github.com/dimxy/komodo/commit/bc46ee90268cdd7db3d44a84048a61f5ea67b109
+[komodo] GitHub Actions checks success on prices\-gold\-feed\-rebased
+
+[17-Dec-19 08:39 AM] GitHub#0000
+
+{Embed}
+ArtemGr
+https://github.com/KomodoPlatform/atomicDEX-API/issues/373#issuecomment-566440524
+[KomodoPlatform/atomicDEX-API] New comment on issue #373: p2p for ordermatching, plans
+the same attack can be performed by a malicious relay/caretaker, no?
+but yeah, in a smaller open port network is might be easier to implement or reuse the consensus/mitigation protocols
+
+[17-Dec-19 08:42 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/373#issuecomment-566441783
+[KomodoPlatform/atomicDEX-API] New comment on issue #373: p2p for ordermatching, plans
+> the same attack can be performed by a malicious relay/caretaker, no? 
+
+yes, in this case your local can stop using the bad relayer upon receiving invalid data from it. We should have quite a lot of relayers (especially for popular coin pairs) for this case which is possible. Such relayers can be maintained by our team.
+
+[17-Dec-19 08:51 AM] GitHub#0000
+
+{Embed}
+ArtemGr
+https://github.com/KomodoPlatform/atomicDEX-API/issues/373#issuecomment-566444940
+[KomodoPlatform/atomicDEX-API] New comment on issue #373: p2p for ordermatching, plans
+maintaining relays/caretakers by the team doesn't sound very decentralized to me. the network should ideally elect such caretakers on its own. it should keep working if all our servers are down.
+
+anyhow, i like the idea that we can sidestep webrtc by having clients access the caretaker nodes via http, it's not a mobile p2p network I was initially aiming for, but as a temporary solution it allows us to cover the various platforms (nodejs, webview, broswer, native) faster, and it might be wis...
+
+[17-Dec-19 09:13 AM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/KomodoPlatform/atomicDEX-API/issues/373#issuecomment-566452703
+[KomodoPlatform/atomicDEX-API] New comment on issue #373: p2p for ordermatching, plans
+maybe view the caretaker nodes as a caching layer, so it just provides info quickly, but in its absence slower means can obtain the same data.
+
+this way, it wont matter so much if the caretaker nodes are team nodes as it is only serving a caching function. of course, having this layer being full p2p is a good eventual goal to have, but probably can be the last thing that is fully decentralized as without the reputation system in place, it seems very problematic to avoid spam
+
+[17-Dec-19 09:56 AM] GitHub#0000
+
+{Embed}
+artemii235
+https://github.com/KomodoPlatform/atomicDEX-API/issues/373#issuecomment-566468981
+[KomodoPlatform/atomicDEX-API] New comment on issue #373: p2p for ordermatching, plans
+> maintaining relays/caretakers by the team doesn't sound very decentralized to me.
+
+I think I put it a bit wrong. I meant that it will be good that the team will maintain `some` nodes that can be considered as good ones. The idea is GUI developers teams, coin communities etc. will support their caretakers at least for pairs they are interested of and it will be quite decentralized already. The entire caretaker setup can be simple:
+1. Install/build MM2.
+1. Set something like `can_be_relay...
+
+[17-Dec-19 10:12 AM] GitHub#0000
+
+{Embed}
+ArtemGr
+https://github.com/KomodoPlatform/atomicDEX-API/issues/373#issuecomment-566475100
+[KomodoPlatform/atomicDEX-API] New comment on issue #373: p2p for ordermatching, plans
+so many options  D
+that's lovely. i'll ping you when we're closer to actually playing with this
+
+[17-Dec-19 12:55 PM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/compare/16be0478a59f...2b5abd013df3
+[komodo:jl777] 13 new commits
+[`9d1af22`](https://github.com/jl777/komodo/commit/9d1af22230c33feb2cba18d2bcf18681d13cbf8a) update libgmp fetch URL - ca333
+[`629692e`](https://github.com/jl777/komodo/commit/629692e375ffc0dacde41d5158f020bbf61afbe2) update libsnark fetch URL - ca333
+[`3e7cb8a`](https://github.com/jl777/komodo/commit/3e7cb8ad5e1cb178caab4c2cc762c6a9d83eaf37) Merge pull request #1772 from KomodoPlatform/dev - jl777
+[`336cb6d`](https://github.com/jl777/komodo/commit/336cb6da720641e9b99909f578e63e0e24b29c22) Merge branch 'dev' into FSM - jl777
+[`532b034`](https://github.com/jl777/komodo/commit/532b034e5ca02412f21c7847e7de308536a8739d) Refactor of gateway and importgateway (#44) - Mixa84
+
+[17-Dec-19 12:55 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] macOS\-latest CI success on jl777
+
+[17-Dec-19 01:55 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] Win Build success on jl777
+
+[17-Dec-19 02:17 PM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/commit/aed369eb8a20b734c3acdb5e692a355db170be44
+[komodo:jl777] 1 new commit
+[`aed369e`](https://github.com/jl777/komodo/commit/aed369eb8a20b734c3acdb5e692a355db170be44) adaptivepow=3,4,5,6,7 modes - jl777
+
+[17-Dec-19 02:17 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] macOS\-latest CI success on jl777
+
+[17-Dec-19 02:17 PM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/pull/1780
+[jl777/komodo] Pull request opened: #1780 Jl777
+Enable choosing min window size
+3 -> 1, 4 -> 2, 5 -> 3, 6 -> 6, 7 -> 12
+
+[17-Dec-19 02:18 PM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/pull/1780
+[jl777/komodo] Pull request closed: #1780 Jl777
+
+[17-Dec-19 02:18 PM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/compare/daa103484a17...255fc959b9f1
+[komodo:FSM] 6 new commits
+[`e209125`](https://github.com/jl777/komodo/commit/e209125235d7263357e3a8d774388e907bc7cf5f) Merge branch 'FSM' into jl777 - jl777
+[`3e2a397`](https://github.com/jl777/komodo/commit/3e2a3978fccd0268a8d5a4ffe419c1517b9f88f5) Merge branch 'FSM' into jl777 - jl777
+[`16be047`](https://github.com/jl777/komodo/commit/16be0478a59f283ae5affd314ff8640733879b5a) Merge branch 'FSM' into jl777 - jl777
+[`2b5abd0`](https://github.com/jl777/komodo/commit/2b5abd013df3c1970b78b599ad171690731ae7e9) Merge branch 'FSM' into jl777 - jl777
+[`aed369e`](https://github.com/jl777/komodo/commit/aed369eb8a20b734c3acdb5e692a355db170be44) adaptivepow=3,4,5,6,7 modes - jl777
+
+[17-Dec-19 02:18 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] macOS\-latest CI success on jl777
+
+[17-Dec-19 02:18 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] macOS\-latest CI success on FSM
+
+[17-Dec-19 02:32 PM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/commit/eb8a5a75281a5f14ce8e612a6ed37c9b66532b0e
+[komodo:jl777] 1 new commit
+[`eb8a5a7`](https://github.com/jl777/komodo/commit/eb8a5a75281a5f14ce8e612a6ed37c9b66532b0e) Fix polarity - jl777
+
+[17-Dec-19 02:32 PM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/pull/1781
+[jl777/komodo] Pull request opened: #1781 Fix polarity
+
+[17-Dec-19 02:32 PM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/pull/1781
+[jl777/komodo] Pull request closed: #1781 Fix polarity
+
+[17-Dec-19 02:32 PM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/jl777/komodo/compare/255fc959b9f1...c077b4a1b074
+[komodo:FSM] 2 new commits
+[`eb8a5a7`](https://github.com/jl777/komodo/commit/eb8a5a75281a5f14ce8e612a6ed37c9b66532b0e) Fix polarity - jl777
+[`c077b4a`](https://github.com/jl777/komodo/commit/c077b4a1b07434154b18791c552d13ed44837603) Merge pull request #1781 from jl777/jl777 - jl777
+
+[17-Dec-19 02:33 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] Win Build failure on jl777
+
+[17-Dec-19 02:33 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] macOS\-latest CI failure on jl777
+
+[17-Dec-19 02:33 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] macOS\-latest CI success on FSM
+
+[17-Dec-19 02:33 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] ubuntu\-18\.04 CI cancelled on jl777
+
+[17-Dec-19 02:33 PM] GitHub#0000
+
+{Embed}
+https://github.com/jl777/komodo/commit/eb8a5a75281a5f14ce8e612a6ed37c9b66532b0e
+[komodo] GitHub Actions checks failure on jl777
+
+[17-Dec-19 02:45 PM] GitHub#0000
+
+{Embed}
+JointDEX
+https://github.com/JointDEX/EasyDEX-GUI
+[KomodoPlatform/EasyDEX-GUI] Fork created: JointDEX/EasyDEX-GUI
+
+[17-Dec-19 02:46 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] ubuntu\-18\.04 CI success on jl777
+
+[17-Dec-19 02:46 PM] GitHub#0000
+
+{Embed}
+https://github.com/jl777/komodo/commit/2b5abd013df3c1970b78b599ad171690731ae7e9
+[komodo] GitHub Actions checks success on jl777
+
+[17-Dec-19 02:56 PM] GitHub#0000
+
+{Embed}
+JointDEX
+https://github.com/JointDEX/atomicDEX-API
+[KomodoPlatform/atomicDEX-API] Fork created: JointDEX/atomicDEX-API
+
+[17-Dec-19 03:19 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] Win Build success on jl777
+
+[17-Dec-19 03:24 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] Win Build success on jl777
+
+[17-Dec-19 03:25 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] Win Build success on FSM
+
+[17-Dec-19 03:32 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] Win Build success on jl777
+
+[17-Dec-19 03:37 PM] GitHub#0000
+
+{Embed}
+jl777
+https://github.com/KomodoPlatform/atomicDEX-API/issues/373#issuecomment-566594844
+[KomodoPlatform/atomicDEX-API] New comment on issue #373: p2p for ordermatching, plans
+i think we can use the DEX chain to solve some of the trickier issues.
+
+by requiring that the caretaker nodes have at least some reasonable amount of DEX, we can then create a stake weighted system for reputation, etc. all the caretaker nodes would need to run DEX and we can use opreturns in the DEX chain to store important data.
+
+this makes spamming the caretakers nodes require a DEX stake, which can always be blocked if a big enough DEX stake blacklists a bad behaving pubkey.
+
+i think...
+
+[17-Dec-19 03:38 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] Win Build success on FSM
+
+[17-Dec-19 03:49 PM] GitHub#0000
+
+{Embed}
+dimxy
+https://github.com/dimxy/komodo/commit/ac1c57bfd3aed76841e9029a6336063bfb0e0f92
+[komodo:marmara\-v1\-1\-valid] 1 new commit
+[`ac1c57b`](https://github.com/dimxy/komodo/commit/ac1c57bfd3aed76841e9029a6336063bfb0e0f92) added pubkey to marmaralock - dimxy
+
+[17-Dec-19 03:49 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] macOS\-latest CI success on marmara\-v1\-1\-valid
+
+[17-Dec-19 04:05 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] ubuntu\-18\.04 CI success on jl777
+
+[17-Dec-19 04:05 PM] GitHub#0000
+
+{Embed}
+https://github.com/jl777/komodo/commit/aed369eb8a20b734c3acdb5e692a355db170be44
+[komodo] GitHub Actions checks success on jl777
+
+[17-Dec-19 04:16 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] ubuntu\-18\.04 CI success on jl777
+
+[17-Dec-19 04:16 PM] GitHub#0000
+
+{Embed}
+https://github.com/jl777/komodo/commit/aed369eb8a20b734c3acdb5e692a355db170be44
+[komodo] GitHub Actions checks success on jl777
+
+[17-Dec-19 04:19 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] ubuntu\-18\.04 CI success on FSM
+
+[17-Dec-19 04:19 PM] GitHub#0000
+
+{Embed}
+https://github.com/jl777/komodo/commit/255fc959b9f15bbb7e4702ff21f716520f07eb78
+[komodo] GitHub Actions checks success on FSM
+
+[17-Dec-19 04:26 PM] GitHub#0000
+
+{Embed}
+tonymorony
+https://github.com/KomodoPlatform/atomicDEX-API/issues/440#issuecomment-566638939
+[KomodoPlatform/atomicDEX-API] New comment on issue #440: OMG \(ERC20\) swaps failing on MakerPaymentSent stage
+Closing as non-actual
+
+[17-Dec-19 04:26 PM] GitHub#0000
+
+{Embed}
+tonymorony
+https://github.com/KomodoPlatform/atomicDEX-API/issues/440
+[KomodoPlatform/atomicDEX-API] Issue closed: #440 OMG \(ERC20\) swaps failing on MakerPaymentSent stage
+
+[17-Dec-19 04:26 PM] GitHub#0000
+
+{Embed}
+tonymorony
+https://github.com/KomodoPlatform/atomicDEX-API/issues/489#issuecomment-566639233
+[KomodoPlatform/atomicDEX-API] New comment on issue #489: ETH\-VRSC swap failed with TakerPaymentWaitForSpendFailed \[funds stuck\]
+Closing as non-actual
+
+[17-Dec-19 04:26 PM] GitHub#0000
+
+{Embed}
+tonymorony
+https://github.com/KomodoPlatform/atomicDEX-API/issues/489
+[KomodoPlatform/atomicDEX-API] Issue closed: #489 ETH\-VRSC swap failed with TakerPaymentWaitForSpendFailed \[funds stuck\]
+
+[17-Dec-19 04:26 PM] GitHub#0000
+
+{Embed}
+tonymorony
+https://github.com/KomodoPlatform/atomicDEX-API/issues/490#issuecomment-566639330
+[KomodoPlatform/atomicDEX-API] New comment on issue #490: KMD\-RFOX swap failed with TakerPaymentWaitForSpendFailed and TakerPaymentRefundFailed \[funds stuck\]
+Closing as non-actual
+
+[17-Dec-19 04:26 PM] GitHub#0000
+
+{Embed}
+tonymorony
+https://github.com/KomodoPlatform/atomicDEX-API/issues/490
+[KomodoPlatform/atomicDEX-API] Issue closed: #490 KMD\-RFOX swap failed with TakerPaymentWaitForSpendFailed and TakerPaymentRefundFailed \[funds stuck\]
+
+[17-Dec-19 04:27 PM] GitHub#0000
+
+{Embed}
+tonymorony
+https://github.com/KomodoPlatform/atomicDEX-API/issues/504#issuecomment-566639424
+[KomodoPlatform/atomicDEX-API] New comment on issue #504: DOGE\-KMD swap failed with MakerPaymentSpendFailed but TakerPaymentSpent success \[funds stuck\]
+Closing as non-actual
+
+[17-Dec-19 04:27 PM] GitHub#0000
+
+{Embed}
+tonymorony
+https://github.com/KomodoPlatform/atomicDEX-API/issues/504
+[KomodoPlatform/atomicDEX-API] Issue closed: #504 DOGE\-KMD swap failed with MakerPaymentSpendFailed but TakerPaymentSpent success \[funds stuck\]
+
+[17-Dec-19 04:27 PM] GitHub#0000
+
+{Embed}
+tonymorony
+https://github.com/KomodoPlatform/atomicDEX-API/issues/510#issuecomment-566639757
+[KomodoPlatform/atomicDEX-API] New comment on issue #510: LTC\-KMD swap failed \(TakerPaymentRefundFailed\) \[funds stuck\]
+Closing as non-actual
+
+[17-Dec-19 04:27 PM] GitHub#0000
+
+{Embed}
+tonymorony
+https://github.com/KomodoPlatform/atomicDEX-API/issues/510
+[KomodoPlatform/atomicDEX-API] Issue closed: #510 LTC\-KMD swap failed \(TakerPaymentRefundFailed\) \[funds stuck\]
+
+[17-Dec-19 04:29 PM] GitHub#0000
+
+{Embed}
+tonymorony
+https://github.com/KomodoPlatform/atomicDEX-API
+[KomodoPlatform/atomicDEX-API] New star added
+
+[17-Dec-19 04:31 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] ubuntu\-18\.04 CI success on jl777
+
+[17-Dec-19 04:31 PM] GitHub#0000
+
+{Embed}
+https://github.com/jl777/komodo/commit/eb8a5a75281a5f14ce8e612a6ed37c9b66532b0e
+[komodo] GitHub Actions checks success on jl777
+
+[17-Dec-19 04:31 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] ubuntu\-18\.04 CI success on FSM
+
+[17-Dec-19 04:31 PM] GitHub#0000
+
+{Embed}
+https://github.com/jl777/komodo/commit/c077b4a1b07434154b18791c552d13ed44837603
+[komodo] GitHub Actions checks success on FSM
+
+[17-Dec-19 04:55 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] Win Build success on marmara\-v1\-1\-valid
+
+[17-Dec-19 05:44 PM] GitHub#0000
+
+{Embed}
+https://help.github.com/en/actions
+[komodo] ubuntu\-18\.04 CI success on marmara\-v1\-1\-valid
+
+[17-Dec-19 05:44 PM] GitHub#0000
+
+{Embed}
+https://github.com/dimxy/komodo/commit/ac1c57bfd3aed76841e9029a6336063bfb0e0f92
+[komodo] GitHub Actions checks success on marmara\-v1\-1\-valid
+
+[17-Dec-19 06:27 PM] GitHub#0000
+
+{Embed}
+gcharang
+https://github.com/KomodoPlatform/atomicDEX/issues/131
+[KomodoPlatform/atomicDEX] Issue opened: #131 Give a hint to a user about unlock Time when swap times out or fails
+Indicate the approximate amount of time to wait for the coins to be available for a swap again.
+

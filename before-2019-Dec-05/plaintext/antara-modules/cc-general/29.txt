@@ -1,0 +1,479 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[03-Aug-18 03:14 PM] jl777c#5810
+it was an edge case of betting maxodds that gave an error
+
+[03-Aug-18 03:16 PM] siu - Chainmakers#3920
+what does `key` in `kvupdate key "value" days passphrase` stand for?
+
+[03-Aug-18 03:16 PM] siu - Chainmakers#3920
+im new to this
+
+[03-Aug-18 03:17 PM] jl777c#5810
+the key
+
+[03-Aug-18 03:17 PM] jl777c#5810
+@Alright should have documented the calls
+
+[03-Aug-18 03:17 PM] siu - Chainmakers#3920
+ok
+
+[03-Aug-18 03:18 PM] jl777c#5810
+KV -> key value storage
+
+[03-Aug-18 03:18 PM] jl777c#5810
+value is associated with a key
+
+[03-Aug-18 03:25 PM] siu - Chainmakers#3920
+tried a kvupdate and it seems like it broke the chain
+
+[03-Aug-18 03:25 PM] siu - Chainmakers#3920
+```"blocks": 2112,
+  "longestchain": 0,
+```
+
+[03-Aug-18 03:26 PM] jl777c#5810
+why do you say the chain is broken?
+
+[03-Aug-18 03:27 PM] jl777c#5810
+longestchain requires 3 or more peers
+
+[03-Aug-18 03:37 PM] siu - Chainmakers#3920
+ohh so all peers disconnected :/
+
+[03-Aug-18 04:01 PM] siu - Chainmakers#3920
+im a bit confused with the day and passphrase in the kvupdate
+
+[03-Aug-18 04:01 PM] siu - Chainmakers#3920
+if i set a key/value with a passphrase
+
+[03-Aug-18 04:02 PM] siu - Chainmakers#3920
+then try to edit it with another passphrase, i still get to change it, even when passphrase is not the same
+
+[03-Aug-18 04:16 PM] jl777c#5810
+sounds like a bug
+
+[03-Aug-18 04:31 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=COQUI kvupdate AURORA "Nace 24 de febrero de 2012 en Mayagüez" azgmvd```
+
+[03-Aug-18 04:31 PM] siu - Chainmakers#3920
+```{
+  "coin": "COQUI",
+  "height": 138493,
+  "expiration": 139933,
+  "flags": 1,
+  "key": "AURORA",
+  "keylen": 6,
+  "value": "Nace 24 de febrero de 2012 en Mayagüez",
+  "valuesize": 39,
+  "fee": 0.001,
+  "txid": "029c9cf352b33d189595cba7b7be5b31d966e65d6274731208148e2fba95f0c6"
+}
+```
+
+[03-Aug-18 04:32 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=COQUI kvsearch AURORA{
+  "coin": "COQUI",
+  "currentheight": 138493,
+  "key": "AURORA",
+  "keylen": 6,
+  "height": 138466,
+  "expiration": 139906,
+  "flags": 0,
+  "value": "Nace 24 de febrero de 2012 en Mayagüez",
+  "valuesize": 39
+}
+```
+
+[03-Aug-18 04:33 PM] siu - Chainmakers#3920
+Now notice the change in the value (1 at the end)  and the passphrase (c in the end instead of d)
+
+[03-Aug-18 04:33 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=COQUI kvupdate AURORA "Nace 24 de febrero de 2012 en Mayagüez1" azgmvc
+{
+  "coin": "COQUI",
+  "height": 138499,
+  "expiration": 139939,
+  "flags": 1,
+  "key": "AURORA",
+  "keylen": 6,
+  "value": "Nace 24 de febrero de 2012 en Mayagüez1",
+  "valuesize": 40,
+  "fee": 0.001,
+  "txid": "aaa282f2845be3e5eccc493076927cde8b859b9993fceb6df47cf759bfcca930"
+}
+```
+
+[03-Aug-18 04:33 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=COQUI kvsearch AURORA{
+  "coin": "COQUI",
+  "currentheight": 138501,
+  "key": "AURORA",
+  "keylen": 6,
+  "height": 138499,
+  "expiration": 139939,
+  "flags": 0,
+  "value": "Nace 24 de febrero de 2012 en Mayagüez1",
+  "valuesize": 40
+}
+```
+
+[03-Aug-18 04:33 PM] siu - Chainmakers#3920
+change did execute anyway
+
+[03-Aug-18 04:40 PM] jl777c#5810
+interesting bug. I will investigate
+
+[03-Aug-18 04:53 PM] siu - Chainmakers#3920
+also, what does expiration do?
+
+[03-Aug-18 05:00 PM] jl777c#5810
+it is when the key expires
+
+[03-Aug-18 06:19 PM] siu - Chainmakers#3920
+is it possible to get a permanent key
+
+[03-Aug-18 06:19 PM] siu - Chainmakers#3920
+?
+
+[03-Aug-18 06:20 PM] jl777c#5810
+just pay a bigger fee and get 500 weeks
+
+[03-Aug-18 07:25 PM] Alright#0419
+@siu - Chainmakers format is
+kvupdate key "value" days passphrase
+
+[03-Aug-18 07:26 PM] Alright#0419
+there are help commands in the daemon for it now, not sure if you saw that
+
+[03-Aug-18 07:26 PM] siu - Chainmakers#3920
+yes... i tested them
+
+[03-Aug-18 07:26 PM] Alright#0419
+Yea you can change it because you aren't setting the password properly
+
+[03-Aug-18 07:27 PM] siu - Chainmakers#3920
+how is it set correctly?
+
+[03-Aug-18 07:27 PM] Alright#0419
+kvupdate key "value" days passphrase
+
+[03-Aug-18 07:28 PM] Alright#0419
+./komodo-cli -ac_name=COQUI kvupdate AURORA "Nace 24 de febrero de 2012 en Mayagüez" <ANUMBER> azgmvd
+
+[03-Aug-18 07:28 PM] siu - Chainmakers#3920
+ok
+
+[03-Aug-18 07:28 PM] siu - Chainmakers#3920
+so blank is not an option?
+
+[03-Aug-18 07:29 PM] Alright#0419
+if you have a passphrase, no
+
+[03-Aug-18 07:29 PM] blackjok3r#3181
+"blank" is never an option
+
+[03-Aug-18 07:30 PM] siu - Chainmakers#3920
+./komodo-cli -ac_name=COQUI kvupdate AURORA "Nace 24 de febrero de 2012 en Mayagüez1" 1 azgmvc
+{
+  "error": "error verifying sig, passphrase is probably wrong"
+}
+
+[03-Aug-18 07:31 PM] siu - Chainmakers#3920
+good
+
+[03-Aug-18 07:31 PM] siu - Chainmakers#3920
+thanks
+
+[03-Aug-18 07:31 PM] siu - Chainmakers#3920
+i still dont get the expiration thing
+
+[03-Aug-18 07:31 PM] siu - Chainmakers#3920
+like, if i want to be able to store info permanently
+
+[03-Aug-18 09:40 PM] siu - Chainmakers#3920
+Ohh understood
+
+[04-Aug-18 09:52 AM] SHossain#0007
+please send some AT1 coins in this address `RANyPgfZZLhSjQB9jrzztSw66zMMYDZuxQ`
+
+[04-Aug-18 10:02 AM] CHMEX#0686
+@SHossain  d6f7721bd0a7e4549803a9e2f5b4d9e47f58a4fc0d377ab334a900754270423a on its way
+
+[04-Aug-18 10:03 AM] CHMEX#0686
+there is also a faucet but only 1 at the time
+
+[04-Aug-18 10:28 AM] SHossain#0007
+thanks @CHMEX 😃
+
+[04-Aug-18 11:43 AM] SHossain#0007
+i get 0 connections and blocks. do you have any live peer ip?
+
+[04-Aug-18 11:52 AM] CHMEX#0686
+78.47.205.239
+
+[04-Aug-18 11:54 AM] SHossain#0007
+thanks. now the chain is syncing
+
+[04-Aug-18 03:48 PM] siu - Chainmakers#3920
+```e772437b77354d9cf4d4d8761f21740d45f91c1f8052accaa802715a12eaaae5 winnings 6.00000000 bet 2.00000000 at odds 2:1
+```
+
+[04-Aug-18 03:48 PM] siu - Chainmakers#3920
+i won! 😂
+
+[04-Aug-18 05:29 PM] siu - Chainmakers#3920
+found a bug
+
+[04-Aug-18 05:30 PM] siu - Chainmakers#3920
+im posting exactly the same input i did and then the output
+
+[04-Aug-18 05:30 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=AT1 dicebet DIC3 4132ca8e8d46df9f8a8cbe83c99794497e06bbd190bd71f4abcdedf84e90952e 3 1
+{
+  "result": "success",
+  "hex": "0100000002a5c34a45a2fdbf3643d17a6638812a451b0ed8569fad3888b5db75370472e5de000000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e81406a5630296f3a13205f1671c0c1f065086488e55bea2971e7d4783611002d66c82872c3dfaf4338ae12c0125167177ea4f8751cce28e2ef74d8f384b3723d4ce2a100af038001e6a10001ffffffff178eed110939eeab976273c9fecfa6bd98102cf198e6f264698557a106d8a36e030000004847304402207a1a5c69c359775c6b7e143478b892ea9e9e6e20d2966f27f8cc6a21a3f3e0e902204cbc51b266f2c409cb98c0be2e842fd56dfbe865f803f21026a993555e8c7afc01ffffffff0500da3f10e9000000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc00a3e11100000000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc11270000000000002321028702e30d8465d6aa85f35d2f58c06a6ee17f23f376b56044dadf7b793f2c12b9acb99ea430180900002321028702e30d8465d6aa85f35d2f58c06a6ee17f23f376b56044dadf7b793f2c12b9ac00000000000000006d6a4c6ae64244494333000000002e95904ef8edcdabf471bd90d1bb067e499497c983be8c8a9fdf468d8eca32411db9f146a94cf599b0923ac12ad0f1e0199dad7b3804308fa94dad049144023c000000000000000000000000000000000000000000000000000000000000000000000000"
+}
+siu@T460:~/komodo/src$ ./komodo-cli -ac_name=AT1 diceinfo 4132ca8e8d46df9f8a8cbe83c99794497e06bbd190bd71f4abcdedf84e90952e{
+  "result": "success",
+  "fundingtxid": "4132ca8e8d46df9f8a8cbe83c99794497e06bbd190bd71f4abcdedf84e90952e",
+  "name": "DIC3",
+  "sbits": 860047684,
+  "minbet": "1.00000000",
+  "maxbet": "10.00000000",
+  "maxodds": 7,
+  "timeoutblocks": 5,
+  "funding": "10010.00000000"
+}
+```
+
+[04-Aug-18 05:31 PM] siu - Chainmakers#3920
+notice funding is 10010.00000000
+
+[04-Aug-18 05:31 PM] siu - Chainmakers#3920
+then
+
+[04-Aug-18 05:31 PM] siu - Chainmakers#3920
+```siu@T460:~/komodo/src$ ./komodo-cli -ac_name=AT1 sendrawtransaction 0100000002a5c34a45a2fdbf3643d17a6638812a451b0ed8569fad3888b5db75370472e5de000000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e81406a5630296f3a13205f1671c0c1f065086488e55bea2971e7d4783611002d66c82872c3dfaf4338ae12c0125167177ea4f8751cce28e2ef74d8f384b3723d4ce2a100af038001e6a10001ffffffff178eed110939eeab976273c9fecfa6bd98102cf198e6f264698557a106d8a36e030000004847304402207a1a5c69c359775c6b7e143478b892ea9e9e6e20d2966f27f8cc6a21a3f3e0e902204cbc51b266f2c409cb98c0be2e842fd56dfbe865f803f21026a993555e8c7afc01ffffffff0500da3f10e9000000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc00a3e11100000000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc11270000000000002321028702e30d8465d6aa85f35d2f58c06a6ee17f23f376b56044dadf7b793f2c12b9acb99ea430180900002321028702e30d8465d6aa85f35d2f58c06a6ee17f23f376b56044dadf7b793f2c12b9ac00000000000000006d6a4c6ae64244494333000000002e95904ef8edcdabf471bd90d1bb067e499497c983be8c8a9fdf468d8eca32411db9f146a94cf599b0923ac12ad0f1e0199dad7b3804308fa94dad049144023c000000000000000000000000000000000000000000000000000000000000000000000000
+19a5fef592859e6bcd9e49130faed88873b4560aa09f22284bd21610a7dec8f5
+siu@T460:~/komodo/src$ ./komodo-cli -ac_name=AT1 diceinfo 4132ca8e8d46df9f8a8cbe83c99794497e06bbd190bd71f4abcdedf84e90952e{
+  "result": "success",
+  "fundingtxid": "4132ca8e8d46df9f8a8cbe83c99794497e06bbd190bd71f4abcdedf84e90952e",
+  "name": "DIC3",
+  "sbits": 860047684,
+  "minbet": "1.00000000",
+  "maxbet": "10.00000000",
+  "maxodds": 7,
+  "timeoutblocks": 5,
+  "funding": "0.00000000"
+}
+```
+
+[04-Aug-18 05:31 PM] siu - Chainmakers#3920
+after sending rawtx funding goes to 0
+
+[04-Aug-18 05:32 PM] siu - Chainmakers#3920
+```dee572043775dbb58838ad9f56d80e1b452a8138667ad14336bffda2454ac3a5.(L 10010.00000000) check first
+e772437b77354d9cf4d4d8761f21740d45f91c1f8052accaa802715a12eaaae5 B refsbits.33434944 sbits.33434944 nValue 2071.99980000
+e772437b77354d9cf4d4d8761f21740d45f91c1f8052accaa802715a12eaaae5 B refsbits.33434944 sbits.33434944 nValue 2.00000000
+numentropy tx 1: 10010.00000000
+dee572043775dbb58838ad9f56d80e1b452a8138667ad14336bffda2454ac3a5.(L 10010.00000000) check first
+e772437b77354d9cf4d4d8761f21740d45f91c1f8052accaa802715a12eaaae5 B refsbits.33434944 sbits.33434944 nValue 2071.99980000
+e772437b77354d9cf4d4d8761f21740d45f91c1f8052accaa802715a12eaaae5 B refsbits.33434944 sbits.33434944 nValue 2.00000000
+numentropy tx 1: 10010.00000000
+19a5fef592859e6bcd9e49130faed88873b4560aa09f22284bd21610a7dec8f5 winnings 6.00000000 bet 3.00000000 at odds 1:1
+19a5fef592859e6bcd9e49130faed88873b4560aa09f22284bd21610a7dec8f5 winnings 6.00000000 bet 3.00000000 at odds 1:1
+19a5fef592859e6bcd9e49130faed88873b4560aa09f22284bd21610a7dec8f5 winnings 6.00000000 bet 3.00000000 at odds 1:1
+not enough inputs for 3.00010000
+e772437b77354d9cf4d4d8761f21740d45f91c1f8052accaa802715a12eaaae5 B refsbits.33434944 sbits.33434944 nValue 2071.99980000
+e772437b77354d9cf4d4d8761f21740d45f91c1f8052accaa802715a12eaaae5 B refsbits.33434944 sbits.33434944 nValue 2.00000000
+numentropy tx 0: 0.00000000
+```
+
+[04-Aug-18 05:32 PM] siu - Chainmakers#3920
+^output
+
+[04-Aug-18 05:33 PM] siu - Chainmakers#3920
+`not enough inputs for 3.00010000`
+
+[04-Aug-18 05:33 PM] siu - Chainmakers#3920
+@jl777c
+
+[04-Aug-18 05:35 PM] jl777c#5810
+funds for bets in progress are locked and not available for the total
+
+[04-Aug-18 05:35 PM] jl777c#5810
+if you dont have enough utxo, it might not be able to process the bet
+
+[04-Aug-18 05:35 PM] jl777c#5810
+make sure to have more than the absolute minimum number of utxo
+
+[04-Aug-18 05:37 PM] siu - Chainmakers#3920
+` "balance": 13888944.99594979,`
+
+[04-Aug-18 05:37 PM] siu - Chainmakers#3920
+im pretty sure i have enough funds
+
+[04-Aug-18 05:38 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=AT1 getrawmempool[
+]
+```
+
+[04-Aug-18 05:38 PM] siu - Chainmakers#3920
+all tx got confirmed
+
+[04-Aug-18 05:38 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=AT1 diceinfo 4132ca8e8d46df9f8a8cbe83c99794497e06bbd190bd71f4abcdedf84e90952e
+{
+  "result": "success",
+  "fundingtxid": "4132ca8e8d46df9f8a8cbe83c99794497e06bbd190bd71f4abcdedf84e90952e",
+  "name": "DIC3",
+  "sbits": 860047684,
+  "minbet": "1.00000000",
+  "maxbet": "10.00000000",
+  "maxodds": 7,
+  "timeoutblocks": 5,
+  "funding": "0.00000000"
+}
+```
+
+[04-Aug-18 05:38 PM] siu - Chainmakers#3920
+funding stayed at 0
+
+[04-Aug-18 05:39 PM] siu - Chainmakers#3920
+also, it seems like it got stuck between trying to repeat the last 2 bets
+
+[04-Aug-18 05:39 PM] siu - Chainmakers#3920
+```e772437b77354d9cf4d4d8761f21740d45f91c1f8052accaa802715a12eaaae5 B refsbits.33434944 sbits.33434944 nValue 2071.99980000
+e772437b77354d9cf4d4d8761f21740d45f91c1f8052accaa802715a12eaaae5 B refsbits.33434944 sbits.33434944 nValue 2.00000000
+numentropy tx 0: 0.00000000
+19a5fef592859e6bcd9e49130faed88873b4560aa09f22284bd21610a7dec8f5 winnings 6.00000000 bet 3.00000000 at odds 1:1
+91e890d3288311e1fb43df4dadf8badc64bd06dada1e2ed2e7ed8120019637a9 winnings 0.00000000 bet 2.00000000 at odds 7:1
+91e890d3288311e1fb43df4dadf8badc64bd06dada1e2ed2e7ed8120019637a9 winnings 0.00000000 bet 2.00000000 at odds 7:1
+AT1 hwmheight.3720 vs pindex->nHeight.3719 t.1533403677 reorg.1
+91e890d3288311e1fb43df4dadf8badc64bd06dada1e2ed2e7ed8120019637a9 winnings 0.00000000 bet 2.00000000 at odds 7:1
+19a5fef592859e6bcd9e49130faed88873b4560aa09f22284bd21610a7dec8f5 winnings 6.00000000 bet 3.00000000 at odds 1:1
+19a5fef592859e6bcd9e49130faed88873b4560aa09f22284bd21610a7dec8f5 winnings 6.00000000 bet 3.00000000 at odds 1:1
+91e890d3288311e1fb43df4dadf8badc64bd06dada1e2ed2e7ed8120019637a9 winnings 0.00000000 bet 2.00000000 at odds 7:1
+19a5fef592859e6bcd9e49130faed88873b4560aa09f22284bd21610a7dec8f5 winnings 6.00000000 bet 3.00000000 at odds 1:1
+91e890d3288311e1fb43df4dadf8badc64bd06dada1e2ed2e7ed8120019637a9 winnings 0.00000000 bet 2.00000000 at odds 7:1
+91e890d3288311e1fb43df4dadf8badc64bd06dada1e2ed2e7ed8120019637a9 winnings 0.00000000 bet 2.00000000 at odds 7:1
+91e890d3288311e1fb43df4dadf8badc64bd06dada1e2ed2e7ed8120019637a9 winnings 0.00000000 bet 2.00000000 at odds 7:1
+19a5fef592859e6bcd9e49130faed88873b4560aa09f22284bd21610a7dec8f5 winnings 6.00000000 bet 3.00000000 at odds 1:1
+```
+
+[04-Aug-18 05:39 PM] siu - Chainmakers#3920
+both of those txid got confirmed and i los tthe last bet before this happened
+
+[04-Aug-18 05:40 PM] jl777c#5810
+maybe AT1 hwmheight.3720 vs pindex->nHeight.3719 t.1533403677 reorg.1
+got things confused
+
+[04-Aug-18 05:40 PM] jl777c#5810
+what happens if you do a dicestatus
+
+[04-Aug-18 05:42 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=AT1 dicestatus DIC3 4132ca8e8d46df9f8a8cbe83c99794497e06bbd190bd71f4abcdedf84e90952e 19a5fef592859e6bcd9e49130faed88873b4560aa09f22284bd21610a7dec8f5
+{
+  "result": "success",
+  "status": "invalid bet txid"
+}
+```
+
+[04-Aug-18 05:42 PM] siu - Chainmakers#3920
+and the last one: ```./komodo-cli -ac_name=AT1 dicestatus DIC3 4132ca8e8d46df9f8a8cbe83c99794497e06bbd190bd71f4abcdedf84e90952e 91e890d3288311e1fb43df4dadf8badc64bd06dada1e2ed2e7ed8120019637a9
+{
+  "result": "success",
+  "status": "loss"
+}
+```
+
+[04-Aug-18 05:42 PM] siu - Chainmakers#3920
+i mean... the last before the invalid bet
+
+[04-Aug-18 05:45 PM] jl777c#5810
+if you do dicestatus without the bettxid, it will try to autocomplete any pending
+
+[04-Aug-18 05:48 PM] siu - Chainmakers#3920
+ok
+
+[04-Aug-18 05:49 PM] siu - Chainmakers#3920
+``` ./komodo-cli -ac_name=AT1 dicestatus DIC3 4132ca8e8d46df9f8a8cbe83c99794497e06bbd190bd71f4abcdedf84e90952e
+{
+  "result": "success",
+  "status": "no pending bets"
+}
+```
+
+[04-Aug-18 05:49 PM] siu - Chainmakers#3920
+```Mining when blockchain might not be in sync longest.0 vs 3736
+Mining when blockchain might not be in sync longest.0 vs 3736
+Mining when blockchain might not be in sync longest.3732 vs 3736
+e772437b77354d9cf4d4d8761f21740d45f91c1f8052accaa802715a12eaaae5 winnings 6.00000000 bet 2.00000000 at odds 2:1
+not enough inputs for 4.00010000
+e772437b77354d9cf4d4d8761f21740d45f91c1f8052accaa802715a12eaaae5 winnings 6.00000000 bet 2.00000000 at odds 2:1
+not enough inputs for 4.00010000
+19a5fef592859e6bcd9e49130faed88873b4560aa09f22284bd21610a7dec8f5 winnings 6.00000000 bet 3.00000000 at odds 1:1
+not enough inputs for 3.00010000
+19a5fef592859e6bcd9e49130faed88873b4560aa09f22284bd21610a7dec8f5 winnings 6.00000000 bet 3.00000000 at odds 1:1
+not enough inputs for 3.00010000
+ENTROPY tx:
+010000000105bbb2d0182ea2435b6fe9ff2affdd324342cec6fe038b51f1c2208f33a4dd310000000048473044022026ebde7b3b67d54f9b335c8e9c66c1a9cc882d584d5d298a46dacc56845b9b130220427f1a61c56772acf14266912d312d7c733b2ecece7c117464a077965849f5b401ffffffff0400e1f50500000000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc10270000000000002321028702e30d8465d6aa85f35d2f58c06a6ee17f23f376b56044dadf7b793f2c12b9ace0707c48180900002321028702e30d8465d6aa85f35d2f58c06a6ee17f23f376b56044dadf7b793f2c12b9ac00000000000000006d6a4c6ae64544494333000000002e95904ef8edcdabf471bd90d1bb067e499497c983be8c8a9fdf468d8eca32410719f3e473c7abbcbd6162f591f7bbaf275e9405cefe74d63c8f6d9464a04341000000000000000000000000000000000000000000000000000000000000000000000000
+74bec217c9cd5f4fd2129635120bafa260e5efa9d5fe4318d60608dee2d59a47
+added to mempool and broadcast
+
+```
+
+[04-Aug-18 05:50 PM] jl777c#5810
+can you find where the funds went? it cant have just disappeare
+
+[04-Aug-18 05:51 PM] siu - Chainmakers#3920
+which was the explorer link? @CHMEX
+
+[04-Aug-18 05:53 PM] siu - Chainmakers#3920
+@SHossain do you remember the explorer link?
+
+[04-Aug-18 05:53 PM] siu - Chainmakers#3920
+for AT1?
+
+[04-Aug-18 05:53 PM] SHossain#0007
+http://cctest.explorer.dexstats.info/
+
+{Embed}
+http://cctest.explorer.dexstats.info/
+Komodo Explorer
+Komodo Insight. View detailed information on all komodo transactions and block. {{ $root.title + $root.titleDetail }}
+
+[04-Aug-18 05:53 PM] siu - Chainmakers#3920
+👍
+
+[04-Aug-18 05:59 PM] siu - Chainmakers#3920
+http://cctest.explorer.dexstats.info/address/REabWB7KjFN5C3LFMZ5odExHPenYzHLtVw
+
+[04-Aug-18 05:59 PM] siu - Chainmakers#3920
+this is the funding address
+
+[04-Aug-18 05:59 PM] siu - Chainmakers#3920
+seems like the funds are still there
+
+[04-Aug-18 06:00 PM] jl777c#5810
+maybe it is just a bug with diceinfo
+
+[04-Aug-18 06:01 PM] siu - Chainmakers#3920
+ill try another bet then
+
+[04-Aug-18 06:01 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=AT1 dicebet DIC3 4132ca8e8d46df9f8a8cbe83c99794497e06bbd190bd71f4abcdedf84e90952e 3 2
+error code: -1
+error message:
+basic_string::_M_construct null not valid
+```
+

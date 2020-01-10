@@ -1,0 +1,433 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[14-Feb-19 02:18 PM] dukeleto#7326
+i tried to look at the code, but nothing was obvious
+
+[14-Feb-19 02:24 PM] dukeleto#7326
+@jl777c another newbie question for you, what causes a xtn to be "non-final" ? I have read the code, but I am still trying to understand it
+
+[14-Feb-19 02:25 PM] dukeleto#7326
+i read all the code of `CheckFinalTx` to understand how an xtn could fail to be "final", and my brain just kind of melted with all the details
+
+[14-Feb-19 02:26 PM] dukeleto#7326
+in regtests, i am getting some odd behavior that I have tracked down to utxos I think should be "finalized" but are not "final" and don't count towards the total of `getreceivedbyaddress`, for instance
+
+[14-Feb-19 02:55 PM] blackjok3r#3181
+The joys of komodods linker issues :D
+Until I fixed the komodo-cli inclusion on all komodo_*.h files its was 100 times worse. 😄
+
+[14-Feb-19 04:26 PM] jl777c#5810
+is nLockTime set? if in the future it will be nonfinal
+
+[14-Feb-19 04:26 PM] jl777c#5810
+no idea about regtest anything
+
+[14-Feb-19 06:10 PM] dukeleto#7326
+@jl777c i saw nLockTime==nBlockTime when i enabled this debug print `printf("non-final txin seq.%x locktime.%u vs nTime.%u\n",txin.nSequence,(uint32_t)tx.nLockTime,(uint32_t)nBlockTime);`
+
+[14-Feb-19 06:11 PM] jl777c#5810
+pretty sure nLockTime needs to be > median time
+
+[14-Feb-19 06:11 PM] dukeleto#7326
+i read some stuff about that
+
+[14-Feb-19 06:21 PM] jl777c#5810
+i think there is something like pblock->GetMedianTime()
+
+[15-Feb-19 02:08 AM] josephnicholas GMT+8#5904
+Hi @dukeleto I have some question on dPOW, since I just can't understand why sending the block hash to BTC can enable hash rate sharing
+
+[15-Feb-19 04:43 AM] ComputerGenie 👴🏼📢#7004
+@josephnicholas GMT+8 the short answer is that it's because in order to erase that data from the Bitcoin chain, you would have to reorg the Bitcoin chain. So the data is secure by Bitcoin's hashrate.
+Think of it similar to how Bitcoin performs a "checkpoint", but instead of hard-coding it like `https://github.com/bitcoin/bitcoin/blob/master/src/chainparams.cpp#L146-#L162` and requiring everyone to manually update nodes to get the new checkpoint, it's recorded live and in real-time on a secondary chain that requires a tremendous amount of hasrate to "unrecord"
+
+[15-Feb-19 05:41 AM] grewalsatinder#9653
+added cclib API calls to kmdgo.
+adding cc rogue API calls now
+https://github.com/satindergrewal/kmdgo
+
+{Embed}
+https://github.com/satindergrewal/kmdgo
+satindergrewal/kmdgo
+Go package for Komodo Platform API. Contribute to satindergrewal/kmdgo development by creating an account on GitHub.
+https://avatars3.githubusercontent.com/u/12998093?s=400&v=4
+
+[15-Feb-19 05:42 AM] grewalsatinder#9653
+My target task was to make basic CC web app by 15th, I was focusing on Faucet.
+But, now I'll just code the Rogue game CC in the web app.
+
+[15-Feb-19 05:42 AM] grewalsatinder#9653
+I know I missed my target date :(
+but took me a bit of time to learn the web side of Go, which I have nice understanding now to think a solution around it 🙂
+
+[15-Feb-19 05:43 AM] grewalsatinder#9653
+My next target, the second was to make addresses manually by 28th, think I'll have to move that to next month end.
+need to make Rogue game web app.
+
+[15-Feb-19 05:44 AM] grewalsatinder#9653
+so, I target myself to complete the Web App by 28th Feb for Rogue game Web App, and if possible then portable Desktop App for Rogue CC game.
+
+{Reactions}
+💪 (5) 🚀 (4) 🔥 (2) 🙏 (2) 
+
+[15-Feb-19 08:02 AM] josephnicholas GMT+8#5904
+Hello all, I got this build issue with FSM branch. 
+```-c helpers/memenv/memenv.cc -o helpers/memenv/memenv.o
+cryptoconditions/src/utils.c:25:30: fatal error: cryptoconditions.h: No such file or directory
+ #include "cryptoconditions.h"
+                              ^
+compilation terminated.
+cryptoconditions/src/utils.c:25:30: fatal error: cryptoconditions.h: No such file or directory
+ #include "cryptoconditions.h"
+                              ^
+compilation terminated.```
+
+[15-Feb-19 08:02 AM] josephnicholas GMT+8#5904
+was thinking of building installing https://github.com/libscott/libcryptoconditions
+
+{Embed}
+https://github.com/libscott/libcryptoconditions
+libscott/libcryptoconditions
+Interledger crypto-conditions implemented in C, including simple JSON api - libscott/libcryptoconditions
+https://avatars3.githubusercontent.com/u/125019?s=400&v=4
+
+[15-Feb-19 08:02 AM] josephnicholas GMT+8#5904
+but it is failing in my mac
+
+[15-Feb-19 08:03 AM] ComputerGenie 👴🏼📢#7004
+https://discordapp.com/channels/412898016371015680/463445317136809984/545588558467956746
+
+[15-Feb-19 08:07 AM] josephnicholas GMT+8#5904
+@ComputerGenie 👴🏼📢 so what's the right branch to choose with latest and building CC implementation?
+
+[15-Feb-19 08:08 AM] ComputerGenie 👴🏼📢#7004
+tbh, I don't know
+I mainly stay on FSM but I don't do any CC so you can't really go by what I do
+
+[15-Feb-19 08:41 AM] Mylo#8306
+FSM has latest bug fix and development of CC related stuff.
+dev/beta have most of CC stuff, but there might be some minor incompatibilities with the newer FSM stuff - e.g. the assetsCC on-chain DEX has had some work done on it in the last 4-6 weeks.
+
+[15-Feb-19 09:39 AM] dukeleto#7326
+@josephnicholas GMT+8 keep typing `make` a few times
+
+[15-Feb-19 09:48 AM] josephnicholas GMT+8#5904
+@dukeleto thanks
+
+[15-Feb-19 09:49 AM] dukeleto#7326
+it's something that happens when switching branches
+
+[15-Feb-19 09:49 AM] dukeleto#7326
+the build system gets confused
+
+[16-Feb-19 12:08 AM] ! |🆉🅿🅾🅾🅻.🅲🅰| ! - crackers#9719
+Is sapling still a mining requirement since zaddr are gone?
+
+[16-Feb-19 05:08 AM] Alright#0419
+@! |🆉🅿🅾🅾🅻.🅲🅰| ! - crackers if you're asking whether or not it needs v4 txs, yes it does
+
+[16-Feb-19 06:01 PM] Alright#0419
+I'm trying to write a python script that stops a daemon then restarts it with different params. I have a problem in that the process keeps the RPC connection open for some time after it has stopped. Because of this, when I restart the daemon it fails with `Error: Unable to start HTTP server`
+
+Does anyone know how I can force this connection to close or how much time it takes to close after the daemon has stopped?
+
+[16-Feb-19 06:04 PM] Alright#0419
+`netstat` just show it as pid 0 and `TIME_WAIT` for some time after stopping the daemon
+
+[16-Feb-19 06:14 PM] Alright#0419
+lot's of it 😅
+
+[16-Feb-19 06:14 PM] Alright#0419
+hold on
+
+[16-Feb-19 06:16 PM] Alright#0419
+```
+def restart_daemon(chain, rpc_connection):
+    params = get_chainparams(chain, rpc_connection)
+    magic_check = rpc_connection.getinfo()['p2pport']
+    print(magic_check)
+    rpc_connection.stop()
+    print('Waiting for daemon to stop, please wait')
+    while True:
+        try:
+            rpc_connection.getinfo()
+            continue
+        except Exception as e:
+            break
+    
+    komodod_path = sys.path[0] + '/komodod'
+    blocknotify = '-blocknotify=' + sys.path[0] + '/staker.py %s ' + chain
+    print(komodod_path)
+    print(blocknotify)
+    param_list = [komodod_path]
+    for i in params:
+       param_list.append('-' + i + '=' + params[i])
+    param_list.append(blocknotify)
+    #param_list.append('> /dev/null')
+    time.sleep(200)
+    proc = subprocess.Popen(param_list)
+    #subprocess.run(param_list, shell=False, stdout=None, stderr=None, timeout=1)
+    print('Waiting for daemon to respond, please wait')
+    while True:
+        try:
+            rpc_connection.getinfo()
+            break
+        except Exception as e:
+            continue
+    print(param_list)
+    return(0)
+```
+I believe I need to explicitly close the rpc_connection, but I'm not entirely sure
+
+[16-Feb-19 06:17 PM] Alright#0419
+Ok there are two problems here though
+
+[16-Feb-19 06:17 PM] Alright#0419
+this doesn't quite solve it because after killing the daemon, the connection sits at `TIME_WAIT` for some time
+
+[16-Feb-19 06:17 PM] Alright#0419
+but thank you, this helps
+
+[16-Feb-19 06:19 PM] Alright#0419
+Ah this isn't using requests
+
+[16-Feb-19 06:19 PM] Alright#0419
+it uses slickrpc or something like that
+
+[16-Feb-19 06:19 PM] Alright#0419
+could have a sleep
+
+[16-Feb-19 06:20 PM] Alright#0419
+just testing that the concept I'm trying is viable, will touch up things like this before I make it public
+
+[16-Feb-19 06:21 PM] Alright#0419
+should why?
+
+[16-Feb-19 06:21 PM] Alright#0419
+I get that it's just constantly polling getinfo, but it's literally waiting to see when the daemon stops responding
+
+[16-Feb-19 06:21 PM] Alright#0419
+so as soon as daemon doesn't respond, break
+
+[16-Feb-19 06:22 PM] Alright#0419
+what is particularly dangerous about that?
+
+[16-Feb-19 06:23 PM] Alright#0419
+read 2 lines above it
+
+[16-Feb-19 06:25 PM] Alright#0419
+rpc_connection.stop()
+
+[16-Feb-19 06:25 PM] Alright#0419
+is the same as `komodo-cli stop`
+
+[16-Feb-19 06:25 PM] Alright#0419
+where is what defined?
+
+[16-Feb-19 06:26 PM] Alright#0419
+https://github.com/barjomet/slick-bitcoinrpc
+
+{Embed}
+https://github.com/barjomet/slick-bitcoinrpc
+barjomet/slick-bitcoinrpc
+Just another Python bitcoin-rpc client. Contribute to barjomet/slick-bitcoinrpc development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/7434416?s=400&v=4
+
+[16-Feb-19 06:26 PM] Alright#0419
+https://github.com/barjomet/slick-bitcoinrpc#example
+
+{Embed}
+https://github.com/barjomet/slick-bitcoinrpc
+barjomet/slick-bitcoinrpc
+Just another Python bitcoin-rpc client. Contribute to barjomet/slick-bitcoinrpc development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/7434416?s=400&v=4
+
+[16-Feb-19 06:26 PM] Alright#0419
+```
+from slickrpc import Proxy
+
+bitcoin = Proxy("http://%s:%s@127.0.0.1:8332"%(rpcuser, rpcpassword))
+print(bitcoin.getblock(bitcoin.getbestblockhash()))
+```
+
+[16-Feb-19 06:26 PM] Alright#0419
+it's like this
+
+[16-Feb-19 06:28 PM] Alright#0419
+rpc_connection  = Proxy("http://%s:%s@127.0.0.1:8332"%(rpcuser, rpcpassword))
+
+[16-Feb-19 06:28 PM] Alright#0419
+rpc_connection.stop() does definitely stop the daemon
+
+[16-Feb-19 06:29 PM] Alright#0419
+it's literally the same thing as `komodo-cli stop`
+
+[16-Feb-19 06:29 PM] Alright#0419
+man that's just how slickrpc works
+
+[16-Feb-19 06:29 PM] Alright#0419
+I have no idea. it's a blackbox to me
+
+[16-Feb-19 06:29 PM] Alright#0419
+```
+from slickrpc import Proxy
+
+bitcoin = Proxy("http://%s:%s@127.0.0.1:8332"%(rpcuser, rpcpassword))
+print(bitcoin.getblock(bitcoin.getbestblockhash()))
+```
+do you see this?
+
+[16-Feb-19 06:29 PM] Alright#0419
+you don't need to define getblock or getbestblockhash
+
+[16-Feb-19 06:30 PM] Alright#0419
+it's as simple as those 3 lines
+
+[16-Feb-19 06:30 PM] Alright#0419
+rpc_connection.stop()
+
+[16-Feb-19 06:31 PM] Alright#0419
+it's *literally* the same thing as `komodo-cli stop`
+
+[16-Feb-19 06:31 PM] jl777c#5810
+connection stop is NOT stop rpc
+
+[16-Feb-19 06:31 PM] jl777c#5810
+unless it is sending the stop rpc
+
+[16-Feb-19 06:31 PM] Alright#0419
+that's what it is doing
+
+[16-Feb-19 06:31 PM] Alright#0419
+same exact thing as `komodo-cli stop`
+
+[16-Feb-19 06:32 PM] jl777c#5810
+it sounds like it is killing the tcp connection
+
+[16-Feb-19 06:32 PM] jl777c#5810
+instead of letting the daemon shutdown cleanly
+
+[16-Feb-19 06:32 PM] Alright#0419
+No, that's what i need to do, but can't figure out how to
+
+[16-Feb-19 06:32 PM] jl777c#5810
+system("./komodo-cli stop");
+
+[16-Feb-19 06:32 PM] Alright#0419
+it does stop the daemon cleanly. The problem is that the rpc connection used to stop it remains open
+
+[16-Feb-19 06:33 PM] Alright#0419
+the connection still exists somehow even after daemon stops
+
+[16-Feb-19 06:33 PM] Alright#0419
+so I think I need to explicitly close the connection my script is making, but I'm unsure how
+
+[16-Feb-19 06:33 PM] jl777c#5810
+maybe there is a "stop" equivalent for the client
+
+[16-Feb-19 06:34 PM] Alright#0419
+not sure what you mean
+
+[16-Feb-19 06:34 PM] Alright#0419
+it's arbitrary
+
+[16-Feb-19 06:41 PM] Alright#0419
+strange, I tried a sleep 200 and it still failed
+
+[16-Feb-19 06:47 PM] Alright#0419
+Thanks for the help @Deleted User , I'll need to get back to this tomorrow though
+
+[16-Feb-19 06:55 PM] TonyL#3577
+Hmm ```timeout=DEFAULT_HTTP_TIMEOUT``` is this method argument
+
+[16-Feb-19 06:56 PM] TonyL#3577
+And `DEFAULT_HTTP_TIMEOUT = 30` define in start
+
+[16-Feb-19 06:57 PM] TonyL#3577
+https://github.com/barjomet/slick-bitcoinrpc/blob/master/slickrpc/rpc.py#L45 it's possible to set timeout on Proxy object creation
+
+{Embed}
+https://github.com/barjomet/slick-bitcoinrpc/blob/master/slickrpc/rpc.py
+barjomet/slick-bitcoinrpc
+Just another Python bitcoin-rpc client. Contribute to barjomet/slick-bitcoinrpc development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/7434416?s=400&v=4
+
+[16-Feb-19 06:58 PM] TonyL#3577
+Is error that he using not correct pycurl variable?
+
+[16-Feb-19 06:59 PM] TonyL#3577
+Aha seems like `pycurl.TIMEOUT` is what needed to be used here
+
+[16-Feb-19 06:59 PM] TonyL#3577
+CONNECTTIMEOUT should be timeout on connection initialisation (timeout for connection attempt)
+
+[16-Feb-19 07:06 PM] TonyL#3577
+We want timeout for already established connection but now it have timeout for connection establishment
+
+[16-Feb-19 07:06 PM] TonyL#3577
+If I understand correct pycurl variables. Needs to be tested
+
+[17-Feb-19 12:07 AM] TonyL#3577
+https://curl.haxx.se/libcurl/c/curl_easy_setopt.html read documentation my suggestions were not correct - these params not very related. I can't realise how client can take server port if server is on server port.  On my side after `rpc_connection.stop()` Proxy receiving `chainname daemon stops` message and komodod stop listen on p2p and rpc ports. Then nothing  stops me to start daemon again
+
+[17-Feb-19 12:09 AM] TonyL#3577
+Possible to test this easy way actually:
+open ipython - create proxy object
+execute stop() via proxy object in ipython
+can start daemon in cli without problems and Proxy object isn't dead
+
+[17-Feb-19 02:35 AM] Alright#0419
+@TonyL thanks man, I'll have to try to dumb down my scripts and see if a simpler version works
+
+[17-Feb-19 02:35 AM] Alright#0419
+if it has the same result, can you take a look at it and try running?
+
+[17-Feb-19 03:23 AM] Alright#0419
+Ok, here is the simplest way to reproduce the problem. 
+
+open 2 terminals, start komodod in one of them normally 
+run this script in the other terminal https://pastebin.com/3zjihQih
+wait for komodod to stop in the other terminal then run `sudo netstat -nputw | grep<rpc port>`
+for me it outputs this 
+```
+tcp        1      0 127.0.0.1:52650         127.0.0.1:52574         CLOSE_WAIT  19116/python3       
+tcp6       0      0 127.0.0.1:52574         127.0.0.1:52650         FIN_WAIT2   -        
+```
+even though the daemon is closed
+
+{Embed}
+https://pastebin.com/3zjihQih
+#!/usr/bin/env python3    import platform  import os  import re  i...
+https://pastebin.com/i/facebook.png
+
+[17-Feb-19 03:41 AM] Alright#0419
+reran (seemingly) the same script I was trying yesterday and it worked
+
+[17-Feb-19 03:41 AM] Alright#0419
+wat.
+
+[17-Feb-19 03:41 AM] Alright#0419
+😫
+
+[17-Feb-19 04:44 AM] Alright#0419
+@Deleted User I added a sleep to the other while True and it works 😃
+
+{Reactions}
+👍 
+
+[17-Feb-19 09:28 AM] TonyL#3577
+@Alright I did exactly same way now - started stopping script in one terminal
+it took ~5 seconds before I get `error: couldn't connect to server: unknown (code -1)
+(make sure server is running and you are connecting to the correct RPC port)`
+In other terminal
+Then started chain in CLI without problems without script stopping
+
+[17-Feb-19 09:28 AM] TonyL#3577
+Really interesting if it works different way on your machine
+

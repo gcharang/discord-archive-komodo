@@ -1,0 +1,319 @@
+==============================================================
+Guild: Komodo
+Channel: talk-mining
+Topic: ./komodod -ac_name=ZAWY24 -ac_adaptivepow=1 -ac_supply=1000000 -ac_reward=10000000000 -ac_cc=2 -addnode=5.9.102.210 &
+
+A channel to discuss mining. For useful links and more info click the pinned messages to the right.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[09-Aug-19 10:57 PM] zawy#5864
+I can't follow enough to provide any feedback
+
+[10-Aug-19 04:13 AM] dukeleto#7326
+@jl777c i think i understood most of what you said
+
+[10-Aug-19 06:05 AM] jl777c#5810
+i dont think it works if the curve25519 chain isnt created from scratch each time. another try was to keep squaring to quickly get the total product and then linearly search, but without known anchor points, a parallel search can be done and 1/x used to get everything to multiply out right. i guess we wait for the chia vdf
+
+[10-Aug-19 09:04 AM] jl777c#5810
+exploring a modified merkle proof system, where instead of hashing you use curve25519 cmult. the proof size per 16 bits is a bit large, but i think it can be highly compressed by using standard G^(2^n) values. not 100% clear on all the details yet, but i think this allows to find the special 16bits encoded field elements, prove their location and also prove that it is in the linear curve25519 chain. if this is true it means it can use a brand new curve25519 chain for each block, which would mean that parallel processing wont be possible!
+
+[10-Aug-19 09:04 AM] jl777c#5810
+@zawy zach_bitcoin claims to have proven that all PoS systems are insecure. how does it affect your VDT+PoS? https://github.com/zack-bitcoin/amoveo/blob/master/docs/other_blockchains/proof_of_stake.md
+
+{Embed}
+https://github.com/zack-bitcoin/amoveo/blob/master/docs/other_blockchains/proof_of_stake.md
+zack-bitcoin/amoveo
+A blockchain for trust-free markets in financial derivatives - zack-bitcoin/amoveo
+https://avatars0.githubusercontent.com/u/6126593?s=400&v=4
+
+[10-Aug-19 09:06 AM] jl777c#5810
+also i am not 100% clear on the reversing nakamoto idea for VDT+PoS. do you mean to just start with the stake, add a time delay with VDT, and then submit the block? i guess the VDT needs to be below the bnTarget when hash combined with the txid of the staking utxo? with a divide by stake in the right place
+
+[10-Aug-19 09:41 AM] jl777c#5810
+with a utxo system, the stake will be scattered across a lot of different utxo, so i think it needs to do the VDT based on the pubkey and then given the output hash of the VDT, all the utxo can be hashed with the VDT and then divided by the specific value of each utxo and compare to bnTarget
+
+[10-Aug-19 10:08 AM] zawy#5864
+I tried to make the "reverse nakamoto consensus" section with the 1 to 7 bullets clear and precise enough to code.  Yes, that's the order. The big advantage of the VDF is that it allows the cnosensus voters to be "permissionless".  They do not need permission to join the vote which is required in non-VDF POS. non VDF POS requires all stakers to register their existance and lock up stake.  The VDF automatically locks stake in each vote.  You only need to prove you were a staker if you won the election.  This is why his 1st paragraph in "why POS fails" does not apply.  His next arguing point  seems to depend on stakers being a very small part of the amount of total coin, less than 1%.  My scheme requires a large portion of coin holders to be running a node which is also a "miner" and they do it for free..  A problem with all POW and POS is that people want no central authority and yet they want to pay others to vote for them in consensus  That's deeply flawed. Freedom is not free.  If you don't want a central authority, then do your share of the voting AND record all the results of all the votes.
+
+[10-Aug-19 10:14 AM] zawy#5864
+pubkey sounds like a good idea
+
+[10-Aug-19 10:15 AM] zawy#5864
+but finding out what your solvetime will be is fast and easy
+
+[10-Aug-19 10:17 AM] zawy#5864
+so you can cycle through them all. .
+
+[10-Aug-19 10:17 AM] jl777c#5810
+utxo based staking doesnt seem to need explicit permission, just having a utxo is enough. but you mean with the VDF we dont need to use coinage?
+
+[10-Aug-19 10:18 AM] zawy#5864
+Your probability of having a short solvetime is proportional to the coin in the utxo
+
+[10-Aug-19 10:19 AM] zawy#5864
+```solvetime = 2*RandValue*TargetSolvetime*Difficulty/(UTXO qty)```
+
+[10-Aug-19 10:19 AM] jl777c#5810
+only the amount then, yes that is an improvement, but without the actual VDF value, it seems you cant tell if a specific utxo wins or not, so the VDF must be based on something like the pubkey, height, prevhash
+
+[10-Aug-19 10:20 AM] zawy#5864
+The randvalue here is key
+
+[10-Aug-19 10:20 AM] jl777c#5810
+the VDF value would be the same for all utxo for the same pubkey
+
+[10-Aug-19 10:20 AM] jl777c#5810
+and becomes the randvalue
+
+[10-Aug-19 10:21 AM] jl777c#5810
+so all staker need to use a CPU core calculating the VDF value each block
+
+[10-Aug-19 10:21 AM] zawy#5864
+the rand value is generated from the pubkey and previous VDF output but not the previous block hash in order to prevent being able to construct blocks that give you a better chance in the next round
+
+[10-Aug-19 10:22 AM] jl777c#5810
+yes, prevent stakers from grinding
+
+[10-Aug-19 10:22 AM] jl777c#5810
+so hash (pubkey + prev VDF) is the rand value
+
+[10-Aug-19 10:23 AM] jl777c#5810
+then you just use the smallest value utxo that would solve the block
+
+[10-Aug-19 10:26 AM] zawy#5864
+After Chia finally released their paper this summer, it seems they are also doing a "reverse" process.....but they noticed that the timestamp also allows grinding which I didn't.  So they came up with a difficulty algorithms that I know is a disaster in POW.  It very likely is not be a disaster if everyone is consistently voting (not doing on-off mining) which may be the case here because there are no minnig profits.  But I have a long section decribing the problem and a different DA to handle it.  But now that I think about it, their solution may be fine in my scheme (but maybe not theirs because they were considering paying farmers).
+
+[10-Aug-19 10:27 AM] zawy#5864
+Another possibility is that I don't allow miners to assign a timestamp.....they simply must add the solvetime they calculate to the previous timestamp
+
+[10-Aug-19 10:28 AM] zawy#5864
+So the time cuold get far off from eral time which must be why I did not do that...but that does nto seem to be a problem
+
+[10-Aug-19 10:29 AM] jl777c#5810
+why not make elapsed time part of the solving?
+
+[10-Aug-19 10:29 AM] zawy#5864
+I think I thought of that and said "heck, let them pick a timestamp" without realizing it opened a grinding attack, so I may make that change and delete that whole paragraph
+
+[10-Aug-19 10:30 AM] jl777c#5810
+then all will be incentivized to future date it as much as possible, but with FTL of 4, there is not much room for that
+
+[10-Aug-19 10:30 AM] jl777c#5810
+```solvetime = 2*RandValue*TargetSolvetime*Difficulty/((UTXO qty)*f(tipdiff))```
+
+[10-Aug-19 10:30 AM] zawy#5864
+a future time here in the timestamps does not help
+
+[10-Aug-19 10:31 AM] jl777c#5810
+if it is in the divisor, it seems to help reduce solve time
+
+[10-Aug-19 10:33 AM] zawy#5864
+tipdiff always  = solvetime in my mind in that equation so I'm having trouble seeing the implication
+
+[10-Aug-19 10:34 AM] jl777c#5810
+it just motivates all stakers to set the timestamp as close to realtime as possible
+
+[10-Aug-19 10:34 AM] jl777c#5810
+and to submit the block as soon as their stake+tipdiff solves the block
+
+[10-Aug-19 10:35 AM] jl777c#5810
+the VDF will take different amounts of time on different systems
+
+[10-Aug-19 10:35 AM] zawy#5864
+but it should motivate +FTL error per block
+
+[10-Aug-19 10:35 AM] jl777c#5810
+maybe 3:1 ratio or more
+
+[10-Aug-19 10:36 AM] jl777c#5810
+yes everyone will try to push as close to FTL border as possible, but with FTL of 4... pushing it even 1 second risks some nodes rejecting it
+
+[10-Aug-19 10:36 AM] jl777c#5810
+and 1 or 2 seconds shouldnt matter so much with the right f(tipdiff)
+
+[10-Aug-19 10:37 AM] jl777c#5810
+just enough to incentivize using correct timestamp
+
+[10-Aug-19 10:41 AM] zawy#5864
+But any ability to change solvetime  allows a grinding attack...he can try all N-possible  timestamps and run them all through a VDF at same time privately, then he does it again for each of those VDF outputs, needing to run N\*N VDFs in parallel in the next block height.....maybe he can do 3 or more generations ...he can then choose which path of timestamp selection that  increased his chances of winning by I think N, amplifying his apparent stake by N
+
+[10-Aug-19 10:45 AM] jl777c#5810
+the tipdiff needs to not affect the VDF solvetime, but affect the bnTarget comparison then
+
+[10-Aug-19 10:52 AM] zawy#5864
+But bnTarget in the disguise of Diffiulty above would affect   solvetime   , right?
+
+[10-Aug-19 10:53 AM] jl777c#5810
+maybe it is VDF delaytime and a separate solvetime
+
+[10-Aug-19 10:54 AM] zawy#5864
+hmmm
+
+[10-Aug-19 10:54 AM] zawy#5864
+another field in the header.....I think that would be good
+
+[10-Aug-19 10:54 AM] jl777c#5810
+so it needs to have a delaytime at a minimum added to the prior timestamp, in addition to tipdiff based bnTarget calc
+
+[10-Aug-19 10:54 AM] jl777c#5810
+i think both are able to be calculated without any additional field needed
+
+[10-Aug-19 10:56 AM] jl777c#5810
+this way it seems that even if you can calcualate VDF at 3x realtime speeds, it wont help
+
+[10-Aug-19 10:56 AM] jl777c#5810
+as you still need the tipdiff to advance
+
+[10-Aug-19 10:57 AM] jl777c#5810
+without this, just relying on VDF solve seems to give the fastest CPU a big edge
+
+[10-Aug-19 10:57 AM] jl777c#5810
+the latest i99999 would certainly calculate the VDF faster than a raspberry pi
+
+[10-Aug-19 10:58 AM] zawy#5864
+I may be in and out today, but I want  to discuss it to your exhaustion.
+
+[10-Aug-19 10:58 AM] jl777c#5810
+but for PoS we would want to remove this CPU based advantage
+
+[10-Aug-19 10:58 AM] jl777c#5810
+with a small FTL, you can have it solved in half the time, but you would need to wait until it was eligible
+
+[10-Aug-19 11:06 AM] jl777c#5810
+without a tipdiff based equation, then the fastest CPU will win, given equal stake, so your staking power is CPU speed * stake
+
+[10-Aug-19 11:19 AM] zawy#5864
+The VDF should be implemented by special, possibly expensive, possibly ASIC, VDF or VDF server.  Ideally, everyone would buy their own VDF ASIC that should be small and cheap, except for development.  Chia is spending a lot of bounty on the fastest code.
+
+[10-Aug-19 11:20 AM] zawy#5864
+Chia envisions VDF servers.
+
+[10-Aug-19 11:21 AM] zawy#5864
+I'm thinking about your idea
+
+[10-Aug-19 01:43 PM] zawy#5864
+@jl777c   I am not clear on your idea.  Can you show me the logic+math that determines the next timestamp and VDF value?
+
+[10-Aug-19 01:54 PM] jl777c#5810
+the staker would determine the next timestamp, most likely realtime due to slightly easier bnTarget the larger tipdiff is. the VDF is the same logic as yours, just adjusting the bnTarget via tipdiff (slightly)
+
+[10-Aug-19 03:18 PM] zawy#5864
+Being able to adjust bnTarget by just 2 options will double the attacker's solutions (effective stake) for the next block.
+
+[10-Aug-19 03:19 PM] zawy#5864
+solvetime affects VDF's random output that's used in next block
+
+[10-Aug-19 03:20 PM] jl777c#5810
+can we have a fixed solvetime for the VDF that way having N different timestamps doesnt change the first N that solves the block, so it doesnt seem like it increases the attackers solutions
+
+[10-Aug-19 04:02 PM] zawy#5864
+You need different solvetimes to prevent collisions.  I made the solvetime distribution flat so there would be fewer collisions than poisson.  If stake-rate is constant, a solution will be found in 0 to 2 x T. (  But if that's with 50% probability, I need to remove the 2.  )   Being able to change the POW's difficulty (not the VDF-POS) by the VDF-POS winners increasing or decreasing it by 0.01% per block is crucial to my coin idea.  So, to keep VDF on track with real time (the problem here) they could also vote to change the  conversion factor between real time and current VDF rate by 0.01%, but the change is delayed 500 blocks.
+
+[10-Aug-19 04:03 PM] zawy#5864
+delayed so they do not get the benefit of  this 1-bit grind doubling thier chances in the next block
+
+[10-Aug-19 04:05 PM] jl777c#5810
+i was thinking in terms of just replacing an existing utxo staking with VDF-PoS
+
+[10-Aug-19 04:06 PM] jl777c#5810
+wouldnt different amounts in utxo get different solvetimes?
+
+[10-Aug-19 04:06 PM] zawy#5864
+yes
+
+[10-Aug-19 04:07 PM] jl777c#5810
+maybe the pubkey needs to be part of the random, to make each staker get different solvetimes
+
+[10-Aug-19 04:10 PM] zawy#5864
+The solvetime must be based on the stake.  If he used the pubkey, he would still have to prove he owns all utxo's that sum to the stake QTY in the denominator......so it seems he might as well check every UTXO he has instead.  Also, he could mix and match UTXOs for different quantities to grind, unless the validator knows that he used all UTXO's that exist for that pubkey.
+
+[10-Aug-19 04:11 PM] zawy#5864
+I am assuming you mean use pubkey so that he does not have to check every UTXO
+
+[10-Aug-19 04:13 PM] zawy#5864
+The security comes from stakers not wanting the coin to be attacked because they would lose value.
+
+[10-Aug-19 04:14 PM] zawy#5864
+Similarly, miners do not want BTC to be attacked because of the stake they have in equipment.
+
+[10-Aug-19 04:21 PM] zawy#5864
+Replace that POW stake in equip and with  HR as a commodity in the free market (rentals) then BTC has zero security.  POW is a POS scheme that is different  because the stake in POW is locked up in the machine churning out hashes during the vote.  Also different because the POW stake is off-chain, but the miner is trying to get that off-chain stake converted to on-chain stake.  So the time order is reversed.    A government wanting to take over BTC would have to buy $2B of equipment, about the cost of a bomber.  But if BTC had this scheme and everyone ran a node, it would cost the government $100 B plus the massive increase in price that buying coin would cause, if the government had not been secretly buying up coin from the beginning.
+
+[10-Aug-19 04:22 PM] zawy#5864
+But if the government owns a lot of the coin....it might not want to harm it
+
+[10-Aug-19 04:23 PM] jl777c#5810
+maybe the total value of all the utxo is what sets the VDF initial VDF time, but the actual utxo used would extend it? still not sure how the VDF fits into the staking picture precisely
+
+[10-Aug-19 04:24 PM] jl777c#5810
+i think of things in terms of the actual list of utxos for a pubkey, some calculation happens for each utxo, which is compared to a bnTarget, with adjustment for utxo size (and tipdiff?) involved in the equation. without seeing the actual bnTarget equation, i am sort of blind about the details
+
+[10-Aug-19 04:25 PM] zawy#5864
+difficulty is set by past solvetimes.    It is an estimate of the total amount of stake participating, without having any clue as to actual UTXOs that are out there, just the ones that find a solvetime
+
+[10-Aug-19 04:25 PM] zawy#5864
+this is exactly like POW and it's the miracle of Nakamoto consensus
+
+[10-Aug-19 04:31 PM] zawy#5864
+traditional consensus made voters register and then gave them a time period to vote.  Then everyone counts the votes to see the result from the  majority of the registered voters.   Nakamoto turned the distributed consensus world upside down by using the voting period  to measure the number of voters.   In addition, the traditional scheme required every voter to digital sign their votes to get 50% instead of 33% protection.   But POW only need to check the hash.   Traditional hasw massive communication: registering, counting every digitally signed vote.   Nakamoto needs only 1 vote from 1 previously anonymous voter to prove he won the election.
+
+[10-Aug-19 04:31 PM] jl777c#5810
+yes, i understood that part from your articles
+
+[10-Aug-19 04:32 PM] zawy#5864
+Oh i didn't remember i mentionde digitally signing....ok great
+
+[10-Aug-19 04:32 PM] jl777c#5810
+with utxo based staking, it seems like other than the entropy that might be grinded, it can be quite similar
+
+[10-Aug-19 04:33 PM] jl777c#5810
+absence of a winning submission and solvetime determines the size of the electorate
+
+[10-Aug-19 04:34 PM] zawy#5864
+```bnTarget = avg(N prev targets) * avg(N solvetimes) / T```
+
+[10-Aug-19 04:35 PM] zawy#5864
+same as always
+
+[10-Aug-19 04:35 PM] jl777c#5810
+ok, and how is the "hash" calculated that is compared to the bnTarget
+
+[10-Aug-19 04:38 PM] zawy#5864
+```solvetime = 2*RandValue*TargetSolvetime*2^256/target/(UTXO qty)
+hash = RandValue / (UTXO qty)```
+
+[10-Aug-19 04:38 PM] zawy#5864
+```Randvalue = function(UTXO, pubkey, previous VDFout)```
+
+[10-Aug-19 04:39 PM] jl777c#5810
+so there is a different VDF out for each utxo?
+
+[10-Aug-19 04:39 PM] jl777c#5810
+how can a node calculate that efficiently
+
+[10-Aug-19 04:39 PM] jl777c#5810
+oh, previous VDF out. what is the current VDFout and how does it factor into things?
+
+[10-Aug-19 04:40 PM] zawy#5864
+You do not need to run a VDF  (or pay a central server) unless you get a fast solvetime
+
+[10-Aug-19 04:41 PM] jl777c#5810
+ok, so you scan all your utxo, find the smallest one that would win a block, then obtain a VDF to be able to submit the new block
+
+[10-Aug-19 04:41 PM] jl777c#5810
+and the VDF delay time needs to match the solvetime from above
+
+[10-Aug-19 04:43 PM] zawy#5864
+```VDFout = eval(solvetime,Seed)
+seed = functionA(UTXO, pubkey, previous VDFout)
+RandValue  = normalize 0 to 1 the hash(seed)```
+
+[10-Aug-19 04:44 PM] zawy#5864
+```eval() also returns proof VDF was solved```
+
+[10-Aug-19 04:44 PM] jl777c#5810
+and the timestamp needs to be exactly solvetime more than past block?
+

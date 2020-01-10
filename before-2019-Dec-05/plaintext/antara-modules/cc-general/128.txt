@@ -1,0 +1,510 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[09-Nov-18 04:12 PM] Bryan_Beus#6442
+ok
+
+[09-Nov-18 04:12 PM] Bryan_Beus#6442
+so, this is mostly for instant payments, and while it can be combined in some scenarios, it can be difficult to accomplish this
+
+[09-Nov-18 04:12 PM] Mihailo#5902
+Well, for now it is a single CC
+
+[09-Nov-18 04:15 PM] jl777c#5810
+if we can add token sending via channels, then people can channel send tokens that represent, whatever the tokens represent
+
+[09-Nov-18 04:17 PM] Bryan_Beus#6442
+ok
+
+[09-Nov-18 04:17 PM] Bryan_Beus#6442
+can you please describe for me the general flow of using channels?
+
+[09-Nov-18 04:18 PM] Bryan_Beus#6442
+for example, you create a channel with the `rpccall` method,
+
+then you X with `rpccall`,
+
+then X with `rpccall`,
+
+and once the txid enters the mempool, the payment can be considered spent
+
+[09-Nov-18 04:18 PM] Bryan_Beus#6442
+and anything about withdrawing from the cc or ending it, etc.
+
+[09-Nov-18 04:27 PM] Mihailo#5902
+This is the regular flow of using channel:
+```
+Channel create: channelsopen destination_public_key number_of_payments payment_amount - this creates a channel between the one creating channel and the destination public key with number of payments defined of certain denomination.
+Example: channesopen 025d2c1b95cd6e49ca2159ed58ef748a52c90efb2509d174c091328713388b6e3a 100 10000 - will create a channel with 100 payments of 10k satoshi - in total 0.01 coin.
+
+Channel payment: channelspayment open_tx_id number_of_pyaments_released - this will send the specified amount to receiver
+Example channelspayment 636318273631cb3d205bde25bcf0cf3137984e2b866c3aa879040f906fb47c3b 10 - will send 100k satoshi to receiver.
+```
+
+[09-Nov-18 04:27 PM] TonyL#3577
+https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340 here are the RPC calls for channels (channels page)
+
+{Embed}
+https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit
+Smart Contract Test Plan
+faucet
+
+
+ Faucet Contract
+ Available RPC calls, What does this Call do?, Example Test Command, Example Expected Output, What to Check, Comments, Testing Result
+ faucetaddress[ pubkey], Will display central faucet address and your faucet contract address for your pubkey.
+ pubk...
+https://lh4.googleusercontent.com/jG0EwoRG0GKTwPpnAwZivN2UkcMWt-qr3QUTPsmy2nz8nNGRLIBXezodcKzZoKg9bFwJDQ=w1200-h630-p
+
+[09-Nov-18 04:27 PM] TonyL#3577
+With responses examples
+
+[09-Nov-18 04:28 PM] Bryan_Beus#6442
+Perfect
+
+[09-Nov-18 04:30 PM] Mihailo#5902
+Now when the sender does not want to have the funds in a channel anymore (want to withdraw them and use them anywhere else) he needs to close the channel and after channel close is notarized he can retreive the funds. This is important to show the recevier that the channel will be closed and it won't receive new funds anymore.
+```
+Channel close: channelsclose open_tx_id - it will close the channel
+
+Channel refund: channelsrefund open_tx_id close_tx_id - this will retreive funds from channle adress back to creators pubkey address, but only after close is notarized
+```
+
+[09-Nov-18 04:33 PM] Mihailo#5902
+You have also channel info to list all the available channels in which you are involved, and to get specific info for particular channel:
+```
+Channel info: channelsinfo - will list all the channels available and their open_tx_id
+channelsinfo open_tx_id - will list info for that particular channel
+```
+
+[09-Nov-18 04:37 PM] Bryan_Beus#6442
+ok, great. 
+
+I think I can work with all of this. Will let you know when I have more questions. Thank you both.
+
+[09-Nov-18 04:38 PM] Bryan_Beus#6442
+@Mihailo 
+
+will you be around for a bit?
+
+[09-Nov-18 04:39 PM] Mihailo#5902
+Well, I'm leaving soon, but will check Discord periodically so you can ask me and I'll respond asap.
+
+[09-Nov-18 04:39 PM] Bryan_Beus#6442
+great, thx
+
+[11-Nov-18 11:07 PM] Larbiouajani#7820
+https://get.cryptobrowser.site/3696600
+
+{Embed}
+https://get.cryptobrowser.site/3696600
+CryptoTab Browser - Lightweight, fast, and ready to mine!
+CryptoTab Browser is the world’s first web browser with built-in mining features. Familiar Chrome user interface is perfectly combined with extremely fast mining speed. Mine and browse at the same time!
+https://get.cryptobrowser.site/static/django-cryptotab-sharing/cryptotab_sharing/images/message_images/cryptotab_browser_og-img-sqaure-ready-02@2x.png
+
+{Reactions}
+🤔 (2) 
+
+[12-Nov-18 08:24 PM] jl777c#5810
+@TonyL @Mihailo found the oracles validation error. was latent and small utxo exposed the problem
+
+[12-Nov-18 08:24 PM] jl777c#5810
+also, i am not seeing any problems on the dealer node, is the stress test still going?
+
+[12-Nov-18 08:26 PM] TonyL#3577
+I've experimented with spam scripts and seems it's broke it. Let me check
+
+[12-Nov-18 08:27 PM] TonyL#3577
+Oh, so `oraclefeed` might work now
+
+[12-Nov-18 08:30 PM] jl777c#5810
+fix will be tomorrow
+
+{Reactions}
+👌 
+
+[12-Nov-18 08:36 PM] TonyL#3577
+@jl777c stress-test should be live
+
+[12-Nov-18 10:41 PM] TonyL#3577
+My ISP made a stress-test for me instead by random downtime for a 2 hours  :trollface: 
+Was surprised how many things it's possible to do when there is no internet at all
+
+{Reactions}
+😕 
+
+[13-Nov-18 08:30 AM] gcharang#6833
+@TonyL Hey! I am testing https://github.com/tonymorony/trollbox_gui  .Can you give me chain params?
+
+{Embed}
+https://github.com/tonymorony/trollbox_gui
+tonymorony/trollbox_gui
+My plays with Python Kivy GUI framework and Stakedchain OraclesCC chat concept - tonymorony/trollbox_gui
+https://avatars1.githubusercontent.com/u/24797699?s=400&v=4
+
+[13-Nov-18 08:35 AM] TonyL#3577
+Hey @gcharang ! 
+Now I'm on: ```./komodod -ac_name=CCNG1 -ac_supply=1000 -ac_reward=10000000000000 -ac_cc=1 -addnode=159.69.201.122 -addnode=159.69.45.70 -daemon```
+
+[13-Nov-18 08:36 AM] gcharang#6833
+And he repo is jl777/komodo - FSM branch ?
+
+[13-Nov-18 08:37 AM] TonyL#3577
+Yup
+
+{Reactions}
+👍 
+
+[13-Nov-18 08:37 AM] TonyL#3577
+Oh have to notice repo in manual as well. And will make some chain kinda official testing chain to mention it in repo
+
+[13-Nov-18 10:13 AM] CrisF#3405
+@TonyL I've given it a decent try.  Think it's my ubuntu 16.04 ```MTDev is not supported by your version of linux```
+
+[13-Nov-18 10:15 AM] CrisF#3405
+Also tried with trollbox with pubkey trouble.  Think it may be to my setup of having FSM in a diferent directory.
+Will have a try again later.
+
+[13-Nov-18 08:09 PM] TonyL#3577
+@CrisF Komodo even maybe installed on different server - since app working via RPC - just connection needed to be manually hardcoded atm (https://github.com/tonymorony/trollbox_gui#rpc-connection)
+Hmm try something like a  `sudo apt-get install libmtdev1`
+I've tried only on 18.04
+
+{Embed}
+https://github.com/tonymorony/trollbox_gui
+tonymorony/trollbox_gui
+My plays with Python Kivy GUI framework and Stakedchain OraclesCC chat concept - tonymorony/trollbox_gui
+https://avatars1.githubusercontent.com/u/24797699?s=400&v=4
+
+[13-Nov-18 10:58 PM] TonyL#3577
+Downloading 16.04.5 (Xenial Xerus) ISO to check dependencies here
+
+[13-Nov-18 11:11 PM] CrisF#3405
+@TonyL Thanks!
+
+{Reactions}
+👍 
+
+[14-Nov-18 01:27 AM] TonyL#3577
+@CrisF Started on Ubuntu 16.04 - only one additional step was needed - updating Python to 3.6 by this guide (including this step sudo rm /usr/bin/python3
+sudo ln -s python3.5 /usr/bin/python3) http://ubuntuhandbook.org/index.php/2017/07/install-python-3-6-1-in-ubuntu-16-04-lts/
+After python updating execute packages installing string again since python3-kivy will update
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/512076165062590466/unknown.png
+
+{Embed}
+Ji m
+http://ubuntuhandbook.org/index.php/2017/07/install-python-3-6-1-in-ubuntu-16-04-lts
+How to Install Python 3.6.1 in Ubuntu 16.04 LTS
+
+[14-Nov-18 01:38 AM] TonyL#3577
+@Deleted User Is it possible to put not only pip packages / additional files into virtualenv but also python itself?
+On my to-do list arrange packaging/build executables (as soon as RPC connection details will be not hardcoded)
+It's not worked on python3.5 because 3.6+ working with bytes type different way
+
+[14-Nov-18 01:40 AM] TonyL#3577
+Will try, thanks 👍 First time working with external libraries hehe
+
+[14-Nov-18 04:44 AM] CrisF#3405
+@TonyL Thank you!
+
+[14-Nov-18 05:12 AM] blackjok3r#3181
+virtual env is better to not screw system... but not aleays the easiest for noobs... ideally it should *just work*
+
+[14-Nov-18 06:33 AM] TonyL#3577
+Current installation is for contributors/devs mostly - in general there is a possibility to build multi-platforms executables in used framework, just have to learn how 😃
+
+{Reactions}
+👌 
+
+[14-Nov-18 11:40 AM] TonyL#3577
+Seems that I solved problems most of the problems with connectivity problems in TUI - just switched RPC connection lib to this one https://github.com/barjomet/slick-bitcoinrpc Moreover creator promised much better perfomance.
+One which I used before (https://github.com/jgarzik/python-bitcoinrpc) seems tricky somewhere and losing RPC connection after X seconds of inactivity - so not recommended to use ))
+
+{Embed}
+https://github.com/barjomet/slick-bitcoinrpc
+barjomet/slick-bitcoinrpc
+Just another Python bitcoin-rpc client. Contribute to barjomet/slick-bitcoinrpc development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/7434416?s=400&v=4
+
+{Reactions}
+👌 (2) 
+
+[14-Nov-18 05:45 PM] Mihailo#5902
+@TonyL I have fixed oracle (I think 😃 ) so you can start testing it. I think previous created oracles can be used. But this fix is a hardfork change because there is change in validation so you must update all nodes.
+https://github.com/jl777/komodo/pull/948
+
+{Embed}
+https://github.com/jl777/komodo/pull/948
+Oracle Fix by Mixa84 · Pull Request #948 · jl777/komodo
+Reorder vins so that only one normal vin is before CC vin and other normal vins moved to end
+Fixed AddOracleInputs to add utxos only from that oracle
+Fixed sharing funds from all oracles for that p...
+https://avatars3.githubusercontent.com/u/39563265?s=400&v=4
+
+{Reactions}
+👌 
+
+[15-Nov-18 08:18 AM] TonyL#3577
+@Mihailo Oraclefeed seems working smooth now  🚀 
+Almost finished with environment setup to proceed with 2/3 gw deposits/withdrawals test
+
+[15-Nov-18 08:26 AM] TonyL#3577
+Time to time oraclefeed printing errors regards not enough oraclesinputs (but there is a few hundred oraclessubscribe UTXOs) but in the next block heights continue to oraclize
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/512543998339055619/unknown.png
+
+[15-Nov-18 08:59 AM] TonyL#3577
+Seems problem is on my UTXO generator side. Batch of oraclessubscribes generating but not sending now straight
+
+[15-Nov-18 09:17 AM] TonyL#3577
+There is some strange behaviour in general - part of sending transactions just disappear  and not coming mempool(seems that's why UTXO generator getting txids but these transactions not coming to mempool and publisher funds not increasing)
+Like a on screenshot - was broadcasted data for 1098079 - 1098085 heights
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/512556806304694294/unknown.png
+
+[15-Nov-18 09:18 AM] TonyL#3577
+But actually there is a gap
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/512556949619867658/unknown.png
+
+[15-Nov-18 09:18 AM] jl777c#5810
+do you wait until a tx is in the mempool before sending the next one?
+
+[15-Nov-18 09:19 AM] jl777c#5810
+unlike dice, with oracles it is important to get each one in the mempool
+
+[15-Nov-18 09:20 AM] TonyL#3577
+Is oraclefeed waiting for it?
+
+[15-Nov-18 09:21 AM] TonyL#3577
+```broadcast TONY1 txid.(21698e5c49fe5f0a8114379cee14ec7ac177e5554dba5aac6e544d5c8d4557c8)
+KMD ht.1098079 <- 5fc110006f358efd1f8351fc6d03e33eae24918acecb8a0256aa50d98d8af30f1b1d850da585de3b0f68912fdc5fc2a7f4bd5e4d8f08a00249899d074752ece3b327acac
+f.B M.2 of N.3 size.3 -> bWyntMYswmnUn2zDeCxAxW5TFaNdN8R9pu
+9fde01fe12fbe970df8bebaa1b7cb63c1b76d417ebae35c3089fdd0874a60b2e 1 100000000
+3f4f2a01d1f183430732651e6b2ef3e86cc9b500b13072e0486480efc00e464d 0 10000
+```
+```
+./komodo-cli -ac_name=TONY1 getrawtransaction 21698e5c49fe5f0a8114379cee14ec7ac177e5554dba5aac6e544d5c8d4557c8 1
+error code: -5
+error message:
+No information available about transaction```
+
+[15-Nov-18 09:24 AM] TonyL#3577
+I'll wait re-write UTXO generator to wait previous tx get to mempool - seems things working different now after latest mempool changes
+
+[15-Nov-18 09:24 AM] TonyL#3577
+Now getting huge gaps in heights
+
+[15-Nov-18 09:24 AM] jl777c#5810
+mempool usage is always a bit unreliable. but not even checking if it got into your own mempool is guaranteeing your nodes idea of current state will be different than what it actually is
+
+[15-Nov-18 09:26 AM] TonyL#3577
+oraclefeed printing some txids but there is no such transactions on chain (and don't see any printouts why it's not getting to mempool)
+
+[15-Nov-18 09:26 AM] jl777c#5810
+no errors in debug.log
+
+[15-Nov-18 09:26 AM] jl777c#5810
+I assume if you wait for confirmations, it works?
+
+[15-Nov-18 09:28 AM] TonyL#3577
+```2018-11-15 09:16:36 AddToWallet 0a3589a78bca52006b5fb4588357b0a1c5ff31ae865233fbf131742504ec00bb  new
+2018-11-15 09:19:30 connect() to 95.213.238.98:56247 failed after select(): Connection refused (111)
+2018-11-15 09:20:17 connect() to 159.65.134.48:56247 failed after select(): Connection refused (111)
+2018-11-15 09:20:44 connect() to 217.182.203.106:56247 failed after select(): Connection refused (111)```
+
+[15-Nov-18 09:28 AM] TonyL#3577
+I guess thats it
+
+[15-Nov-18 09:30 AM] TonyL#3577
+But none of my nodes have such IPs, not sure why this info in .komodo/TONY1/debug.log 
+Some blocking from google cloud side maybe 🤔
+
+[15-Nov-18 09:33 AM] TonyL#3577
+Hetzner node seems working ok, 2 Google Cloud nodes got issues with transactions broadcasting (part broadcasting part just dissapear)
+
+[15-Nov-18 09:33 AM] TonyL#3577
+So problem should be on my network configuration side, not software
+
+{Reactions}
+🤕 
+
+[15-Nov-18 11:05 AM] TonyL#3577
+Interesting - with default GCP firewall restrictions I was able to sync the chain but it's partially blocked transactions broadcasting.
+After I've created custom GCP network rules it's seems working ok now. Kinda note if someone will use GCP for assetchain creation  😃
+
+[15-Nov-18 12:02 PM] Mihailo#5902
+I think I also had one situation where my tx disappeared, but I thought maybe it was something on my side I did wrong. If it happens elswhere then it could be an issue.
+
+[15-Nov-18 12:14 PM] Mihailo#5902
+@TonyL maybe you can hold on testing 2of3 gateway as I have an update for that that I will submit very soon. So you can then test gateway completley. I would focus on this oracle fix to check that everything works correctly.
+
+[15-Nov-18 12:21 PM] TonyL#3577
+It was an interesting network issue - firewall blocking rules allowed to synch the chain but didn't allow to interact with mempool for a 3 nodes from 5 in chain.
+
+[15-Nov-18 12:21 PM] TonyL#3577
+@Mihailo Will it be a hardforking change? Just tuned everything 😂
+
+[15-Nov-18 12:23 PM] TonyL#3577
+Eating a lot of time spinoff the new testing chain for 5 gateways test nodes: ensure the pubkeys, fill balance, import pubkeys to KMD chain, register/subscrie on oracle
+
+[15-Nov-18 12:23 PM] TonyL#3577
+Seems it's a time for more automation 😃
+
+[15-Nov-18 12:25 PM] gcharang#6833
+@TonyL you might find the scripts used in https://github.com/StakedChain/staked of some help to start with
+
+{Embed}
+https://github.com/StakedChain/staked
+StakedChain/staked
+repo for using staked chains, for testing and production use - StakedChain/staked
+https://avatars0.githubusercontent.com/u/42953759?s=400&v=4
+
+[15-Nov-18 12:27 PM] Mihailo#5902
+@TonyL, hm I think it will not be a hardfork change. I started implementing validation but I can turn it off until it is complete.
+
+[15-Nov-18 12:31 PM] TonyL#3577
+Thanks @gcharang 👍 
+@Mihailo If there some new changes are coming it's better to test with these changes to not do the same twice, just buzz me when changes are pushed and I'll test rapidly this time - have 5 servers now ready and synced
+
+[15-Nov-18 12:31 PM] TonyL#3577
+It's better to test with coming changes because anyway it will need a re-test after it
+
+[15-Nov-18 12:36 PM] Mihailo#5902
+👍
+
+[15-Nov-18 12:50 PM] Mihailo#5902
+@TonyL @jl777c Do we have some special defines in code for testing purposes? I was thinking for the function that will check if tx is notarized/confirmed it will be very long to wait for 60 confirms or notarization so we can lower the number just in testing. Do we have some mechanism already?
+
+[15-Nov-18 12:51 PM] jl777c#5810
+no we dont
+
+[15-Nov-18 12:51 PM] jl777c#5810
+feel free to add one
+
+[15-Nov-18 12:51 PM] jl777c#5810
+then build can be done with -DTESTMODE
+
+[15-Nov-18 12:52 PM] Mihailo#5902
+Ok, something like that would be good.
+
+[15-Nov-18 01:30 PM] kimmel (Pungo.io)#2275
+just for curiosity is someone building oracles to retrieve data based on cryptoconditions?
+
+[15-Nov-18 01:31 PM] kimmel (Pungo.io)#2275
+would be interesting to test some easy to fetch data into an oracle cryptocondition
+
+[15-Nov-18 01:31 PM] kimmel (Pungo.io)#2275
+I would like to test them with our backend at some point if it kind of works
+
+[15-Nov-18 01:32 PM] kimmel (Pungo.io)#2275
+I'm talking about easy data feeds such as fiat rates, crypto rates etc
+
+[15-Nov-18 01:35 PM] kimmel (Pungo.io)#2275
+aggregating data from several services and pushing it through a blockchain data feed service would would be an easy pas-as-you-go option an probably easy to monetize around the community
+
+[15-Nov-18 01:36 PM] kimmel (Pungo.io)#2275
+is someone aware of anyone building something like this around?
+
+[15-Nov-18 01:37 PM] jl777c#5810
+oraclefeed has a mode that pushes price into oracle
+
+[15-Nov-18 01:38 PM] TonyL#3577
+https://github.com/tonymorony/trollbox_gui in trollbox messenger gui using oraclesCC to post/read messages
+
+{Embed}
+https://github.com/tonymorony/trollbox_gui
+tonymorony/trollbox_gui
+My plays with Python Kivy GUI framework and Stakedchain OraclesCC chat concept - tonymorony/trollbox_gui
+https://avatars1.githubusercontent.com/u/24797699?s=400&v=4
+
+[15-Nov-18 01:39 PM] TonyL#3577
+https://github.com/tonymorony/kmd_cc_qa here also some scripts which publish / read from oracles like a basic examples what is possible to do
+
+{Embed}
+https://github.com/tonymorony/kmd_cc_qa
+tonymorony/kmd_cc_qa
+CLI Tools for Komodo CC. Contribute to tonymorony/kmd_cc_qa development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/24797699?s=400&v=4
+
+[15-Nov-18 01:40 PM] TonyL#3577
+https://github.com/StakedChain/trollbox non gui version of oraclesCC chat
+
+{Embed}
+https://github.com/StakedChain/trollbox
+StakedChain/trollbox
+On chain real time chat for KMD assetchains. Contribute to StakedChain/trollbox development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/42953759?s=400&v=4
+
+[15-Nov-18 02:04 PM] kimmel (Pungo.io)#2275
+thanks checking
+
+[15-Nov-18 03:00 PM] Alright#0419
+@kimmel (Pungo.io) 
+https://github.com/StakedChain/StakedNotary/blob/master/oraclefetch.sh
+https://github.com/StakedChain/StakedNotary/blob/master/oraclepush.sh
+
+{Embed}
+https://github.com/StakedChain/StakedNotary/blob/master/oraclefetch.sh
+StakedChain/StakedNotary
+repo to launch and manage STAKED notary nodes. Contribute to StakedChain/StakedNotary development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/42953759?s=400&v=4
+
+{Embed}
+https://github.com/StakedChain/StakedNotary/blob/master/oraclepush.sh
+StakedChain/StakedNotary
+repo to launch and manage STAKED notary nodes. Contribute to StakedChain/StakedNotary development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/42953759?s=400&v=4
+
+{Reactions}
+👍 
+
+[15-Nov-18 03:00 PM] Alright#0419
+scripts for pushing/retrieving arbitrary jsons on chain
+
+[15-Nov-18 06:32 PM] dukeleto#7326
+that looks shiny
+
+[16-Nov-18 10:38 AM] kimmel (Pungo.io)#2275
+looks nice, hope to have some hours, some day, to dig into it, thx @Alright
+
+[16-Nov-18 10:48 AM] TonyL#3577
+https://youtu.be/kcb8lRpZs6s pilot voice video guide for gateways TUI 
+Any feedback is welcome - fist such experience 😂
+
+{Embed}
+Tony Lysakov
+https://youtu.be/kcb8lRpZs6s
+Gateways CC 1 - Gateway Binding
+In this short video demonstration, I've created a gateway for external coin value transfer on Komodo cluster asset chain. Download TUI: https://github.com/to...
+https://i.ytimg.com/vi/kcb8lRpZs6s/maxresdefault.jpg
+
+[16-Nov-18 12:20 PM] TonyL#3577
+@Bryan_Beus Hi!  As discussed I've added examples of gatewaysCC RPC calls to test plan (it's not much useful without guide but I think better to have it to keep integrity). Also calls examples can be found here: https://github.com/jl777/komodo/blob/FSM/src/cc/gateways.cpp#L53
+
+{Embed}
+https://github.com/jl777/komodo/blob/FSM/src/cc/gateways.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[16-Nov-18 07:40 PM] Bryan_Beus#6442
+@TonyL 
+
+Great, thank you
+
+[16-Nov-18 07:41 PM] Bryan_Beus#6442
+I will try and add them soon.
+

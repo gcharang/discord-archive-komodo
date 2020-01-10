@@ -1,0 +1,417 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[22-Aug-18 10:08 AM] Alright#0419
+you can do `tail -f ~/.komodo/BRK/debug.log` for the debug.log
+
+[22-Aug-18 10:09 AM] CrisF#3405
+stdout```Dice plan (BORKED) already exists cmpflag.1
+```
+
+[22-Aug-18 10:10 AM] Alright#0419
+you're getting a completely different error than me
+
+[22-Aug-18 10:10 AM] Alright#0419
+I get the `missing inputs` error on 1 VPS on a fresh node and it works on the other VPS on a fresh node
+
+[22-Aug-18 10:10 AM] Alright#0419
+pretty confused about that
+
+[22-Aug-18 10:11 AM] CrisF#3405
+Ahh...  debug.log ```2018-08-22 10:10:21 connect() to 103.18.58.150:35102 failed after select(): No route to host (113)```
+
+[22-Aug-18 10:11 AM] Alright#0419
+can ignore that
+
+[22-Aug-18 10:11 AM] Alright#0419
+that's your node trying to connect to peers it got from the DNS seeder
+
+[22-Aug-18 10:11 AM] Alright#0419
+which aren't running BRK
+
+[22-Aug-18 10:11 AM] CrisF#3405
+I see.
+
+[22-Aug-18 10:14 AM] Alright#0419
+building komodod on a third VPS to see what happens >.<
+
+[22-Aug-18 10:17 AM] CrisF#3405
+I didn't build, only ran `./komodo-cli -ac_name=BRK dicebet BORKED fd6093b89df7cbb68796ad014682641cd74fd6bdd6b3599faf1474941afe5dc9 57 1`
+
+[22-Aug-18 10:17 AM] CrisF#3405
+after syncing.
+
+[22-Aug-18 10:19 AM] Alright#0419
+fresh VPS and it worked fine 😣
+
+[22-Aug-18 10:20 AM] Alright#0419
+I don't understand how spamming completely broke my komodod build's ability to do `dicebet`
+
+[22-Aug-18 10:20 AM] Alright#0419
+deleted the entire data directory *3* times, tested from scratch each time
+
+[22-Aug-18 10:23 AM] jl777c#5810
+but a fresh node worked?
+
+[22-Aug-18 10:23 AM] jl777c#5810
+clearly something is broken, need to isolate what
+
+[22-Aug-18 10:34 AM] Alright#0419
+Christ, it's time for bed 😣 my rawsend script was trying to send it on the wrong chain
+
+[22-Aug-18 10:34 AM] Alright#0419
+sorry :/
+
+[22-Aug-18 10:36 AM] SHossain#0007
+i just did a dicebet of `BORKED` and won
+```
+        "result": "success",
+        "status": "win",
+        "won": 114
+```
+
+[22-Aug-18 10:42 AM] jl777c#5810
+dice plan's dealer node needs to run dicestatus call in a cron task, or if anything happens to his node's realtime responses, all the dicebets will timeout and payout as winners and consume entropy tx
+
+[22-Aug-18 10:44 AM] CrisF#3405
+I have this in stdout ```CC Eval EVAL_DICE Invalid: DiceCalc mismatch for win/loss spending tx 098191216c728fc69ff3b84a696be30edb41362bad9092ff5b2a39e620171f6d```
+before this came up
+```Dice plan (BORKED) already exists cmpflag.1```
+
+[22-Aug-18 10:44 AM] CrisF#3405
+Not sure if useful...
+
+[22-Aug-18 10:45 AM] SHossain#0007
+what is your command?
+HEX value?
+
+[22-Aug-18 10:45 AM] jl777c#5810
+how did you get that error?
+
+[22-Aug-18 10:45 AM] jl777c#5810
+it is an invalid dicebet completion
+
+[22-Aug-18 10:45 AM] CrisF#3405
+It came up on startup it seems.
+
+[22-Aug-18 10:45 AM] CrisF#3405
+Then ran 
+`./komodo-cli -ac_name=BRK dicebet BORKED fd6093b89df7cbb68796ad014682641cd74fd6bdd6b3599faf1474941afe5dc9 57 1`
+
+[22-Aug-18 10:46 AM] CrisF#3405
+and this came up 
+`Dice plan (BORKED) already exists cmpflag.1
+`
+
+[22-Aug-18 10:48 AM] SHossain#0007
+i haven't seen that. but, i'll test a fresh sync now and lookout for the above error.
+btw, which branch you are using?
+
+[22-Aug-18 10:49 AM] CrisF#3405
+Same as I'm running for STAKED2 - `dev`
+
+[22-Aug-18 10:50 AM] Alright#0419
+Ah, forgot to mention that
+
+[22-Aug-18 10:51 AM] Alright#0419
+dice contract differs between dev and jl777 branches
+
+[22-Aug-18 10:51 AM] Alright#0419
+you'll want to build from jl777 for BRK
+
+[22-Aug-18 10:52 AM] CrisF#3405
+Will jl777 be OK with STAKED2 also?
+
+{Reactions}
+👎 
+
+[22-Aug-18 10:52 AM] SHossain#0007
+dev branch is old now. beta branch even would work.
+
+{Reactions}
+😛 
+
+[22-Aug-18 10:54 AM] SHossain#0007
+alternatively, you can copy compilied binaries from different branch into different directory and issue calls from there.
+
+[22-Aug-18 10:58 AM] CrisF#3405
+Would jl777 branch effect VerusCoin staking?  I have another vps doing that.
+
+[22-Aug-18 10:58 AM] SHossain#0007
+VRSC using completely different daemon
+
+[22-Aug-18 10:59 AM] CrisF#3405
+So no problem to use that then?
+
+[22-Aug-18 10:59 AM] SHossain#0007
+nope
+
+[22-Aug-18 11:00 AM] CrisF#3405
+Great, that's what I'll try.  (Not sure how to `copy compilied binaries from different branch into different directory and issue calls from there` yet.
+
+[22-Aug-18 11:04 AM] SHossain#0007
+Example:
+After compiling komodo using jl777 branch, use:
+```
+cd ~
+mkdir jl777
+cp ~/komodo/src/komodod ~/jl777/komodod
+cp ~/komodo/src/komodo-cli ~/jl777/komodo-cli
+cd jl777
+./komodod ........
+```
+After compiling komodo using dev branch, use:
+```
+cd ~
+mkdir dev
+cp ~/komodo/src/komodod ~/dev/komodod
+cp ~/komodo/src/komodo-cli ~/dev/komodo-cli
+cd dev
+./komodod ........
+```
+just basic copy-paste
+
+[22-Aug-18 11:07 AM] CrisF#3405
+Thanks, @SHossain !  That is very useful 😃
+
+{Reactions}
+👍🏽 
+
+[22-Aug-18 11:14 AM] Alright#0419
+@jl777c not sure if you saw above but `dicefund` needs a minimum to prevent `dicelist` spam
+
+[22-Aug-18 11:14 AM] Alright#0419
+will be back later today
+
+[22-Aug-18 11:16 AM] jl777c#5810
+ok, I will add a constraint for that
+
+[22-Aug-18 11:16 AM] jl777c#5810
+actually I cant
+
+[22-Aug-18 11:17 AM] jl777c#5810
+diceaddfund is not spending CC, so what I do is ignore anything that is too small
+
+[22-Aug-18 11:17 AM] Alright#0419
+Could you add something like `dicelist <pubkey>`?
+
+[22-Aug-18 11:28 AM] jl777c#5810
+what would it do?
+
+[22-Aug-18 12:39 PM] CrisF#3405
+@Alright  I'm on jl777 branch now.
+
+[22-Aug-18 12:40 PM] CrisF#3405
+```./komodo-cli -ac_name=BRK dicebet BORKED fd6093b89df7cbb68796ad014682641cd74fd6bdd6b3599faf1474941afe5dc9 57 1```
+gives 
+```"result": "success",
+  "hex": "0100000002419084cdfd254285e9cf89ba6984d7901d4df7ea607b2b18aa049327791ef817000000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e8140bc8dc581ff9c18a93f73e7fb3c8d9b908666d66b7b97bfe3364288523e46fee76980b775e96f003ae7da7ad8540e4ef2b6c2bb176db764d58982d496deef031aa100af038001e6a10001ffffffff53ecc6862ed4607e34c4d24ed93f386f0bfe0a3746d15011fd454a2aa3c84306010000006a473044022062d988500cc82ce8f003938de5f8825cec816f953f2d9fc48271241ed7ce9b5702205826420830e20dfc393658502042ca39e5537063d90b71c6298296920fec7087012102c633f3d8266a316ad1aa40c1531b6ab4b567c1ebf97cdbc7ac0a5e5da2391cf4ffffffff0500e1f50500000000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc0019bf5301000000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc1127000000000000232102c633f3d8266a316ad1aa40c1531b6ab4b567c1ebf97cdbc7ac0a5e5da2391cf4acdfd8babcf15a0000232102c633f3d8266a316ad1aa40c1531b6ab4b567c1ebf97cdbc7ac0a5e5da2391cf4ac00000000000000006d6a4c6ae642424f524b45440000c95dfe1a947414af9f59b3d6bdd64fd71c64824601ad9687b6cbf79db89360fdb24d8e79eaf574752dfa7f286a9af133a88acd41bda35d46f00d065076dccb75000000000000000000000000000000000000000000000000000000000000000000000000"```
+
+[22-Aug-18 12:42 PM] CHMEX#0686
+now you need to send the hex to the network with
+./komodo-cli -ac_name=BRK sendrawtransaction <pasteHEXhere>
+
+[22-Aug-18 12:42 PM] CrisF#3405
+```./komodo-cli -ac_name=BRK sendrawtransaction <I pasted HEXhere>```
+
+[22-Aug-18 12:42 PM] CHMEX#0686
+yes
+
+[22-Aug-18 12:45 PM] CrisF#3405
+My balance went down 57 + fee.
+
+[22-Aug-18 12:46 PM] CrisF#3405
+Anything else I need to do?
+
+[22-Aug-18 12:46 PM] jl777c#5810
+did you win or lose?
+
+[22-Aug-18 12:59 PM] CrisF#3405
+How can I check?
+
+[22-Aug-18 01:07 PM] CrisF#3405
+Ahh, `dicestatus` and those hexs.
+
+[22-Aug-18 01:07 PM] CrisF#3405
+```"result": "success",
+  "status": "win",
+  "won": 1```
+
+[22-Aug-18 01:09 PM] CrisF#3405
+Is @Alright the dealer on a table named `BORKED` ?
+
+[22-Aug-18 01:10 PM] CrisF#3405
+And I bet `57` with odds of `1`?
+
+[22-Aug-18 01:26 PM] CrisF#3405
+```"status": "win",
+  "won": 4662```
+
+[22-Aug-18 01:28 PM] CrisF#3405
+Now getting ```  "result": "error",
+  "error": "couldnt create faucet get transaction"```
+
+[22-Aug-18 01:28 PM] CrisF#3405
+Maybe empty?
+
+[22-Aug-18 01:29 PM] blackjok3r#3181
+there is a few conditions where it creates an error
+
+[22-Aug-18 01:29 PM] blackjok3r#3181
+I am trying to find all them on STAKED2 atm, but we are on an older version so not sure whats been changed
+
+[22-Aug-18 01:30 PM] blackjok3r#3181
+What you need to do, is have the terminal where you started `komodod` open and monitor what it prints out there, as they have more info on what is going on.
+
+[22-Aug-18 01:31 PM] CrisF#3405
+Didn't see anything starnge there, but I probably wouldn't know, haha.
+
+[22-Aug-18 01:31 PM] CrisF#3405
+`diceinfo` shows ```diceinfo fd6093b89df7cbb68796ad014682641cd74fd6bdd6b3599faf1474941afe5dc9
+{
+  "result": "success",
+  "fundingtxid": "fd6093b89df7cbb68796ad014682641cd74fd6bdd6b3599faf1474941afe5dc9",
+  "name": "BORKED",
+  "sbits": 75064407117634,
+  "minbet": "1.00000000",
+  "maxbet": "1000.00000000",
+  "maxodds": 5,
+  "timeoutblocks": 5,
+  "funding": "904.00000000"```
+
+[22-Aug-18 01:31 PM] CrisF#3405
+That wouldn't cover my payout if I won.
+
+[22-Aug-18 01:32 PM] CrisF#3405
+(I think)
+
+[22-Aug-18 01:32 PM] blackjok3r#3181
+that might be the issue then. I saw on STAKED2 that it would print for minbet/maxbet if you went under/over those
+
+[22-Aug-18 01:33 PM] blackjok3r#3181
+but I havent had it have less funding than the max bet yet
+
+[22-Aug-18 01:33 PM] blackjok3r#3181
+its going to be hard to do that, as its 50/50 odds and max bet is 2, and it has 500 coins in it.. so like impossible to happen lol
+
+[22-Aug-18 01:38 PM] CrisF#3405
+@blackjok3r  Yeah
+
+[22-Aug-18 01:38 PM] CrisF#3405
+In this case though it's not maxbet.
+
+[22-Aug-18 01:39 PM] CrisF#3405
+I'm under the max bet, but with the odds I was betting it would need to payout more than the 904 funds available if I won.
+
+[22-Aug-18 01:41 PM] CrisF#3405
+It would need to pay out 4662 again if I won.
+
+[22-Aug-18 01:42 PM] CrisF#3405
+g2g
+
+[22-Aug-18 02:49 PM] siu - Chainmakers#3920
+tried a rewards that worked perfectly as intended.
+
+[22-Aug-18 03:12 PM] dukeleto#7326
+@jl777c https://github.com/jl777/komodo/pull/820
+
+{Embed}
+https://github.com/jl777/komodo/pull/820
+cctests sync by leto · Pull Request #820 · jl777/komodo
+Enable cc=2 in our regtest chain
+Fix one uint64_t bug
+Improve and add some new error messages to make JSON responses more useful. All prints to stderr have been kept so the current workflow of test...
+https://avatars1.githubusercontent.com/u/30298?s=400&v=4
+
+{Reactions}
+👌 
+
+[22-Aug-18 03:14 PM] dukeleto#7326
+that PR passes lots of dice RPC internal errors back into the JSON response, hopefully will make dice testing easier. Some of the errors had no error message  previously. hopefully makes testing/debugging easier
+
+[22-Aug-18 03:19 PM] jl777c#5810
+merged. thanks!
+
+[22-Aug-18 03:26 PM] dukeleto#7326
+no problem, happy to help the CC revolution 👍
+
+[22-Aug-18 03:43 PM] jl777c#5810
+there are only a very few types in bitcoin. pay to pubkey, pay to pubkey hash and pay to script hash
+p2pk, p2pkh, p2sh
+there are actually more that are possible, but those three are 99%+ of bitcoin transactions
+so you can pay to a pubkey, or to its hash. or to a script's hash. the last is how most of the more complex scripts are invoked. to spend a p2sh vout, you need to provide the redeemscript, this script's hash is what the p2sh address was.
+all of the above are the standard bitcoin vout types and there should be plenty of materials about it
+Encrypted by a verified device
+what I did with the CC contracts is created a fourth type of vout, the CC vout. this is using the cryptoconditions standard and it is even a different signature mechanism. ed25519 instead of secp256k1. it is basically a big extension to the bitcoin script. There is a special opcode that is added that says it is a CC script.
+but it gets more interesting
+
+[22-Aug-18 03:43 PM] jl777c#5810
+each CC script has an evalcode
+this is just an arbitrary number. but what it does is allows to create a self-contained universe of CC utxo that all have the same evalcode and that is how a faucet CC differentiates itself from a dice CC, the eval code is different
+
+one effect from using a different eval code is that even if the rest of the CC script is the same, the bitcoin address that is calculated is different. what this means is that for each pubkey, there is a unique address for each different eval code!
+and this allows efficient segregation of one CC contracts transactions from another
+
+[22-Aug-18 03:44 PM] jl777c#5810
+the final part that will make it all clear how the funds can be locked inside the contract. this is what makes a contract, a contract. I put both the privkey and pubkey for a randomly chosen address and associate it with each CC contract. That means anybody can sign outputs for that privkey. However, it is a CC output, so in addition to the signature, whatever constraints a CC contract implements must also be satistifed. This allows funds to be locked and yet anybody is able to spend it, assuming they satisfy the CC's rules
+
+one other technical note is that komodod has the insight-explorer extensions built in. so it can lookup directly all transactions to any address. this is a key performance boosting thing as if it wasnt there, trying to get all the utxo for an address not in the wallet is quite time consuming
+
+{Reactions}
+💯 👍 (2) 👏 (2) 🇨 © Komodo (5) 
+
+[22-Aug-18 04:32 PM] SHossain#0007
+dicebet with non round numbers works fine
+```
+d4dfce9b597b9653679b0835fe8ce01e566fc3d522fe326558a0b0b3d8818b82 winnings 31.54000000 bet 15.77000000 at odds 1:1
+835f4f502bafd57e550db4515b8980b7e43dd0c146078604f1a20d86cdeb63ae winnings 35.59751562 bet 17.79875781 at odds 1:1
+86ac79842c26d9ffcd79b70be10ad0dbbf9eb94a6878a54773e46eff517bd5f2 winnings 35.59751562 bet 17.79875781 at odds 1:1
+```
+
+[22-Aug-18 04:34 PM] SHossain#0007
+the last 2 i tried with odds 1.25 and 1.82, the contract used only 1 as odds instead of the full amount.
+
+[22-Aug-18 04:35 PM] jl777c#5810
+odds are integer
+
+{Reactions}
+👍🏽 
+
+[22-Aug-18 04:41 PM] SHossain#0007
+`f593650df34e7c36503c8a9e4a421a88509d20da2423006f629d44eea7470912 winnings 376.95942564 bet 94.23985641 at odds 3:1`
+
+[22-Aug-18 05:03 PM] SHossain#0007
+wondering what i have done wrong. dicestatus returning error
+```
+"method":"dicestatus",
+"params": ["DiceX","9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6","c707dee2e4f66bca7b8a84ff71b9704f649dc56158429639e6f0cc4acd040468"]
+```
+```
+    "result": {
+        "result": "error",
+        "error": "Diceinit error"
+    },
+```
+
+[22-Aug-18 05:04 PM] SHossain#0007
+both dealer node and player node online
+
+[22-Aug-18 05:04 PM] SHossain#0007
+after placing a bet, dealer node showed the bet was lost. used dicestatus on player node and it is returning error
+
+[22-Aug-18 05:06 PM] SHossain#0007
+this output is from dealernode showing the txid
+```
+c707dee2e4f66bca7b8a84ff71b9704f649dc56158429639e6f0cc4acd040468 winnings 0.00000000 bet 94.23985641 at odds 7:1
+```
+
+[22-Aug-18 05:06 PM] SHossain#0007
+using latest code from jl777 branch
+

@@ -1,0 +1,492 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[30-Jul-18 06:50 PM] SHossain#0007
+you need to send funds there
+
+[30-Jul-18 06:51 PM] SHossain#0007
+@siu - Chainmakers use this https://github.com/himu007/KMD-CC-Token-Test-Guide/blob/master/rpc/rewards/rewardsaddfunding.md
+
+{Embed}
+https://github.com/himu007/KMD-CC-Token-Test-Guide/blob/master/rpc/rewards/rewardsaddfunding.md
+himu007/KMD-CC-Token-Test-Guide
+KMD-CC-Token-Test-Guide - Komodo CC Token testing description, setup & how-to
+https://avatars2.githubusercontent.com/u/8881040?s=400&v=4
+
+[30-Jul-18 06:51 PM] SHossain#0007
+lock your funds for 5% APR 😃
+
+{Reactions}
+👍 (2) 
+
+[30-Jul-18 06:59 PM] jl777c#5810
+ok, initial version if dice CC is in jl777
+
+[30-Jul-18 06:59 PM] jl777c#5810
+this one is somewhat similar to rewards, in that you need to create a specific dice plan
+
+[30-Jul-18 07:00 PM] jl777c#5810
+diceaddfunds name fundingtxid amount
+diceaddress [pubkey]
+dicebet name fundingtxid amount odds
+dicefund name funds minbet maxbet maxodds timeoutblocks
+diceinfo fundingtxid
+dicelist
+diceloser name fundingtxid bettxid
+dicerefund name fundingtxid bettxid
+dicewinner name fundingtxid bettxid
+
+but additionally, you need to create txids with hashed entropy, basically any dice tx other than a dicebet will add hashed entropy, but you need to create a few at first via diceaddfunds
+
+[30-Jul-18 07:01 PM] jl777c#5810
+the diceinfo, dicelist, diceaddress work just like the rewards counterparts
+
+[30-Jul-18 07:02 PM] jl777c#5810
+once there is a dice plan with funds, you can make dicebets. for now to resolve it the creator of the diceplan needs to do a dicewinner or diceloser
+
+[30-Jul-18 07:04 PM] jl777c#5810
+last I will add a dicerefund that allows anybody to undo a dicebet, this would happen only if the diceplan node is offline.I guess it could be that it refunds or it becomes an automatic win. not sure which is best. probably need to make it an automatic win to incentivize the "house" account not to go offline
+
+[30-Jul-18 07:06 PM] jl777c#5810
+in order to save a step, I dont hash the entropy of the dicebet. but I guess I need to if we want it to refund after timeout instead of automatic win, as the way it is now would allow the house account to just not complete a large losing bet
+
+[30-Jul-18 07:07 PM] jl777c#5810
+as you can see, things are not quite settled, but enough seems to work I wanted to get some feedback
+
+[30-Jul-18 07:53 PM] SHossain#0007
+that was done very fast
+
+[30-Jul-18 07:53 PM] SHossain#0007
+updating
+
+[30-Jul-18 07:57 PM] jl777c#5810
+CC enables some pretty cool stuff, pretty quickly
+
+[30-Jul-18 07:57 PM] siu - Chainmakers#3920
+updating
+
+[30-Jul-18 07:57 PM] jl777c#5810
+of course initial dice is likely full of bugs, dont bet anything you cant afford to lose!
+
+{Reactions}
+😂 (3) 
+
+[30-Jul-18 07:57 PM] siu - Chainmakers#3920
+any new smart contract added to -ac_cc=1 is a hard fork change?
+
+[30-Jul-18 07:58 PM] SHossain#0007
+```
+./komodo-cli -ac_name=ATEST dicelist
+[
+  "0d6e82af9959caec14d7af42fd67db68a45bcd23c755457ebf192a52d62c599c"
+]
+```
+
+[30-Jul-18 07:59 PM] jl777c#5810
+not many active entropy utxo, so probably you want to make your own dice plan
+
+[30-Jul-18 08:02 PM] SHossain#0007
+these messages keep appearing/appeared in console
+```
+CC Eval EVAL_FAUCET Invalid: cant faucet from mempool spending tx 66a12f22ac8b84f61bd912b61aad4ee014929a1bf6a51f013e477253770a760e
+faucetget invalid amount
+CC Eval EVAL_FAUCET Invalid: cant faucet from mempool spending tx 66a12f22ac8b84f61bd912b61aad4ee014929a1bf6a51f013e477253770a760e
+faucetget invalid amount
+CC Eval EVAL_FAUCET Invalid: cant faucet from mempool spending tx 66a12f22ac8b84f61bd912b61aad4ee014929a1bf6a51f013e477253770a760e
+faucetget invalid amount
+CC Eval EVAL_FAUCET Invalid: cant faucet from mempool spending tx 66a12f22ac8b84f61bd912b61aad4ee014929a1bf6a51f013e477253770a760e
+faucetget invalid amount
+CC Eval EVAL_FAUCET Invalid: cant faucet from mempool spending tx 66a12f22ac8b84f61bd912b61aad4ee014929a1bf6a51f013e477253770a760e
+faucetget invalid amount
+CC Eval EVAL_FAUCET Invalid: cant faucet from mempool spending tx 66a12f22ac8b84f61bd912b61aad4ee014929a1bf6a51f013e477253770a760e
+```
+
+[30-Jul-18 08:03 PM] Alright#0419
+Yea, trying to break the faucet with spam
+
+[30-Jul-18 08:03 PM] jl777c#5810
+faucet is self limiting from evil spammers
+
+[30-Jul-18 08:04 PM] SHossain#0007
+```./komodo-cli -ac_name=ATEST diceaddress 03fe754763c176e1339a3f62ee6b9484720e17ee4646b65a119e9f6370c7004abc
+{
+  "result": "success",
+  "DiceCCaddress": "REabWB7KjFN5C3LFMZ5odExHPenYzHLtVw",
+  "Dicemarker": "RLEe8f7Eg3TDuXii9BmNiiiaVGraHUt25c",
+  "CCaddress": "RNZBxcH9ntcB8cJMTtbWZJrjzJNQ4ADLkz",
+  "myCCaddress": "RNZBxcH9ntcB8cJMTtbWZJrjzJNQ4ADLkz",
+  "myaddress": "RANyPgfZZLhSjQB9jrzztSw66zMMYDZuxQ"
+}```
+
+[30-Jul-18 08:10 PM] SHossain#0007
+```
+./komodo-cli -ac_name=ATEST diceinfo 0d6e82af9959caec14d7af42fd67db68a45bcd23c755457ebf192a52d62c599c
+{
+  "result": "success",
+  "fundingtxid": "0d6e82af9959caec14d7af42fd67db68a45bcd23c755457ebf192a52d62c599c",
+  "name": "dice",
+  "sbits": 1701013860,
+  "minbet": "1.00000000",
+  "maxbet": "100.00000000",
+  "maxodds": 10,
+  "timeoutblocks": 5,
+  "funding": "1000.00000000"
+}
+```
+
+[30-Jul-18 08:16 PM] Alright#0419
+Anyone able to do `faucetget`
+
+[30-Jul-18 08:16 PM] Alright#0419
+think I broke it
+
+[30-Jul-18 08:18 PM] Alright#0419
+```
+2018-07-30 20:17:25 ERROR: CheckInputs(): 059757fa3941f90f63fe6c7770cad75caab9618d2ae50fa40b9fca7a17fb4676 value in (0.0000006) < value out (1.00) diff -0.99999940
+2018-07-30 20:17:25 ERROR: AcceptToMemoryPool: ConnectInputs failed 059757fa3941f90f63fe6c7770cad75caab9618d2ae50fa40b9fca7a17fb4676
+```
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/473585182947934228/faucetraw
+
+[30-Jul-18 08:20 PM] jl777c#5810
+investigating
+
+[30-Jul-18 08:20 PM] Alright#0419
+I spammed faucetfund with a couple thousand single sat txs
+
+[30-Jul-18 08:20 PM] Alright#0419
+cost less than 1 ATEST
+
+[30-Jul-18 08:20 PM] SHossain#0007
+```
+./komodo-cli -ac_name=ATEST faucetget
+{
+  "result": "success",
+  "hex": "0100000002202179e70ed59683fcfd6121dd0e23e9df16cee723b662fcf050dc9c256a0d50000000007b4c79a276a072a26ba067a565802103682b255c40d0cde8faee381a1a50bbb89980ff24539cb8518e294d3a63cefe1281408116dd798ea55305a5b6afbda77d5e51243079f5f9917caf2902b9db4e7adbaf473ffbe122a1dc2fd2f622c60262f70968c1507eeca68ca2d405db0748338725a100af038001e4a10001ffffffff45943aa711c4c163e2bfe1ad2fa4749cdd213ed9b30bbdde103dd337c09fada9000000007b4c79a276a072a26ba067a565802103682b255c40d0cde8faee381a1a50bbb89980ff24539cb8518e294d3a63cefe1281408d6d35b91cc67babf7f651627701a481e45a085ba00f87ad313f6ff49156f4dd43296375db303bb2ebbbe7a2537cd54d0edc1495f1d897c07998c05faa4849a2a100af038001e4a10001ffffffff02e1d31f4802000000302ea22c8020e029c511da55523565835887e412e5a0c9b920801b007000df45e545f25028248103120c008203000401cc00e1f50500000000232103fe754763c176e1339a3f62ee6b9484720e17ee4646b65a119e9f6370c7004abcac00000000"
+}
+```
+
+[30-Jul-18 08:20 PM] SHossain#0007
+```
+./komodo-cli -ac_name=ATEST sendrawtransaction 0100000002202179e70ed59683fcfd6121dd0e23e9df16cee723b662fcf050dc9c256a0d50000000007b4c79a276a072a26ba067a565802103682b255c40d0cde8faee381a1a50bbb89980ff24539cb8518e294d3a63cefe1281408116dd798ea55305a5b6afbda77d5e51243079f5f9917caf2902b9db4e7adbaf473ffbe122a1dc2fd2f622c60262f70968c1507eeca68ca2d405db0748338725a100af038001e4a10001ffffffff45943aa711c4c163e2bfe1ad2fa4749cdd213ed9b30bbdde103dd337c09fada9000000007b4c79a276a072a26ba067a565802103682b255c40d0cde8faee381a1a50bbb89980ff24539cb8518e294d3a63cefe1281408d6d35b91cc67babf7f651627701a481e45a085ba00f87ad313f6ff49156f4dd43296375db303bb2ebbbe7a2537cd54d0edc1495f1d897c07998c05faa4849a2a100af038001e4a10001ffffffff02e1d31f4802000000302ea22c8020e029c511da55523565835887e412e5a0c9b920801b007000df45e545f25028248103120c008203000401cc00e1f50500000000232103fe754763c176e1339a3f62ee6b9484720e17ee4646b65a119e9f6370c7004abcac00000000
+faucetget validated
+faucetget validated
+faucetget validated
+faucetget validated
+d58b71231087a0f0ba73eca5a1577bcba2d8d5c8bd158241e832dcfe9a80e109
+```
+
+[30-Jul-18 08:21 PM] Alright#0419
+works?
+
+[30-Jul-18 08:21 PM] Alright#0419
+🤔
+
+[30-Jul-18 08:21 PM] jl777c#5810
+fixed
+
+[30-Jul-18 08:21 PM] SHossain#0007
+actually....
+```
+  "blocks": 9083,
+  "longestchain": 9127,
+  "timeoffset": 0,
+  "tiptime": 1532979828,
+  "connections": 6,
+```
+
+[30-Jul-18 08:21 PM] SHossain#0007
+will resync from fresh
+
+[30-Jul-18 08:27 PM] Alright#0419
+`faucetget` works again
+
+[30-Jul-18 08:27 PM] Alright#0419
+What problem did that actually cause?
+
+[30-Jul-18 08:28 PM] Alright#0419
+Curious if spamming any of the other contracts would be worth trying.
+
+[30-Jul-18 08:28 PM] SHossain#0007
+please try
+
+[30-Jul-18 08:29 PM] Alright#0419
+Ah, he just added protection to other contracts
+
+[30-Jul-18 08:29 PM] SHossain#0007
+i'm testing the new dice rpc call, you can keep doing illeagal calls 😛
+
+[30-Jul-18 08:29 PM] SHossain#0007
+on the old rpc calls which are working
+
+[30-Jul-18 08:30 PM] Alright#0419
+Yea I was looking at the validation code and that was all I could think of
+
+[30-Jul-18 08:30 PM] Alright#0419
+*for now*
+
+[30-Jul-18 08:32 PM] jl777c#5810
+dice has no validation yet
+
+[30-Jul-18 08:32 PM] jl777c#5810
+i think for assets, there could be some issues if you tweak the tx construction in CCassetstx to be more in favor to your side
+
+[30-Jul-18 08:33 PM] Alright#0419
+👌
+
+[30-Jul-18 08:36 PM] Alright#0419
+any chance you could fix this 
+```
+2018-07-30 20:35:56 skip Relaying wtx 73abb112b4df3100e1d14e148db70cce0b0eded49f0b30aa9107fed91e1dc1ff nLockTime 1532439629 vs now.1532982956
+2018-07-30 20:35:56 skip Relaying wtx 84dbba278c46db19eae5b03426d22ec418f5d3591db1f8c4af41a24362aae2ff nLockTime 1532790057 vs now.1532982956
+2018-07-30 20:35:56 skip Relaying wtx 485c1255aa26176d5db49e330f1948fa022b43358740d8e0a274afb1f30ce3ff nLockTime 1532567040 vs now.1532982956
+2018-07-30 20:35:56 skip Relaying wtx b61ac4853f60c437055a23c43c6094717faf97f8f681c31cfc39f3f16680fbff nLockTime 1532704767 vs now.1532982956
+2018-07-30 20:35:56 skip Relaying wtx 24c42b63d637f6f473816bd8563eabf63adef0a6abdcc5effee03b3e989ffcff nLockTime 1532965209 vs now.1532982956
+```
+
+It's been happening on all chains for what seems like a couple months now. Every now and then it spams this *a lot*
+
+[30-Jul-18 08:37 PM] jl777c#5810
+it should just be KMD
+
+[30-Jul-18 08:37 PM] Alright#0419
+getting it on ATEST right now
+
+[30-Jul-18 08:37 PM] jl777c#5810
+investigating
+
+[30-Jul-18 08:38 PM] jl777c#5810
+pushed fix
+
+[30-Jul-18 08:40 PM] SHossain#0007
+what is `maxodds`, & `timeoutblocks` in **`dicefund`** call?
+
+[30-Jul-18 08:41 PM] jl777c#5810
+maxodds is the largest odds you can be with
+
+[30-Jul-18 08:41 PM] jl777c#5810
+timeoutblocks is how many blocks before it times out
+
+[30-Jul-18 08:41 PM] SHossain#0007
+what are the optimal numbers for those? (never played dice before)
+
+[30-Jul-18 08:41 PM] SHossain#0007
+trying to create a new dice
+
+[30-Jul-18 08:42 PM] jl777c#5810
+if you allow 100 million odds, then it can make for a very large payout
+
+[30-Jul-18 08:44 PM] SHossain#0007
+Thanks
+
+[30-Jul-18 08:44 PM] SHossain#0007
+```
+./komodo-cli -ac_name=ATEST dicefund KMDDice 777777 0.777 7.77 777 7
+{
+  "result": "success",
+  "hex": "010000000a5890b79f42a2039d6b661cec3f0a748f8122b51427d2747d7cddb45e7c774988010000004847304402206544c1d0bb42da89d93e58526a28b3c80ef45dca516ecd11ee3fe7fc35a5261c02207f0b134ff5cdb840692a65eccd86fb2fc2a63afc6f1309a2ed9d054d1a076b1201ffffffff5b90bd88124ebd1a0988c612902234782b737b860189fb5871088d2d3aae2481020000004948304502210091972c641291022da6d49ab8d3790ccdbb0f563b385b89ac723fa688a6c84ee202207198c3d48ce1d9591fce6fb41192145c38f8312c7a78251f4231986070a3283a01ffffffff5bfb06fac51707a69414a1f908ac3f9eb3fca50f303c4ae960f94491e8dc7f5c0100000049483045022100ea0b49d902f844ef280b8621cdc5a5365a779a04a159ba30e00bd0b3eaf284da02205aece19ee807ce11b0ed7b74175df29dd2be4560361174664571a6a596a894fd01ffffffff5ca636731b8c28889248a0b434e3124f19518b2c4b4bbefd80af303329ae9471020000004847304402203eb318ae650753ab7cc2e9ea9b2cc2477add2fbd9e49e0ac1d7560f7e08ecbb002202d77d75ed2c1d3b53feda45c699374f74d1bf1065b46e3a24514dd072f2a9dcb01ffffffff5d5132ee6f33ba09b4bcfb84beddfcbdf58888ea7f221cc8078a96865e1e0ea10000000049483045022100e3cc5062becc979fc347a9ccde6af8ebba39c0d88105c9a35c89876207fafb0202204f631d063911e4526958f6629a847cca832d845a86adcae248625fd45b03e7d001ffffffff5e626ec0b20cd783ee0bf52aa33189796ddd4649d31b64fdee10b6daecbd079200000000494830450221009f3c17ccc73f28d9ba1d80c149890f56c6aafa576e152eb776082d12d54548eb022053f3b87eee04d9f5ef9f961d79433ec76b0f0e4a2288104212db01f6d2d7d1f801ffffffff5eb56cd4df0702b06debcf36de8309432b8140daa0a2544159ff68bbb96ed205000000004847304402202.............
+```
+
+[30-Jul-18 08:45 PM] SHossain#0007
+that was a very big hex value
+
+[30-Jul-18 08:45 PM] SHossain#0007
+output:
+```
+ebfcff20fa5ab7bebf14b778e74bd6b34b02f100ff75e4cb611190f160ae4cf7
+```
+
+[30-Jul-18 08:45 PM] jl777c#5810
+yes, the rawtx construction is quite simplistic now
+
+[30-Jul-18 08:46 PM] jl777c#5810
+but it allows for a predictable vin selection
+
+[30-Jul-18 08:46 PM] jl777c#5810
+i will need to improve it
+
+[30-Jul-18 08:47 PM] jl777c#5810
+anyway, now there is a new dice fund, do a few diceaddfunds and then you can bet
+
+[30-Jul-18 08:47 PM] jl777c#5810
+as soon as you bet, you will know if you won or lost
+
+[30-Jul-18 08:47 PM] jl777c#5810
+well, only if you are controlling the address that created the dice fund
+
+[30-Jul-18 08:53 PM] SHossain#0007
+https://github.com/himu007/KMD-CC-Token-Test-Guide/blob/master/rpc/dice/dicefund.md
+
+{Embed}
+https://github.com/himu007/KMD-CC-Token-Test-Guide/blob/master/rpc/dice/dicefund.md
+himu007/KMD-CC-Token-Test-Guide
+KMD-CC-Token-Test-Guide - Komodo CC Token testing description, setup & how-to
+https://avatars2.githubusercontent.com/u/8881040?s=400&v=4
+
+[30-Jul-18 08:53 PM] SHossain#0007
+all the outputs are there, including hex value
+
+[30-Jul-18 08:55 PM] SHossain#0007
+the txid still in mempool
+
+[30-Jul-18 08:55 PM] jl777c#5810
+it was a big output, relative to the utxo you had
+
+[30-Jul-18 08:55 PM] SHossain#0007
+started local miner
+
+[30-Jul-18 08:55 PM] SHossain#0007
+```
+./komodo-cli -ac_name=ATEST dicelist
+[
+  "0d6e82af9959caec14d7af42fd67db68a45bcd23c755457ebf192a52d62c599c",
+  "ebfcff20fa5ab7bebf14b778e74bd6b34b02f100ff75e4cb611190f160ae4cf7"
+]
+```
+
+[30-Jul-18 08:56 PM] SHossain#0007
+```
+./komodo-cli -ac_name=ATEST diceinfo ebfcff20fa5ab7bebf14b778e74bd6b34b02f100ff75e4cb611190f160ae4cf7
+{
+  "result": "success",
+  "fundingtxid": "ebfcff20fa5ab7bebf14b778e74bd6b34b02f100ff75e4cb611190f160ae4cf7",
+  "name": "KMDDice",
+  "sbits": 28538276415819083,
+  "minbet": "0.77700000",
+  "maxbet": "7.77000000",
+  "maxodds": 777,
+  "timeoutblocks": 7,
+  "funding": "777777.00000000"
+}
+```
+
+[30-Jul-18 08:56 PM] SHossain#0007
+anyone interested in betting?
+
+[30-Jul-18 09:03 PM] jl777c#5810
+the dicefund creator can actually finalize any dicebet transactions and it should properly deal with paying winners and not paying losing tx
+
+[30-Jul-18 09:08 PM] SHossain#0007
+```
+./komodo-cli -ac_name=ATEST diceaddfunds KMDDice ebfcff20fa5ab7bebf14b778e74bd6b34b02f100ff75e4cb611190f160ae4cf7 10
+{
+  "result": "success",
+  "hex": "0100000001646b59153d05ed0cb2b241dbbc42cd86df446ea43db8a66c68fdc2462e1bc6850000000049483045022100bdbf75970d7f708c4a5637d703b0a055e65a2eab0e71f6435604281d5981143d022008942029da09aa09bd0c9358b8169528e596968150e85d15c143c6961bf2b39501ffffffff0400ca9a3b00000000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc1027000000000000232103fe754763c176e1339a3f62ee6b9484720e17ee4646b65a119e9f6370c7004abcacf0aed71218090000232103fe754763c176e1339a3f62ee6b9484720e17ee4646b65a119e9f6370c7004abcac00000000000000006d6a4c6ae6454b4d444469636500f74cae60f1901161cbe475ff00f1024bb3d64be778b714bfbeb75afa20fffcebd22d4e75f4939198938b49036f71c3a0e00d20ca05237147aaed0d85cd50ff29000000000000000000000000000000000000000000000000000000000000000000000000"
+}
+```
+
+[30-Jul-18 09:09 PM] SHossain#0007
+output:
+```
+83370785623efc679de990b0d90bd45b375a0a53ce9e011259c31a8c747fd1ff
+```
+
+[30-Jul-18 09:32 PM] SHossain#0007
+i have added 10 coins to the dice fund using the above command. contract address balance still shows same
+```
+./komodo-cli -ac_name=ATEST diceinfo ebfcff20fa5ab7bebf14b778e74bd6b34b02f100ff75e4cb611190f160ae4cf7
+{
+  "result": "success",
+  "fundingtxid": "ebfcff20fa5ab7bebf14b778e74bd6b34b02f100ff75e4cb611190f160ae4cf7",
+  "name": "KMDDice",
+  "sbits": 28538276415819083,
+  "minbet": "0.77700000",
+  "maxbet": "7.77000000",
+  "maxodds": 777,
+  "timeoutblocks": 7,
+  "funding": "777777.00000000"
+}
+```
+
+[30-Jul-18 09:38 PM] SHossain#0007
+```
+./komodo-cli -ac_name=ATEST dicebet KMDDice ebfcff20fa5ab7bebf14b778e74bd6b34b02f100ff75e4cb611190f160ae4cf7 7 7
+else case funcid 70
+else case funcid 69
+add 777777.00000000
+else case funcid 66
+else case funcid 66
+cant find dice entropy inputs
+error code: -1
+error message:
+basic_string::_M_construct null not valid
+```
+
+[30-Jul-18 09:38 PM] SHossain#0007
+@Deleted User https://github.com/himu007/KMD-CC-Token-Test-Guide
+
+{Embed}
+https://github.com/himu007/KMD-CC-Token-Test-Guide
+himu007/KMD-CC-Token-Test-Guide
+KMD-CC-Token-Test-Guide - Komodo CC Token testing description, setup & how-to
+https://avatars2.githubusercontent.com/u/8881040?s=400&v=4
+
+{Reactions}
+👍 
+
+[30-Jul-18 10:32 PM] Alright#0419
+did we stall?
+
+[30-Jul-18 10:32 PM] Alright#0419
+/komodo-cli -ac_name=ATEST getblockhash 9157
+011dd8ff1e10af504e46b19bc310d7b9495c2f891944820261b31b0078cd4471
+
+[30-Jul-18 10:32 PM] Alright#0419
+Oh nope
+
+[30-Jul-18 11:10 PM] siu - Chainmakers#3920
+updating again
+
+[30-Jul-18 11:16 PM] siu - Chainmakers#3920
+seems like im stuck at 9083
+
+[31-Jul-18 12:02 AM] siu - Chainmakers#3920
+resynced and everything good
+
+[31-Jul-18 06:36 AM] jl777c#5810
+pushed fix, the addfunds tx was corrupted
+
+[31-Jul-18 06:40 AM] jl777c#5810
+still has problems, investigating
+
+[31-Jul-18 06:46 AM] jl777c#5810
+pushed fix, got a bet to create
+
+[31-Jul-18 06:47 AM] jl777c#5810
+and broadcast
+
+[31-Jul-18 09:06 AM] SHossain#0007
+updating
+
+[31-Jul-18 09:10 AM] Mylo#8306
+sorry to be a noob.
+when i launch
+`/komodo/src/komodod -ac_cc=1 -ac_name=ATEST -addressindex=1 -spentindex=1 -ac_supply=1000 -ac_reward=10000000000000 -pubkey= 03A09B67FC0AB05E212BDD085AC03A04EF0CD88A45F0E25D109B23ACFDA1B9EF09  -addnode=136.243.58.134 -addnode=195.201.20.230 -addnode=195.201.137.5 &`
+
+pubkey.....is this my "compressed 66 character KMD pubkey" or does it need to be a BTC pubkey?   is it pre-shared, like notaries, or can i put my NN pubkey there?
+
+also, how do i know what P2P port it will use?  in my docker file i need to pre-define which ports to passthru/map.
+
+[31-Jul-18 09:11 AM] Mylo#8306
+debug says 40245, but i wouldn't know until after i try.
+
+[31-Jul-18 09:11 AM] SHossain#0007
+BTC pubkey
+
+{Reactions}
+👍 
+
+[31-Jul-18 09:11 AM] SHossain#0007
+when you do `validateaddress` it shows the same pubkey
+
+[31-Jul-18 09:12 AM] Mylo#8306
+think i need to order a pizza first.
+

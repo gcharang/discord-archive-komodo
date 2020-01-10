@@ -1,0 +1,354 @@
+==============================================================
+Guild: Komodo
+Channel: dev-nspv
+Topic: ./komodod -nSPV=1 -ac_reward=100000000  -ac_name=NSPV -ac_supply=10000000000 -ac_cc=2 -addressindex=1 -spentindex=1 -connect=5.9.102.210 &
+./komodod -nSPV=1 -addnode=5.9.253.195 &
+https://drive.google.com/drive/folders/1ZvzrhNBQgroejTKPl0kCOTJ8h7XMnO2M?usp=sharing
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[05-Aug-19 02:43 PM] jl777c#5810
+yes, you can see listunspent of any address
+
+[05-Aug-19 02:43 PM] jl777c#5810
+so why not default to the most recent logged in address?
+
+[05-Aug-19 02:51 PM] Sir Seven#7158
+I just expected to see error if no user is actually logged in.
+There is no problem in this case.
+
+[07-Aug-19 10:56 AM] gcharang#6833
+@jl777c 
+```bash
+curl --data-binary '{"jsonrpc": "2.0", "id":"curltest", "method": "getpeerinfo", "params": [] }' -H 'content-type: text/plain;' http://127.0.0.1:$port/
+```
+
+```json
+  {
+    "nodeid": 1,
+    "protocolversion": 2,
+    "ipaddress": "5.9.253.195",
+    "port": 7770,
+    "lastping": 1565175111,
+    "time_started_con": 1565174366,
+    "time_last_request": 1565175123,
+    "services": 0,
+    "missbehavescore": 0,
+    "bestknownheight": 1476663,
+    "in_sync": "not_synced"
+  }
+```
+what is `"services": 0,` and ` "in_sync": "not_synced"` this node has the same bestknownheight as other nodes that don't have the "in_sync" property
+
+[07-Aug-19 10:59 AM] jl777c#5810
+not_synced is based on the info it sent back, maybe it is lagging a bit?
+
+[07-Aug-19 10:59 AM] jl777c#5810
+services 0 means its not an nSPV fullnode, which seems wrong
+
+[07-Aug-19 11:00 AM] jl777c#5810
+does it remain a peer?
+
+[07-Aug-19 11:00 AM] jl777c#5810
+with services 0, it seems it wont respond as a valid nSPV fullnode, which would not allow it to achieve in_sync status
+
+[07-Aug-19 11:01 AM] gcharang#6833
+@jl777c 
+this is the whole output
+https://paste.ubuntu.com/p/PX3fvWQgfc/
+all nodes have services: 0
+all have same bestknownheight
+only 2 have "in_sync": "not_synced"
+
+[07-Aug-19 11:02 AM] jl777c#5810
+plz ask @blackjok3r that was his update
+
+[07-Aug-19 11:02 AM] gcharang#6833
+will do
+
+[07-Aug-19 01:46 PM] daemonfox#6136
+With nSPV all dPOW coins can be "lite" sent... can it be used on BTC itself?
+
+[07-Aug-19 01:47 PM] jl777c#5810
+no, it needs to be a komodo based coin AND with dPoW, both
+
+[07-Aug-19 01:49 PM] daemonfox#6136
+so there is no way the Bitcoin SPV mode in AGAMA will ever work with nSPV?
+
+[07-Aug-19 01:49 PM] daemonfox#6136
+its on the wrong end of the validation notarizations?
+
+[07-Aug-19 01:52 PM] jl777c#5810
+i am 100% sure BTC legacy devs will reject any PR to add the nSPV functionality into the bitcoind
+
+[07-Aug-19 01:53 PM] jl777c#5810
+i guess we could make our own custom bitcoind with nSPV support as it isnt a consensus change, but really i dont feel like doing that. just too much work to help make a legacy coin have more tech. probably would make BTC price plummet
+
+{Reactions}
+😂 (5) 
+
+[07-Aug-19 01:53 PM] daemonfox#6136
+HAHAHA
+
+[07-Aug-19 01:54 PM] daemonfox#6136
+oh man i wasnt expecting that last part
+
+[07-Aug-19 01:54 PM] daemonfox#6136
+but i was thinking the same thing... bitcoind could be slightly modified so KMD had its own nSPV capable BTC nodes
+
+[07-Aug-19 01:58 PM] jl777c#5810
+it is not a "slight" modification
+
+[08-Aug-19 02:56 AM] blackjok3r#3181
+services I think is reading the wrong variable, I will fix it. Synced means that it has the block header from that node for the chain tip and it links back to the last notarization.After its been running a while all nodes should be synced to the same block.
+
+[08-Aug-19 02:56 AM] blackjok3r#3181
+@gcharang
+
+{Reactions}
+👍 
+
+[08-Aug-19 07:21 AM] gcharang#6833
+got it
+
+[08-Aug-19 03:09 PM] dukeleto#7326
+FYI HUSH has merged in latest nSPV updates from `FSM` branch
+
+{Reactions}
+😎 
+
+[11-Aug-19 04:31 PM] jl777c#5810
+@gcharang fixed the services value
+
+{Reactions}
+👍 
+
+[11-Aug-19 04:33 PM] jl777c#5810
+also we just achieved the first web wallet broadcast. still it is very rough and many fields are not being generated but it should be simple to use and able to create and broadcast valid tx
+
+[11-Aug-19 05:25 PM] jl777c#5810
+@allbits maybe you might want to try it. just start nspv and then go to browser http://127.0.0.1:<rpcport>
+
+[11-Aug-19 06:18 PM] allbits#5898
+K. Will do later today. Thanks. I'll have to remember how to update my nspv haha
+
+[11-Aug-19 06:21 PM] blackjok3r#3181
+git pull
+make
+
+[11-Aug-19 06:27 PM] allbits#5898
+Yeah. Thanks 😀
+
+[11-Aug-19 06:27 PM] allbits#5898
+How do I check what branch I'm in. I haven't updated in a while
+
+[11-Aug-19 06:32 PM] blackjok3r#3181
+git branch
+
+[11-Aug-19 06:47 PM] allbits#5898
+Thanks
+
+[11-Aug-19 07:08 PM] jl777c#5810
+in the jl777 branch
+
+[11-Aug-19 07:32 PM] allbits#5898
+Was just going to ask that!
+
+[11-Aug-19 08:19 PM] allbits#5898
+Am I doing libnspv?
+
+[11-Aug-19 08:20 PM] jl777c#5810
+yes
+
+[11-Aug-19 08:20 PM] jl777c#5810
+just like when you did the cli testing, just can use the browser now
+
+[11-Aug-19 08:22 PM] allbits#5898
+Updated. I did ./nspv. What rpc port in the browser?
+
+[11-Aug-19 08:22 PM] jl777c#5810
+what coin
+
+[11-Aug-19 08:22 PM] blackjok3r#3181
+-port= work?
+
+[11-Aug-19 08:23 PM] allbits#5898
+I just did ./nspv without surviving anything else
+
+[11-Aug-19 08:23 PM] blackjok3r#3181
+then it will be 7771
+
+[11-Aug-19 08:23 PM] jl777c#5810
+then it is KMD, port 7771
+
+[11-Aug-19 08:23 PM] jl777c#5810
+-port should work
+
+[11-Aug-19 08:23 PM] blackjok3r#3181
+-port seems like a good idea so all coins are the same port
+
+[11-Aug-19 08:23 PM] jl777c#5810
+no
+
+[11-Aug-19 08:23 PM] jl777c#5810
+each nspv is a separate process
+
+[11-Aug-19 08:24 PM] jl777c#5810
+only one can bind any specific rpc port
+
+[11-Aug-19 08:24 PM] allbits#5898
+I get error: no method returned in the browser
+
+[11-Aug-19 08:24 PM] blackjok3r#3181
+yes. But to test, just set port so all scripts will just work, with alll coins
+
+[11-Aug-19 08:24 PM] jl777c#5810
+http://127.0.0.1:7771
+
+[11-Aug-19 08:25 PM] jl777c#5810
+you are right, seems i just broken it
+
+[11-Aug-19 08:25 PM] jl777c#5810
+no it works
+
+[11-Aug-19 08:25 PM] allbits#5898
+Ok
+
+[11-Aug-19 08:25 PM] jl777c#5810
+i am just not running it for KMD
+
+[11-Aug-19 08:26 PM] allbits#5898
+I get error: no method
+
+[11-Aug-19 08:26 PM] jl777c#5810
+./nspv ILN
+
+[11-Aug-19 08:26 PM] jl777c#5810
+try ILN
+
+[11-Aug-19 08:26 PM] jl777c#5810
+it is port 12986
+
+[11-Aug-19 08:27 PM] allbits#5898
+Same result
+
+[11-Aug-19 08:28 PM] jl777c#5810
+does cli respond?
+
+[11-Aug-19 08:28 PM] allbits#5898
+Cli output seems normal. What kind of commands can I test on cli
+
+[11-Aug-19 08:28 PM] jl777c#5810
+nothing has changed on cli
+
+[11-Aug-19 08:30 PM] jl777c#5810
+try http://127.0.0.1:12986/method/getinfo
+
+[11-Aug-19 08:31 PM] allbits#5898
+Oooh that worked! Looks pretty
+
+[11-Aug-19 08:31 PM] allbits#5898
+Except for my ILN balance
+
+[11-Aug-19 08:32 PM] jl777c#5810
+you can try with KMD now it works
+
+[11-Aug-19 08:32 PM] jl777c#5810
+but only test amounts
+
+[11-Aug-19 08:33 PM] allbits#5898
+There it is!
+
+[11-Aug-19 08:53 PM] allbits#5898
+So I generated new address, logged in, received funds. Then tested send but sent full amount (without accounting for fee). This created a crash when I tried to broadcast the transaction. There was also lots of unformed data on that broadcast page - variable names instead of numbers
+
+[11-Aug-19 08:53 PM] jl777c#5810
+try sending a bit less
+
+[11-Aug-19 08:57 PM] allbits#5898
+Tried sending less and it aborted when I hit send transaction (the step before broadcast)
+
+[11-Aug-19 08:57 PM] jl777c#5810
+update to latest, i just fixed some bugs
+
+[11-Aug-19 08:57 PM] allbits#5898
+K
+
+[11-Aug-19 08:59 PM] allbits#5898
+Success!
+
+[11-Aug-19 09:02 PM] allbits#5898
+Funds received ok. But nspv wallet not updating - not showing updated balance or the transaction in the transaction history
+
+[11-Aug-19 09:02 PM] jl777c#5810
+this has no javascript
+
+[11-Aug-19 09:02 PM] allbits#5898
+I hit refresh but it doesn't update
+
+[11-Aug-19 09:02 PM] jl777c#5810
+oh, seems it is in the cache. if you logout and login again is the balance ok?
+
+[11-Aug-19 09:02 PM] grewalsatinder#9653
+```$ ./nspv MORTY
+couldnt match coin, defaulting to KMD chain
+027e3758c3a65b12aa1046462b486d0a63bfa1beae327897f56c5cfb7daaae71 genesisblockhash KMD
+Start NSPV_rpcloop.7771
+>>>>>>>>>> NSPV_rpcloop 127.0.0.1:7771 bind sock.3 API enabled at unixtime.1565557344 <<<<<<<<<
+Discover KMD peers...^C```
+
+[11-Aug-19 09:02 PM] grewalsatinder#9653
+trying RICK or MORTY goes to 7771
+
+[11-Aug-19 09:03 PM] grewalsatinder#9653
+I guess it doesn't has those params
+
+[11-Aug-19 09:03 PM] jl777c#5810
+coins entry is needed
+
+[11-Aug-19 09:03 PM] grewalsatinder#9653
+I just wanted to test the test chain, instead of real KMD or other assetchains etc
+
+[11-Aug-19 09:03 PM] jl777c#5810
+look at ILN, it shows what fields are needed
+
+[11-Aug-19 09:03 PM] grewalsatinder#9653
+okay
+
+[11-Aug-19 09:03 PM] allbits#5898
+Logout and login didn't fix
+
+[11-Aug-19 09:03 PM] jl777c#5810
+did the tx confirm?
+
+[11-Aug-19 09:04 PM] allbits#5898
+Yes.
+
+[11-Aug-19 09:05 PM] jl777c#5810
+@grewalsatinder latest has the vin/vout working. but for vin we need to remove the amount field
+
+[11-Aug-19 09:07 PM] jl777c#5810
+as of now, web wallet is feature complete, of course there will be bugs
+
+[11-Aug-19 09:08 PM] grewalsatinder#9653
+https://raw.githubusercontent.com/jl777/SuperNET/beta/iguana/coins/rick_7776
+
+[11-Aug-19 09:08 PM] grewalsatinder#9653
+trying to find `magic` value for RICK
+
+[11-Aug-19 09:09 PM] jl777c#5810
+"netmagic\":\"f60d75fd
+
+[11-Aug-19 09:09 PM] grewalsatinder#9653
+ah it's netmagic ?
+
+[11-Aug-19 09:09 PM] grewalsatinder#9653
+got it
+
+[11-Aug-19 09:09 PM] grewalsatinder#9653
+👍
+
+[11-Aug-19 09:09 PM] jl777c#5810
+it might be byte reversed fd750df6
+

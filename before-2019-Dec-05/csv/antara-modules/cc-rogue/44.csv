@@ -1,0 +1,212 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"466679763491225600";"joe2x4#5987";"18-Feb-19 07:59 PM";"Is it possible to allow in game items to also be tradeable via Dex in addition to whole characters? It seems this would add a delightful experience. -Asking for a friend...";"";"";
+"466679763491225600";"joe2x4#5987";"18-Feb-19 08:00 PM";"Is it probable?";"";"";
+"412323938782150658";"SHossain#0007";"18-Feb-19 08:08 PM";"i believe this is possible and you may see it in the future";"";"";
+"272003866906722306";"TonyL#3577";"18-Feb-19 08:26 PM";"Found where these tricky arrows should create:
+https://github.com/jl777/komodo/blob/jl777/src/cc/rogue/things.c#L251
+https://github.com/jl777/komodo/blob/jl777/src/cc/rogue/weapons.c#L179";"";"";
+"272003866906722306";"TonyL#3577";"18-Feb-19 08:28 PM";"There are this o_group property checks in pack.c but can't collect puzzle pieces together so far";"";"";
+"272003866906722306";"TonyL#3577";"18-Feb-19 08:30 PM";"Interesting that on pickup there is no any check if it group https://github.com/jl777/komodo/blob/jl777/src/cc/rogue/pack.c#L229
+But on leave pack it's checking if obj->o_group
+In original rogue such groups counted as 1
+
+Will try to remove this o_group argument at all - maybe it's a clue
+ Interesting how things will behave 😃";"";"";
+"272003866906722306";"TonyL#3577";"18-Feb-19 09:30 PM";"What I've detected so far (without code modifications) is that it counting initial arrows as one object when drop it and pick up
+Playing by ./rogue 777 gui
+When pickup food with initial pack:
+```                           |...%@. strength*3 48 vs total.42 vs 5 inventory let
+                           +...... a) 2 rations of food
+                           ------- b) +1 ring mail [protection 4] (being worn)
+                                   c) A +1,+1 mace (weapon in hand)
+                                   d) A +1,+0 short bow
+                                   e) 38 +0,+0 arrows
+                                   --Press space to continue--```";"";"";
+"272003866906722306";"TonyL#3577";"18-Feb-19 09:30 PM";"When then drop and pickup pack with arrows it's counting as 1:
+```                                   strength*3 48 vs total.5 vs 4 inventory lett
+                                   a) 2 rations of food
+                           ------- b) +1 ring mail [protection 4] (being worn)
+                           |...... c) A +1,+1 mace (weapon in hand)
+                           |...%.. d) A +1,+0 short bow
+                           +...... e) 38 +0,+0 arrows
+                           ------- --Press space to continue--```
+
+But if shot one arrow, drop pack and pickup pack counting not as 1 items but as total arrows amount";"";"";
+"272003866906722306";"TonyL#3577";"18-Feb-19 09:34 PM";"So on pick up  arrows not recounting. There are really tricky state changes conditions on drop/pick-up packed throwable stuff. Mindblowing - easier just count these throwable items packs as 1 item imo and not even try to count/recount on pickup - just count any pickup as +1 item 😂";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 06:12 AM";"i dont want to mess with the code unless to fix a serious issue. as you see it is very tricky and intricate";"";"💯 (1)";
+"347922216429813760";"grewalsatinder#9653";"19-Feb-19 07:43 AM";"going to compile https://github.com/KomodoPlatform/komodo/tree/rogue_multiOS on mac";"";"";
+"347922216429813760";"grewalsatinder#9653";"19-Feb-19 07:43 AM";"@TonyL 
+so I compile it with zcbuild/build-mac and then do makerouge and then src/ make?";"";"";
+"347922216429813760";"grewalsatinder#9653";"19-Feb-19 07:43 AM";"@SHossain";"";"";
+"347922216429813760";"grewalsatinder#9653";"19-Feb-19 07:44 AM";"is it good to compile on mac or still issues?";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 07:52 AM";"No need to makerogue if you're using rogue_multiOS, build/build-mac should makerogue automatically. Just build and try to sync then";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 07:52 AM";"Yesterday it compiled fine on Mac";"";"";
+"347922216429813760";"grewalsatinder#9653";"19-Feb-19 07:54 AM";"perfect! executed build-mac already 😃";"";"🚀 (1)";
+"272003866906722306";"TonyL#3577";"19-Feb-19 08:15 AM";"@jl777c true, in the end I just tried to understand why counters in max inventory limit count 1 more (it allows to take x3*strength + item) - seems it's connected to original game hardcoded rule that you can't have less than 1 item in inventory (it have validation if you'll try to drop last one). Was just interesting research - realised that can read C code if just imagine -> as . and {} as 4 spaces idents 😂";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 08:15 AM";"Proceeding to multiplayer";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 08:17 AM";"I changed it so ISMANY objects count as 1";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 08:17 AM";"but the maxtotal is 2x strength";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 08:17 AM";"whitespace having effect on code is quite crazy";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 08:18 AM";"violates some basic rules about being unambiguous, eg. is 4 spaces the same as tab";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 08:18 AM";"But in python miss one space is quite same as forget { in C :)
+Oh cool, ISMANY as 1  - it should eliminate this headache";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 08:19 AM";"Thanks god IDE converting tab to 4 spaces - one time I've edited python code in nano - pressed tab instead of 4 spaces and then troubleshooted for a while";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 08:20 AM";"it is just wrong to be able to look at the code and not know for sure what it says due to any ambiguity,let alone invisible things like spaces, tabs";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 08:22 AM";"https://bugs.python.org/issue22086 people even opening issues because of such problems lol";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 08:31 AM";"Cool, ISMANY as 1 working as a charm, even when I shot one arrow and dropped pack and picked up it's counting as 1
+Player can just imagine that it's a magic quiver. Like a when you have ammo pack - in games it's usually just pack, not depends how many ammo you have";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 08:33 AM";"so it can take up many inventory spots, but just one maxstrength spot";"";"💯 (1)";
+"347922216429813760";"grewalsatinder#9653";"19-Feb-19 08:44 AM";"finished compiled a min or so ago.
+doing fresh sync. got past block 196, and also shows rogue calls in cclibfino output 🙂";"";"👍 (1)";
+"272003866906722306";"TonyL#3577";"19-Feb-19 08:48 AM";"`newgame 17 \""[2,0.1]\""` created game for 2 players, will try to win myself now";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 08:52 AM";"```./komodo-cli -ac_name=ROGUE cclib gameinfo 17 \""[%22bc0e7663eb2a31a64b47f651bfee3a2048a9cccd15b8f9940482ea7cc8a95539%22]\""
+{
+  ""name"": ""rogue"",
+  ""method"": ""gameinfo"",
+  ""gametxid"": ""bc0e7663eb2a31a64b47f651bfee3a2048a9cccd15b8f9940482ea7cc8a95539"",
+  ""result"": ""success"",
+  ""gameheight"": 23894,
+  ""height"": 23894,
+  ""start"": 23899,
+  ""alive"": 0,
+  ""numplayers"": 0,
+  ""maxplayers"": 2,
+  ""buyin"": 0.10000000,
+  ""players"": [
+  ]
+}
+```
+@jl777c Should wait 5 blocks before registration is opened? Oh no, registered in next block after gametxid is mined, just tried wrong txid";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 08:55 AM";"```{
+  ""name"": ""rogue"",
+  ""method"": ""gameinfo"",
+  ""gametxid"": ""bc0e7663eb2a31a64b47f651bfee3a2048a9cccd15b8f9940482ea7cc8a95539"",
+  ""result"": ""success"",
+  ""gameheight"": 23894,
+  ""height"": 23894,
+  ""start"": 23899,
+  ""starthash"": ""00066677a09d661db4281149da99b6cda6cb4859657e62e97cb79c9e423a3b65"",
+  ""seed"": 4375137766543604581,
+  ""run"": ""cc/rogue/rogue 4375137766543604581 bc0e7663eb2a31a64b47f651bfee3a2048a9cccd15b8f9940482ea7cc8a95539"",
+  ""alive"": 2,
+  ""numplayers"": 2,
+  ""maxplayers"": 2,
+  ""buyin"": 0.10000000,
+  ""players"": [
+    {
+      ""slot"": 0,
+      ""status"": ""registered"",
+      ""baton"": ""0feabb85be788f286efc78e19e3106cc8f7294305995657e74179f1be069b01d"",
+      ""tokenid"": ""0000000000000000000000000000000000000000000000000000000000000000"",
+      ""batonaddr"": ""RFRFeXa81GsEYURQbQN9eh7LPxxbbJVsxX"",
+      ""ismine"": true,
+      ""batonvout"": 0,
+      ""batonvalue"": 0.10990000,
+      ""batonht"": 23899
+    },
+    {
+      ""slot"": 1,
+      ""status"": ""registered"",
+      ""baton"": ""fbdd6c27b25864749cca6c9946dd1993ba980a523e1641cacb2197829faf2cde"",
+      ""tokenid"": ""0000000000000000000000000000000000000000000000000000000000000000"",
+      ""batonaddr"": ""RVuzXY65FyJiPPWSBc9efATh6nb4M9MceR"",
+      ""ismine"": false,
+      ""batonvout"": 0,
+      ""batonvalue"": 0.10990000,
+      ""batonht"": 23899
+    }
+  ]
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 08:55 AM";"Seems fine";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 08:58 AM";"Died by one player, let's try to bailout";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 08:59 AM";"Immediately after I've broadcasted bailout status of this player in gameinfo changed to finished:
+```    {
+      ""slot"": 1,
+      ""status"": ""finished"",
+      ""baton"": ""4e29e16c00265b9176edbd687b167181d3f32b1bf8c19ffe37c18f93f3cc57ee"",
+      ""tokenid"": ""0000000000000000000000000000000000000000000000000000000000000000"",
+      ""batonaddr"": ""RVuzXY65FyJiPPWSBc9efATh6nb4M9MceR"",
+      ""ismine"": true,
+      ""batonvout"": 0,
+      ""batonvalue"": 0.10950000,
+      ""batonht"": 23905
+    }```
+Let's quit on second node and try to highlander";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:00 AM";"```  ""txid"": ""abb9319da94c88200107abddc69ee8e283fe5f6c2a56d7c1c0df6f9edde513d3"",
+  ""result"": ""success""``` highlander broadcasted";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:00 AM";"Gameinfo started to return error:
+```./komodo-cli -ac_name=ROGUE cclib gameinfo 17 \""[%22bc0e7663eb2a31a64b47f651bfee3a2048a9cccd15b8f9940482ea7cc8a95539%22]\""
+{
+  ""name"": ""rogue"",
+  ""method"": ""gameinfo"",
+  ""gametxid"": ""bc0e7663eb2a31a64b47f651bfee3a2048a9cccd15b8f9940482ea7cc8a95539"",
+  ""status"": ""error"",
+  ""error"": ""couldnt find valid game""
+}
+```";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:03 AM";"it worked for me, both players finished";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:03 AM";"did the highlander win both buyins?";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:04 AM";"http://rogue.explorer.dexstats.info/tx/abb9319da94c88200107abddc69ee8e283fe5f6c2a56d7c1c0df6f9edde513d3 highlander transaction
+Hmm in which transaction player which broadcasted highlander should receive pot?";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:04 AM";"I can see output only to loosing player (loosing player wallet R9vESme6P1rqVNFVBidtViGevZ3SJ7KVia)";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:04 AM";"Buyin in this game was 0.1";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:05 AM";"Oh no, it's winner wallet";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:05 AM";"how much gold did you have?";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:05 AM";"that plus both buyins it should be";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:05 AM";"Not remember but less than 100";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:05 AM";"and multiplayer games pay double rate for gold";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:06 AM";"I've quit on level2";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:06 AM";"highlander 10x";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:06 AM";"0.01 ROGUE per gold";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:06 AM";"for the highlander";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:06 AM";"0.87 payout -> 0.67 in gold, could you have had 67 gold?";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:06 AM";"Oh I see so if it was 70 gold - player received 0,7 + 0,2 buyins";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:07 AM";"Looks like a true, next game will track gold balance";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:08 AM";"So if highlander in multiplayer with 5000 gold it's  50 ROGUE coins - cool!";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:08 AM";"i can see a lot more multiplayer games in the future";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:08 AM";"But aren't players can't cheat this way? Just  play against each other with buyin 0.01 to grind gold and cashout";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:09 AM";"yes, there is the 5 block wait";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:09 AM";"and the strict time limit";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:10 AM";"maybe it devalues ROGUE by 10x, but as it was likely few are selling ROGUE as it is so hard to get";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:10 AM";"Yep, some devalue was the point";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:10 AM";"the more ROGUE circulating, the more people will pay for playerdata";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:11 AM";"maybe it shouldnt be 10x for a last man standing...";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:11 AM";"but only if you have amulet";"";"💯 (1)";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:11 AM";"ok, I will change to 2x if lastman standing";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:11 AM";"Abusing prevention";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:11 AM";"so 4x single player";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:12 AM";"still worth doing, but with 5 block wait time maybe not that much benefit as you can almost get killed in 5 blocks";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:12 AM";"If you're so cool to find amulet you earn a lot of gold";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:12 AM";"And it's stimulating playerdata market even more";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:13 AM";"Since players will want not only defeat opponent to take the buyin but also find the amulet";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:13 AM";"So will need strong enough warriors";"";"";
+"412482228359266328";"CrisF#3405";"19-Feb-19 09:16 AM";"Hi, could someone please tell me where the original game code comes from?";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:18 AM";"I got it from: https://github.com/Davidslv/rogue, but it is basically the same code as original
+Rogue: Exploring the Dungeons of Doom
+Copyright (C) 1980-1983, 1985, 1999 Michael Toy, Ken Arnold and Glenn Wichman";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:18 AM";"almost 40 years old!";"";"👵 (1)";
+"412482228359266328";"CrisF#3405";"19-Feb-19 09:19 AM";"Thank you 😃  Amazing isn't it!";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:21 AM";"That feeling when code is older almost twice than you 😂";"";"🍼 (4)";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:22 AM";"updated jl777 branch with reduction of last man standing reward";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:22 AM";"so now it is 2x for multiplayer, 4x for last man standing, 20x for amulet win (over single player farming)";"";"treasure (1)";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:23 AM";"it encourages multiplayer (real or no) with the 2x. at least there is a chance some random roguer will join and play against you";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:23 AM";"also when you win, your pack items are converted to gold and I think it is many thousands of gold";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:24 AM";"Stimulating to move into multiplayer 👍";"";"";
+"272003866906722306";"TonyL#3577";"19-Feb-19 09:24 AM";"After you trained in singleplayer";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:24 AM";"still the total won even with amulet should be less than 100 ROGUE";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:24 AM";"and considering some player play for years and never win, it seems the value per ROGUE cant be very low";"";"";
+"370026641323327491";"ph03nix#3115";"19-Feb-19 09:26 AM";"what is max supply of ROGUE";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:27 AM";"infinite";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:27 AM";"10% of all transactions goes into the main CC address, which pays out the gold -> ROGUE";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:28 AM";"so the more games played, the more funds available";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:28 AM";"""CCbalance"": 1202386.13391190,";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:28 AM";"I estimate about 20,000 free trading ROGUE exists at this moment";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:29 AM";"a better store of value in ROGUE would be a high quality playerdata";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:29 AM";"but the inflation rate of ROGUE is designed to scale with usage, and the more usage, the more it is worth. Not sure if the -ac_perc 10% is the exact right value";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:29 AM";"but pretty sure it is within an order of magnitude";"";"";
+"370026641323327491";"ph03nix#3115";"19-Feb-19 09:34 AM";"so the main CC address will never run out of funds?";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:35 AM";"it might temporarily run out of funds. in that case, you would need to wait with your bailout/highlander tx, but it is self-replenishing based on usage";"";"👌 (1)";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:35 AM";"ROGUERS update to latest version (jl777 and FSM are in sync). there are ""hardforking"" changes in gameplay interpretation and I will be enabling strict validation soon. When I do, if you are not running the latest, you will go on a fork";"";"👆 (1)";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:38 AM";"I believe the ability for percentage of transaction volumes to go to a locked address is pretty unique, let alone where the release of funds is based on actual gameplay keystrokes";"";"";
+"455741312273219595";"jl777c#5810";"19-Feb-19 09:40 AM";"also can use some testgames by non-TonyL to make sure the validation is working properly";"";"";

@@ -1,0 +1,372 @@
+==============================================================
+Guild: Komodo
+Channel: cc-pegs
+Topic: The Pegs Antara modules is a mechanism for creating a decentralized stable coin, pegged to any asset like fiat currency, stock, crypto that has a reliable price source 
+Intro + RPC: https://docs.komodoplatform.com/basic-docs/antara/antara-api/pegs.html
+User tutorial: https://docs.komodoplatform.com/basic-docs/antara/antara-tutorials/pegs-module-user-tutorial.html
+Peg Creator tutorial: https://docs.komodoplatform.com/basic-docs/antara/antara-tutorials/pegs-module-creator-tutorial.html
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[15-Apr-19 09:29 AM] KomodoWorld#8282
+thanks, seems magic to me
+
+[15-Apr-19 09:39 AM] jl777c#5810
+i havent yet populated the other 5 price slots
+
+[15-Apr-19 09:43 AM] jl777c#5810
+mined uses the trustless oracles process
+
+[15-Apr-19 09:44 AM] jl777c#5810
+correlated protects against the 2% attack. trustless oracles is set currently to allow a +/-1% variance, so an attacker can push the price up 1% and then down 1% to create a 2% swing, which might be enough to change monetary outcomes. not any giant issue for most cases, but still want to be safe than sorry
+
+[15-Apr-19 09:44 AM] jl777c#5810
+smoothed is just a 24hr SMA, average value, as the correlation is done over 24hr period
+
+[15-Apr-19 09:45 AM] jl777c#5810
+it isnt a realtime signal, but every block there is a trustless price that is updated based on the prior 24hrs that is solid enough to settle contracts automatically with
+
+{Reactions}
+👍 
+
+[07-May-19 10:15 AM] Regnar#6164
+If anyone is interested I'll post here due to JP's background and knowledge of currencies and monetary policies (traditional as well as some crypto) here's a current tweet based on the DAI peg https://twitter.com/jp_koning/status/1121418943757979648
+
+and his blog "Moneyness" <https://jpkoning.blogspot.com>
+
+{Embed}
+JP Koning (@jp_koning)
+https://twitter.com/jp_koning/status/1121418943757979648
+@ricburton @newcurrency That's what I was wondering. If the goal is to quickly get Dai back to $1 when it deviates, why isn't the stability fee shared with Dai owners in the form of interest? Then as the stability fee is jacked up, so is the interest-rate-on-Dai. Vice vers...
+Twitter
+
+[19-Jun-19 12:25 PM] Regnar#6164
+More info about pegs by Jpkoning, specifically the MakerDAI
+
+https://jpkoning.blogspot.com/2019/05/revisiting-stablecoins.html?m=1
+
+{Embed}
+https://jpkoning.blogspot.com/2019/05/revisiting-stablecoins.html?m=1
+Revisiting stablecoins
+Source: Gravity Glue  (2014)    Cryptocurrencies were supposed to destroy the traditional monetary system. Ten years on, where are we?   B...
+https://1.bp.blogspot.com/-yD0YhxyiCOk/XO0WsJ_aJgI/AAAAAAAAC0c/DqH4rmPWK9EBGoaTAh6kufgpmPSOp9MYwCLcBGAs/w1200-h630-p-k-no-nu/gravityglue.JPG
+
+[25-Jun-19 04:52 PM] KomodoWorld#8282
+https://arxiv.org/abs/1906.02152  this is a recent paper about crypto-backed stablecoins
+
+{Embed}
+https://arxiv.org/abs/1906.02152
+(In)Stability for the Blockchain: Deleveraging Spirals and...
+We develop a model of stable assets, including noncustodial stablecoins
+backed by cryptocurrencies. Such stablecoins are popular methods for
+bootstrapping price stability within public blockchain...
+
+[25-Jun-19 04:52 PM] KomodoWorld#8282
+`Based on our results, we suggest design improvements that can improve long-term stability and suggest methods for solving pricing problems that arise in existing stablecoins. In addition to the direct risk of instability, our dynamics results suggest a profitable economic attack during extreme events that can induce volatility in the stable asset. This attack additionally suggests ways in which stablecoins can cause perverse incentives for miners, posing risks to blockchain consensus. `
+
+[09-Jul-19 01:58 PM] Mihailo#5902 (pinned)
+Hi all, we have made the initial implementation of PegsCC. For those who are not familiar with PegsCC, it is basically a mechanism to have a coin that is always backed by other crypto at worst 1:1 but it should be more - stablecoin. People deposit some other crypto (lets say KMD,BTC ...) using gateways CC in external chain and get tokens on pegs chain. So now tokens can be deposited in an account and you can take coins in amount of price_of_token*amount (up to 80% of value). Lets call this chain KUSD (1 KUSD should represent 1$) , so with deposit of 100KMD in gateway you'll get 100KMDT, and you can then deposit 100KMDT in account on KUSD chain and take lets say maximum of 120KUSD (KMD=1.5$). When the price changes, if it goes up you can take more KUSD, but if it goes down there is the problem. It is solved with possibility for other users to liquidate worst accounts that are in "debt" 90% or more with a gain of 5%. So in previous example if KMD price is 1.3333$ then 120KUSD is 90% of 133.33$ and this account can be liquidated. Some other user gives 120KUSD and gets 95KMDT (it is worth 126.66$), and 5KMDT goes to the system to improve the overall "debt" of the system. The account holder which had his account liquidated is left with his 120KUSD so he is in loss of 10% because he has not maintained better ratio on his account. This way all coins should be backed by crypto all the time.
+
+[09-Jul-19 01:58 PM] Mihailo#5902 (pinned)
+The code is currently in my repo for testing (as there are some modification for testing so that I don't put that in FSM): https://github.com/Mixa84/komodo/tree/pegsCC
+
+Currently there is functionality without validation and probably there are bugs. I have setup test chain so everybody can test. These are the parameters:
+```
+komodod -ac_supply=1000000 -ac_reward=10000 -ac_name=KUSDTEST -ac_cc=2 -ac_import=PEGSCC -ac_end=1 -ac_perc=0 -ac_cbopret=7 -earlytxid=a130861d422655cb28ffbf788c3b4a07748ba67eb7c413c9440b7cbbfcb9d296 -addnode=116.203.17.140:22993 -addnode=116.203.17.141:22993
+
+KMD token txid:    babf52d3f8586393a3ca45e07ccd9ab247fd56c5104bef3aa6a83be3f104831a
+Oracle txid:        bde7c4fb8f7f402891d350715c308179193e4c961c90cac0740a7e89d561b437
+Gateway txid:        e41b98f104d5d3a8f94742f5b0237a9efdd6999bea4af2ce64228c7280167b40
+Pegs txid:        a130861d422655cb28ffbf788c3b4a07748ba67eb7c413c9440b7cbbfcb9d296
+```
+In order to get started you will need to mine few blocks so you have for txfee for gatewaysdeposit and gatewaysclaim transactions (20k sat). You can use the gateways TUI from here https://github.com/tonymorony/komodo-cctools-python to send KMD to deposit address and make deposit and claim tx. After having some balance of KMDT, you can do pegsfund to deposit and then pegsget to take KUSD coins.
+
+[09-Jul-19 02:02 PM] Mihailo#5902
+NOTE: don't forget to `export CONFIGURE_FLAGS='CPPFLAGS=-DTESTMODE'` before the build and start the chain with -pubkey=<pubkey> to use CC, and when you make KMD tx to deposit address to wait that KMD block data is posted to oracle (you can check with `komodo-cli -ac_name=KUSDTEST oraclessamples bde7c4fb8f7f402891d350715c308179193e4c961c90cac0740a7e89d561b437 REnSwBrnZtuPVPngNy8kWLAn9BjUB1F6Dw 5`)
+
+[09-Jul-19 02:03 PM] Mihailo#5902
+@jl777c @TonyL
+
+{Reactions}
+🔥 (7) 🚀 (5) 
+
+[09-Jul-19 02:43 PM] gcharang#6833
+Pinned a message.
+
+[09-Jul-19 02:47 PM] TonyL#3577
+this summer is really hot 😃
+
+[09-Jul-19 04:15 PM] allbits#5898
+What is the motivation to deposit KMDT into the system in the first instance, given that one is at risk of loss if price moves against them and they fail to maintain their ratio in time?
+
+[09-Jul-19 04:41 PM] jl777c#5810
+you are able to borrow against it
+
+[09-Jul-19 04:41 PM] jl777c#5810
+so without selling it you can cash out stablecoins
+
+[09-Jul-19 04:42 PM] jl777c#5810
+no need to find counterparty, no need to go to exchange. maybe in some jurisdictions it could be a tax advantaged way
+
+[09-Jul-19 04:43 PM] jl777c#5810
+also, as long as you are not liquidated, if your coins are used to fund a withdraw, you do get a bit of a premium
+
+[09-Jul-19 04:44 PM] jl777c#5810
+a fiat pegged and backed stablecoin, without any fiat involved
+
+[09-Jul-19 04:45 PM] jl777c#5810
+maybe some project wants to create a stablecoin, this is a way they can do it. the issued stablecoins are freely tradeable and are expected to trade on exchanges
+
+[09-Jul-19 05:50 PM] CMaurice#1685
+do crypto owners using gateways CC in external chain lose rights to rewards/staking?
+
+[09-Jul-19 05:58 PM] Alright#0419
+@CMaurice if you're talking about coins held in the gateway, yes
+
+[09-Jul-19 05:58 PM] Alright#0419
+it may be possible for the gateway signers themselves to collect these rewards though
+
+[09-Jul-19 06:11 PM] siu - Chainmakers#3920
+i was syncing the chain and got this: ```height.2136
+height.2137
+height.2138
+height.2139
+CC Eval EVAL_GATEWAYS Invalid: gatewaysdeposit tx is not yet confirmed(notarised)! spending tx ff2efc72e3e75d15be91fa0dcac3673efe0d9c51726d815bbc056ef105fd49e7
+BTC/USD 12561.6133, BTC/GBP 10076.5368, BTC/EUR 11205.0219 GBPUSD 1.246620, EURUSD 1.121070 EURGBP 0.899288
+(KMD 0.00011950) (ETH 0.02473800)  errs.0```
+
+[09-Jul-19 06:11 PM] siu - Chainmakers#3920
+started mining and got to block 2140 but im not sure if im forked or not
+
+[09-Jul-19 06:12 PM] siu - Chainmakers#3920
+am i in the correct chain? ```./komodo-cli -ac_name=KUSDTEST getblockhash 2140
+0544b7487eecef27e3aebccc6d8ad70cf7edb1783554c161d4d76e0b5e3b515b
+```
+
+[09-Jul-19 06:15 PM] siu - Chainmakers#3920
+```height.2149
+41d9245d1f947e0737060306b761af062e4400000b3b00005b8b000025b90900443300008ed50700d326000059380000ae9a100091de000011310100cba10000d0010100787a03004c116c082f0401001952010014522c005d1f000076e2020081b40400de5213004b290200af940000293500009d940000b6740a007471b400c6a40000f90c0100b6720100dc220000ba2e000084b52500 <- Mineropret
+C ht.2150 now.1562696078 htstamp.1562696061 1562696062 - pricebits[0] 1562696001 -> lags.77 -60 61
+ContextualCheckBlock failed ht.2150
+0157ddb1fe282dd738142cdbe9f5ac7284d433055dfb645e74e50eda56ab8016 Invalid block mined, try again
+C ht.2150 now.1562696078 htstamp.1562696061 1562696062 - pricebits[0] 1562696001 -> lags.77 -60 61
+ContextualCheckBlock failed ht.2150
+07fe4f66d410eef172947a7e797a9d2ef8f2d90baa8c7b10cdd761411f333cc5 Invalid block mined, try again
+```
+
+[09-Jul-19 06:15 PM] siu - Chainmakers#3920
+i keep getting this
+
+[09-Jul-19 06:15 PM] siu - Chainmakers#3920
+invalid blocks mined
+
+[09-Jul-19 06:28 PM] siu - Chainmakers#3920
+Is it normal for sync to take a long time for the last couple of blocks?
+
+[09-Jul-19 06:28 PM] siu - Chainmakers#3920
+@jl777c @Mihailo
+
+[09-Jul-19 06:44 PM] Mihailo#5902
+@siu - Chainmakers  I forgot to add that you must build it with -DTESTMODE, like for other CCs when testing...
+
+{Reactions}
+👍 
+
+[09-Jul-19 06:50 PM] ElectroChemical#3544
+Hey there, new to the discord. Is there a FAQ or simple explanation of the stablecoin implementation used for this? Thanks!
+
+[09-Jul-19 07:08 PM] siu - Chainmakers#3920
+@Mihailo , wait, im confused. Do the `./zcutil/build.sh` with that parameter? Or were should i use that -DTESTMODE paramter?
+
+[09-Jul-19 07:22 PM] Mihailo#5902
+@siu - Chainmakers Yes, but you must do `export CONFIGURE_FLAGS='CPPFLAGS=-DTESTMODE'     ` first
+
+[09-Jul-19 07:22 PM] siu - Chainmakers#3920
+ok
+
+[09-Jul-19 07:23 PM] Mihailo#5902
+@ElectroChemical We don't have proper documentation on pegs CC yet. Working on it...
+
+[09-Jul-19 07:25 PM] ElectroChemical#3544
+Understood, thanks
+
+[09-Jul-19 07:46 PM] Mihailo#5902
+@siu - Chainmakers You also have to do make clean now before build.
+
+[10-Jul-19 07:02 AM] jl777c#5810
+~/komodo/src/cc/pegs.cpp has the initial design description @ElectroChemical
+
+[10-Jul-19 11:41 AM] hyperDEX#6586
+So i understand this properly, there is no counter party, there is a bounty for people to liquidate the trades that are in the red?
+
+[10-Jul-19 11:57 AM] jl777c#5810
+yes
+
+[10-Jul-19 11:57 AM] jl777c#5810
+anybody can borrow against the backing crypto
+
+[10-Jul-19 11:58 AM] jl777c#5810
+once they do, if their address ends up being the most leveraged and the overall balance is in the redzone, anybody can get a 5% arbitrage fee
+
+[10-Jul-19 11:59 AM] jl777c#5810
+so as long as people like the 5% bounty, the system restores to the safety zone
+
+[10-Jul-19 12:11 PM] hyperDEX#6586
+What happens when it goes the other way? They make a profit and want to close out the trade
+
+[10-Jul-19 12:15 PM] hyperDEX#6586
+Will new stable coins be minted ?
+
+[10-Jul-19 12:19 PM] jl777c#5810
+goes the other way? then it costs more stable coins to close out the position
+
+[10-Jul-19 12:19 PM] jl777c#5810
+at any given time you can close your position out by replacing the borrowed stablecoins
+
+[10-Jul-19 12:20 PM] jl777c#5810
+i meant in the first sentence that the balance gets better if the price goes up
+
+[10-Jul-19 12:20 PM] jl777c#5810
+not sure what you mean by profit. profit in what currency? profit on the unsold coins or the issued stable coins?
+
+[10-Jul-19 12:21 PM] hyperDEX#6586
+So as a example.
+
+I deposit 100KMD and get 100USD (assuming $1/each)
+
+[10-Jul-19 12:22 PM] hyperDEX#6586
+If KMD goes to $0.5, when i cashout i would be able to swap for 200KMD for the same 100USD right?
+
+[10-Jul-19 12:22 PM] jl777c#5810
+cant take out 100%
+
+[10-Jul-19 12:22 PM] jl777c#5810
+say you take out 80%
+
+[10-Jul-19 12:22 PM] hyperDEX#6586
+Oh how does that work?
+
+[10-Jul-19 12:22 PM] jl777c#5810
+you need to leave some collateral
+
+[10-Jul-19 12:22 PM] jl777c#5810
+you cant remove all value from your account
+
+[10-Jul-19 12:23 PM] jl777c#5810
+unless everything is settled and there are no loans outstanding, then you can just withdraw the KMD
+
+[10-Jul-19 12:23 PM] hyperDEX#6586
+oh i think i am confusing myself. You basically are taking out a loan
+
+[10-Jul-19 12:23 PM] jl777c#5810
+yes, model is very similar to loan
+
+[10-Jul-19 12:23 PM] jl777c#5810
+just that you are borrowing from the blockchain in stablecoins with KMD as collaterral
+
+[10-Jul-19 12:24 PM] hyperDEX#6586
+So you deposit 100KMD which is worth $100, you can take out $80 in stable coins for something else
+
+[10-Jul-19 12:24 PM] jl777c#5810
+and that anybody can foreclose on you if your account gets too close to busted
+
+[10-Jul-19 12:24 PM] jl777c#5810
+yes, the $80 you take out is freely tradeable
+
+[10-Jul-19 12:24 PM] jl777c#5810
+and you can redeem the $80 worth of KMD at anytime, from the blockchain (one or more of the existing accounts)
+
+[10-Jul-19 12:24 PM] jl777c#5810
+slight premium needs to be paid to redeem
+
+[10-Jul-19 12:24 PM] hyperDEX#6586
+If KMD goes up does the 20% collateral go up too?
+
+[10-Jul-19 12:25 PM] jl777c#5810
+once you make the loan, you dont have to do anything more
+
+[10-Jul-19 12:25 PM] jl777c#5810
+if the collateral value goes below 10%, it will get liquidated by your friendly neighborhood rekting maching
+
+[10-Jul-19 12:26 PM] jl777c#5810
+if KMD goes up 20%, then your 100 KMD is worth $120, against an $80 loan, so your ratio is improved
+
+[10-Jul-19 12:27 PM] hyperDEX#6586
+So you have the rekting machines, on the flip side could you have a saving machine, where they save that loan from being rekt? 😄
+
+[10-Jul-19 12:27 PM] hyperDEX#6586
+i am pretty sure dai has something like that
+
+[10-Jul-19 12:27 PM] jl777c#5810
+it is up to you to save yourself by depositing more
+
+[10-Jul-19 12:28 PM] jl777c#5810
+or redeeming part or alll
+
+[10-Jul-19 12:28 PM] hyperDEX#6586
+Ok is there a situation when you redeem the loan and you get back more KMD than you have locked in for the loan?
+
+[10-Jul-19 12:29 PM] hyperDEX#6586
+I guess you lock in the loan then KMD tanks 50%
+
+[10-Jul-19 12:29 PM] jl777c#5810
+you got rekt way before that if you took out 80%
+
+[10-Jul-19 12:29 PM] hyperDEX#6586
+Ah i see
+
+[10-Jul-19 12:30 PM] jl777c#5810
+with 80% out, at about a 10% drop, you are in the redzone and the rekting machines are revving up
+
+[10-Jul-19 12:30 PM] hyperDEX#6586
+What if you took out a 40% loan and it drops 50% 😄
+
+[10-Jul-19 12:30 PM] jl777c#5810
+they like their 5%
+
+[10-Jul-19 12:30 PM] Mihailo#5902
+You ca  get more if you are left with more KUSD than you borrowed. So you can exchange "free" (not bound to account) KUSD anytime.
+
+[10-Jul-19 12:30 PM] hyperDEX#6586
+60% becomes 30%+40% yeah still only 70%
+
+[10-Jul-19 12:30 PM] jl777c#5810
+yes your own account would be rekt, but the 80 USDK you took out can buy 160 KMD from other accounts
+
+[10-Jul-19 12:31 PM] hyperDEX#6586
+hahaha you got rekt but quickly rekt others to get more KMD 😄
+
+[10-Jul-19 12:31 PM] jl777c#5810
+actually yes. to rekt a redzone account, you do need the USDK
+
+[10-Jul-19 12:32 PM] hyperDEX#6586
+I can see a rekting bot on the cards 😃
+
+[10-Jul-19 12:33 PM] jl777c#5810
+i think it should be an rpc call that automatically finds accounts to rekt and makes a tx if there is one
+
+[10-Jul-19 12:36 PM] jl777c#5810
+@Mihailo we do need some sort of document to describe how all this works
+
+[10-Jul-19 12:40 PM] Mihailo#5902
+@jl777c Yes, proper description of how pegs CC works would be great. As it is pretty confusing in the beginning.
+
+[10-Jul-19 12:41 PM] jl777c#5810
+can you write the first draft?
+
+[10-Jul-19 12:44 PM] Mihailo#5902
+Yes, I'll do my best.
+
+[10-Jul-19 12:48 PM] hyperDEX#6586
+Out of interest is there a interest rate on the loan?
+
+[10-Jul-19 12:49 PM] hyperDEX#6586
+It could take into account held collateral rewards
+
+[10-Jul-19 12:50 PM] Mihailo#5902
+No, the only thing that hunts you is to maintain the account under the red zone. When you get liquidated then 5% goes to liquidator and 5% goes to the system to improve overall ratio.
+
+[10-Jul-19 12:50 PM] hyperDEX#6586
+So when you pay back your loan is there a fee?
+

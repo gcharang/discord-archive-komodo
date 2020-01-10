@@ -1,0 +1,372 @@
+==============================================================
+Guild: Komodo
+Channel: notarynode
+Topic: Setup Guide: https://docs.komodoplatform.com/notary/setup-Komodo-Notary-Node.html
+Stats: https://komodostats.com
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[24-Dec-18 02:51 AM] Jax#4739
+@lukechilds Trying to message you regarding your utxo splitter, but Discord's new default privacy settings are preventing me from doing so. Sent you a friend request.
+
+{Reactions}
+👍 
+
+[24-Dec-18 04:22 PM] CHMEX#0686
+Afaik yes. Its a method or burning coins.
+
+[24-Dec-18 04:24 PM] CHMEX#0686
+en.bitcoin.it/wiki/OP_RETURN
+
+[24-Dec-18 05:55 PM] dukeleto#7326
+@webworker01 @CHMEX both are the same OP_RETURN
+
+[24-Dec-18 05:56 PM] dukeleto#7326
+OP_RETURN is a special bitcoin script opcode that says "the rest of this script is just data, do not store it in the utxo database", which every node must store in memory
+
+[24-Dec-18 05:56 PM] dukeleto#7326
+this service records things in OP_RETURN, very similar to how dpow uses OP_RETURN: https://opentimestamps.org/
+
+{Embed}
+https://opentimestamps.org//
+OpenTimestamps: a timestamping proof standard
+OpenTimestamps aims to be a standard format for blockchain timestamping. The format is flexible enough to be vendor and blockchain independent.
+
+[24-Dec-18 05:57 PM] dukeleto#7326
+in the days before OP_RETURN, people stored data as actual utxo vin/vouts
+
+[24-Dec-18 05:57 PM] dukeleto#7326
+such as, the original Satoshi whitepaper PDF is stored directly as a multisig transaction(!)
+
+[24-Dec-18 05:57 PM] dukeleto#7326
+that bloats the utxo DB for the rest of time on every node
+
+[24-Dec-18 05:58 PM] dukeleto#7326
+hence why btc core is so against storing rando data as utxos, OP_RETURN allows rando data to not pollute utxo DB
+
+[24-Dec-18 07:59 PM] jl777c#5810
+opreturn script returns failed
+
+[24-Dec-18 07:59 PM] jl777c#5810
+so any attempt to spend it will fail
+
+[24-Dec-18 08:29 PM] dukeleto#7326
+@webworker01 by definition, OP_RETURN outputs are not spendable (unspendable), and do not need to be stored in the utxo database. That is what he is trying to say, I think
+
+[24-Dec-18 10:18 PM] blackjok3r#3181
+Op return usually have zero value, so being unspendable does not matter
+
+[24-Dec-18 10:18 PM] blackjok3r#3181
+I think u can attach value to them to burn coins
+
+[24-Dec-18 10:19 PM] blackjok3r#3181
+That was how labs was going to launch its cluster chains. Op returnn with chain params, burning the ac_supply
+
+[24-Dec-18 10:19 PM] blackjok3r#3181
+Not sure if that is still the plan
+
+[27-Dec-18 11:24 PM] smellycouch#3071
+quick question, why to addresses involved in notarization and 0.0001  UTXOs often have negative balances?
+
+[27-Dec-18 11:24 PM] smellycouch#3071
+https://kmdexplorer.io/address/RWVt3CDvXXAw5NeyMrjUC8s7YssAJ9j4A4
+
+[27-Dec-18 11:44 PM] Alright#0419
+@smellycouch fairly sure it's an explorer bug
+
+[27-Dec-18 11:44 PM] Alright#0419
+I've seen it happen before with addresses that have *tonnes* of transactions
+
+[27-Dec-18 11:46 PM] Deleted User#0000
+rofl at totals 😄
+
+[28-Dec-18 12:24 AM] smellycouch#3071
+@Alright   thx
+
+[28-Dec-18 01:21 AM] blackjok3r#3181
+notary nodes would break anything that tried to log their transactions ... when the local wallet itself cant go a couple of days witout totally bogging down and breaking, an explorer could hope for at best a few weeks before having corrupted data.
+
+[28-Dec-18 01:41 AM] smellycouch#3071
+@blackjok3r  is that because of the number of transactions, or some other factor?      I'm interested.   that address above is at 1.2 million transactions.   Many systems need to handle that much per second, with near zero tolerance for error.   I do hope to see KMD itself handle that any transactions per second someday
+
+[28-Dec-18 01:43 AM] blackjok3r#3181
+Its a database issue, not the actual blockchain itself... the blockchain is accurate but when you try to keep track of the tranacions in some place (like the BTC wallet code, or the insight DB's (for explorers) It just doesnt work ... I figured out ways to "fix" it on the BTC wallet code side... where the node lives inside a "bubble" of 1000 blocks, and does not save its tranasacion history from before that time. This has 100% fixed any problem notary node has of bogging down, btu its a very specific fix and definatly cannot apply to all nodes. I think possibly a mining pool node's wallet could also use this method. Exchanges though, not very sure.
+
+[28-Dec-18 01:45 AM] blackjok3r#3181
+If some use was using a blockchain for millions of transacions, I think they would need to deploy thier own entrie DB code and infristrucure to support that.
+
+[28-Dec-18 01:45 AM] blackjok3r#3181
+No mean feat ... I looked at the BTC wallet code for about 3-4 days, to wrap my head around what would be required to replace it before deciding that it basically cant be done.
+
+[28-Dec-18 01:46 AM] blackjok3r#3181
+Decided on hacking workarounds into it instead. As unless your really pushing it to do what it was never designed ot do it does a perfecty fine job.
+
+[28-Dec-18 01:52 AM] smellycouch#3071
+@blackjok3r   thank you, very interesting.        I will save myself the 3-4 days then 😃      I'm surprised a DB can't handle it, but glad it's an external issue
+
+[28-Dec-18 01:53 AM] blackjok3r#3181
+Yeah not really sure why or how it ends up corrupted, this is pretty rare but a rescan on a wallet with millions of transactions takes an extreme amount of time.
+
+[28-Dec-18 01:55 AM] smellycouch#3071
+that it does 😉  🍿
+
+[29-Dec-18 05:24 AM] Mylo#8306
+i think it's something to do with moving wallet.dat files between block reward maturity.   just a guess.   the active wallet.dat on the notary nodes sometimes rescan from a particular height _after_ their block reward matures.
+
+reason i think it's related to this is the pioneers NN wallet was -50 to -100KMD for a while.  side note, a rollover wallet sometimes tops up the NN wallet to do notarizations.  When these mature block rewards are accounted for but not spendable because they don't have `nLockTime` set.   <--- too low level for me to hand-on-heart say i'm an expert on behaviour without someone blessing my assumption with "yes you are correct mylo" or "derrr mylo, you are so wrong" 😄
+
+[31-Dec-18 03:03 PM] infotech-al#5583
+💥Happy New Year to the AR node operators! Happy 2019! 💥
+
+[02-Jan-19 07:06 AM] smellycouch#3071
+@Mylo   I'll buy that, makes sense.
+
+[02-Jan-19 07:06 AM] smellycouch#3071
+How does one end up with ```wrong senderind.0```?       assuming myind is not 0?
+
+[02-Jan-19 12:03 PM] SHossain#0007
+0 should be jl777's node
+
+[02-Jan-19 10:33 PM] Mylo#8306
+Don’t know, won’t be top priority to find the answer for cpl days sry
+
+[03-Jan-19 12:14 AM] smellycouch#3071
+@SHossain  @Mylo , thank you , it's not a priority at all, I'll figure it out, was just curious if anyone else had managed to do this lol
+
+[03-Jan-19 12:16 AM] SHossain#0007
+You can't use iguana mainnet until you are elected and your pubkey exists is in Komodo source.
+
+[03-Jan-19 03:51 AM] Deleted User#0000
+You can t discuss with NN as your queries will be rejected but you can see what s happening I think
+
+[03-Jan-19 03:52 AM] Deleted User#0000
+That was one requirement : leave it public to let any audit possible.
+
+[03-Jan-19 03:52 AM] Deleted User#0000
+(Back in the day when we were finding ways to secure the network after)
+
+[03-Jan-19 05:06 AM] smellycouch#3071
+@SHossain  oh I'm not doing that, no.   no KMD mainnet for me.
+
+[03-Jan-19 05:07 AM] smellycouch#3071
+at least at this moment.   just realized I should be in #kmdlabs
+
+[04-Jan-19 01:04 AM] Mylo#8306
+3 years sys admin experience or equivalent (telco background is handy because of real time comms nature of systems)
+compiling stubborn code
+git workflow
+fault troubleshooting
+on-call
+full node experience
+scripting ability
+like matrix style code & logs drifting up a screen
+competitive
+humble
+
+#kmdlabs gives all of that.   1 month there is like 1 year of sys admin work, maybe more depending how many chains requiring troubleshooting for what they are doing.
+
+{Reactions}
+💯 (2) 😂 
+
+[08-Jan-19 07:10 AM] dukeleto#7326
+TO FIX: fatal error: OCTET_STRING.h: No such file or directory : ./zcutil/build.sh 3 TIMES or git clean -fdx or reclone, which are less optimal
+
+{Reactions}
+3⃣ 🇲 🇦 🇬 🇮 🇨 #⃣ 
+
+[08-Jan-19 11:19 AM] tharmar#8486
+`acplit KMD 10` causes this error: `{"error":"couldnt create duplicates tx","tag":"17588760565848623494"}` can anyone relate to that ?
+
+[08-Jan-19 11:23 AM] tharmar#8486
+and iguana is printing `dont have KMD xxxxxxxx utxo, please send funds`  but can't do that without `acsplit` ... 😦
+
+[08-Jan-19 11:25 AM] tharmar#8486
+iguana is running and listening on port 7776:
+`~$  netstat -lnp | grep 7776
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+tcp        0      0 127.0.0.1:7776          0.0.0.0:*               LISTEN      20026/iguana`
+
+[08-Jan-19 11:57 AM] blackjok3r#3181
+u have no kmd... send balacne to your self or send KMD to node
+
+[08-Jan-19 11:29 PM] lukechilds#2707
+@dukeleto why is git clean less optimal?
+
+[08-Jan-19 11:30 PM] lukechilds#2707
+Isn't that the exact point of git clean?
+
+[08-Jan-19 11:30 PM] lukechilds#2707
+To get the repo in a clean state for doing a fresh build
+
+[08-Jan-19 11:58 PM] SHossain#0007
+best thing for me is `git reset --hard`. works all the time
+
+[09-Jan-19 12:00 AM] lukechilds#2707
+`git clean` is like `git reset --hard` but nukes everything. 
+`git reset --hard` can leave some bits behind like build artifacts
+
+[09-Jan-19 12:02 AM] SHossain#0007
+yes, and my own files
+
+[09-Jan-19 12:03 AM] SHossain#0007
+for removing old builds i use `make clean`
+
+[09-Jan-19 12:03 AM] SHossain#0007
+basically, i use these everyday
+
+[09-Jan-19 01:45 AM] Mylo#8306
+thx `git reset --hard` sounds like something i shd use more, cheers
+
+[09-Jan-19 04:23 PM] dukeleto#7326
+@lukechilds it can lose data accidentally, mostly
+
+{Reactions}
+👍 
+
+[09-Jan-19 04:23 PM] dukeleto#7326
+the "less optimal" is that it can do what you want, but you *might* lose data, depending on the state of your tree
+
+[09-Jan-19 04:23 PM] dukeleto#7326
+build.sh X 3 cannot lose your data
+
+[09-Jan-19 04:24 PM] dukeleto#7326
+@SHossain i have this shell alias for like 10+ years: ```
+$ type undo
+undo is aliased to `git reset HEAD^'
+```
+
+[09-Jan-19 04:24 PM] dukeleto#7326
+not --hard tho, because that can lose data. Don't make it easy to accidentally lose data, is very core git philosophy
+
+[09-Jan-19 04:25 PM] dukeleto#7326
+so Git folks veer towards the solution that has least risk of losing data, if multiple choices exist to do the same thing
+
+[09-Jan-19 04:25 PM] dukeleto#7326
+`undo` is great for "oh, i didn't want that commit message, let's do that again"
+
+{Reactions}
+🙏 
+
+[09-Jan-19 04:47 PM] BadAss#8800
+i get an eroor when updating kmd
+
+[09-Jan-19 04:47 PM] BadAss#8800
+error
+
+[09-Jan-19 04:47 PM] BadAss#8800
+ions.c  -fPIC -DPIC -o cryptoconditions/src/.libs/cryptoconditions.o
+In file included from cryptoconditions/src/asn/Condition.h:14:0,
+                 from cryptoconditions/src/cryptoconditions.c:17:
+cryptoconditions/src/asn/SimpleSha256Condition.h:14:26: fatal error: OCTET_STRING.h: No such file or directory
+compilation terminated.
+Makefile:2424: recipe for target 'cryptoconditions/src/cryptoconditions.lo' failed
+make[2]: *** [cryptoconditions/src/cryptoconditions.lo] Error 1
+make[2]: *** Waiting for unfinished jobs....
+mv -f zmq/.deps/libbitcoin_zmq_a-zmqpublishnotifier.Tpo zmq/.deps/libbitcoin_zmq_a-zmqpublishnotifier.Po
+mv -f zcash/.deps/libzcash_a-prf.Tpo zcash/.deps/libzcash_a-prf.Po
+mv -f zcash/.deps/libzcash_a-Proof.Tpo zcash/.deps/libzcash_a-Proof.Po
+mv -f zcash/.deps/libzcash_a-Note.Tpo zcash/.deps/libzcash_a-Note.Po
+mv -f crypto/.deps/crypto_libbitcoin_crypto_a-equihash.Tpo crypto/.deps/crypto_libbitcoin_crypto_a-equihash.Po
+mv -f zcash/.deps/libzcash_a-zip32.Tpo zcash/.deps/libzcash_a-zip32.Po
+mv -f zcash/.deps/libzcash_a-JoinSplit.Tpo zcash/.deps/libzcash_a-JoinSplit.Po
+make[2]: Leaving directory '/home/komodo/komodo/src'
+Makefile:4929: recipe for target 'all-recursive' failed
+make[1]: *** [all-recursive] Error 1
+make[1]: Leaving directory '/home/komodo/komodo/src'
+Makefile:659: recipe for target 'all-recursive' failed
+make: *** [all-recursive] Error 1
+komodo@BadAssEU:~/komodo$
+
+[09-Jan-19 04:52 PM] jl777c#5810
+build.sh a few times
+
+[09-Jan-19 04:52 PM] jl777c#5810
+it has been this way for a while
+
+[09-Jan-19 04:52 PM] jl777c#5810
+cryptoconditions/src/asn/SimpleSha256Condition.h:14:26: fatal error: OCTET_STRING.h: No such file or directory
+means just build.sh again, maybe 4 times
+
+[09-Jan-19 05:01 PM] BadAss#8800
+ok
+
+[09-Jan-19 05:02 PM] BadAss#8800
+hmm, are we on beta now?
+
+[09-Jan-19 05:02 PM] jl777c#5810
+yes, beta should be much more stable
+
+[09-Jan-19 05:04 PM] BadAss#8800
+ok lets try
+
+[09-Jan-19 05:08 PM] BadAss#8800
+beta worked
+
+[09-Jan-19 05:30 PM] dukeleto#7326 (pinned)
+TO FIX: fatal error: OCTET_STRING.h: No such file or directory : ./zcutil/build.sh 3 TIMES or git clean -fdx or reclone, which are less optimal
+
+[09-Jan-19 05:30 PM] dukeleto#7326
+Pinned a message.
+
+[09-Jan-19 05:30 PM] dukeleto#7326
+it was only pinned in the private channel, now it can be searched for in both places
+
+[09-Jan-19 05:30 PM] dukeleto#7326
+the error is more likely to happen when switching branches, fyi
+
+[09-Jan-19 05:57 PM] BadAss#8800
+ah well, it let us communicate
+
+[10-Jan-19 02:48 PM] ! |🆉🅿🅾🅾🅻.🅲🅰| ! - crackers#9719
+notarizations seem to be really bad since switch to beta
+
+[24-Jan-19 12:53 PM] jl777c#5810
+whose coin is KOIN?
+
+[24-Jan-19 12:53 PM] jl777c#5810
+they put 99% of funds into sprout....
+
+[24-Jan-19 01:24 PM] cipi#4502
+@aseandude 👆
+
+[24-Jan-19 01:25 PM] aseandude#9647
+Yeah.   Z address.
+
+[24-Jan-19 01:25 PM] aseandude#9647
+@jl777c.       I'm KOIN
+
+[24-Jan-19 01:26 PM] aseandude#9647
+@jl777c @cipi.     Is there an issue I need to address?
+
+[24-Jan-19 01:28 PM] SHossain#0007
+you need to move all your funds from sprout address to sapling address. otherwise, you will not be able to use them afer 15th February 2019
+
+[24-Jan-19 01:39 PM] CHMEX#0686
+and you are traded on DP right? dPOW is highly recommended
+
+[28-Jan-19 01:23 PM] jeezy#3408
+@jl777c  can you  roughly estimate the start of the next NN election and starting date of the next season?
+
+[28-Jan-19 01:23 PM] jl777c#5810
+Q2
+
+[28-Jan-19 01:23 PM] jeezy#3408
+I bet a lot of people will be looking into provider plans and trying to cut some yearly deals
+
+[28-Jan-19 01:23 PM] jl777c#5810
+we will try for April elections, not sure we will be able to do this
+
+[28-Jan-19 01:23 PM] jeezy#3408
+would be good to know a rough date
+
+[28-Jan-19 01:24 PM] jl777c#5810
+Q2
+
+[28-Jan-19 01:24 PM] jl777c#5810
+April or May likely
+
+[28-Jan-19 01:24 PM] jeezy#3408
+okay  we can work with that
+

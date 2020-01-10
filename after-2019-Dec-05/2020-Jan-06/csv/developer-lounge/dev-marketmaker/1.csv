@@ -1,0 +1,96 @@
+AuthorID,Author,Date,Content,Attachments,Reactions
+"371114647052615681","Mylo#8306","05-Jan-20 12:45 AM","`I've tried with 2020-01-03 and it worked fine 🙂` thanks @zatJUM I’ll try today!","",""
+"419964976397156352","cipi#4502","05-Jan-20 01:18 AM","@artem.pikulin how long does mm2 wait till it gives up validating a payment?
+```
+MAKER (AXE)
+         ""timestamp"" : 1578185638362, 2020-01-05T00:53:58
+         ""event"" : {
+            ""type"" : ""MakerPaymentSent""
+
+TAKER
+         ""timestamp"" : 1578185689482, 2020-01-05T00:54:49
+               ""error"" : ""taker_swap:675] !maker_coin.tx_details_by_hash: utxo:1614] JsonRpcError { request: JsonRpcRequest { jsonrpc: \""2.0\"", id: \""8472\"", method: \""blockchain.transaction.get\"", params: [String(\""0fa0c8f3f75513995c42308542995ee2b677432e098b5021e737b2b0939f3a33\""), Bool(true)] }, error: Response(Object({\""code\"": Number(2), \""message\"": String(\""daemon error: DaemonError({\\'code\\': -5, \\'message\\': \\'No such mempool or blockchain transaction. Use gettransaction for wallet transactions.\\'})\"")})) }""
+            },
+            ""type"" : ""MakerPaymentValidateFailed""
+```
+looks like with AXE it takes longer then 50s for a tx to make it to the mempool of other nodes","",""
+"419964976397156352","cipi#4502","05-Jan-20 01:20 AM","the tx actually exists and has been mined in the meantime with 5 confirmations: https://insight.axerunners.com/tx/0fa0c8f3f75513995c42308542995ee2b677432e098b5021e737b2b0939f3a33","",""
+"419964976397156352","cipi#4502","05-Jan-20 02:39 AM","problem ""solved"": `addnode` the native wallet of the mm2-node to the wallet of the electrum servers... but it is still strange that it takes so long for the tx to propagate to the mempool without such tricks","",""
+"457121878465708043","artem.pikulin#0794","05-Jan-20 06:08 AM","@cipi Hi, MM2 makes 3 attempts with 10 seconds interval for payment validation. If all 3 attempts fail it will abort the swap with `...PaymentValidateFailed`  error. 50 seconds is too long for tx mempool propagation, seems like it's specific coin issue. We can wait a bit longer too, but I'm unsure if it's worth to make such fix for single coin when it works nice for 99.9% of the others.","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:48 AM","hello @artem.pikulin","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:48 AM","I got some trouble with `recent_swaps` rpc documentation","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:50 AM","i'm trying to know what i have to parse in case of StartedFailed, NegotiateFailed etc","https://cdn.discordapp.com/attachments/449950331577565194/663318368022953994/Capture_decran_2020-01-05_a_10.49.15.png",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:50 AM","This is not specified in the doc the data format of those error type","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:50 AM","And i don't know how to make a swap failed intentionally","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:50 AM","If you can drive me i will appreciate the effort :p","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:51 AM","The documentation cover all the Success Events, none of Error Events","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:51 AM","I have no idea of the format to parse etc and i need in the UI to handle error case i guess","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:53 AM","Basically i have an `std::variant` that can take all the Event possible, success or error.","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:53 AM","With an hash map that have as key the `event_type` and as value the concrete type of the current event in the array of `swaps`","",""
+"231533083818590211","Oszy#5734","05-Jan-20 09:53 AM","if i remember correctly then a swap is failed if there is any error event present in the json, if it's successful there is none","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:53 AM","Yeah that's what i'm saying @Oszy","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:54 AM","But the official Komodo Documentation doesn't show the contents in case of error","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:54 AM","How i'm supposed to parse something that it's not documented ? How can i force a swap to failed myself for every error case ?","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:54 AM","I tried alone since 2 hours, no success.","",""
+"231533083818590211","Oszy#5734","05-Jan-20 09:55 AM","Uhm let me check but I think they are like Maker/Taker Payment Validate/Spend Failed","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:55 AM","https://developers.komodoplatform.com/basic-docs/atomicdex/atomicdex-api.html#my-recent-swaps","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:56 AM","I speak about this one.","",""
+"457121878465708043","artem.pikulin#0794","05-Jan-20 09:58 AM","@Slyris Hi, all error events have same structure, e.g.: https://gist.github.com/artemii235/66004ce8ec3ad4f87b5485c1972ed575#file-makerpaymenttransactionfailed-L73
+```
+    {
+      ""event"": {
+        ""data"": {
+          ""error"": ""lp_swap:1888] eth:654] RPC error: Error { code: ServerError(-32010), message: \""Transaction with the same hash was already imported.\"", data: None }""
+        },
+        ""type"": ""MakerPaymentTransactionFailed""
+      },
+      ""timestamp"": 1563744118577
+    },
+```","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:58 AM","Thank's artem it's what i was looking for.","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:58 AM",":p","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:59 AM","so timestamp + data object and error field","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:59 AM","alright ?","",""
+"457121878465708043","artem.pikulin#0794","05-Jan-20 09:59 AM","So for `StartFailed` you will see something like this:
+```
+    {
+      ""event"": {
+        ""data"": {
+          ""error"": ""...""
+        },
+        ""type"": ""StartFailed""
+      },
+      ""timestamp"": 1563744118577
+    },
+```
+Etc","",""
+"457121878465708043","artem.pikulin#0794","05-Jan-20 09:59 AM","```
+so timestamp + data object and error field
+alright ?
+```
+Yes, exactly","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:59 AM","Ok it's exactly what i'm looking for thanks.","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:59 AM","Can we have this in the official doc too ?","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:59 AM","Can be usefull for others","",""
+"206445134122844170","Slyris#2880","05-Jan-20 09:59 AM","or pin the message ?","",""
+"231533083818590211","Oszy#5734","05-Jan-20 10:00 AM","Pinned a message.","",""
+"457121878465708043","artem.pikulin#0794","05-Jan-20 10:01 AM","Sure, I'm actualizing the doc right now, will add a couple of error cases to the `my_swap_status` and `my_recent_swaps` response examples.","",""
+"206445134122844170","Slyris#2880","05-Jan-20 10:04 AM","great thanks","",""
+"206445134122844170","Slyris#2880","05-Jan-20 10:08 AM","i'm supposing that the goal of the different data object content is to be implemented as a variant no @artem.pikulin ?","",""
+"206445134122844170","Slyris#2880","05-Jan-20 10:08 AM","How you deal with this kind of structure in rust ?","",""
+"206445134122844170","Slyris#2880","05-Jan-20 10:08 AM","How you have a collection of different Object Type such as my_recent_swaps give you","",""
+"457121878465708043","artem.pikulin#0794","05-Jan-20 10:16 AM","Events enum definitions are here:
+Maker swap - https://github.com/KomodoPlatform/atomicDEX-API/blob/mm2/mm2src/lp_swap/maker_swap.rs#L778
+Taker swap - https://github.com/KomodoPlatform/atomicDEX-API/blob/mm2/mm2src/lp_swap/taker_swap.rs#L283
+It's adjacently tagged enum representation built in `serde` crate (https://serde.rs/enum-representations.html).
+The `type` field is used as tag identifying the content type, `data` field is actual content.","",""
+"457121878465708043","artem.pikulin#0794","05-Jan-20 10:18 AM","As you can see all error events use `SwapError` type as variant data, the struct itself is defined here: https://github.com/KomodoPlatform/atomicDEX-API/blob/mm2/mm2src/lp_swap.rs#L439","",""
+"206445134122844170","Slyris#2880","05-Jan-20 10:18 AM","Nice i cannot have the same approach in C++","",""
+"206445134122844170","Slyris#2880","05-Jan-20 10:18 AM","that's why i used variant","",""
+"206445134122844170","Slyris#2880","05-Jan-20 10:19 AM","Look like:
+
+```cpp
+using t_event_registry = std::unordered_map<std::string, std::variant<finished_event, started_event>>;
+t_event_registry         events;
+```","",""
+"206445134122844170","Slyris#2880","05-Jan-20 10:19 AM","(need to add more events)","",""

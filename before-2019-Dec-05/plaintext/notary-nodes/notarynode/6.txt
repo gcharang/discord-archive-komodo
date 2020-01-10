@@ -1,0 +1,571 @@
+==============================================================
+Guild: Komodo
+Channel: notarynode
+Topic: Setup Guide: https://docs.komodoplatform.com/notary/setup-Komodo-Notary-Node.html
+Stats: https://komodostats.com
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[27-Jun-18 06:12 AM] lukechilds#2707
+Yeah, I'm leaning towards that tbh
+
+[27-Jun-18 06:13 AM] lukechilds#2707
+that `jq` command is pretty horrific
+
+{Reactions}
+😄 
+
+[27-Jun-18 06:13 AM] lukechilds#2707
+and it also means whoever is tasting AC params can literally copy/pasta the args straight in
+
+[27-Jun-18 06:14 AM] lukechilds#2707
+rather than having to smush them into some weird array syntax
+
+[27-Jun-18 06:14 AM] Mylo#8306
+yeah that too.  wanna make it easy for the copy pastas
+
+[27-Jun-18 06:15 AM] blackjok3r#3181
+jq works... so its fine :troll:
+
+{Reactions}
+🗣 
+
+[27-Jun-18 06:19 AM] patchkez#5349
+but this assetchainparams.txt does not contain information like p2p or rpc port, so it is quite useless for me
+
+[27-Jun-18 06:21 AM] Deleted User#0000
+Afaik lazynode will just adapt whatever the args are to just continue launching with the same exact method.
+It just scans the asserchains file with args but never use it so json version will work too. As long as we got some sort of db (json) with all params it will be fine
+
+[27-Jun-18 06:22 AM] Deleted User#0000
+it s just modifying the parsing logic
+
+[27-Jun-18 06:23 AM] lukechilds#2707
+To account for duplicate args JSON format needs to look like this:
+
+```
+cat assetchains.json
+[
+  [
+    [
+      "ac_name",
+      "ZILLA"
+    ],
+    [
+      "ac_supply",
+      "11000000"
+    ],
+    [
+      "addnode",
+      "54.39.23.248"
+    ]
+  ],
+  [
+    [
+      "ac_name",
+      "RFOX"
+    ],
+    [
+      "ac_supply",
+      "1000000000"
+    ],
+    [
+      "ac_reward",
+      "100000000"
+    ],
+    [
+      "addnode",
+      "78.47.196.146"
+    ]
+  ]
+]
+```
+
+[27-Jun-18 06:23 AM] lukechilds#2707
+that's pretty nasty
+
+[27-Jun-18 06:23 AM] lukechilds#2707
+but it would allow adding custom meta
+
+[27-Jun-18 06:23 AM] lukechilds#2707
+like RPC port etc
+
+[27-Jun-18 06:23 AM] lukechilds#2707
+@patchkez why do you need p2p or rpc port?
+
+[27-Jun-18 06:23 AM] Deleted User#0000
+Unfixed and missing params could just be a mess to loop via jq btw...
+
+[27-Jun-18 06:29 AM] patchkez#5349
+@webworker01 that is ok, but we need to have it in config file. You could have some kind of tool talking to assetchains via RPC. And it can happen quite easily that assetchains are running on multiple nodes.
+
+[27-Jun-18 06:34 AM] patchkez#5349
+```[
+  {
+    "ac_name": "ZILLA",
+    "ac_supply": "11000000",
+    "addnode": "54.39.23.248"
+  },
+  {
+    "ac_name": "RFOX",
+    "ac_supply": "1000000000",
+    "ac_reward": "100000000",
+    "addnode": [
+                "78.47.196.146",
+                "78.47.196.147",
+                "78.47.196.148"
+               ]
+
+  }
+]
+```
+
+[27-Jun-18 06:34 AM] patchkez#5349
+@lukechilds you see above syntax as problematic?
+
+[27-Jun-18 06:35 AM] lukechilds#2707
+Yes, significantly harder to pass with jq
+
+[27-Jun-18 06:35 AM] patchkez#5349
+@webworker01 rpc and p2p ports are also defined in coins/*_7776 files
+
+[27-Jun-18 06:36 AM] lukechilds#2707
+If we were going the JSON rout it should be stored and parsed like this:
+
+```
+$ cat assetchains.json
+[
+  [
+    [
+      "ac_name",
+      "ZILLA"
+    ],
+    [
+      "ac_supply",
+      "11000000"
+    ],
+    [
+      "addnode",
+      "54.39.23.248"
+    ]
+  ],
+  [
+    [
+      "ac_name",
+      "RFOX"
+    ],
+    [
+      "ac_supply",
+      "1000000000"
+    ],
+    [
+      "ac_reward",
+      "100000000"
+    ],
+    [
+      "addnode",
+      "78.47.196.146"
+    ],
+    [
+      "addnode",
+      "123.45.678.90"
+    ]
+  ]
+]
+
+$ cat assetchains.json | jq '.[] | map("-\(.[0])=\(.[1])") | reduce .[1:][] as $i ("\(.[0])"; . + " \($i)")'
+"-ac_name=ZILLA -ac_supply=11000000 -addnode=54.39.23.248"
+"-ac_name=RFOX -ac_supply=1000000000 -ac_reward=100000000 -addnode=78.47.196.146 -addnode=123.45.678.90"
+```
+
+[27-Jun-18 06:36 AM] lukechilds#2707
+simple map reduce
+
+[27-Jun-18 06:36 AM] lukechilds#2707
+but I think it should be stored as a simple TXT file
+
+[27-Jun-18 06:36 AM] lukechilds#2707
+Notice dupe addnode args work properly above ☝
+
+[27-Jun-18 06:37 AM] Mylo#8306
+```
+[
+  {
+    "ac_name": "ZILLA",
+    "params": [
+    "ac_supply": "11000000",
+    "addnode": "54.39.23.248"
+    ]
+  },
+  {
+    "ac_name": "RFOX",
+     "params": [
+    "ac_supply": "1000000000",
+    "ac_reward": "100000000",
+    "addnode": "78.47.196.146",
+     "addnode": "78.47.196.147",
+      "addnode": "78.47.196.148"
+      ],
+      "meta": [
+         "rpcport": 1234,
+         "p2pport": 1235,
+      ]
+  }
+]
+```
+
+[27-Jun-18 06:37 AM] Mylo#8306
+excuse spacing, rushing out
+
+[27-Jun-18 06:38 AM] lukechilds#2707
+@Mylo that's not a valid JSON array
+
+[27-Jun-18 06:38 AM] lukechilds#2707
+arrays only have a list of values
+
+[27-Jun-18 06:39 AM] lukechilds#2707
+objects have property:value pairs
+
+[27-Jun-18 06:39 AM] lukechilds#2707
+but property names are unique
+
+[27-Jun-18 06:39 AM] Mylo#8306
+oic and your object same same thing you mentioned earlier will be a problem and unreadable. gotcha
+
+[27-Jun-18 06:39 AM] lukechilds#2707
+so you can't have dupes
+
+[27-Jun-18 06:39 AM] lukechilds#2707
+anyway guys, I'm really busy with HyperDEX dev right now
+
+[27-Jun-18 06:39 AM] lukechilds#2707
+but will try and get a PR together tonight
+
+{Reactions}
+👌 
+
+[27-Jun-18 06:40 AM] Mylo#8306
+your last example is good @lukechilds
+
+[27-Jun-18 06:41 AM] lukechilds#2707
+I still think plain text is the way to go
+
+[27-Jun-18 06:41 AM] lukechilds#2707
+that doesn't offer much over plain text
+
+[27-Jun-18 06:41 AM] lukechilds#2707
+apart from being hard to edit
+
+[27-Jun-18 06:42 AM] Mylo#8306
+csv just as easy
+ac_name=zilla,addnode=1.2.3.4,addnode=2.3.4.5
+using awk
+then p2p port misses out
+
+[27-Jun-18 06:42 AM] blackjok3r#3181
+plain text is fine really... but p2p rpc would need to be a separate thing then.
+
+[27-Jun-18 06:42 AM] lukechilds#2707
+I still don't quite get why we need the p2p port in here
+
+[27-Jun-18 06:43 AM] blackjok3r#3181
+I need it... atm.. I have to maunually call getinfo then add it to firewall
+
+[27-Jun-18 06:43 AM] Mylo#8306
+central config.  but tbh not a problem in a _second_ config file 🤧
+
+[27-Jun-18 06:44 AM] patchkez#5349
+@lukechilds we aslo need it for starting docker containers, we need to tell Docker which ports to expose to the internet
+
+[27-Jun-18 06:45 AM] lukechilds#2707
+where is the p2p port set? Is it always the same for all assetchain nodes or can it be different?
+
+[27-Jun-18 06:45 AM] blackjok3r#3181
+you can change it in confile I think, but its generated by the AC params.
+
+[27-Jun-18 06:45 AM] blackjok3r#3181
+each AC has its own one.
+
+[27-Jun-18 06:45 AM] blackjok3r#3181
+or *should* have its own one.
+
+[27-Jun-18 06:46 AM] Mylo#8306
+would 2 config files work though?
+csv normal for ac stuff
+then commented out lines for p2p stuff
+
+e.g.
+```
+ac_name=zilla,addnode=1.2.34,ac_blah=foo
+ac_name=mylo,addnode=1.2.34,ac_blah=foo
+#ac_name=zilla,p2p=1234,rcpport=5678
+#ac_name=mylo,p2p=9000,rpcport8000
+
+```
+
+[27-Jun-18 06:46 AM] Mylo#8306
+it's just a convention we're trying to get consensus on 😃
+
+[27-Jun-18 06:47 AM] lukechilds#2707
+if it's changeable it probably shouldn't be in here
+
+[27-Jun-18 06:47 AM] lukechilds#2707
+but I suppose we could have a meta property that's just for arbitrary data
+
+[27-Jun-18 06:47 AM] blackjok3r#3181
+it CAN be changed... but you really should not change it..
+
+[27-Jun-18 06:48 AM] blackjok3r#3181
+the other params, define its default
+
+[27-Jun-18 06:48 AM] blackjok3r#3181
+You can take some of james C code and port it to whatever, and generate the p2p/rpc ports fromt he other params if you want.
+
+[27-Jun-18 06:48 AM] blackjok3r#3181
+but seems pointless, if they cna just be added to the file by the chains creator.
+
+[27-Jun-18 06:49 AM] blackjok3r#3181
+you will also get a COIN_7776 file generated now, when you start the chain for first time... all the info it in that in JSON already.
+
+[27-Jun-18 06:49 AM] lukechilds#2707
+ok
+
+[27-Jun-18 06:50 AM] lukechilds#2707
+so to allow for general data to be added
+
+[27-Jun-18 06:50 AM] lukechilds#2707
+including default rpc port
+
+[27-Jun-18 06:50 AM] lukechilds#2707
+or any other key:value data
+
+[27-Jun-18 06:50 AM] lukechilds#2707
+```
+$ cat assetchains.json
+[
+  {
+    "data": {
+      "name": "ZILLA",
+      "rpcPort": 4321,
+      "key": "value"
+    },
+    "params": [
+      [
+        "ac_name",
+        "ZILLA"
+      ],
+      [
+        "ac_supply",
+        "11000000"
+      ],
+      [
+        "addnode",
+        "54.39.23.248"
+      ]
+    ]
+  },
+  {
+    "data": {
+      "name": "RFOX",
+      "rpcPort": 4321,
+      "key": "value"
+    },
+    "params": [
+      [
+        "ac_name",
+        "RFOX"
+      ],
+      [
+        "ac_supply",
+        "1000000000"
+      ],
+      [
+        "ac_reward",
+        "100000000"
+      ],
+      [
+        "addnode",
+        "78.47.196.146"
+      ],
+      [
+        "addnode",
+        "123.45.678.90"
+      ]
+    ]
+  }
+]
+
+$ cat assetchains.json | jq '.[].params | map("-\(.[0])=\(.[1])") | reduce .[1:][] as $i ("\(.[0])"; . + " \($i)")'
+"-ac_name=ZILLA -ac_supply=11000000 -addnode=54.39.23.248"
+"-ac_name=RFOX -ac_supply=1000000000 -ac_reward=100000000 -addnode=78.47.196.146 -addnode=123.45.678.90"
+```
+
+[27-Jun-18 06:50 AM] blackjok3r#3181
+nice!
+
+[27-Jun-18 06:50 AM] Mylo#8306
+yep
+
+[27-Jun-18 06:51 AM] Mylo#8306
+you forgot mylo coin :troll:
+
+[27-Jun-18 06:51 AM] lukechilds#2707
+ok
+
+[27-Jun-18 06:51 AM] lukechilds#2707
+will PR this shit up later today
+
+[27-Jun-18 06:52 AM] Mylo#8306
+gsad
+
+[27-Jun-18 06:52 AM] blackjok3r#3181
+great work. Finally someone did it onstead of talking about it. Nice work.
+
+[27-Jun-18 06:55 AM] lukechilds#2707
+wait
+
+[27-Jun-18 06:55 AM] lukechilds#2707
+thinking about it
+
+[27-Jun-18 06:55 AM] lukechilds#2707
+is there any reason that params actually need to be an array
+
+[27-Jun-18 06:56 AM] lukechilds#2707
+like is anyone really going to want to query ACs with a supply larger than x
+
+[27-Jun-18 06:56 AM] lukechilds#2707
+if not, we can get the best of both worlds
+
+[27-Jun-18 06:56 AM] blackjok3r#3181
+there is all diff kinds of them, and verus has multiple values for a single param
+
+[27-Jun-18 06:56 AM] lukechilds#2707
+yeah, even more reason to not use an array
+
+[27-Jun-18 06:57 AM] blackjok3r#3181
+-ac_reward=0,38400000000,2400000000
+
+[27-Jun-18 06:58 AM] lukechilds#2707
+could just be shortened to:
+
+```
+[
+  {
+    "data": {
+      "rpcPort": 4321,
+      "key": "value"
+    },
+    "params": "-ac_name=ZILLA -ac_supply=11000000 -addnode=54.39.23.248"
+  },
+  {
+    "data": {
+      "rpcPort": 4321,
+      "key": "value"
+    },
+    "params": "-ac_name=RFOX -ac_supply=1000000000 -ac_reward=100000000 -addnode=78.47.196.146 -addnode=123.45.678.90"
+  }
+]
+```
+
+[27-Jun-18 06:58 AM] lukechilds#2707
+params is just a string so can be anything
+
+[27-Jun-18 06:59 AM] blackjok3r#3181
+what if we are not using some of them though like me... I dont use te addnode= on my NN.
+
+[27-Jun-18 06:59 AM] lukechilds#2707
+good point
+
+[27-Jun-18 06:59 AM] blackjok3r#3181
+wihtout array I cant drop it off
+
+[27-Jun-18 06:59 AM] blackjok3r#3181
+well i could.. but that would get messy
+
+[27-Jun-18 07:00 AM] lukechilds#2707
+yup
+
+[27-Jun-18 07:13 AM] blackjok3r#3181
+222223-ac_reward=0,38400000000,2400000-ac_reward=0,38400000000,2400000000oigf0000 at 3:00 PM
+yup
+
+[27-Jun-18 07:13 AM] blackjok3r#3181
+11ewdwë at 3:00 PM
+yup6
+
+[27-Jun-18 07:13 AM] blackjok3r#3181
+3+3.+363
+
+[27-Jun-18 07:13 AM] blackjok3r#3181
+.6
+
+[27-Jun-18 07:13 AM] blackjok3r#3181
+,jbgujn m ,m ,mç
+
+[27-Jun-18 07:13 AM] blackjok3r#3181
++ö
+
+[27-Jun-18 07:13 AM] blackjok3r#3181
+ç««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««««
+“«««««««««««««««««««««««««««««
+
+[27-Jun-18 07:13 AM] blackjok3r#3181
+¬¬¬
+
+[27-Jun-18 07:14 AM] blackjok3r#3181
+🤔
+
+[27-Jun-18 07:14 AM] blackjok3r#3181
+stupid child
+
+[27-Jun-18 07:15 AM] blackjok3r#3181
+lol
+
+[27-Jun-18 07:15 AM] blackjok3r#3181
+2 mins away
+
+[27-Jun-18 07:25 AM] patchkez#5349
+@lukechilds also we should be able to add other data into that file, something like:
+
+[27-Jun-18 07:25 AM] patchkez#5349
+```{
+  "assetchains": [
+      {
+        "data": {
+          "name": "ZILLA",
+          "rpcPort": 4321,
+          "key": "value"
+        },
+        "params": [
+          [
+            "ac_name",
+            "ZILLA"
+          ],
+          [
+            "ac_supply",
+            "11000000"
+          ],
+          [
+            "addnode",
+            "54.39.23.248"
+          ]
+        ]
+      },
+      {
+      ...
+      }
+  ],
+  "notary_ips:": [
+    "54.39.23.249",
+    "54.39.23.250"
+    ]
+}
+```
+
+[27-Jun-18 07:29 AM] blackjok3r#3181
+@lukechilds  I think just move addnode to data section in you verion with no array.... as addnode is not an AC param.
+
+[27-Jun-18 07:29 AM] blackjok3r#3181
+you only need it for the very first sync... so put it in data, problem solved.
+

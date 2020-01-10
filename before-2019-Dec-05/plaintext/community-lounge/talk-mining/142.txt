@@ -1,0 +1,311 @@
+==============================================================
+Guild: Komodo
+Channel: talk-mining
+Topic: ./komodod -ac_name=ZAWY24 -ac_adaptivepow=1 -ac_supply=1000000 -ac_reward=10000000000 -ac_cc=2 -addnode=5.9.102.210 &
+
+A channel to discuss mining. For useful links and more info click the pinned messages to the right.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[03-Aug-19 08:15 PM] jl777c#5810
+then when it solves we get a much more meaningful onchain diff than the current gradually increasing diff
+
+[03-Aug-19 08:16 PM] jl777c#5810
+even if we 10x it, if there is 10000x the hash, it still finds a block in a second and we emitted coins we didnt have to
+
+[03-Aug-19 08:16 PM] jl777c#5810
+so maybe calculate the max possible hashrate, based on recent blocks
+
+[03-Aug-19 08:16 PM] jl777c#5810
+exponentially decay from that, to the current calc
+
+[03-Aug-19 08:17 PM] jl777c#5810
+as long as the estimate is above the actual hashrate, then we can get a real valid diff sample
+
+[03-Aug-19 08:18 PM] jl777c#5810
+which will then make the estimate for the max possible hashrate more accurate, though maybe we double it as we are dropping exponentially back to normally increasing diff
+
+[03-Aug-19 08:18 PM] jl777c#5810
+and not much harm in overestimating the max possible hash
+
+[03-Aug-19 08:19 PM] jl777c#5810
+i guess the question is, based on current solve times, how to calculate the max possible implied hashrate
+
+[03-Aug-19 08:21 PM] jl777c#5810
+well all denominated in bnTarget
+
+[03-Aug-19 08:28 PM] jl777c#5810
+I am viewing the time less than expected for the recent blocks as a resource that we really want to spend. and the best usage of that is to get as close to the real hashrate as possible with the next sample. not sure on the math of how to calibrate the exponential decay to use up as close to all the time possible on the next block. but we now can temporarily have very large difficulty, but still decay it fast enough so it can be solved normally
+
+[03-Aug-19 08:29 PM] zawy#5864
+Just thinking out loud......
+if sum last 3 block < 0.2xT then bnTarget = (bnTarget \* min(1000, 1000*tipdiff/180)) / 1000;
+
+[03-Aug-19 08:30 PM] zawy#5864
+to be done at very end, after min()
+
+[03-Aug-19 08:31 PM] zawy#5864
+sum 3 blocks < 0.2T is almost 3 blocks behind, so don't let anyone have a block for 3 minutes even if they have the hashrate the SMAs have estimated.
+
+[03-Aug-19 08:32 PM] jl777c#5810
+but SMA estimate is how close to reality?
+
+[03-Aug-19 08:32 PM] zawy#5864
+close.....it's always an underestimate
+
+[03-Aug-19 08:32 PM] zawy#5864
+by those factors
+
+[03-Aug-19 08:33 PM] jl777c#5810
+at first, it will be grossly underestimating as it only has the most recent low diffs
+
+[03-Aug-19 08:33 PM] jl777c#5810
+so 17 blocks zoom by
+
+[03-Aug-19 08:33 PM] jl777c#5810
+i think we need a time based estimate, which will naturally decay as time passes
+
+[03-Aug-19 08:33 PM] jl777c#5810
+need to overestimate
+
+[03-Aug-19 08:34 PM] jl777c#5810
+then let the decay find the actual
+
+[03-Aug-19 08:34 PM] jl777c#5810
+this is what i see when CPU is mining
+
+[03-Aug-19 08:34 PM] jl777c#5810
+the mult value ticks up each second, but until it is easy enough, nothing happens
+
+[03-Aug-19 08:34 PM] jl777c#5810
+same thing, just in reverse
+
+[03-Aug-19 08:35 PM] zawy#5864
+tipdiff is decaying
+
+[03-Aug-19 08:35 PM] jl777c#5810
+yes but above is max of 180x, right?
+
+[03-Aug-19 08:35 PM] zawy#5864
+yes, in 4th block of the attack
+
+[03-Aug-19 08:36 PM] jl777c#5810
+too slow
+
+[03-Aug-19 08:36 PM] jl777c#5810
+10 blocks almost for free and this extra coin emission cant be recovered
+
+[03-Aug-19 08:36 PM] zawy#5864
+let me run the test
+
+[03-Aug-19 08:36 PM] jl777c#5810
+can we use all extra time, start at crazy high diff, exponentially decay down to normal, with 10 seconds left in the budget
+
+[03-Aug-19 08:37 PM] jl777c#5810
+like a Sphygmomanometer
+
+[03-Aug-19 08:38 PM] jl777c#5810
+where the high pressure is the higher than blood pressure diff
+
+[03-Aug-19 08:38 PM] jl777c#5810
+it is released until it can be solved. then immediately we have a valid estimate of actual hashrate, on block 4
+
+[03-Aug-19 08:39 PM] jl777c#5810
+and maybe only 3 easy blocks are lost, regardless of how much hashrate. since we recover in 5 blocks, but 10 to 15 minutes, the coin emission is preserved
+
+[03-Aug-19 08:39 PM] zawy#5864
+600 seconds to get 5 blocks
+
+[03-Aug-19 08:40 PM] jl777c#5810
+yes, so we can lose only 5 fast blocks
+
+[03-Aug-19 08:40 PM] jl777c#5810
+i know this is close to impossible, yet it shouldnt be impossible
+
+[03-Aug-19 08:41 PM] zawy#5864
+I'm saying that's the result of my test
+
+[03-Aug-19 08:41 PM] jl777c#5810
+oh! thats a perfect match
+
+[03-Aug-19 08:41 PM] zawy#5864
+100000 can't get the 6th block in less than 10 minutes
+
+[03-Aug-19 08:41 PM] jl777c#5810
+```if sum last 3 block < 0.2xT then bnTarget = (bnTarget * min(1000, 1000*tipdiff/180)) / 1000;```
+
+[03-Aug-19 08:41 PM] jl777c#5810
+that?
+
+[03-Aug-19 08:41 PM] zawy#5864
+yes
+
+[03-Aug-19 08:42 PM] jl777c#5810
+so calculate this after the min() triggers
+
+[03-Aug-19 08:42 PM] zawy#5864
+yes
+
+[03-Aug-19 08:43 PM] zawy#5864
+this is crazy shit 😃
+
+[03-Aug-19 08:43 PM] jl777c#5810
+before the averaging with prior bnTarget
+
+[03-Aug-19 08:43 PM] zawy#5864
+no, after
+
+[03-Aug-19 08:43 PM] jl777c#5810
+ok
+
+[03-Aug-19 08:44 PM] zawy#5864
+but it needs some work.  An attacker will just make sure it's 4 seconds per block  to avoid this trigger
+
+[03-Aug-19 08:44 PM] jl777c#5810
+yes
+
+[03-Aug-19 08:44 PM] jl777c#5810
+that is why i had multiple boosters
+
+[03-Aug-19 08:44 PM] zawy#5864
+it needs a single function
+
+[03-Aug-19 08:57 PM] jl777c#5810
+its ready
+
+[03-Aug-19 08:57 PM] jl777c#5810
+ZAWY13
+
+[03-Aug-19 08:57 PM] jl777c#5810
+@SHossain up for another test? a single ASIC can test whether we can slow it down or not
+
+[03-Aug-19 08:58 PM] SHossain#0007
+sure. updating
+
+[03-Aug-19 08:58 PM] hellcatz#5825
+i got x2 Z9M ready to go... (~30Ksol)
+
+[03-Aug-19 08:59 PM] SHossain#0007
+no other nodes on network. setting up 2nd node
+
+[03-Aug-19 08:59 PM] jl777c#5810
+just start with ASIC whenever ready. i got the 15 CPU threads to trigger the new booster, but it never found any blocks
+
+[03-Aug-19 08:59 PM] jl777c#5810
+my 210 node is online
+
+[03-Aug-19 08:59 PM] jl777c#5810
+there should be 2 nodes now
+
+[03-Aug-19 09:00 PM] SHossain#0007
+ok. i have 2 as well
+
+[03-Aug-19 09:00 PM] jl777c#5810
+ht 31
+
+[03-Aug-19 09:00 PM] SHossain#0007
+setting up pool
+
+[03-Aug-19 09:00 PM] SHossain#0007
+my nodes are not synced yet
+
+[03-Aug-19 09:02 PM] jl777c#5810
+ht 35, diff 6.75
+
+[03-Aug-19 09:03 PM] jl777c#5810
+@zawy with trigger at 0.2T, it will only delay it for 12 seconds per block
+
+[03-Aug-19 09:03 PM] jl777c#5810
+unless it solves the much higher diff...
+
+[03-Aug-19 09:04 PM] jl777c#5810
+not sure a one size fits all will catch all the cases
+
+[03-Aug-19 09:04 PM] SHossain#0007
+restarted daemon. waiting for sync
+
+[03-Aug-19 09:04 PM] SHossain#0007
+sync done. pool up
+
+[03-Aug-19 09:04 PM] SHossain#0007
+starting Z9 Mini
+
+[03-Aug-19 09:04 PM] SHossain#0007
+@hellcatz you can point as well if you like
+
+[03-Aug-19 09:05 PM] jl777c#5810
+ht 39 diff 7.43
+
+[03-Aug-19 09:05 PM] SHossain#0007
+miner started
+
+[03-Aug-19 09:05 PM] jl777c#5810
+40 7.45
+
+[03-Aug-19 09:06 PM] jl777c#5810
+special booster kicked in
+
+[03-Aug-19 09:06 PM] jl777c#5810
+5 easy blocks
+
+[03-Aug-19 09:06 PM] SHossain#0007
+45: 7.23
+
+[03-Aug-19 09:07 PM] SHossain#0007
+52: 12.21
+
+[03-Aug-19 09:07 PM] zawy#5864
+maybe your boost is blocking mine
+
+[03-Aug-19 09:08 PM] jl777c#5810
+i only implemented your boost
+
+[03-Aug-19 09:08 PM] jl777c#5810
+i took mine out
+
+[03-Aug-19 09:08 PM] jl777c#5810
+the boost is working
+
+[03-Aug-19 09:08 PM] jl777c#5810
+but diff isnt increasing as the blocks are too slow
+
+[03-Aug-19 09:08 PM] SHossain#0007
+single CPU thread shows over 2 sol/s
+
+[03-Aug-19 09:08 PM] zawy#5864
+is it being hit with high HR?
+
+[03-Aug-19 09:08 PM] SHossain#0007
+only 10k sol from my miner
+
+[03-Aug-19 09:09 PM] jl777c#5810
+maybe ASIC is slow to ramp up?
+
+[03-Aug-19 09:09 PM] SHossain#0007
+yes, fan speed is slow as i hear
+
+[03-Aug-19 09:09 PM] jl777c#5810
+its not solving the boosted diff
+
+[03-Aug-19 09:09 PM] SHossain#0007
+60: 34
+
+[03-Aug-19 09:10 PM] SHossain#0007
+pool max diff set to 16
+
+[03-Aug-19 09:10 PM] SHossain#0007
+61: 45.377
+
+[03-Aug-19 09:10 PM] jl777c#5810
+for a single mini, thats too high, isnt it?
+
+[03-Aug-19 09:10 PM] SHossain#0007
+i thought hellcatz will join
+
+[03-Aug-19 09:10 PM] SHossain#0007
+let me change it back to 8
+
+[03-Aug-19 09:11 PM] SHossain#0007
+restarted pool
+

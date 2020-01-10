@@ -1,0 +1,469 @@
+==============================================================
+Guild: Komodo
+Channel: cc-oracles
+Topic: This channel is for discussion and announcements surrounding the oracles crypto condition contract. Please feel free to answer any questions, technical or non-technical. The oracles contract can be used for converting off-chain data into on-chain data. It has vast set of use cases as dapps and other contracts can trigger actions based on what is written to an oracle. Please see the channel's pinned messages for examples of how it is currently being used. Alright#0419 will be happy to answer any questions you may have when they are available.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[24-May-19 12:00 PM] Mihailo#5902
+Try now 😉
+
+[24-May-19 12:00 PM] Alright#0419
+you just change it?
+
+[24-May-19 12:00 PM] Alright#0419
+Oh oh
+
+[24-May-19 12:00 PM] Mihailo#5902
+No, but I changed something else that could affect it!
+
+[24-May-19 12:01 PM] Alright#0419
+I need to try it again, I was really just testing that it worked as expected with no HAX
+
+[24-May-19 12:01 PM] Alright#0419
+need to try HAX again and take proper notes
+
+[24-May-19 02:25 PM] smk762 -  dracocanis ominator#7640
+I keep getting this error running test on oracle RPCs
+```CC Eval EVAL_ORACLES Invalid: vin.3 is CC for oraclesregister or pubkey not same as vin pubkey, register must be done from owner of pubkey that registers to oracle!! spending tx e0915b54b98a1a0d8386ea1df90cc36cae14ae20c73332f960724964f415d563
+DEBUG:BitcoinRPC:<-- {"result":null,"error":{"code":-26,"message":"16: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)"},"id":196}
+```
+its in a loop for each format string 
+`valid_formats = ["s", "S", "d", "D", "c", "C", "t", "T", "i", "I", "l", "L", "h", "Ihh"]`
+normally gets about halfway through, so pubkey is correct. Doesnt crash consistently on any specific format, but tends to get to at least "i"
+
+[24-May-19 04:49 PM] TonyL#3577
+Can you try to do the same manually?  There was strange behaviour of tests on channelsCC (you can find in #cc-channels) not reproducable on usual chain, so I'm started to sync there is some regtest specifics.
+
+{Reactions}
+👍 
+
+[25-May-19 02:08 AM] smk762 -  dracocanis ominator#7640
+I"m assuming it's trying to spend a utxo that was already used for an earlier tx. will try adding some sleeps or reflowing the loops
+
+[25-May-19 05:59 AM] smk762 -  dracocanis ominator#7640
+loop reflow seems to have resolved the issue
+
+[25-May-19 06:01 AM] smk762 -  dracocanis ominator#7640
+anyone able to offer a short desciption of these items and their purpose from `oraclesaddress`?
+`| OraclesNormalAddress |`
+`| OraclesNormalBalance | `
+`| OraclesCCTokensAddress |`
+
+[25-May-19 07:31 AM] smk762 -  dracocanis ominator#7640
+got tests completing, but `Ihh` output isnt what I'd expect. 
+```
+        # Ihh type
+        result = rpc.oraclesdata(globals()["oracle_{}".format("Ihh")], "ffffffff00000000ffffffff00000000ffffffff00000000ffffffff00000000ffffffff00000000ffffffff00000000ffffffff00000000ffffffff00000000ffffffff")
+        assert_success(result)
+        # baton
+        oraclesdata_Ihh = self.send_and_mine(result["hex"], rpc)
+        info = rpc.oraclesinfo(globals()["oracle_{}".format("Ihh")])
+        batonaddr = info['registered'][0]['baton']
+        result = rpc.oraclessamples(globals()["oracle_{}".format("Ihh")], batonaddr, "1")
+        #assert_equal("['4294967295', 'ffffffff00000000ffffffff00000000ffffffff00000000ffffffff00000000', 'ffffffff00000000ffffffff00000000ffffffff00000000ffffffff00000000']", str(result["samples"][0]['data']), "Data match")
+        assert_equal("ffffffff00000000ffffffff00000000ffffffff00000000ffffffff00000000", str(result["samples"][0]['data']), "Data match")
+```
+
+[25-May-19 07:32 AM] smk762 -  dracocanis ominator#7640
+original `assert_equal` has 3 items, output only gves the second one
+
+[25-May-19 07:33 AM] smk762 -  dracocanis ominator#7640
+which is not same as the `oraclesdata` input (though that is assumed expected)
+
+[25-May-19 07:39 AM] smk762 -  dracocanis ominator#7640
+https://pastebin.com/tfNWuj20 <--- console readout of input/output for `Ihh` test
+
+{Embed}
+https://pastebin.com/tfNWuj20
+DEBUG:BitcoinRPC:-325-> oraclesdata ["8d8161527a3425ee28c032ab9b12...
+https://pastebin.com/i/facebook.png
+
+[25-May-19 07:40 AM] TonyL#3577
+please don't change expected results in tests
+
+[25-May-19 07:40 AM] TonyL#3577
+if output not match expected result it means that error is somewhere
+
+[25-May-19 07:40 AM] smk762 -  dracocanis ominator#7640
+kept the old one commented out, just to see if it's work without the other bits
+
+[25-May-19 07:41 AM] smk762 -  dracocanis ominator#7640
+also has to remove the `u` before output, but was gonna work towards letting it back in
+
+[25-May-19 07:41 AM] TonyL#3577
+If tests will do only what program say there is no any reasons in tests at all
+
+[25-May-19 07:42 AM] TonyL#3577
+Moreover Mihailo reported about similar issue with Ihh type above, maybe there is a problem with types combining
+
+[25-May-19 07:44 AM] smk762 -  dracocanis ominator#7640
+cool. Does the `u` matter for `assert_equal`?
+Had to change oraclessamples code, because didnt like using batontxis, looks like it wants baton address now.
+
+[25-May-19 07:44 AM] TonyL#3577
+oraclessamples output changed so maybe it return not unicode now
+
+[25-May-19 07:45 AM] smk762 -  dracocanis ominator#7640
+cool, wont work on retoring the `u` then
+
+{Reactions}
+👍 
+
+[25-May-19 07:45 AM] TonyL#3577
+before there was `u` because it returned unicode
+
+[25-May-19 07:45 AM] TonyL#3577
+Please keep in mind that end goal is not to make tests pass but to use tests to find problems in software
+
+[25-May-19 07:46 AM] TonyL#3577
+So if program output not matches expected logical output - maybe problem is not in test condition but in program
+
+[25-May-19 07:46 AM] smk762 -  dracocanis ominator#7640
+lol, yeah.
+
+[25-May-19 07:46 AM] smk762 -  dracocanis ominator#7640
+I'll report what goes wrong
+
+{Reactions}
+🙌 
+
+[25-May-19 07:48 AM] smk762 -  dracocanis ominator#7640
+I changed loop to get past the `bad pubkey` error. Suspect issue is allocated utxo spent before loop got to it - so error message assumed misleading, because pubkey is correct.
+
+[25-May-19 07:49 AM] TonyL#3577
+So if Ihh returning now except of this:
+```#assert_equal("['4294967295', 'ffffffff00000000ffffffff00000000ffffffff00000000ffffffff00000000', 'ffffffff00000000ffffffff00000000ffffffff00000000ffffffff00000000']"``` 
+this ```assert_equal("ffffffff00000000ffffffff00000000ffffffff00000000ffffffff00000000", str(result["samples"][0]['data']), "Data match")```
+
+[25-May-19 07:49 AM] smk762 -  dracocanis ominator#7640
+Changed `oraclessamples` params to match what it wants now
+
+[25-May-19 07:49 AM] TonyL#3577
+It's definetly a bug
+
+[25-May-19 07:49 AM] TonyL#3577
+Ihh should return I, h and h
+
+[25-May-19 07:49 AM] smk762 -  dracocanis ominator#7640
+looks like only returning `h` 🤷
+
+[25-May-19 07:52 AM] smk762 -  dracocanis ominator#7640
+the `bad pubkey` error was not always happening, and not on same format every time, so I think that is not bug in CC, just because of test script doing too much too quickly and trying to spend allocated utxos which already spent in earlier format loop.
+
+[25-May-19 07:52 AM] smk762 -  dracocanis ominator#7640
+bug in error message being strange, but not in how CC works
+
+[25-May-19 07:54 AM] TonyL#3577
+Yep, I think same problem was with channels - tests executed calls too fast
+
+[26-May-19 06:57 AM] smk762 -  dracocanis ominator#7640
+Curious about the `oraclesfund` RPC. Not yet in docs. 
+Takes oracleTXID as single parameter. No "funds"?
+Cant register until "funded". Value is not specified, but I did notice:
+On oraclescreate, `OraclesNormalBalance` gains 0.001
+On oraclesfund, `myCCbalance(Oracles)` gains 0.001 (repeatable)
+I assume this is automatic and the value is static. Please confirm?
+
+[26-May-19 08:57 AM] Alright#0419
+oraclesfund sends a static amount to your CC address
+
+[26-May-19 08:57 AM] Alright#0419
+which oraclesregister will then spend
+
+[26-May-19 08:58 AM] Alright#0419
+purpose of doing that is to trigger CC validation on oraclesregister inputs from what I understand
+
+[26-May-19 08:59 AM] Alright#0419
+really don't think you should use regtest for unit tests btw
+
+[26-May-19 08:59 AM] Alright#0419
+I *really* don't trust that regtest has the same exact behavior as a real chain
+
+[26-May-19 09:00 AM] Alright#0419
+`-testnode=1` with a quick block time would be more suitable imo
+
+[26-May-19 09:21 AM] gcharang#6833
+and if you need two seperate wallets for testing,
+you can use: https://github.com/gcharang/create-assetchain
+for starting  a chain with two daemons on the same node
+
+{Embed}
+https://github.com/gcharang/create-assetchain
+gcharang/create-assetchain
+Simple scripts to create a Komodo assetchain using a single node for testing - gcharang/create-assetchain
+https://avatars1.githubusercontent.com/u/21151592?s=400&v=4
+
+{Reactions}
+🍻 
+
+[26-May-19 01:08 PM] smk762 -  dracocanis ominator#7640
+I'm also manually testing on a custom chain, same params as CFEKORKL across two nodes using oraclefix branch of mixa84 repo
+
+[26-May-19 01:19 PM] smk762 -  dracocanis ominator#7640
+fwiw, added message to hex converter at http://oracle.earth/oracles_data/
+to make manual testing a bit easier
+rest of site is down for updates tho
+
+[26-May-19 04:18 PM] TonyL#3577
+So, is there issue with combined datatypes? @smk762 -  dracocanis ominator
+
+[26-May-19 10:58 PM] TonyL#3577
+`you can use: https://github.com/gcharang/create-assetchain
+for starting  a chain with two daemons on the same node`
+
+Regtest framework doing quite same thing btw:
+https://github.com/tonymorony/komodo/blob/FSM/qa/rpc-tests/test_framework/test_framework.py#L202
+
+It should be not very hard to switch to non-regtest chain, but tests will take much more time and will much harder to tests new tests  😃
+
+{Embed}
+https://github.com/tonymorony/komodo/blob/FSM/qa/rpc-tests/test_framework/test_framework.py
+tonymorony/komodo
+Komodo. Contribute to tonymorony/komodo development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/24797699?s=400&v=4
+
+[27-May-19 03:00 AM] Mylo#8306
+https://vimeo.com/332420851
+
+[27-May-19 03:00 AM] Mylo#8306
+text based menu control of blockchain creation like @gcharang all-in-one
+
+[27-May-19 03:03 AM] Mylo#8306
+it does tokens, rewards and when oracles is tested oracles.  full dev tool 😃
+
+{Reactions}
+💪 (3) 
+
+[27-May-19 03:31 AM] smk762 -  dracocanis ominator#7640
+@TonyL still working on manual confirmation, but I believe so. Keep getting `
+{
+  "result": "error",
+  "error": "data does not match length or content format specification"
+}` but I think thats my fault, not bug.
+
+[27-May-19 06:04 AM] gcharang#6833
+thats great mylo
+
+[27-May-19 08:10 AM] smk762 -  dracocanis ominator#7640
+k, confirmed my fault on the above - bad hex.
+
+[27-May-19 08:15 AM] smk762 -  dracocanis ominator#7640
+found a misleading error message:
+when attempting to `oraclesdata` with nonregistered pubkey:
+```{
+  "result": "error",
+  "error": "datafee 0.00000000 is illegal"
+}
+```
+
+[27-May-19 09:57 AM] Mihailo#5902
+@TonyL @Alright @smk762 -  dracocanis ominator As I mentioned before, I noticed something is wrong with oraclessamples as the data for Ihh was too short, and seems it is just returning single hash
+
+[27-May-19 09:58 AM] TonyL#3577
+Yes, I think combined types data displaying is broken
+
+[27-May-19 09:58 AM] jl777c#5810
+we need to find and fix all these "little" issues for the hardupdate
+
+[27-May-19 09:59 AM] Mihailo#5902
+I'm on it now
+
+[27-May-19 09:59 AM] smk762 -  dracocanis ominator#7640
+```smk762@cctest163:~/mixa84/komodo/src$ ./komodo-cli -ac_name=TESTORCL oraclessamples 1f23c40cd5290a8a34425336b22ec84b05e6304a9315fdb3ec76df260a348fc3 RVerJvoYsXp3avQ3xxe54EhajZgn5xidKB 1
+{
+  "result": "success",
+  "samples": [
+    {
+      "data": "This is the third bit",
+      "txid": "71d65c21f49f57ec44712f9a59c2a5dab31172267ba514510c97390e08eed366"
+    }
+  ]
+}
+```
+
+{Reactions}
+👍 
+
+[27-May-19 10:00 AM] smk762 -  dracocanis ominator#7640
+from `sss` oracle
+
+[27-May-19 10:00 AM] smk762 -  dracocanis ominator#7640
+so last `s` value returned
+
+[27-May-19 10:01 AM] smk762 -  dracocanis ominator#7640
+anything else needed to test, or wait for next commit?
+
+[27-May-19 10:03 AM] TonyL#3577
+are all other tests except of `Ihh` data type passing?
+
+[27-May-19 10:04 AM] smk762 -  dracocanis ominator#7640
+yep, in the autotest. didnt do all manually tho
+
+[27-May-19 10:07 AM] smk762 -  dracocanis ominator#7640
+will do a few manually now, to get right length prefixes for hex conversion page
+
+[27-May-19 10:07 AM] smk762 -  dracocanis ominator#7640
+dont anticipate any problems tho
+
+[27-May-19 10:08 AM] TonyL#3577
+great, please adjust dev docs for latest oracles update when you'll have time
+
+[27-May-19 10:10 AM] smk762 -  dracocanis ominator#7640
+already made some changes, but have a few extra blanks to fill in
+
+{Reactions}
+🔥 
+
+[27-May-19 10:10 AM] Mylo#8306
+yes, we'll need to update the dev docs as well.
+
+[27-May-19 10:10 AM] smk762 -  dracocanis ominator#7640
+thats what I'm working on 😃
+
+[27-May-19 10:11 AM] Mylo#8306
+excellent.
+
+[27-May-19 10:21 AM] Mihailo#5902
+@Alright I found your changes made to print only the last one, commits e5907e31a6c0ceb8368e8af260c6ae903207100b and 5c77b99a66dc1305adcc9c02bb335695c21f457f, I fixed it and now it shows it like this:
+```{
+  "result": "success",
+  "samples": [
+    {
+      "data": [
+        "1366855",
+        "00000000fa140feac8804ec316f8c1f8e8102845d9f882f11f1ff9283bfb4fed",
+        "1e706fbd32a4587b6ae0b983d6d078b90011552481b64275484f2fc76fdc5b7d"
+      ],
+      "txid": "f9765c07c20568cb3472056163226006dec2e393579a77dc99b90ccb1d5a4eae"
+    }
+  ]
+}
+```
+
+[27-May-19 10:22 AM] Mihailo#5902
+@TonyL Is this display format ok or should I adapt it to something else (maybe because of tests or ...)
+
+[27-May-19 10:24 AM] TonyL#3577
+I think it's good, sure. Actually data was list like this before 😃
+
+[27-May-19 10:24 AM] Mihailo#5902
+Yes!
+
+[27-May-19 10:24 AM] Mihailo#5902
+Just checking if it is ok 😉
+
+[27-May-19 10:25 AM] Mihailo#5902
+I also put txid first and then data...
+
+[27-May-19 10:34 AM] Mihailo#5902
+Fix pushed to https://github.com/Mixa84/komodo/tree/oraclesfix
+
+{Embed}
+https://github.com/Mixa84/komodo/tree/oraclesfix
+Mixa84/komodo
+Komodo. Contribute to Mixa84/komodo development by creating an account on GitHub.
+https://avatars3.githubusercontent.com/u/39563265?s=400&v=4
+
+{Reactions}
+treasure 
+
+[27-May-19 10:53 AM] smk762 -  dracocanis ominator#7640
+```smk762@cctest163:~/mixa84/komodo/src$ ./komodo-cli -ac_name=TESTORCL oraclessamples 1f23c40cd5290a8a34425336b22ec84b05e6304a9315fdb3ec76df260a348fc3 RVerJvoYsXp3avQ3xxe54EhajZgn5xidKB 6
+{
+  "result": "success",
+  "samples": [
+    {
+      "txid": "71d65c21f49f57ec44712f9a59c2a5dab31172267ba514510c97390e08eed366",
+      "data": [
+        "This is the first bit",
+        "This is the second bit",
+        "This is the third bit"
+      ]
+    }
+  ]
+}
+```
+🎯
+
+{Reactions}
+👌 🔥 
+
+[27-May-19 12:52 PM] Alright#0419
+@Mihailo wasn't aware combined data types worked like that 🤔
+
+[27-May-19 12:52 PM] Alright#0419
+sorry if I broke it 😅
+
+{Reactions}
+👍 
+
+[27-May-19 12:53 PM] Alright#0419
+@smk762 -  dracocanis ominator 
+```
+    {
+      "txid": "71d65c21f49f57ec44712f9a59c2a5dab31172267ba514510c97390e08eed366",
+      "data": [
+        "This is the first bit",
+        "This is the second bit",
+        "This is the third bit"
+      ]
+    }
+```
+how do you create a sample like this?
+
+[27-May-19 12:54 PM] smk762 -  dracocanis ominator#7640
+data format `sss`
+
+[27-May-19 12:55 PM] smk762 -  dracocanis ominator#7640
+when adding hex, concatenate the individual hex like `hexlenDATAhexlenDATAhexlenDATA`
+
+[27-May-19 02:52 PM] smk762 -  dracocanis ominator#7640
+only thing I dont have a definition for in docs now is `OraclesCCTokensAddress`
+
+[27-May-19 02:52 PM] smk762 -  dracocanis ominator#7640
+draft here -https://github.com/smk762/developer-docs/blob/master/docs/basic-docs/cryptoconditions/cc-oracles.md
+
+{Embed}
+https://github.com/smk762/developer-docs/blob/master/docs/basic-docs/cryptoconditions/cc-oracles.md
+smk762/developer-docs
+Contribute to smk762/developer-docs development by creating an account on GitHub.
+https://avatars3.githubusercontent.com/u/35845239?s=400&v=4
+
+[27-May-19 02:54 PM] Mihailo#5902
+name_of_ccCCTokensAddress for every CC is the global CC address where tokens are stored. Not every CC use tokens so for some this is irrelevant....
+
+{Reactions}
+👍 
+
+[28-May-19 12:33 PM] smk762 -  dracocanis ominator#7640
+for the little endian number formats, is it integer only?
+
+[28-May-19 12:34 PM] Mihailo#5902
+How do you mean?
+
+[28-May-19 12:40 PM] smk762 -  dracocanis ominator#7640
+like type 't', I understand the range limit, just wondering if a float can be converted and stored also
+
+[28-May-19 12:40 PM] smk762 -  dracocanis ominator#7640
+autotests are all integer
+
+[28-May-19 12:41 PM] smk762 -  dracocanis ominator#7640
+sorry if stupid question 😄
+
+[28-May-19 12:42 PM] Mihailo#5902
+You can store whatever you like in that x bytes but it will be returned as integer 😉
+
+[28-May-19 12:43 PM] Mihailo#5902
+So if you want, you can process it later from integer to whatever you like.
+
+[28-May-19 12:43 PM] smk762 -  dracocanis ominator#7640
+cool, so float better stored as 's/S'
+
+[28-May-19 12:44 PM] Mihailo#5902
+BTW, now looking at oraclesamples and I'm not sure it will work with number formats...
+
+[28-May-19 12:45 PM] Mihailo#5902
+Never mind, it works...
+

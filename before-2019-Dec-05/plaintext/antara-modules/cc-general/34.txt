@@ -1,0 +1,480 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[06-Aug-18 06:20 PM] dukeleto#7326
+i am using your exact command from the gist, with the same conf file (changed to my valid pubkey)
+
+[06-Aug-18 06:20 PM] dukeleto#7326
+still the same error, arg
+
+[06-Aug-18 06:20 PM] dukeleto#7326
+i should be on the latest `jl777` branch, or a different one?
+
+[06-Aug-18 06:22 PM] Mylo#8306
+i'm from about 12 hours ago
+
+[06-Aug-18 06:23 PM] dukeleto#7326
+just making sure there was/wasn't a CC branch i should be on
+
+[06-Aug-18 06:23 PM] Mylo#8306
+commit `79a3b761c234a140b622e24e8307ce0c65627e52`
+
+[06-Aug-18 06:23 PM] Mylo#8306
+jl777 branch
+
+[06-Aug-18 06:25 PM] dukeleto#7326
+```     if ( NOTARY_PUBKEY33[0] == 0 )
+         return(-1);```
+
+[06-Aug-18 06:25 PM] dukeleto#7326
+that is the code that making stuff not work for me, it's detecing no pubkey somehow
+
+[06-Aug-18 06:25 PM] dukeleto#7326
+```$ ./komodod -conf=/home/dukeleto/.komodo/komodo.conf -ac_cc=1 -ac_name=REGTEST -addressindex=1 -spentindex=1 -ac_supply=5555555 -ac_reward=10000000 -pubkey=02de7795adfe6454844d7991103c97754fb41b71b44db1ac5f30d26b24d13aca30 -regtest
+end.0 blocks, reward 0.10000000 halving.0 blocks, decay.0 perc 0.0000% ac_pub=[00...]
+call komodo_args.(./komodod) NOTARY_PUBKEY.(y=02de7795adfe6454844d7991103c97754fb41b71b44db1ac5f30d26b24d13aca30)```
+
+[06-Aug-18 06:26 PM] dukeleto#7326
+@jl777c how is it that I can start an AC with the above, with NOTARY_PUBKEY recognized, yet the code above returns -1 ?
+
+[06-Aug-18 06:26 PM] dukeleto#7326
+i made ensureCC_requirements tell me which reason it is failing, it can't find the pubkey
+
+[06-Aug-18 06:32 PM] jl777c#5810
+somehow it is set to y=02de7795adfe6454844d7991103c97754fb41b71b44db1ac5f30d26b24d13aca30
+
+[06-Aug-18 06:32 PM] jl777c#5810
+the y= in front is not valid
+
+[06-Aug-18 06:33 PM] jl777c#5810
+maybe put -pubkey= in the beginning
+
+[06-Aug-18 06:41 PM] dukeleto#7326
+good catch, i didn't see that
+
+[06-Aug-18 06:44 PM] dukeleto#7326
+```$ ./komodod -regtest -conf=/home/dukeleto/.komodo/komodo.conf -ac_cc=1 -ac_name=REGTEST -addressindex=1 -spentindex=1 -ac_supply=5555555 -ac_reward=1000000-pubkey=02de7795adfe6454844d7991103c97754fb41b71b44db1ac5f30d26b24d13aca30
+end.0 blocks, reward 0.10000000 halving.0 blocks, decay.0 perc 0.0000% ac_pub=[00...]
+call komodo_args.(./komodod) NOTARY_PUBKEY.(02de7795adfe6454844d7991103c97754fb41b71b44db1ac5f30d26b24d13aca30)
+>>>>>>>>>> REGTEST: p2p.64367 rpc.64368 magic.340962df 873030367 5555555 coins
+initialized REGTEST at 1533580994
+finished loading blocks REGTEST```
+
+{Reactions}
+👌🏽 
+
+[06-Aug-18 06:45 PM] dukeleto#7326
+``` ./komodo-cli -regtest faucetaddress
+error code: -1
+error message:
+to use CC contracts, you need to launch daemon with valid -pubkey= for an address in your wallet. ERR=-1
+```
+
+[06-Aug-18 06:46 PM] dukeleto#7326
+i added the ERR=-1 which means it's the pubkey check, not the addressindex check
+
+[06-Aug-18 06:47 PM] dukeleto#7326
+mylo is importing  privkey, then using that as a pubkey. I am using getnewaddress and then using that. Could that cause a difference?
+
+[06-Aug-18 06:48 PM] jl777c#5810
+the address is in the wallet? and it is the right pubkey?
+
+[06-Aug-18 06:49 PM] jl777c#5810
+getnewaddress from the -regtest instance? otherwise it will be in the wrong wallet.dat
+
+[06-Aug-18 06:50 PM] dukeleto#7326
+```dukeleto@myhush02:~/git/komodo/src$ echo $PUBKEY
+0273e8525d8e146e8cb8e3035dbcb1e97a768fbac74466b816b3cafea91258bf71
+dukeleto@myhush02:~/git/komodo/src$ ./komodod -regtest -conf=/home/dukeleto/.komodo/komodo.conf -ac_cc=1 -ac_name=REGTEST -addressindex=1 -spentindex=1 -ac_supply=5555555 -ac_reward=10000000 -pubkey=$PUBKEY      end.0 blocks, reward 0.10000000 halving.0 blocks, decay.0 perc 0.0000% ac_pub=[00...]
+call komodo_args.(./komodod) NOTARY_PUBKEY.(0273e8525d8e146e8cb8e3035dbcb1e97a768fbac74466b816b3cafea91258bf71)
+>>>>>>>>>> REGTEST: p2p.64367 rpc.64368 magic.340962df 873030367 5555555 coins
+initialized REGTEST at 1533581382
+finished loading blocks REGTEST
+...
+dukeleto@myhush02:~/git/komodo/src$ ./komodo-cli -regtest validateaddress RKTNXQvjxMX8A7n2AkRuSNYqskSCEgTzce
+{
+  "isvalid": true,
+  "address": "RKTNXQvjxMX8A7n2AkRuSNYqskSCEgTzce",
+  "scriptPubKey": "76a9146f9e2344289579b150d9275f660e467ee77e3d8788ac",
+  "segid": 11,
+  "ismine": true,
+  "iswatchonly": false,
+  "isscript": false,
+  "pubkey": "0273e8525d8e146e8cb8e3035dbcb1e97a768fbac74466b816b3cafea91258bf71",
+  "iscompressed": true,
+  "account": ""
+}
+```
+
+[06-Aug-18 06:51 PM] dukeleto#7326
+parses pubkey correctly, i generated it in that wallet, validates correctly
+
+[06-Aug-18 06:52 PM] dukeleto#7326
+this is on Linux, on `cctests` branch that I branched from `jl777` last night, if that matters
+
+[06-Aug-18 06:52 PM] jl777c#5810
+it might be the other cases being checked for that is giving error
+
+[06-Aug-18 06:52 PM] dukeleto#7326
+```diff --git a/src/wallet/rpcwallet.cpp b/src/wallet/rpcwallet.cpp
+index 2954606..5dbd374 100644
+--- a/src/wallet/rpcwallet.cpp
++++ b/src/wallet/rpcwallet.cpp
+@@ -4836,7 +4836,7 @@ int32_t ensure_CCrequirements()
+     if ( NOTARY_PUBKEY33[0] == 0 )
+         return(-1);
+     else if ( GetBoolArg("-addressindex", DEFAULT_ADDRESSINDEX) == 0 )
+-        return(-1);
++        return(-2);
+     else return(0);
+ }
+
+@@ -4923,11 +4923,13 @@ UniValue diceaddress(const UniValue& params, bool fHelp)
+ UniValue faucetaddress(const UniValue& params, bool fHelp)
+ {
+     struct CCcontract_info *cp,C; std::vector<unsigned char> pubkey;
++    int errno;
+     cp = CCinit(&C,EVAL_FAUCET);
+     if ( fHelp || params.size() > 1 )
+         throw runtime_error("faucetaddress [pubkey]\n");
+-    if ( ensure_CCrequirements() < 0 )
+-        throw runtime_error("to use CC contracts, you need to launch daemon with valid -pubkey= for an address in your wallet\n");
++    errno = ensure_CCrequirements();
++    if ( errno < 0 )
++        throw runtime_error(strprintf("to use CC contracts, you need to launch daemon with valid -pubkey= for an address in your wallet. ERR=%d\n", errno));
+     if ( params.size() == 1 )
+         pubkey = ParseHex(params[0].get_str().c_str());
+     return(CCaddress(cp,(char *)"Faucet",pubkey));```
+
+[06-Aug-18 06:52 PM] dukeleto#7326
+i have this commit, which seems to tell me it's the pubkey check from the ERR=-1 output above
+
+[06-Aug-18 06:54 PM] jl777c#5810
+very strange....
+
+[06-Aug-18 06:54 PM] jl777c#5810
+not sure if anyone else is getting this error
+
+[06-Aug-18 06:58 PM] jl777c#5810
+if NOTARY_PUBKEY33 is not null, it really shouldnt give that error
+
+[06-Aug-18 07:34 PM] dukeleto#7326
+Mylo doesn't have this problem in his docker stuff, we are doing something slightly different somehow
+
+[06-Aug-18 08:35 PM] dukeleto#7326
+@SHossain i would be interested to know the definition of "colored utxo" in https://github.com/himu007/KMD-CC-Token-Test-Guide/blob/master/faq.md
+
+{Embed}
+https://github.com/himu007/KMD-CC-Token-Test-Guide/blob/master/faq.md
+himu007/KMD-CC-Token-Test-Guide
+KMD-CC-Token-Test-Guide - Komodo CC Token testing description, setup & how-to
+https://avatars2.githubusercontent.com/u/8881040?s=400&v=4
+
+[06-Aug-18 08:35 PM] dukeleto#7326
+i am not sure what that means
+
+[06-Aug-18 08:39 PM] jl777c#5810
+utxo with CC vout
+
+[06-Aug-18 08:41 PM] jl777c#5810
+so like p2pk, p2pkh, p2sh there is a CC vout
+
+[06-Aug-18 08:41 PM] jl777c#5810
+once it is sent to a CC vout, then it needs to follow the specific CC contract rules to be able to be spent
+
+[06-Aug-18 08:42 PM] dukeleto#7326
+ok, thanks for clarifying
+
+[06-Aug-18 08:42 PM] dukeleto#7326
+i am still getting up to speed in terminology and all the new RPCs
+
+[06-Aug-18 08:44 PM] dukeleto#7326
+```$ ./komodo-cli -regtest faucetaddress
+{
+  "result": "success",
+  "FaucetCCaddress": "R9zHrofhRbub7ER77B7NrVch3A63R39GuC",
+  "Faucetmarker": "RKQV4oYs4rvxAWx1J43VnT73rSTVtUeckk",
+  "myCCaddress": "RFF4RgW1z2oJuqFLs7dH4ft25Zau53ZUD6",
+  "myaddress": "RKTNXQvjxMX8A7n2AkRuSNYqskSCEgTzce"
+}```
+
+[06-Aug-18 08:44 PM] dukeleto#7326
+i am not even sure what I did but I think it's working now
+
+[06-Aug-18 08:46 PM] dukeleto#7326
+so now I can play with CC RPCs and continue on python tests, woot
+
+[06-Aug-18 08:59 PM] dukeleto#7326
+making good progress right now
+
+[06-Aug-18 09:02 PM] dukeleto#7326
+```$ ./qa/pull-tester/rpc-tests.sh cryptoconditions
+=== Running testscript cryptoconditions.py ===
+Initializing CC test directory /tmp/test0PvJmS
+call komodo_args.(/home/dukeleto/git/komodo/src/komodod) NOTARY_PUBKEY.()
+initialized  at 1533589283
+finished loading blocks
+height.0 slowflag.1 possible.0 cmp.0
+[] PASSPORT iteration waiting for KOMODO_INITDONE
+Mining blocks...
+READY for  RPC calls at 1533589286! done PASSPORT  refid.33
+JSONRPC error: to use CC contracts, you need to launch daemon with valid -pubkey= for an address in your wallet. ERR=-1
+
+  File "/home/dukeleto/git/komodo/qa/rpc-tests/test_framework/test_framework.py", line 121, in main
+    self.run_test()
+  File "/home/dukeleto/git/komodo/qa/rpc-tests/cryptoconditions.py", line 36, in run_test
+    faucet  = rpc.faucetaddress()
+  File "/home/dukeleto/git/komodo/qa/rpc-tests/test_framework/authproxy.py", line 145, in __call__
+    raise JSONRPCException(response['error'])
+Stopping nodes
+Cleaning up
+Failed
+!!! FAIL: cryptoconditions.py !!!
+
+
+
+Tests completed: 1
+successes 0; failures: 1```
+
+[06-Aug-18 09:03 PM] dukeleto#7326
+this is good, the test is progressing much further. I still have to teach the test suite to use -pubkey, which probably means always importing a fixed pub/priv key testing pair like Mylo. Otherwise, you have to start daemon, getnewaddress, validateaddress, stop, restart with pubkey
+
+[06-Aug-18 10:35 PM] Mylo#8306
+morning!  i've gone to check letolabs commits before notarystats 🙀
+
+[06-Aug-18 10:38 PM] Mylo#8306
+fyi from mm2 chatter
+```
+Yes, with a Docker release and a core developers can re-enter the same Docker environment that dumped the core and use the gdb to work with  the crash (gdb works well with both the C and the Rust code).
+```
+
+{Reactions}
+🆒 
+
+[07-Aug-18 07:06 AM] jl777c#5810
+NOTARY_PUBKEY.() <- that indicates -pubkey= wasnt used and is likely the problem of launching komodod via different code paths, some with -pubkey=, others without
+
+[07-Aug-18 12:26 PM] Mylo#8306
+faucetfund expects a string, not an integer or decimal/float, is this intentional?
+also, from one terminal
+```
+curl -v --user user   --data-binary '{"jsonrpc": "1.0", "id":"curltest", "method": "faucetfund", "params": ["7"]}' -H 'content-type: text/plain' http://127.0.0.1:7771/
+```
+and in another terminal this popped up
+```
+ExtractDestination failed
+ExtractDestination failed
+```
+^^^What does **ExtractDestination failed** mean?
+
+The rpc returned no probs from command line and from curl though
+```
+{"result":{"result":"success","hex":"<THE HEX STRING GOT SNIPPED HERE"},"error":null,"id":"curltest"}
+```
+
+[07-Aug-18 12:28 PM] jl777c#5810
+ExtractDestination failed is an error with the scriptPubKey
+
+[07-Aug-18 12:32 PM] Mylo#8306
+Is this a me-error or a  you-error?
+
+[07-Aug-18 12:33 PM] Mylo#8306
+user error or something that needs your investigation/more-info?
+
+[07-Aug-18 12:34 PM] Mylo#8306
+```
+root@42c89ffb3431:~/.komodo# komodo-cli faucetaddress
+ExtractDestination failed
+{
+  "result": "success",
+  "FaucetCCaddress": "R9zHrofhRbub7ER77B7NrVch3A63R39GuC",
+  "Faucetmarker": "RKQV4oYs4rvxAWx1J43VnT73rSTVtUeckk",
+  "myaddress": "RWPg8B91kfK5UtUN7z6s6TeV9cHSGtVY8D"
+}
+root@42c89ffb3431:~/.komodo# komodo-cli  faucetinfo
+ExtractDestination failed
+{
+  "result": "success",
+  "name": "Faucet",
+  "funding": "0.00000000"
+}
+```
+There's more info in case.
+
+[07-Aug-18 12:48 PM] jl777c#5810
+it might be a harmless printout
+
+[07-Aug-18 12:48 PM] jl777c#5810
+the faucetinfo is correct
+
+[07-Aug-18 02:50 PM] dukeleto#7326
+morning, it's time for ☕
+
+[07-Aug-18 02:50 PM] dukeleto#7326
+I think I dreamed of CC tests last night
+
+[07-Aug-18 02:53 PM] dukeleto#7326
+made lots of progress yesterday, I can now startup a CC AC in the test suite
+
+[07-Aug-18 02:57 PM] dukeleto#7326
+TIL is that komodod -server=1 does not mean the same thing as server=1 in the conf file, that is confusing
+
+[07-Aug-18 02:58 PM] dukeleto#7326
+@jl777c `unexpected fname.(/tmp/testZ2dPJw/node0) vs REGTEST [REGTEST] n.7 len.21 (w/node0)` how important is that warning?
+
+[07-Aug-18 02:58 PM] dukeleto#7326
+i am dealing with a weird bug, i looked at the code that prints it out, but it's hard to tell
+
+[07-Aug-18 02:58 PM] jl777c#5810
+there are timing difference between command line vs. .conf file
+
+[07-Aug-18 02:59 PM] jl777c#5810
+it looks like some command line stuff is getting confused
+
+[07-Aug-18 02:59 PM] dukeleto#7326
+yeah, you could say that 😃
+
+[07-Aug-18 02:59 PM] dukeleto#7326
+`/home/dukeleto/git/komodo/src/komodod -datadir=/tmp/testZ2dPJw/node0 -keypool=1 -discover=0 -rest -regtest -daemon -rpcport=64368 -conf=/tmp/testZ2dPJw/node0/REGTEST.conf -ac_name=REGTEST -addressindex=1 -spentindex=1 -ac_supply=5555555 -ac_reward=10000000 -pubkey=02676d00110c2cd14ae24f95969e8598f7ccfaa675498b82654a5b5bd57fc1d8cf -ac_cc=1`
+
+[07-Aug-18 03:00 PM] dukeleto#7326
+that is how the test suite starts an AC for testing
+
+[07-Aug-18 03:00 PM] dukeleto#7326
+Komodo doesn't like the custom datadir that doesn't match the AC name
+
+[07-Aug-18 03:01 PM] dukeleto#7326
+```$ PYTHON_DEBUG=1 ./qa/pull-tester/rpc-tests.sh cryptoconditions --tracerpc
+=== Running testscript cryptoconditions.py ===
+Initializing CC test directory /tmp/testXW56pt
+Writing to /tmp/testXW56pt/node0/komodo.conf
+RPC port=12342
+Setting up network...
+start_node: komodod started, calling : /home/dukeleto/git/komodo/qa/pull-tester/run-bitcoin-cli-datadir=/tmp/testXW56pt/node0 -rpcwait getblockcount
+end.0 blocks, reward 0.10000000 halving.0 blocks, decay.0 perc 0.0000% ac_pub=[00...]
+unexpected fname.(/tmp/testXW56pt/node0) vs REGTEST [REGTEST] n.7 len.21 (t/node0)
+Created (/tmp/testXW56pt/node0/REGTEST.conf)
+call komodo_args.(/home/dukeleto/git/komodo/src/komodod) NOTARY_PUBKEY.(02676d00110c2cd14ae24f95969e8598f7ccfaa675498b82654a5b5bd57fc1d8cf)
+>>>>>>>>>> REGTEST: p2p.64367 rpc.64368 magic.340962df 873030367 5555555 coins
+initialized REGTEST at 1533654045
+Komodo REGTEST server starting
+finished loading blocks REGTEST
+height.0 slowflag.1 possible.0 cmp.0```
+
+[07-Aug-18 03:01 PM] jl777c#5810
+true, datadir and .conf needs to be aligned
+
+[07-Aug-18 03:01 PM] dukeleto#7326
+my current bug is that the server doesn't exit or go into the background, and the test suite hangs
+
+[07-Aug-18 03:02 PM] dukeleto#7326
+when it starts it up, the test komodod doesn't exit like it should (I have server=1 in the conf and -daemon on the CLI), so it hangs the test suite
+
+[07-Aug-18 03:04 PM] jl777c#5810
+you cant just put it in the background with &
+
+[07-Aug-18 03:05 PM] dukeleto#7326
+this is from the Python test suite
+
+[07-Aug-18 03:06 PM] dukeleto#7326
+i thought server=1 or -daemon would make it go into the background and allow the python function to return instead of waiting forever for an exit code
+
+[07-Aug-18 03:07 PM] dukeleto#7326
+```qa/rpc-tests/test_framework/util.py-            cmd_args = cmd + " -datadir="+datadir + " -rpcwait getblockcount"
+qa/rpc-tests/test_framework/util.py-            if os.getenv("PYTHON_DEBUG", ""):
+qa/rpc-tests/test_framework/util.py-                print "initialize_chain: komodod started, calling: " + cmd_args
+qa/rpc-tests/test_framework/util.py:            subprocess.check_call([ cmd, "-datadir="+datadir,
+qa/rpc-tests/test_framework/util.py-                                    "-rpcwait", "getblockcount"]) #, stdout=devnull)```
+
+[07-Aug-18 03:07 PM] dukeleto#7326
+that is the line that uses `subprocess.check_call` to execute komodod
+
+[07-Aug-18 03:07 PM] jl777c#5810
+did you try just &
+
+[07-Aug-18 03:07 PM] dukeleto#7326
+which waits for an exit code
+
+[07-Aug-18 03:07 PM] dukeleto#7326
+hey, why not, I will try that now
+
+[07-Aug-18 03:14 PM] dukeleto#7326
+this was working before I added various CC params. And when I use the exact same command manually it goes into the background correctly
+
+[07-Aug-18 03:17 PM] dukeleto#7326
+i am modifying things to try &, i have to change how it calls check_call
+
+[07-Aug-18 03:25 PM] dukeleto#7326
+i think i have discovered the issue
+
+[07-Aug-18 03:25 PM] dukeleto#7326
+the server is not hanging like I thought, it's the first RPC command
+
+[07-Aug-18 03:25 PM] dukeleto#7326
+`/home/dukeleto/git/komodo/qa/pull-tester/run-bitcoin-cli -datadir=/tmp/test6wK5dA/node0 -rpcwait getblockcount`
+
+[07-Aug-18 03:25 PM] dukeleto#7326
+the `-rpcwait` makes it wait forever I think
+
+[07-Aug-18 03:25 PM] dukeleto#7326
+and because I don't have -conf it might be getting confused. Feels like I am close to getting this working
+
+[07-Aug-18 03:27 PM] dukeleto#7326
+```$ /home/dukeleto/git/komodo/qa/pull-tester/run-bitcoin-cli -datadir=/tmp/test6wK5dA/node0 -conf=/tmp/testPTy9n8/node0/komodo.conf -rpcport=64368 -rpcwait getblockcount
+0```
+
+[07-Aug-18 03:27 PM] dukeleto#7326
+that works. there was an issue with what rpc port it thought it should use
+
+[07-Aug-18 03:28 PM] dukeleto#7326
+at least I know what `-rpcwait` is now, I had not used that before
+
+[07-Aug-18 03:29 PM] dukeleto#7326
+i think i will have our first CC tests running in an automated test suite soon, and I will enjoy hooking them up to Travis
+
+[07-Aug-18 03:44 PM] Alright#0419
+@jl777c did you read what I said a couple hundred messages ago about `rewardscreatefunding` needing a minimum amount to prevent someone from spamming `rewardslist`
+
+[07-Aug-18 03:45 PM] jl777c#5810
+i missed that
+
+[07-Aug-18 03:45 PM] Alright#0419
+`./komodo-cli -ac_name=AT1 rewardscreatefunding spam 0 0 0 0 0` for example is valid
+
+[07-Aug-18 03:45 PM] jl777c#5810
+will fix
+
+[07-Aug-18 03:47 PM] dukeleto#7326
+and that makes a great test, too
+
+[07-Aug-18 03:47 PM] jl777c#5810
+pushed fix
+
+[07-Aug-18 03:48 PM] dukeleto#7326
+i just started a document of CC tests to write and added that the above should generate an error
+
+[07-Aug-18 04:18 PM] Mylo#8306
+`-server` i thought was for json/rpc server, not to go into bg which is `-daemon`.  However the rpc loop - yes i see that when the defaults are applied (e.g. not listed in .conf) and it takes the first `komodo-cli` command for the loop to stop "PASSPORT []....." repeated on cli.  I was lazily trying to allow rpc calls remotely to test my code from home without needing to commit/pull on experimental stuff.
+
+[07-Aug-18 04:41 PM] Alright#0419
+does the txid for `rewardsunlock` not matter at all? 
+```
+./komodo-cli -ac_name=AT1 rewardsunlock over10k fa2501e6d7ae5de7a4c21f237457654af51e979a6b2e34c9f582dc7eac79a49e e4blahblahblahblahb3b74cf0981d71ede17e9a65ad414f813d3eb8b39539229b7351fw2332d32d32garbagegewfewfwefweiepakdoekf
+{
+  "result": "success",
+  "hex": "010000000203604e123d365d38b1eaf920c7a6f783806991a2cbde6728481a881c98824ed7000000007b4c79a276a072a26ba067a565802103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb98140f9abf11f495d110ad728309a3feef365efc59ba53594b2e50e2afba5ffcda1871a8c331346a6ced3f052a258a53b48abae1eb2c574c7ccabd946095414a480dea100af038001e5a10001ffffffff605fe869a6db6ef44b35dc14029e039bffe549919e5d8daecdb3b19dcfd4633e000000007b4c79a276a072a26ba067a565802103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb981404cf46f88166c1ea415644104731293d927b44bb1bf20ecd1e8007115c304704b686a7b33a25328da18b46d4c118ce1cc5be00dad5721c8e76a01ea7a802ae512a100af038001e5a10001ffffffff030c385a4817000000302ea22c802065686d47a4049c2c845a71895a915eb84c04445896eec5dc0be40df0b31372da8103120c008203000401cc76161a5402000000232103ba0a42e46075c475444339605031c846b25f614dbeef2b656abcf67f0592e328ac00000000000000002c6a2ae5556f76657231306b009ea479ac7edc82f5c9342e6b9a971ef54a655774231fc2a4e75daed7e60125fa00000000"
+}
+```
+Broadcasted this just fine, and it confirmed
+http://cctest.explorer.dexstats.info/tx/cc58ab8277f7ba4b190752bb40dce570f8b507d2bdfa8f29d974cb0e1a6fb913
+
+[07-Aug-18 04:41 PM] Alright#0419
+notice the `blahblahblah` and `garbage` in the second txid
+

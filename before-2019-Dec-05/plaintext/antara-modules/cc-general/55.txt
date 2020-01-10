@@ -1,0 +1,401 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[15-Aug-18 02:48 PM] siu - Chainmakers#3920
+ok, so today we play with faucet or with tokens?
+
+[15-Aug-18 02:49 PM] SHossain#0007
+i will put dice creator node offline and get auto win txid to jl777. that is needed
+
+[15-Aug-18 02:49 PM] jl777c#5810
+not really. it just checks to see that there is enough coins to pay the rewards for what you are locking, actually just compare to the amount being locked, but there is no check for all the pending locks, when they expired and predicting how much is left when you unlock at some random time between minseconds and maxseconds
+
+[15-Aug-18 02:50 PM] jl777c#5810
+if you use a plan that ends up having not enough funds when unlocking... i guess is it locker beware?
+
+[15-Aug-18 02:51 PM] Alright#0419
+Will test how rewardsunlock behaves when plan is out of funds
+
+[15-Aug-18 02:51 PM] SHossain#0007
+```
+./komodo-cli -ac_name=AT4 dicebet Dice1AT4 b9f942c312aa5877de59935a6ebb1aa69e2a4ba1e50c913dc1b116932c84fe06 10 1
+```
+
+[15-Aug-18 02:51 PM] SHossain#0007
+```
+b9f942c312aa5877de59935a6ebb1aa69e2a4ba1e50c913dc1b116932c84fe06.(F 1000000.00000000) 6c22c97c4d3ede91dc4821f4b6b60a00b4b714762198f1f99a4c06237846ff55.(E 20.00000000) check first
+d6c9651c080849dabd6ea001c3b1faf92b00ae81a7e3865e38ccd46bc7457feb.(E 10.00000000) 3ae8179ac3cd0ad4b045132b26304b0816487ee768433940c1d3e32c144b0ef2.(E 10.00000000) numentropy tx 3: 1000040.00000000
+{
+  "result": "success",
+  "hex": "010000000255ff467823064c9af9f198217614b7b4000ab6b6f42148dc91de3e4d7cc9226c000000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e8140f6973157e8fe40560c5e36c7e2d6368f8d7eaa4f2810ed34b22b655197ee7b2c65b84155a791c07bef88f07ac11e0df71d318be7f293f71f06ed889c0c909aa0a100af038001e6a10001ffffffffda8e89789e92f9844a7fc054cfe3ed7d8e33d8466bd567b1ecedf6eb6bab897400000000494830450221009070bd6fa3860a95ab2cb0a76fdd75f15138d86c4c9c26a11e374f8b7f8aa05b02202c61a12659240643742ecb87b9ad95a4adae7ed83eaaaf432e68dd8288c8891501ffffffff050094357700000000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc00ca9a3b00000000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc112700000000000023210304b1f0ba82cb8e064a32e093e2319ff6f886523d4c910204169353529c7669a6aca715a40d1700000023210304b1f0ba82cb8e064a32e093e2319ff6f886523d4c910204169353529c7669a6ac00000000000000006d6a4c6ae642446963653141543406fe842c9316b1c13d910ce5a14b2a9ea61abb6e5a9359de7758aa12c342f9b9c347f83f824c32bd7a57083c1890d11603754952074a2f2f1248b2cf5a67e072000000000000000000000000000000000000000000000000000000000000000000000000"
+}
+```
+
+[15-Aug-18 02:52 PM] SHossain#0007
+output txid
+```
+e9baf6b66e9aedfabb85ed5349362b6c25a958b3d46f63f30c6a85aa3d1da28d
+```
+
+[15-Aug-18 02:52 PM] jl777c#5810
+@Alright most important rewards test is the spending a mempool output as if that is not possible, it can be spam attacked to prevent others from unlocking
+
+[15-Aug-18 02:52 PM] SHossain#0007
+timeout block is 1. will try dicefinish and then dicestatus
+
+[15-Aug-18 02:52 PM] Alright#0419
+Will test that also
+
+[15-Aug-18 02:53 PM] jl777c#5810
+the no-locktxid form of rewards unlock should only work with >maxseconds locked txid. this way there can be a cron task that runs (on any node) to payout fully matured locked rewards
+
+[15-Aug-18 02:53 PM] SHossain#0007
+@Alright we need more connection to AT4 and the explorer needs updating as well
+
+[15-Aug-18 02:54 PM] Alright#0419
+getting nodes up right now
+
+[15-Aug-18 02:54 PM] SHossain#0007
+```
+./komodo-cli -ac_name=AT4 getblockhash 119
+025e45521e880095262a788666bfd3bcdb0d24b523d0a20d39c0ef37a3e25ba8
+```
+
+[15-Aug-18 02:54 PM] jl777c#5810
+it is still possible to specify a specific locktxid and unlock it by anybody, but that is just the nature of things
+
+[15-Aug-18 02:54 PM] jl777c#5810
+if someone is willing to use the txfee to unlock, it seems they can
+
+[15-Aug-18 02:55 PM] CHMEX#0686
+ok I can move the explorer to AT4 if 3 is not longer needed
+
+[15-Aug-18 02:55 PM] SHossain#0007
+@CHMEX please update to AT4
+
+[15-Aug-18 02:59 PM] SHossain#0007
+```
+./komodo-cli -ac_name=AT4 dicefinish Dice1AT4 b9f942c312aa5877de59935a6ebb1aa69e2a4ba1e50c913dc1b116932c84fe06 e9baf6b66e9aedfabb85ed5349362b6c25a958b3d46f63f30c6a85aa3d1da28d
+duration 162 (1534345120 - 1534344958) numblocks 10 (130 - 120)
+{
+  "result": "success",
+  "hex": "01000000038da21d3daa856a0cf3636fd4b358a9256c2b364953ed85bbfaed9a6eb6f6bae90200000048473044022071c5b64fb980d45952f6f51d37391e4cc80e1c502c6f0e8200acab213a4e5fb4022058c93633e8d822fcf47dc2da73b7517bca205747d91f0b8d6ed601290dcdde4501ffffffff8da21d3daa856a0cf3636fd4b358a9256c2b364953ed85bbfaed9a6eb6f6bae9000000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e81402334270e087aa856586a802f1ee2833be1f1a80bf9c9a3656e4fb0a40daf298671ff93bee01bffd599db2463fc6ae667a084a341b4e60ee174293f24a717a136a100af038001e6a10001ffffffff8da21d3daa856a0cf3636fd4b358a9256c2b364953ed85bbfaed9a6eb6f6bae9010000007b4c79a276a072a26ba067a5658021039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94e8140f0ce95698dfa1e743a8de0313d3734c589be760f830ff8990591dc169c746bf96704408af6c35c5b445934d31198e19127d01b06a7a87d48b12d1d02cccfbfefa100af038001e6a10001ffffffff04f0a29a3b00000000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc1027000000000000232103fe754763c176e1339a3f62ee6b9484720e17ee4646b65a119e9f6370c7004abcac009435770000000023210304b1f0ba82cb8e064a32e093e2319ff6f886523d4c910204169353529c7669a6ac00000000000000006d6a4c6ae654446963653141543406fe842c9316b1c13d910ce5a14b2a9ea61abb6e5a9359de7758aa12c342f9b90000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+}
+```
+
+[15-Aug-18 02:59 PM] SHossain#0007
+output
+```
+duration 162 (1534345120 - 1534344958) numblocks 10 (130 - 120)
+duration 162 (1534345120 - 1534344958) numblocks 10 (130 - 120)
+duration 162 (1534345120 - 1534344958) numblocks 10 (130 - 120)
+duration 162 (1534345120 - 1534344958) numblocks 10 (130 - 120)
+5fb06068488ec95665145054b4e089769c4e2ec69836e1f7ec46201e4a3cdde5
+```
+
+[15-Aug-18 03:00 PM] SHossain#0007
+```
+./komodo-cli -ac_name=AT4 dicestatus Dice1AT4 b9f942c312aa5877de59935a6ebb1aa69e2a4ba1e50c913dc1b116932c84fe06 e9baf6b66e9aedfabb85ed5349362b6c25a958b3d46f63f30c6a85aa3d1da28d
+{
+  "result": "success",
+  "status": "win",
+  "won": 20
+}
+```
+
+[15-Aug-18 03:00 PM] siu - Chainmakers#3920
+yey
+
+[15-Aug-18 03:01 PM] SHossain#0007
+now bringing back the creator node online and will bet
+
+[15-Aug-18 03:06 PM] CHMEX#0686
+syncing from dev or jl777?
+
+[15-Aug-18 03:06 PM] SHossain#0007
+jl777
+
+[15-Aug-18 03:06 PM] CHMEX#0686
+hmm ok not getting past "blocks": 38,
+  "longestchain": 134,
+
+[15-Aug-18 03:07 PM] SHossain#0007
+134 is good
+
+[15-Aug-18 03:07 PM] SHossain#0007
+```
+./komodo-cli -ac_name=AT4 getblockhash 134
+010b8ca4b5b47979a23fa522ad6dd6acc55060aa32c3e7e9edeb250ecd0e4e61
+```
+
+[15-Aug-18 03:08 PM] CHMEX#0686
+meaning it only synced up to 38 and than stopps
+
+[15-Aug-18 03:08 PM] Alright#0419
+yea it's rejecting blocks
+
+[15-Aug-18 03:10 PM] Alright#0419
+scratch that, I didn't `git pull` properly
+
+[15-Aug-18 03:11 PM] CHMEX#0686
+I got the same but let me retry
+
+[15-Aug-18 03:12 PM] SHossain#0007
+WIN `0cf4faa0108771d386c29b8eebdacdd2d7e8b2809523f6d6cba86c59ac7e7ae2 winnings 2000.00000000 bet 1000.00000000 at odds 1:1`
+
+[15-Aug-18 03:15 PM] Alright#0419
+Yea you need to restart AT4
+
+[15-Aug-18 03:15 PM] CHMEX#0686
+looks to be this chain is not working anymore with latest jl777 does not sync
+
+[15-Aug-18 03:15 PM] CHMEX#0686
+yyep
+
+[15-Aug-18 03:15 PM] Alright#0419
+^
+
+[15-Aug-18 03:15 PM] Alright#0419
+what's in block 38
+
+[15-Aug-18 03:15 PM] CHMEX#0686
+i think it's in 39
+
+[15-Aug-18 03:16 PM] CHMEX#0686
+I got 38
+
+[15-Aug-18 03:16 PM] Alright#0419
+```
+2018-08-15 15:15:05 ERROR: CScriptCheck(): 00988bdff6cf50cbcd2b86a8cd3269f72d463baa9a879a7ab30b41586f6c3a00:0 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+2018-08-15 15:15:05 ERROR: CScriptCheck(): 00988bdff6cf50cbcd2b86a8cd3269f72d463baa9a879a7ab30b41586f6c3a00:0 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+2018-08-15 15:15:05 ERROR: AcceptToMemoryPool: ConnectInputs failed 00988bdff6cf50cbcd2b86a8cd3269f72d463baa9a879a7ab30b41586f6c3a00
+2018-08-15 15:15:05 ERROR: CScriptCheck(): 00988bdff6cf50cbcd2b86a8cd3269f72d463baa9a879a7ab30b41586f6c3a00:0 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+2018-08-15 15:15:05 ERROR: CScriptCheck(): 00988bdff6cf50cbcd2b86a8cd3269f72d463baa9a879a7ab30b41586f6c3a00:0 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+2018-08-15 15:15:05 ERROR: AcceptToMemoryPool: ConnectInputs failed 00988bdff6cf50cbcd2b86a8cd3269f72d463baa9a879a7ab30b41586f6c3a00
+```
+
+[15-Aug-18 03:16 PM] siu - Chainmakers#3920
+did i break AT4?
+
+[15-Aug-18 03:16 PM] Alright#0419
+```
+2018-08-15 15:15:05 Misbehaving: 94.130.224.11:57200 (0 -> 100)
+2018-08-15 15:15:05 InvalidChainFound: invalid block=05e06c83d13fa189f79b17cac21841fc51d0f8cd3d1047c001fb301adb9a6593  height=39  log2_work=9.6257088  date=2018-08-15 13:21:32
+2018-08-15 15:15:05 InvalidChainFound:  current best=0138cb24e01185d353ae2cb774a73f8c576119162edb053c7e9a9a46428dbc3e  height=38  log2_work=9.5793159  date=2018-08-15 13:18:49
+```
+
+[15-Aug-18 03:17 PM] Alright#0419
+Check out what happened in 39 so we don't do this again immediately
+
+[15-Aug-18 03:17 PM] siu - Chainmakers#3920
+james did some hardforking change just after shossain announced he made a new chain
+
+[15-Aug-18 03:17 PM] siu - Chainmakers#3920
+could have been that
+
+[15-Aug-18 03:17 PM] jl777c#5810
+I did a hardforking change
+
+[15-Aug-18 03:17 PM] jl777c#5810
+probably need to clear AT4
+
+[15-Aug-18 03:18 PM] jl777c#5810
+or make AT5
+
+[15-Aug-18 03:18 PM] Alright#0419
+well that was short lived
+
+[15-Aug-18 03:18 PM] Alright#0419
+AT5 in bound
+
+[15-Aug-18 03:18 PM] siu - Chainmakers#3920
+we all need to kill AT4 and start over
+
+[15-Aug-18 03:18 PM] CHMEX#0686
+do AT5
+
+[15-Aug-18 03:18 PM] siu - Chainmakers#3920
+ok
+
+[15-Aug-18 03:18 PM] Alright#0419
+on it
+
+[15-Aug-18 03:18 PM] siu - Chainmakers#3920
+./komodod -ac_cc=1 -ac_name=AT5 -addressindex=1 -spentindex=1 -ac_supply=1000 -ac_reward=10000000000000 -pubkey=0225583e18a48116c4c9571f530240f22affe00f95804f1947d59fbc7b825763f6 -addnode=195.201.20.230 -addnode=195.201.137.5 -addnode=94.130.224.11 &
+
+[15-Aug-18 03:18 PM] siu - Chainmakers#3920
+?
+
+[15-Aug-18 03:21 PM] Alright#0419
+`./komodod -ac_cc=1 -ac_name=AT5 -addressindex=1 -spentindex=1 -ac_supply=1000 -ac_reward=10000000000000 -pubkey=<PUBKEY> -addnode=195.201.137.5 -addnode=195.201.20.230`
+
+[15-Aug-18 03:21 PM] Alright#0419
+if you need coins asap, I'll send them to you
+
+[15-Aug-18 03:22 PM] Alright#0419
+don't mine blocks until it's past ~100 or so
+
+[15-Aug-18 03:25 PM] SHossain#0007
+getting AT5
+
+[15-Aug-18 03:26 PM] CHMEX#0686
+explorer is now on AT5
+
+[15-Aug-18 03:26 PM] CHMEX#0686
+not mining
+
+[15-Aug-18 03:27 PM] jl777c#5810
+can we next time make a chain with -ac_perc? it seems that is a not very used ac param and it would be useful for the 0 cost dice use ase
+
+[15-Aug-18 03:27 PM] jl777c#5810
+use case
+
+[15-Aug-18 03:28 PM] jl777c#5810
+i think a 0.1% type of override on all tx will create a nice amount of income to any actively used chain, especially with the way change works
+
+[15-Aug-18 03:29 PM] Alright#0419
+STAKED2 will have ac_perc
+
+[15-Aug-18 03:30 PM] Alright#0419
+with commission going to whoever can break it or a contract on STAKED3
+
+[15-Aug-18 03:43 PM] Alright#0419
+Just tried to `rewardsunlock` a `rewardslock` with 0 minimum time after a couple blocks 
+```
+./komodo-cli -ac_name=AT5 rewardsunlock 0time 977f375ec1d16ce17a63316e741fed5910099e1d460f5d2645ad7d1de67ad490
+{
+  "result": "success",
+  "hex": "0100000002e24930cc3da4e056cea0ace90fbb55628b825d94a3a01cdade9a7d9d99ad839a000000007b4c79a276a072a26ba067a565802103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb98140e5598146fa307de2a6c5bbeb0c9925bcfdcd091fff1ba9173fae7b40cbe7172642763e12fd174d1d9f37b15fd5d7bafdb1cb3d2b413c9a48993d730ffc0aa400a100af038001e5a10001ffffffff90d47ae61d7dad45265d0f461d9e091059ed1f746e31637ae16cd1c15e377f97000000007b4c79a276a072a26ba067a565802103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb981407053d8c738bf1ec6cab61cb0db85ca7fb66f928f0238607e1f981a3d0567d8b27463df0b5ce09830f1f70079c2e65e5c5e45bc46db53236647d3d05bdbbe4a75a100af038001e5a10001ffffffff035360764817000000302ea22c802065686d47a4049c2c845a71895a915eb84c04445896eec5dc0be40df0b31372da8103120c008203000401cc9d487748170000002321027dc7b5cfb5efca96674b45e9fda18df069d040b9fd9ff32c35df56005e330392ac00000000000000002c6a2ae5553074696d6500000090d47ae61d7dad45265d0f461d9e091059ed1f746e31637ae16cd1c15e377f9700000000"
+}
+```
+
+[15-Aug-18 03:44 PM] Alright#0419
+```
+minseconds 0 maxseconds 86400
+duration 39 (1534347671 - 1534347632) numblocks 4 (65 - 61)
+amount 1000.00000000 2000000000000.00000000 4925 -> duration.39 reward 0.00024733 vals 0.00123668 2.47336000
+minseconds 0 maxseconds 86400
+duration 39 (1534347671 - 1534347632) numblocks 4 (65 - 61)
+amount 1000.00000000 2000000000000.00000000 4925 -> duration.39 reward 0.00024733 vals 0.00123668 2.47336000
+minseconds 0 maxseconds 86400
+duration 39 (1534347671 - 1534347632) numblocks 4 (65 - 61)
+amount 1000.00000000 2000000000000.00000000 4925 -> duration.39 reward 0.00024733 vals 0.00123668 2.47336000
+minseconds 0 maxseconds 86400
+duration 39 (1534347671 - 1534347632) numblocks 4 (65 - 61)
+amount 1000.00000000 2000000000000.00000000 4925 -> duration.39 reward 0.00024733 vals 0.00123668 2.47336000
+```
+
+[15-Aug-18 03:44 PM] Alright#0419
+seemed to work fine from the node I sent it from, but I got this on the other node
+
+[15-Aug-18 03:44 PM] Alright#0419
+```
+2018-08-15 15:41:21 ERROR: CScriptCheck(): 6f2f8e0c9f038a3cbfaf2418560fe8128430cc2077f6f3f5bb83b398e1faa0d8:0 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+2018-08-15 15:41:21 ERROR: CScriptCheck(): 6f2f8e0c9f038a3cbfaf2418560fe8128430cc2077f6f3f5bb83b398e1faa0d8:0 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+2018-08-15 15:41:21 ERROR: AcceptToMemoryPool: ConnectInputs failed 6f2f8e0c9f038a3cbfaf2418560fe8128430cc2077f6f3f5bb83b398e1faa0d8
+2018-08-15 15:41:21 Misbehaving: 195.201.20.230:21362 (0 -> 100)
+```
+
+[15-Aug-18 03:49 PM] SHossain#0007
+@Alright if you have any AT5 coins, please fund the faucet
+
+[15-Aug-18 03:49 PM] SHossain#0007
+```
+./komodo-cli -ac_name=AT5 faucetget
+cant find faucet inputs
+{
+  "result": "error",
+  "error": "couldnt create faucet get transaction"
+}
+```
+
+[15-Aug-18 03:50 PM] Alright#0419
+done
+
+[15-Aug-18 03:51 PM] Alright#0419
+you should be fine to mine now btw
+
+[15-Aug-18 03:52 PM] SHossain#0007
+cool
+
+[15-Aug-18 03:52 PM] SHossain#0007
+will start mining. but, as i don't have any funds, i'd be able to claim faucet funds first 😃
+
+[15-Aug-18 03:52 PM] jl777c#5810
+were the inputs valid for the rewards tx? did it confirme?
+
+[15-Aug-18 03:53 PM] Alright#0419
+did not confirm, the first input was the rewardscreatefunding, need to figure out if the other was fine too
+
+[15-Aug-18 03:54 PM] SHossain#0007
+```
+start at 1534348388
+found valid txid after 73012 iterations 1534348449
+```
+
+[15-Aug-18 03:55 PM] Alright#0419
+```
+2018-08-15 15:54:56 ERROR: CScriptCheck(): 008bed88b2dfee149a1798744cb9408b56a6b60d04da5cbc746f643d55e8b500:0 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+2018-08-15 15:54:56 ERROR: CScriptCheck(): 008bed88b2dfee149a1798744cb9408b56a6b60d04da5cbc746f643d55e8b500:0 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+2018-08-15 15:54:56 ERROR: AcceptToMemoryPool: ConnectInputs failed 008bed88b2dfee149a1798744cb9408b56a6b60d04da5cbc746f643d55e8b500
+2018-08-15 15:54:56 Misbehaving: 94.130.224.11:65079 (100 -> 200) BAN THRESHOLD EXCEEDED
+```
+
+[15-Aug-18 03:55 PM] siu - Chainmakers#3920
+can i get some AT5 here? 0225583e18a48116c4c9571f530240f22affe00f95804f1947d59fbc7b825763f6
+
+[15-Aug-18 03:55 PM] Alright#0419
+need address
+
+[15-Aug-18 03:55 PM] siu - Chainmakers#3920
+RKvQKpkJgfMB5CbJQ2p6rUW4CZd7w2heQw
+
+[15-Aug-18 03:55 PM] SHossain#0007
+@siu - Chainmakers for AT5 you need Address not pubkey 😃
+
+[15-Aug-18 03:55 PM] siu - Chainmakers#3920
+lol
+
+[15-Aug-18 03:55 PM] siu - Chainmakers#3920
+sorry
+
+[15-Aug-18 03:55 PM] Alright#0419
+is that your node SHo?
+
+[15-Aug-18 03:55 PM] Alright#0419
+that I just banned
+
+[15-Aug-18 03:55 PM] SHossain#0007
+no idea if i'm banned or not.
+
+[15-Aug-18 03:56 PM] SHossain#0007
+please DM me the ip
+
+[15-Aug-18 03:56 PM] SHossain#0007
+oh..ok
+
+[15-Aug-18 03:56 PM] SHossain#0007
+yes, that is my node
+
+[15-Aug-18 03:56 PM] SHossain#0007
+aside from sync, i didn't do anything on that node
+
+[15-Aug-18 03:56 PM] Alright#0419
+was when you did the faucet tx I'm guessing
+
+[15-Aug-18 03:57 PM] SHossain#0007
+oh and the faucetget
+
+[15-Aug-18 03:58 PM] SHossain#0007
+and, yes. that is my faucetget txid
+
+[15-Aug-18 03:58 PM] SHossain#0007
+still sitting in mempool for me
+

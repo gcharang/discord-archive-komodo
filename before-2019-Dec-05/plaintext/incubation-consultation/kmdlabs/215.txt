@@ -1,0 +1,365 @@
+==============================================================
+Guild: Komodo
+Channel: kmdlabs
+Topic: Please read pinned messages
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[11-Jan-19 04:51 AM] Alright#0419
+or do we just need the last
+
+[11-Jan-19 04:51 AM] blackjok3r#3181
+No let me fix that
+
+[11-Jan-19 04:51 AM] blackjok3r#3181
+hes copied all of them... I was kind of thinking and making it at the same time... but nobody else was heer to give input at the time.
+
+[11-Jan-19 04:52 AM] blackjok3r#3181
+`{"src_chain":"CFEK", "dest_chain":"CFEKED", :src_sum":10, "export_txid": <txid>, "timeofexport":1546341430, "hex": <export tx full hex>, "payouts":<payouts hash> } `
+` {"dest_chain":"CFEKED", "dest_sum":10, "import_txid": <txid>, "timeofimport":1546341430}`
+
+[11-Jan-19 04:52 AM] blackjok3r#3181
+I think that one... but we dont really need to log the import
+
+[11-Jan-19 04:52 AM] blackjok3r#3181
+The export needs to be saved somewhere it cna easily be retreived.
+
+[11-Jan-19 04:52 AM] blackjok3r#3181
+So if the script or a daemon dies, which is likely when trying to push through as many as possible.... you can go back ot the export and finish the import off.
+
+[11-Jan-19 04:54 AM] blackjok3r#3181
+I think thats now right
+
+[11-Jan-19 04:54 AM] blackjok3r#3181
+you can probably even remove amounts... its not like thats much extra data though.
+
+[11-Jan-19 05:15 AM] smk762 -  dracocanis ominator#7640
+Thanks @Alright when I get home I'll submit some scripts that someone else has already rendered obsolete once I submit the PR 💀
+
+[11-Jan-19 05:25 AM] blackjok3r#3181
+haha
+
+{Reactions}
+trollface 
+
+[11-Jan-19 05:27 AM] Alright#0419
+@smk762 -  dracocanis ominator plan is to still use the oracles for real time scores just to stress oracles
+
+[11-Jan-19 05:27 AM] Alright#0419
+but the script I wrote will pull the data directly from the chain
+
+[11-Jan-19 05:28 AM] Alright#0419
+script I wrote is going to be *slow* once there are a lot of people migrating, so it's really just for verification that oracles data is correct
+
+[11-Jan-19 05:41 AM] smk762 -  dracocanis ominator#7640
+so to clarify...
+we're stress testing migrations, with the scoreboard showing participant rankings.
+Migrations are summarised as a json object, and stored in an oracle because why not test that too?
+the data stored in the oracles will be validated by @Alright 's script which asks the chain directly.
+json data in oracles will be faster for near real-time visualisation purposes
+
+[11-Jan-19 05:43 AM] Alright#0419
+Yep, that's the idea
+
+[11-Jan-19 05:44 AM] smk762 -  dracocanis ominator#7640
+coupla questions...
+correct to assume a script to put data into oracle is pending? anyone assigned or am I the guy?
+correct to assume there is an aggregation layer, such as a summary oracle? If not, is there a strategy in place to avoid slowdown from oracle bloat (query returning large number of records)?
+
+[11-Jan-19 05:46 AM] smk762 -  dracocanis ominator#7640
+correct to assume an RPC is being created to generate the an array of json for each block? i.e. block summary can be aggregated before placement in oracle
+
+[11-Jan-19 05:48 AM] smk762 -  dracocanis ominator#7640
+and when's all this go down? I got a bit on the plate this weekend with dragonhound tweaks for @axo777 in prep for a presentation next week for alternative 3rd party use case
+
+[11-Jan-19 05:49 AM] Alright#0419
+weekend after this weekend should work, but it's not up to me
+
+[11-Jan-19 05:49 AM] Alright#0419
+I'd like to start promoting the tests at least a week before they will happen
+
+{Reactions}
+👍 
+
+[11-Jan-19 05:58 AM] Alright#0419
+@smk762 -  dracocanis ominator I can do the migrates oracles script if you like
+
+[11-Jan-19 05:59 AM] Alright#0419
+if you already have some idea of how you'll do it, please do it though
+
+[11-Jan-19 06:14 AM] smk762 -  dracocanis ominator#7640
+if there's an RPC, too easy. If not, I'll have a think about it over the next few days
+
+[11-Jan-19 06:15 AM] smk762 -  dracocanis ominator#7640
+basically just be a tweak of exisitng code to pull the migrate data instead of GPS
+
+[11-Jan-19 06:16 AM] Alright#0419
+there is no rpc to see all oraclesdata for a given block if that's what you're saying
+
+[11-Jan-19 06:16 AM] smk762 -  dracocanis ominator#7640
+i thought we were pulling migrate data?
+
+[11-Jan-19 06:17 AM] Alright#0419
+Oh misunderstood, joker made the `getimports` rpc which takes block height as first argument and shows all imports for that given block
+
+[11-Jan-19 06:18 AM] smk762 -  dracocanis ominator#7640
+cool, thought I remembered somehthing being said about that.
+
+[11-Jan-19 06:18 AM] smk762 -  dracocanis ominator#7640
+will look at it over the weekend, sounds simple enough tho
+
+[11-Jan-19 07:22 AM] Alright#0419
+Added a shite readme to that repo, just needed to write out my thoughts while they were fresh. Still needs a lot of work
+
+[11-Jan-19 07:39 AM] blackjok3r#3181
+The idea, is that each person participating will have a registered pubkey/Raddress (I think its Radd thats used) 
+This Raddress can be tallied with Alrights script. BUt this is for verification that cheating didnt happen after the fact. Not to track in real time, or use oracle.
+
+[11-Jan-19 07:44 AM] blackjok3r#3181
+The way it should work, is the migrate script itself should submit the JSON data to an oracle created by participant. Each participant should have his/her own oracle.
+The oracle will serve as a log for completed exports and imports. The list of import txid's can be use to do GetRawTransaction which will have info about the export transaction(added  for explorer) if you need to do this... However as long as you dont cheat by placing fake data into your oracle doubt its needed. The verify script bty Alright will verify ppl didnt cheat. It will be easy to seem by looking at totals. 
+The export tx should log enough data so that you can take this oracle entry and resume you migrate in case something goes wrong.
+
+[11-Jan-19 07:44 AM] blackjok3r#3181
+@smk762 -  dracocanis ominator
+
+[11-Jan-19 07:45 AM] smk762 -  dracocanis ominator#7640
+cheers. btw, got an update for crosschains.cpp, but cant find it to test the "fix"
+
+[11-Jan-19 07:45 AM] blackjok3r#3181
+I also propose only to log the data once the transaction has been notarised to avoid reorgs messing the data up.
+
+[11-Jan-19 07:45 AM] smk762 -  dracocanis ominator#7640
+```            + HelpExampleCli("getmigrates", "\"00000000febc373a1da2bd9f887b105ad79ddc26ac26c2b28652d64e5207c5b5\"")
+            + HelpExampleRpc("getmigrates", "\"00000000febc373a1da2bd9f887b105ad79ddc26ac26c2b28652d64e5207c5b5\"")
+            + HelpExampleCli("getmigrates", "12800")
++ HelpExampleRpc("getmigrates", "12800")```
+
+[11-Jan-19 07:45 AM] smk762 -  dracocanis ominator#7640
+`getmigrates` should be `getimports`
+
+[11-Jan-19 07:45 AM] blackjok3r#3181
+I think I already fixed one of those, m,aybe not all . fixing now. About to push new version anyway.
+
+{Reactions}
+👍 
+
+[11-Jan-19 07:47 AM] smk762 -  dracocanis ominator#7640
+my plan so far is to call getimports on `getinfo.blocks-10`, and aggregate per block for vis
+
+{Reactions}
+👌 
+
+[11-Jan-19 07:54 AM] blackjok3r#3181
+ok... cool as
+
+[11-Jan-19 07:54 AM] blackjok3r#3181
+@Alright  smk is going to do vis
+
+[11-Jan-19 07:55 AM] blackjok3r#3181
+this doesnt have anything to do with oracles... you can do the oracle log in the migrate sctipt yeah?
+
+[11-Jan-19 07:55 AM] smk762 -  dracocanis ominator#7640
+` komodo-cli -ac_name=CFEKX getimports $(echo $(komodo-cli -ac_name=CFEKX getinfo | jq '.blocks')-10 | bc)`
+
+[11-Jan-19 07:55 AM] blackjok3r#3181
+yeah that should work fine... the RPC itself is very fast
+
+[11-Jan-19 07:55 AM] blackjok3r#3181
+but processign the data that comes in may not be... only 10 blocks might be ok
+
+[11-Jan-19 07:56 AM] smk762 -  dracocanis ominator#7640
+10 blocks back enough to assume its notarised?
+
+[11-Jan-19 07:56 AM] smk762 -  dracocanis ominator#7640
+easy enoough to go back further for safety
+
+[11-Jan-19 07:59 AM] Alright#0419
+@smk762 -  dracocanis ominator you can use dpowconfs, the "confirmations" field will remain at 1 until the tx is notarized
+
+[11-Jan-19 08:00 AM] Alright#0419
+once notarized it will show the actual confirmation count
+
+[11-Jan-19 08:00 AM] blackjok3r#3181
+confirmations > 1 is all you need to use.
+
+[11-Jan-19 08:00 AM] blackjok3r#3181
+I chaged waitforconfirm in my bash migrate script to that and it helped a LOT
+
+[11-Jan-19 08:02 AM] blackjok3r#3181
+also slowed down polls.... seems to get very large numbers of paralell migrates you need to almost never poll... do each step the random sleep for 5-10 mins so it has a very high chance of sucess when it does the RPC, otherwise the daemon starts failing to respoind.
+
+[11-Jan-19 08:02 AM] blackjok3r#3181
+this is with like 4000-6000 migrate scripts going at once... lol
+
+[11-Jan-19 08:02 AM] blackjok3r#3181
+hjoping to get that up to 20,000 or so per node 😄
+
+[11-Jan-19 08:12 AM] smk762 -  dracocanis ominator#7640
+I'm familiar with the waitfor confirmation   bit in the migration script, will look closer and tap in
+
+[11-Jan-19 08:14 AM] blackjok3r#3181
+yeah just make it greater than 1, it wont proceed past 1 until the tx is notarised. I think Alright is going to have a go at that part though, you can focus on vis stuff if you like. I promise we wont do that before you finish it.
+
+[11-Jan-19 08:53 AM] smk762 -  dracocanis ominator#7640
+just found the perfect clip to play (and poster to hide cameras behind) when my cameras are activated - https://www.youtube.com/watch?v=NelBNtNm8l0 :trollface:
+
+{Embed}
+Alec McRae
+https://www.youtube.com/watch?v=NelBNtNm8l0
+Gran Torino - Get Off My Lawn _HD
+Gran Torino get off my lawn
+https://i.ytimg.com/vi/NelBNtNm8l0/maxresdefault.jpg
+
+[11-Jan-19 09:06 AM] blackjok3r#3181
+haha
+
+[11-Jan-19 09:07 AM] blackjok3r#3181
+Pushed new version... help output is fixed... getlastsegidstakes is now much better. Shows PoW block total, and PoS %, so you can now get PoS % over an entire chain, rather than just a running average. MGNX looks pretty close, if not perfect. So algo is good.
+
+{Reactions}
+🔥 
+
+[11-Jan-19 09:54 AM] blackjok3r#3181
+found a few weird things ... Not sure really but I got the segid working on all RPC calls and it returns the right value... Seems it cant persist after restart So I cahnged it so it can be set where it used to be, along with the new place I added to "make it work" before. 35000 blocks takes a few seconds, though this is on nvme drive.
+
+[11-Jan-19 11:41 AM] blackjok3r#3181
+Staking script is working perfectly for staking now. 😃
+
+[11-Jan-19 11:41 AM] blackjok3r#3181
+trying to figure out PoW ...
+
+[11-Jan-19 01:28 PM] blackjok3r#3181
+new staking script pushed.... As alwyas once I started making it the idea changed slightly... I think this version is pretty decent. Need a controlled test with script vs, mining without -pubkey.
+
+[11-Jan-19 02:35 PM] smk762 -  dracocanis ominator#7640
+that sounds pretty damn fast 🏎
+
+[11-Jan-19 02:59 PM] blackjok3r#3181
+yes its not bad... I do wonder how much of it is my computer though
+
+[11-Jan-19 03:20 PM] ComputerGenie 👴🏼📢#7004
+https://images-na.ssl-images-amazon.com/images/I/716Xp1yVpHL._UX679_.jpg
+
+{Embed}
+https://images-na.ssl-images-amazon.com/images/I/716Xp1yVpHL._UX679_.jpg
+https://images-na.ssl-images-amazon.com/images/I/716Xp1yVpHL._UX679_.jpg
+
+{Reactions}
+😂 (7) 
+
+[11-Jan-19 03:29 PM] blackjok3r#3181
+If I could be assed... Id sync MGNX on my VM in  HDD on 8yr old hardware ..
+
+[11-Jan-19 08:52 PM] Alright#0419
+I made this scoreboard script work in real time. Not sure we need people submitting redundant unverified data to oracles other than to stress test oracles.
+
+[11-Jan-19 08:53 PM] Alright#0419
+it's still quite sloppy, will clean it up and push it when I'm available again
+
+[12-Jan-19 01:20 AM] blackjok3r#3181
+There needs to be a way to resume failed migrates guess I'll do it
+
+[12-Jan-19 01:56 AM] blackjok3r#3181
+😅
+
+[12-Jan-19 03:21 AM] blackjok3r#3181
+I am going to just keep working on staker for now. You guys will need to all work together to get this migrate stress test working... So far good progress has been made. Please try to communicate so things are not being done by more than one person at the same time, unless you are working together. 😃
+
+[12-Jan-19 04:02 AM] smk762 -  dracocanis ominator#7640
+PR sent to add ntx% to stats script - https://github.com/StakedChain/StakedNotary/pull/21
+
+{Embed}
+https://github.com/StakedChain/StakedNotary/pull/21
+add ntx percentage to readout by smk762 · Pull Request #21 · Sta...
+changed column order and added notarization percentage to output
+https://avatars3.githubusercontent.com/u/35845239?s=400&v=4
+
+[12-Jan-19 04:03 AM] smk762 -  dracocanis ominator#7640
+and just in case someone else is working on it, here's my itnerary
+
+[12-Jan-19 04:04 AM] smk762 -  dracocanis ominator#7640
+1 - dragonhound + axo variant for tracking
+
+[12-Jan-19 04:04 AM] smk762 -  dracocanis ominator#7640
+2 - cryptoconditions blog posts for kmd medium page (oracles done, migrates almost done)
+
+[12-Jan-19 04:05 AM] smk762 -  dracocanis ominator#7640
+3 - script to write migrate export data to oracle
+
+[12-Jan-19 04:05 AM] smk762 -  dracocanis ominator#7640
+4 - script to read above from oracle, compare with getimports rpc
+
+[12-Jan-19 04:05 AM] smk762 -  dracocanis ominator#7640
+5 -  visualise the above
+
+[12-Jan-19 04:05 AM] smk762 -  dracocanis ominator#7640
+6 - walk the dog
+
+[12-Jan-19 04:25 AM] blackjok3r#3181
+Looks good man. 😃
+
+[12-Jan-19 04:25 AM] blackjok3r#3181
+well my wife has been off work for 3 weeks... and my bank is -$200 😦
+
+[12-Jan-19 04:26 AM] blackjok3r#3181
+looks like I will be stuck home working on this for a while again... haha
+
+[12-Jan-19 04:33 AM] smk762 -  dracocanis ominator#7640
+an idle wife is expensive lol
+
+[12-Jan-19 04:34 AM] blackjok3r#3181
+So are 2 kids
+
+[12-Jan-19 04:38 AM] smk762 -  dracocanis ominator#7640
+safespace warning lol
+
+[12-Jan-19 04:39 AM] smk762 -  dracocanis ominator#7640
+https://www.youtube.com/watch?v=9BEF-dHoimU
+
+{Embed}
+ColaAMVs
+https://www.youtube.com/watch?v=9BEF-dHoimU
+THE BOONDOCKS: The Slickback Intervention
+please Rate & Subscribe Me
+https://i.ytimg.com/vi/9BEF-dHoimU/maxresdefault.jpg
+
+[12-Jan-19 05:14 AM] blackjok3r#3181
+Python is too easy 😄
+
+[12-Jan-19 05:14 AM] blackjok3r#3181
+Just got a sendmany64 script working that does random values....
+
+[12-Jan-19 05:14 AM] blackjok3r#3181
+in like less than 2H 😄
+
+[12-Jan-19 05:17 AM] blackjok3r#3181
+IMO this will be the way to go... Going to have to start a 50/50 chain soon for people to test this.
+
+[12-Jan-19 05:20 AM] NutellaLicka#4241
+```./asset-cli -ac_name=CFEKX getinfo
+./asset-cli: line 12: /home/Nutta/staked/komodo//komodo-cli: No such file or directory```
+Any way I can get it to read the `$branch` properly? Is there somewhere i should be setting this? At the moment its inputting nothing `//` rather than going for the `/master/`
+
+[12-Jan-19 05:20 AM] blackjok3r#3181
+./asset-cli CFEKX getinfo
+
+[12-Jan-19 05:20 AM] blackjok3r#3181
+dont need ac_name
+
+[12-Jan-19 05:20 AM] NutellaLicka#4241
+ah
+
+[12-Jan-19 05:20 AM] NutellaLicka#4241
+thanks
+
+[12-Jan-19 05:20 AM] blackjok3r#3181
+branch is pulled from assetchains.json
+
+[12-Jan-19 05:21 AM] NutellaLicka#4241
+In terms of wallet addresses across the chains, do I need to create a new one on each, or will the same privkey work for all chains, including KMD?
+
+[12-Jan-19 05:21 AM] smk762 -  dracocanis ominator#7640
+same pk will give same addr, just have to import it
+

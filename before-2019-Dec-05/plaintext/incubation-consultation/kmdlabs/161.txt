@@ -1,0 +1,433 @@
+==============================================================
+Guild: Komodo
+Channel: kmdlabs
+Topic: Please read pinned messages
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[15-Dec-18 06:51 AM] blackjok3r#3181
+I didnt even think about LABS stuff until after sapling activated and I had main net up ... then it was a mad rush to get it working.... I think we are all good now though.
+
+[15-Dec-18 08:14 AM] blackjok3r#3181
+Been working on this, might be some info for @CrisF  and @jl777c 
+Diffrences between stakedkomodo and official komodo. This is from doing a diff against the source of FSM and StakedChain/komodo/master.
+
+-> Protocol version/ diffrent notary pubkeys
+-> Notary tx's for staked notaries are maximum priority in the miner by default.
+-> Komodo seeds are disabled for staked chains
+-> Wallet filter for staked notaries (this is complex and needs its own docs, basics are in StakedNotary readme.)
+
+-> MoMoM diffrences to what has been merged to FSM (do you want any of this @jl777c )
+Extra set pf pubkeys possible (part of this was libscotts code, some of it is mine to make dPoW also work)
+Cant send a migrate from a chain to itself
+Cant send more than 1 million coins at once (goes with max money change so that you cant send coins that can never be imported)
+
+-> There is a fix in mining.cpp that fixes setgenerate after the verus merge. 
+In official komodo you cannot decrease threads with setgenerate  with staked you can.
+
+-> Added segid to getsnapshot
+
+[15-Dec-18 08:14 AM] blackjok3r#3181
+RPCs: 
+-> getlastsegidstakes : gives a tally of stakes from chain tip back number of blocks you specify. Works better than get snapshot as you get an idea of what is actually being staked.
+-> getiguanajson  : returns a valid JSON for the current ERA, so that iguana config is not seperate from komodod (saves human error whn changing keys and ports etc)
+-> getnotarysendmany : returns a JSON object with all notary address's and the amount of coins specifed in input. Used for the notary stats and funding notaries.
+-> cleanwallettransactions : this is in the readme, we know what it doesn. Patch is avalible for main net should anyone need this.
+-> some changes to z_mergetoaddress (with the wallet filter I dont think these are needed and might just take it out)
+
+Also there are ERA's: 
+These just mean the notary pubkey arrays are in a 3 dimentional array so its much easier to have many many arrays and juts loop over them, makes changing keys very easy. Code much simpler and easier to follow. 
+
+There is also a function in one of the komodo_.h files where on block receive it figures out what era its in, and creates an array of Raddress's into a global var, only updating the array after the era has finished. This allows the miner priotity to work across ERA's and also the code for the PIRATE exception can work like this. But I have not tested that, maybe its not accurate enough for such a consensus change.
+
+[15-Dec-18 08:18 AM] blackjok3r#3181
+I also did a major code clean up and removed anything we dont need... have to head out now will test in comming days. No major changes, mostly simplifying code (less lines) and removing functions that were added at varius times to test things that didnt work.
+
+{Reactions}
+rum (2) 
+
+[15-Dec-18 08:19 AM] CrisF#3405
+Thanks, @blackjok3r !
+
+[15-Dec-18 08:19 AM] blackjok3r#3181
+no worries... I figured now was the best time to do this. once this is all final, and we know exactly what main net wants and wat it doesn't I cna work on getting streamer back in 😄
+
+[15-Dec-18 08:20 AM] CrisF#3405
+Looking forward to that 😃
+
+[15-Dec-18 08:59 AM] Alright#0419
+was setpubkey rpc merged into FSM?
+
+[15-Dec-18 08:59 AM] Alright#0419
+if not, that's another
+
+[15-Dec-18 08:59 AM] Alright#0419
+need a different name for notary ERAs btw 😛
+
+[15-Dec-18 09:00 AM] Alright#0419
+as VRSC added eras which are totally unrelated
+
+[15-Dec-18 09:01 AM] CrisF#3405
+@Alright Could you please give a brief description of `setpubkey` so I can add it to what I'm working on?
+
+[15-Dec-18 09:02 AM] Alright#0419
+allows user to set `-pubkey=` without restarting the daemon
+
+[15-Dec-18 09:02 AM] Alright#0419
+only works once
+
+[15-Dec-18 09:02 AM] smk762 -  dracocanis ominator#7640
+can we call them paradigms? but with a hard "g". Paradigemeridoos for short.
+
+[15-Dec-18 09:04 AM] CrisF#3405
+Thanks!
+
+[15-Dec-18 09:05 AM] CrisF#3405
+genesis --> generation (gen.)
+
+[15-Dec-18 09:05 AM] CrisF#3405
+`Paradigemeridoos` a real toungue breaker there, haha.
+
+[15-Dec-18 09:05 AM] smk762 -  dracocanis ominator#7640
+can we also rename the notary scripts to "staht.sh" and "stahp.sh" so it sounds like Mahky Mahk talks in the Depahted?
+
+[15-Dec-18 09:06 AM] Alright#0419
+Mahk
+
+{Reactions}
+😄 (2) 
+
+[15-Dec-18 09:08 AM] smk762 -  dracocanis ominator#7640
+```
+cd ~/StakedNotary
+mv start.sh staht.sh
+mv stop.sh stahp.sh
+```
+My node is now southy'd.
+
+{Reactions}
+🏜 
+
+[15-Dec-18 09:15 AM] zatJUM#9924
+Updated my node
+
+{Reactions}
+👍 
+
+[15-Dec-18 09:17 AM] smk762 -  dracocanis ominator#7640
+Dragonhound  ` [KMD] 87.000% 993179 of 1140880`
+Notary  ` [KMD] 60.400% 689787 of 1140882`
+Pool `error: couldn't connect to server: unknown (code -1) (make sure server is running and you are connecting to the correct RPC port)`
+
+[15-Dec-18 09:18 AM] CrisF#3405
+That's taking some time!
+
+[15-Dec-18 09:24 AM] smk762 -  dracocanis ominator#7640
+Might watch this while I wait - https://www.imdb.com/title/tt0346811/videoplayer/vi94372121?ref_=tt_ov_vi
+
+{Embed}
+https://www.imdb.com/title/tt0346811/videoplayer/vi94372121?ref_=tt_ov_vi
+Curse of the Komodo from The Curse of the Komodo (2004)
+Home Video Trailer from DEJ
+https://m.media-amazon.com/images/M/MV5BMzVhMTU4Y2EtNGNmOS00YzUwLTlhNWItYTY3OWZlMTk0YTc0XkEyXkFqcGdeQXVyNzU1NzE3NTg@._V1_.jpg
+
+{Reactions}
+🤣 
+
+[15-Dec-18 09:25 AM] CrisF#3405
+I thought komodos would  be greener...
+
+[15-Dec-18 09:26 AM] smk762 -  dracocanis ominator#7640
+Looks like it follows a time honoured tradition
+
+[15-Dec-18 09:26 AM] smk762 -  dracocanis ominator#7640
+Dodgy special effects + unplausible sci-fi premise = the blonde gets naked.
+
+{Reactions}
+💯 
+
+[15-Dec-18 09:32 AM] CMaurice#1685
+updated
+
+{Reactions}
+👍 
+
+[15-Dec-18 09:47 AM] jl777c#5810
+-> MoMoM diffrences to what has been merged to FSM (do you want any of this @jl777c )
+Extra set pf pubkeys possible (part of this was libscotts code, some of it is mine to make dPoW also work)
+Cant send a migrate from a chain to itself
+Cant send more than 1 million coins at once (goes with max money change so that you cant send coins that can never be imported)
+
+-> There is a fix in mining.cpp that fixes setgenerate after the verus merge. 
+In official komodo you cannot decrease threads with setgenerate  with staked you can.
+
+-> Added segid to getsnapshot
+
+all those seem pretty useful/important along with:
+RPCs: 
+-> getlastsegidstakes : gives a tally of stakes from chain tip back number of blocks you specify. Works better than get snapshot as you get an idea of what is actually being staked.
+-> getiguanajson  : returns a valid JSON for the current ERA, so that iguana config is not seperate from komodod (saves human error whn changing keys and ports etc)
+-> getnotarysendmany : returns a JSON object with all notary address's and the amount of coins specifed in input. Used for the notary stats and funding notaries.
+
+[15-Dec-18 09:47 AM] jl777c#5810
+@blackjok3r
+
+[15-Dec-18 09:48 AM] blackjok3r#3181
+U want all those?
+
+[15-Dec-18 09:48 AM] blackjok3r#3181
+No problem
+
+[15-Dec-18 09:52 AM] jl777c#5810
+not sure how the extrapubkeys are managed
+
+[15-Dec-18 09:52 AM] jl777c#5810
+oh, and maybe limiting to a million coins is too restrictive?
+
+[15-Dec-18 09:53 AM] jl777c#5810
+if it is using MAX_MONEY then it seems it is ok?
+
+[15-Dec-18 09:53 AM] blackjok3r#3181
+You can't know what Max money will be on the import chain
+
+[15-Dec-18 09:53 AM] blackjok3r#3181
+So we chose a millions a cap
+
+[15-Dec-18 09:55 AM] jl777c#5810
+oh, ok, I guess the GUI can make sure import amount is sane
+
+[15-Dec-18 09:55 AM] jl777c#5810
+so that change would be needed
+
+[15-Dec-18 09:56 AM] blackjok3r#3181
+I'll have an in depth look at these things tomorrow, and see how easy/hard it is to make them work, some of the RPCs might depend on other code this was a quick read through to document what we ended up changing before it was all lost, I'd like not to deviate from official source too much
+
+[15-Dec-18 09:57 AM] blackjok3r#3181
+One thing I know is apart from the wallet filter, most of it is backwards compatible
+
+[15-Dec-18 09:58 AM] blackjok3r#3181
+And the array of RAddresss could be calced on demand, rather than being inna global
+
+[15-Dec-18 09:58 AM] blackjok3r#3181
+But it seemed to be more efficient to just dp it the once during sync for each set of keys
+
+[15-Dec-18 10:09 AM] jl777c#5810
+if it is not easy to do, not needed
+
+[15-Dec-18 10:09 AM] jl777c#5810
+adding address calculation to inner loops will slow things down and things are slow enough already
+
+[15-Dec-18 10:10 AM] blackjok3r#3181
+Agreed... It took a lot of iterations to get this stuff even close enough to fst to be viable.
+
+[15-Dec-18 10:14 AM] blackjok3r#3181
+I'll msg u tomorrow about it later on and see what think.. Some it is very simple and quite fast but I'd like some advice about it
+
+[15-Dec-18 10:26 AM] jl777c#5810
+ok
+
+[15-Dec-18 11:38 AM] CrisF#3405
+Have a notarization each on ED & ING.
+
+[15-Dec-18 11:40 AM] CrisF#3405
+Starting to come back to life.
+
+[15-Dec-18 11:49 AM] CrisF#3405
+LF has arisen.
+
+[15-Dec-18 11:51 AM] Bar_F1sh_Rel#0834
+Just finished build and restart. noticed wallet.dat is a little large on komodo though (15M)
+
+[15-Dec-18 11:55 AM] CrisF#3405
+What was it before?
+
+[15-Dec-18 11:56 AM] Bar_F1sh_Rel#0834
+Nah - it's not just got that big - thats normal growth over weeks of notarisations - takes ages to load
+
+[15-Dec-18 12:14 PM] ComputerGenie 👴🏼📢#7004
+```-ASSET-       -NOTR- -UTXO-  -BLOX-    -BALANCE- -LAST- -CNCT-       
+KMD                      42 1141046       4.1657     2m     19       
+CFEK            1482     10   60930 202853134.8695 14h18m     18       
+CFEKED          1700     15   58115       9.7978  1d15h     18       
+CFEKING         1045     15   59113       9.8755     3m     18       
+CFEKLF          1793     18   53238       9.7869    25m     19```
+
+[15-Dec-18 12:14 PM] ComputerGenie 👴🏼📢#7004
+all working but fek and feked here
+
+[15-Dec-18 12:23 PM] CrisF#3405
+Still waiting on CFEK, but 2 on ED now.
+
+[15-Dec-18 12:24 PM] ComputerGenie 👴🏼📢#7004
+same
+
+[15-Dec-18 12:24 PM] ComputerGenie 👴🏼📢#7004
+we're almost there 😄
+
+[15-Dec-18 12:26 PM] ComputerGenie 👴🏼📢#7004
+```-ASSET-       -NOTR- -UTXO-  -BLOX-    -BALANCE- -LAST- -CNCT-       
+KMD                      39 1141054       4.1655     4m     20       
+CFEK            1483      9   60956 202853134.8694     3s     19       
+CFEKED          1701     14   58132       9.7977     5m     19       
+CFEKING         1046     14   59124       9.8754     4m     19       
+CFEKLF          1793     18   53248       9.7869    38m     20 ```
+:shexy:
+
+{Reactions}
+💥 
+
+[15-Dec-18 12:27 PM] CrisF#3405
+I got one just now,too.
+
+[15-Dec-18 12:36 PM] Bar_F1sh_Rel#0834
+Still waiting for my first
+
+[15-Dec-18 12:59 PM] Bar_F1sh_Rel#0834
+Just waiting on LF now
+
+{Reactions}
+👍 (2) 
+
+[15-Dec-18 01:33 PM] CMaurice#1685
+I am all the edge cases: on another machine, production KMD, some weeks ago, I generated the address for the kmdlabs notary I run here.
+
+Using Agama portable on that machine I claimed KMD rewards. Guess where Agama decided to send all the funds? Yes, the notary address. Now I don't seem to be able to send the funds anywhere.
+
+[15-Dec-18 01:44 PM] gcharang#6833
+```
+$ ./stats
+
+
+-ASSET-       -NOTR- -UTXO-  -BLOX-    -BALANCE- -LAST- -CNCT-       
+KMD                      30 1141144       0.3155    46s     16       
+CFEK            1264     12   61021       9.8496 13h10m      6       
+CFEKED          1317     12   58208       9.8434    50s      6       
+CFEKING          822     10   59202       9.9021     5s      6       
+CFEKLF          1395     18   53319       9.8340     1m      6
+```
+I am notarizing too
+
+{Reactions}
+🙂 (2) 
+
+[15-Dec-18 10:17 PM] CrisF#3405
+@CMaurice @blackjok3r should be the one to help with that. ☝ x2
+
+[15-Dec-18 10:19 PM] CMaurice#1685
+Think it'll be fine, should be able send to a fresh wallet from a node when I get the chance, thanks
+
+{Reactions}
+👍 (2) 
+
+[15-Dec-18 10:25 PM] CrisF#3405
+Please check with Blackjok3r if you have any questions.
+
+[16-Dec-18 05:17 AM] blackjok3r#3181
+Guys there is an issue with iguana for split fund. You will need to send the balance to youself to make it work again. I made this small script to help the process. From observations so far it seems to fix it permenantly after sending balance, some problem with using a utxo from before the fork is my best guess. 
+```
+#!/bin/bash
+komodo-cli -ac_name=$1 sendtoaddress RSuXRScqHNbRFqjur2C3tf3oDoauBs2B1i $(komodo-cli -ac_name=$1 getbalance) "" "" true
+```
+use like this:
+`./sendtoself CFEKING`
+
+[16-Dec-18 05:18 AM] blackjok3r#3181
+If this continues to be an issue, I will update our wallet resetter with the fix I have for mainnet.
+
+{Reactions}
+🙏 
+
+[16-Dec-18 05:29 AM] CrisF#3405
+Is CFEK ok for you?
+
+[16-Dec-18 05:31 AM] blackjok3r#3181
+CFEKING and CFKLF had 0 utxo here
+
+[16-Dec-18 05:31 AM] blackjok3r#3181
+and 5 chains on a-team were all on 0
+
+[16-Dec-18 05:33 AM] blackjok3r#3181
+seems to be stalled
+
+[16-Dec-18 05:34 AM] CrisF#3405
+CFEK seems stalled for me.
+
+[16-Dec-18 05:36 AM] CrisF#3405
+0 UTXOs on it for me and unable to split due to stall.
+
+[16-Dec-18 05:36 AM] CrisF#3405
+Others all split.
+
+[16-Dec-18 05:37 AM] blackjok3r#3181
+My CFEK daemon seems to be lockedup
+
+[16-Dec-18 05:37 AM] blackjok3r#3181
+Damn it
+
+[16-Dec-18 05:37 AM] blackjok3r#3181
+I thaught I fixed this ...
+
+[16-Dec-18 05:37 AM] CrisF#3405
+I restarted 3 times, but no go.
+
+[16-Dec-18 05:38 AM] blackjok3r#3181
+My staker isnt staking ... it frozen
+
+[16-Dec-18 05:38 AM] CrisF#3405
+PoS was at 100 before it locked on me.
+
+[16-Dec-18 05:39 AM] blackjok3r#3181
+yeah thats pretty normal ...
+
+[16-Dec-18 05:39 AM] blackjok3r#3181
+its been o 100 the whole time pretty much
+
+[16-Dec-18 05:39 AM] CrisF#3405
+yeah, I was going to try mining (cpu) but then locked.
+
+[16-Dec-18 05:39 AM] blackjok3r#3181
+restarting the staker now ... maybe it wasnt on latest or something 🤷
+
+[16-Dec-18 05:40 AM] blackjok3r#3181
+your deamon is locked when not mining?
+
+[16-Dec-18 05:41 AM] CrisF#3405
+It was staking.  getbalance locked and I saw 100POS.  Wasn't able to connect again to try mining.
+
+[16-Dec-18 05:41 AM] CrisF#3405
+It was fine staking and when I checked this morning the above.
+
+[16-Dec-18 05:42 AM] CrisF#3405
+Wasn't locking when staking yesterday evening.
+
+[16-Dec-18 05:42 AM] blackjok3r#3181
+so it was staking and then locked up ... I added a fix yesterday that might help this, but didnt push it yet
+
+[16-Dec-18 05:43 AM] blackjok3r#3181
+I guess I will go test that code now and push it... not sure its related ... but this didnt happen before so its somehting I added recently thats doing it.
+
+[16-Dec-18 05:44 AM] CrisF#3405
+NN back to `dpow_sigscheck: [src.CFEK] mismatched txid.0000000000000000000000000000000000000000000000000000000000000000 vs {"result":null,"error":{"code":-26,"message":"16: tx-overwinter-active"},"id":"jl777"}
+`
+
+[16-Dec-18 05:44 AM] CrisF#3405
+Others notarizing.
+
+[16-Dec-18 05:45 AM] blackjok3r#3181
+is the print right above that KMD_DPOW sendtrasnaction >>>>> or something like that?
+
+[16-Dec-18 05:45 AM] blackjok3r#3181
+That print indicates its a failed tx on KMD I think... but if others ar enotarising that makes litterall 0 sense.
+
+[16-Dec-18 05:46 AM] CrisF#3405
+Yes
+
+[16-Dec-18 05:46 AM] CrisF#3405
+```new PENDING BESTK (5 8206c) state.0
+bestk.5 8206c KMD height.60560 mod.6 VINI.1 myind.3 MINE.({"txid":"d66593df8956a32484c64fc61fdc26d1fa09ee401d8a73b32d34de2970c47655","vout":18,"scriptSig":{"asm":"3044022004d38e8d9dedcb7b42fa4addd029116beca051802a2c37802a39f196908f269402205176e112e7fc8d5dd469e589247edaa91ebbedc38787c6e8d2dce785a080869b[ALL]","hex":"473044022004d38e8d9dedcb7b42fa4addd029116beca051802a2c37802a39f196908f269402205176e112e7fc8d5dd469e589247edaa91ebbedc38787c6e8d2dce785a080869b01"},"sequence":4294967295}) j.1
+>>>>>>>>>>> KMD dpow_sendrawtransaction ({"result":null,"error":{"code":-26,"message":"16: tx-overwinter-active"},"id":"jl777"}
+)
+dpow_sigscheck: [src.CFEK] mismatched txid.0000000000000000000000000000000000000000000000000000000000000000 vs {"result":null,"error":{"code":-26,"message":"16: tx-overwinter-active"},"id":"jl777"}
+```
+

@@ -1,0 +1,161 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"424224648889106444";"Mihailo#5902";"14-May-19 10:26 AM";"It goes from latest tx to the beginning";"";"";
+"424224648889106444";"Mihailo#5902";"14-May-19 10:26 AM";"I hope ;)";"";"😃 (1)";
+"371114647052615681";"Mylo#8306";"16-May-19 02:35 AM";"i'm getting an empty array with `oracleslist` every time.    do you need some evidence or can you replicate without it?";"";"";
+"272003866906722306";"TonyL#3577";"18-May-19 02:34 PM";"Oh, missed this message. Are you on latest FSM @Mylo ?";"";"";
+"405011811511828481";"Alright#0419";"18-May-19 04:24 PM";"@Mihailo testing this now, could you make oraclessamples aware of oraclesdata still in the mempool please?";"";"";
+"405011811511828481";"Alright#0419";"18-May-19 04:25 PM";"the trollbox dapp relied on that, don't think it's possible to do with your changes";"";"";
+"405011811511828481";"Alright#0419";"18-May-19 04:28 PM";"otherwise, it seems to work as intended
+oraclesinfo only ever shows a single entry for each publisher 
+oraclessamples is able to fetch all samples regardless of baton situation";"";"";
+"405011811511828481";"Alright#0419";"18-May-19 04:29 PM";"Although I've found another underlying problem because of this. If a publisher was actually being paid to publish data, they can re-register with a higher data fee and empty the funds. I brought this up before though, not sure it needs fixing or what, just pointing out that it's possible";"";"";
+"405011811511828481";"Alright#0419";"18-May-19 04:30 PM";"it's not a huge ""bug"" as a publisher could just publish a bunch of garbage data with the lower data fee anyway, this just allows them to do it all at once";"";"";
+"405011811511828481";"Alright#0419";"18-May-19 06:13 PM";"I can oraclesregister using `-pubkey` for a pubkey i don't own, this changes the oraclesinfo output";"";"";
+"405011811511828481";"Alright#0419";"18-May-19 06:13 PM";"can make oraclessamples ""disappear"" kind of";"";"";
+"455741312273219595";"jl777c#5810";"18-May-19 06:14 PM";"that seems a bug";"";"";
+"405011811511828481";"Alright#0419";"18-May-19 06:14 PM";"Oh it changes datafee as well";"";"";
+"405011811511828481";"Alright#0419";"18-May-19 06:15 PM";"so someone else can register your pubkey with a different datafee then next oraclesdata you do, your node uses the datafee they set";"";"";
+"455741312273219595";"jl777c#5810";"18-May-19 06:16 PM";"a worse bug, we need to require vin from the pubkey is spent for register";"";"";
+"272003866906722306";"TonyL#3577";"18-May-19 06:41 PM";"I checked such behaviour before latest oracle update (wanted to ""hack"" votes app) and it printed that address for my pubkey not in wallet on tx broadcast. So bug appeared after latest change it seems";"";"";
+"405011811511828481";"Alright#0419";"18-May-19 06:58 PM";"You could always register for a pubkey you didn't own. I remember testing this months ago and thinking it had no negative effect because you couldn't oraclessamples for a pubkey you didn't own";"";"";
+"405011811511828481";"Alright#0419";"18-May-19 06:59 PM";"not sure if it always changed baton address and baton txid for real publisher info in oraclesinfo though";"";"";
+"272003866906722306";"TonyL#3577";"18-May-19 07:36 PM";"Yes, I think you're right and it worked like this before. Re-checked now on latest FSM https://paste.ubuntu.com/p/C5D38nMcKN/
+
+Actually I think when I checked it first time I got error on oraclesdata call, not on register:
+```./komodo-cli -ac_name=ORCTEST1 oraclesdata c2c3f84e8b3911dc34af29c5e80c3a73e2e6fcad08c64e4fb9825aaa48655d99 00000
+privkey for the -pubkey= address is not in the wallet, importprivkey!
+warning: couldnt find baton utxo RCNsqEvYpPCRHKGkzqHvRqE1MUAmGGjqix
+privkey for the -pubkey= address is not in the wallet, importprivkey!
+vini.1 has CC signing error address.(RB976ifvH1PdUGrk1adMQk7M9N5T8KCBPS)
+{
+  ""result"": ""error"",
+  ""error"": ""couldnt publish data with oracle txid""
+}
+``` 
+and did not pay much attention that was able to broadcast oraclesregister for other pubkey";"";"";
+"455741312273219595";"jl777c#5810";"18-May-19 07:38 PM";"we need to do more than rpc error checks, needs to be a consensus change";"";"";
+"455741312273219595";"jl777c#5810";"18-May-19 07:38 PM";"make it timestamp activated";"";"";
+"455741312273219595";"jl777c#5810";"18-May-19 07:38 PM";"so existing oracle registers wont break";"";"";
+"424224648889106444";"Mihailo#5902";"22-May-19 11:20 AM";"@Alright @TonyL Can you check the fix for oracles on my branch https://github.com/Mixa84/komodo/tree/oraclesfix
+The fix consists of pubkey spoofing check so you can only register for pubkey you own. Before register now there is another tx - oraclefund, which funds pubkeys oracles CC address with 10k sat and then on register it spends that amount to pubkeys normal address ( so it is back to the user). Also I've added oraclessamples to show mempool data.";"";"👍 (1)";
+"424224648889106444";"Mihailo#5902";"22-May-19 11:22 AM";"BTW, the I didn't check before but oraclessamples seem to show uncomplete data? I have Ihh format and one data loks like this `47db1400ed4ffb3b28f91f1ff182f8d9452810e8f8c1f816c34e80c8ea0f14fa000000007d5bdc6fc72f4f487542b68124551100b978d0d683b9e06a7b58a432bd6f701e` but in samples it show like this `1e706fbd32a4587b6ae0b983d6d078b90011552481b64275484f2fc76fdc5b7d`";"";"";
+"405011811511828481";"Alright#0419";"22-May-19 11:28 AM";"Can get to it in a couple hours";"";"";
+"405011811511828481";"Alright#0419";"22-May-19 11:28 AM";"not sure about incomplete data, will check it out as well";"";"";
+"405011811511828481";"Alright#0419";"22-May-19 04:13 PM";"just getting to this, going to leave notes as I go 
+oraclesfund rpc response is not json";"";"";
+"405011811511828481";"Alright#0419";"22-May-19 05:17 PM";"I'm confused how spending the funcid 'F' utxo is passing validation without 'F' being defined in the switch statement";"";"";
+"455741312273219595";"jl777c#5810";"22-May-19 05:19 PM";"how many CC vins do 'F' tx have";"";"";
+"405011811511828481";"Alright#0419";"22-May-19 05:19 PM";"register spends the CC utxo from 'F'";"";"";
+"405011811511828481";"Alright#0419";"22-May-19 05:19 PM";"Ahhhh";"";"";
+"405011811511828481";"Alright#0419";"22-May-19 08:36 PM";"ok everything seems to work as expected, didn't test the timestamp activation, will do it tomorrow";"";"";
+"272003866906722306";"TonyL#3577";"22-May-19 09:08 PM";"As Alright said oraclesfund returns both output and error not as JSON:
+
+```./komodo-cli -ac_name=ORC oraclesfund a
+error adding normal inputs
+
+./komodo-cli -ac_name=ORC oraclesfund a1cc08ef19761dc4b4009dad6de864a0918024cf384ae709914669e3f7bee03a
+0400008085202f89010cc3cc5f83e19b56077d141b064a661c790dbab0108e3c46870d2d38c8577274000000004847304402201862f2f466c29b1edcaffaa5554405e9f314681a236e736b4bf76cb90e3f5c8b02204ced84c1710f439c3683546a1d9a776ae898c952afc258723f6fc0d90044292801ffffffff031027000000000000302ea22c8020474889529bc3519c828debd44f0014177bdcf29295a59b2930186ea9e7cefe568103120c008203000401cce051724e18090000232102bd33f2f1fcc8eaeeeefd630778506b09a0ac4693c324ffef615cdf8a843b1365ac00000000000000004f6a4c4cec463ae0bef7e369469109e74a38cf248091a064e86dad9d00b4c41d7619ef08cca12102bd33f2f1fcc8eaeeeefd630778506b09a0ac4693c324ffef615cdf8a843b13651027000000000000000000001a01000000000000000000000000001```";"";"";
+"424224648889106444";"Mihailo#5902";"23-May-19 09:34 AM";"@Alright I haven't yet set the timestamp as we didn't agree when it is going to activate (or I missed it). I just put some timestamp that already passed so I could test.";"";"";
+"424224648889106444";"Mihailo#5902";"23-May-19 09:34 AM";"@jl777c When should the timestamp for oracle fix be?";"";"";
+"424224648889106444";"Mihailo#5902";"23-May-19 09:35 AM";"@TonyL @Alright I don't have the problem with oraclesfund, what are the steps to reproduce?";"";"";
+"455741312273219595";"jl777c#5810";"23-May-19 09:36 AM";"once it works. then make the timestamp activate july 15th 0:00 UTC";"";"👍 (1)";
+"405011811511828481";"Alright#0419";"23-May-19 10:20 AM";"@Mihailo it's not a problem with the actual functionality. It's just that it doesn't respond with a json";"";"";
+"405011811511828481";"Alright#0419";"23-May-19 10:20 AM";"and yea I saw the timestamp, I'll push it forward and test that it activates smoothly";"";"";
+"424224648889106444";"Mihailo#5902";"23-May-19 10:28 AM";"@Alright 
+```
+komodo-cli -ac_name=GW oraclesfund 6fc9d9de6a61d7bab84f1b921eeed2dfc5a4bd55153bf4d2b2baebc825d9abc0
+
+0400008085202f8901c466bd34197c8cfdf357acc79968022fbf7979b8ab18973c49d7b378bfa3cddd0200000049483045022100a4a25ea63d2429b01360974942def30670c4a0eb878e49d1c0b8df682092257c022014b5cf4576b30342091f085cf2c1209d4194428c9147fc585e039e65e4eab7a601ffffffff021027000000000000302ea22c80204c630c7012900189cbcfeead643d8d086b8f2e026fad1edeef07d68454d38cb58103120c008203000401cc00000000000000004f6a4c4cec46c0abd925c8ebbab2d2f43b1555bda4c5dfd2ee1e921b4fb8bad7616aded9c96f2102bb88d83284e01589458049b37840582a8fcb1c56dcfd324327186f17c5bcde63102700000000000000000000240500000000000000000000000000
+```";"";"";
+"424224648889106444";"Mihailo#5902";"23-May-19 10:28 AM";"Ah, I see it now!";"";"";
+"424224648889106444";"Mihailo#5902";"23-May-19 10:31 AM";"Fixed!";"";"";
+"371114647052615681";"Mylo#8306";"23-May-19 04:44 PM";"thanks for your efforts on oracles - i'm gonna run through a cpl samples  fri/sat on FSMbranch";"";"";
+"272003866906722306";"TonyL#3577";"23-May-19 04:55 PM";"Please note that oracles flow changed a little bit (you have to oraclesfund before register), and these changes are in Mihailo's repo only. Also structure of oraclessamples output was changed for better scalability by Alright and this change is in James repo already";"";"treasure (1)";
+"272003866906722306";"TonyL#3577";"23-May-19 04:57 PM";"I hope that @smk762 -  dracocanis ominator will retest it and track that all changes reflected in oracles/gateways flow docs  🙏";"";"";
+"371114647052615681";"Mylo#8306";"23-May-19 04:59 PM";"ok.  thanks for heads up.";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 02:29 AM";"changes to the docs are on my todo list";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 02:29 AM";"want to have it up prior to end of month as we're merging everything up to master then";"";"👌 (2),⛑ (1)";
+"405011811511828481";"Alright#0419";"24-May-19 03:28 AM";"@Mihailo is it possible for oraclesregister to spend oraclesfund utxos from mempool?";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 03:28 AM";"any limitation there? It doesn't right now, would really help if it could";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"24-May-19 10:04 AM";"```{
+  ""result"": ""success"",
+  ""OraclesCCAddress"": ""REt2C4ZMnX8YYX1DRpffNA4hECZTFm39e3"",
+  ""OraclesCCBalance"": 0.00000000,
+  ""OraclesNormalAddress"": ""RHkFKzn1csxA3fWzAsxsLWohoCgBbirXb5"",
+  ""OraclesNormalBalance"": 0.01250000,
+  ""OraclesCCTokensAddress"": ""RWGhAG1qPRRxCxtewLixKX6GseGZQWVQ9E"",
+  ""PubkeyCCaddress(Oracles)"": ""RJMz8TmLiTdNwN1eRCMxrv9xkghN9cfW32"",
+  ""PubkeyCCbalance(Oracles)"": 0.00000000,
+  ""myCCAddress(Oracles)"": ""RJMz8TmLiTdNwN1eRCMxrv9xkghN9cfW32"",
+  ""myCCbalance(Oracles)"": 0.00000000,
+  ""myaddress"": ""REp6bobAfJz9EmzGQsc1wiYe9W1XJ1w34S"",
+  ""mybalance"": 5000.00000000
+}
+```
+Apologies if this seems overly pedantic, but should the capitalisation be consistent?
+ie. with `address/Address` and `balance/Balance`";"";"";
+"455741312273219595";"jl777c#5810";"24-May-19 10:05 AM";"yes, but to change it now will break all existing JSON parsingz";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"24-May-19 10:05 AM";"fair enough, thought that might be an issue";"";"";
+"424224648889106444";"Mihailo#5902";"24-May-19 10:11 AM";"@Alright I can make it, just as long it does not create some incosistent state...";"";"";
+"455741312273219595";"jl777c#5810";"24-May-19 10:13 AM";"it is a non-consensus change, so just allowing the register to use the most recent utxo, like baton should be harmless";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 10:20 AM";"happy to test if you do it";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 10:20 AM";"it helps a lot with dapps, not having to wait a conf";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"24-May-19 10:32 AM";"with doc, I got this so far. Pls confirm and suggest for `OraclesNormalAddress` and `OraclesCCTokensAddress`";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"24-May-19 10:32 AM";"```| result           |  whether the method executed successfully |
+| OraclesCCAddress |  taking the contract's EVAL code as a modifier, this is the public address that corresponds to the contract's privkey |
+| OraclesCCBalance |  Amount of funds held in the `OracleCCAddress` |
+| OraclesNormalAddress |
+| OraclesNormalBalance | 
+| OraclesCCTokensAddress |
+| PubkeyCCaddress(Oracles) | taking the contract's EVAL code as a modifier, this is the CC address from the pubkey supplied as the parameter |
+| PubkeyCCbalance(Oracles) |  amount of funds held in the `PubkeyCCaddress` |
+| myCCAddress(Oracles) | taking the contract's EVAL code as a modifier, this is the CC address from the pubkey of the user |
+| myCCbalance(Oracles) |  amount of funds held in the `myCCAddress` |
+| myaddress |  the public address of the pubkey used to launch the daemon |
+| mybalance |  amount of funds held in the `myaddress` |```";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"24-May-19 10:35 AM";"does `OraclesCCTokensAddress` need a `OraclesCCTokensBalance` output?";"";"";
+"424224648889106444";"Mihailo#5902";"24-May-19 10:38 AM";"Yes, this one won't create problems as you are spending your inputs so we can make it to spend from mempool (I was thinking if something happens in reorg or something, but seems it will be safe)";"";"";
+"424224648889106444";"Mihailo#5902";"24-May-19 11:34 AM";"@Alright Mempool spending oraclesfund fixed. Please test 😉";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 11:35 AM";":+1: awesome ty";"";"";
+"424224648889106444";"Mihailo#5902";"24-May-19 11:40 AM";"You're welcome";"";"";
+"424224648889106444";"Mihailo#5902";"24-May-19 11:49 AM";"@Alright @TonyL I would suggest to test if we fixed every aspect of spoofing pubkey in register. Try registering with fake pubkey or something else....";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 11:50 AM";"yea tested it quite a bit, couldn't find any holes";"";"";
+"424224648889106444";"Mihailo#5902";"24-May-19 11:50 AM";"👏";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 11:50 AM";"you can fund other people's pubkey, they can use these utxos to register";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 11:50 AM";"doesn't matter though";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 11:50 AM";"tried to gunk up the CC address with garbage, so a register wouldn't work properly";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 11:51 AM";"doens't have any effect, it always spends the correct utxo";"";"";
+"424224648889106444";"Mihailo#5902";"24-May-19 11:51 AM";"Great!";"";"";
+"424224648889106444";"Mihailo#5902";"24-May-19 11:51 AM";"That is the benefit of utxo mechanism 😉";"";"🔥 (1)";
+"405011811511828481";"Alright#0419";"24-May-19 11:52 AM";"think the validation was overkill tbh 😁";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 11:52 AM";"because you need the key to spend it anyway";"";"";
+"424224648889106444";"Mihailo#5902";"24-May-19 11:53 AM";"No, the validation was not overkill as you need to spend your input but then you could set another pubkey for the vouts....";"";"";
+"424224648889106444";"Mihailo#5902";"24-May-19 11:53 AM";"Or maybe you are right.... 🤔";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 11:53 AM";"the existing validation for register was solid enough I think";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 11:54 AM";"I tried for days to send a register to someone else's baton address";"";"";
+"424224648889106444";"Mihailo#5902";"24-May-19 11:54 AM";"Validation for register was not existant, as register did not spend any CC vout";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 11:54 AM";"lol no worries, good work";"";"";
+"424224648889106444";"Mihailo#5902";"24-May-19 11:54 AM";"But basically you could build the tx manually where you will register for somebody else! That's the thing";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 11:54 AM";"hmm no, I was trying to send oraclessamples to someone else's baton address";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 11:55 AM";"baton violation 😛";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 11:55 AM";"that's a good check";"";"";
+"424224648889106444";"Mihailo#5902";"24-May-19 11:55 AM";"mtx.vout.push_back(MakeCC1vout(cp->evalcode,txfee,batonpk));
+If you create a tx manually (without RPC) that sends this vout to someone else baton, but for this you need to have his private key so basically not possible.";"";"";
+"424224648889106444";"Mihailo#5902";"24-May-19 11:56 AM";"The thing is that validation will prevent for some inconsistency in opret!";"";"";
+"424224648889106444";"Mihailo#5902";"24-May-19 11:56 AM";"If you use RPC everything will be fine, and if you manually try to create, it will prevent that you put worng pubkey in opret, which could potentially make some problem in future!";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 11:57 AM";"yea I found that oracletxid in op_return didn't really do anything?";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 11:57 AM";"is that expected?";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 11:57 AM";"I can change it and it has no effect, everything works as normal";"";"";
+"424224648889106444";"Mihailo#5902";"24-May-19 11:58 AM";"oracletxid in opret should point to which oracle that tx belongs. For example now when I add oraclefund inputs in register I match by oracletxid from opret!";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 11:59 AM";"yes what I'm saying is that I can oraclesfund to someone else's pubkey with a garbage oracletxid in op_return";"";"";
+"424224648889106444";"Mihailo#5902";"24-May-19 11:59 AM";"In oracledata if you put wrong  oracletxid it probably won't add another oracledata...";"";"";
+"424224648889106444";"Mihailo#5902";"24-May-19 11:59 AM";"```cpp
+if (funcid=='D' && DecodeOraclesData(vintx.vout[numvouts].scriptPubKey,tmporacletxid,tmpbatontxid,tmppk,data)==0)
+                    fprintf(stderr,""invalid oraclesdata transaction \n"");
+                else if (tmporacletxid==oracletxid)
+                {  ```";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 11:59 AM";"then when they oraclesregister, they spend it, but it doesn't have any negative effect from what I can tell";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 12:00 PM";"the only thing I could think of that would break it is is I could send garbage to the CC address and register try to spend this garbage and fail";"";"";
+"424224648889106444";"Mihailo#5902";"24-May-19 12:00 PM";"I think not, if you add garbage oracletxid in oraclesfund, it won't work for oraclesregister";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 12:00 PM";"couldn't do it";"";"";
+"405011811511828481";"Alright#0419";"24-May-19 12:00 PM";"it does";"";"";

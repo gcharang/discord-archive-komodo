@@ -1,0 +1,388 @@
+==============================================================
+Guild: Komodo
+Channel: dev-scalability
+Topic: Discussion about Komodo scalability. Komodo has demonstrated 20,000 TPS.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[04-Jun-18 05:34 AM] smk762#0000
+image.png
+
+{Attachments}
+https://cdn.discordapp.com/attachments/449949868904022036/453069031826653196/image.png
+
+[04-Jun-18 05:35 AM] smk762#0000
+image.png
+
+{Attachments}
+https://cdn.discordapp.com/attachments/449949868904022036/453069268443987988/image.png
+
+[04-Jun-18 01:07 PM] jl777#0000
+not sure this will be much of an issue either way
+
+[04-Jun-18 01:07 PM] jl777#0000
+yes at first the blocks come faster
+
+[04-Jun-18 01:07 PM] blackjok3r#0000
+ok. its just that the blocks for 1 payment are not totally full 100% of the time, when blocks are that fast.
+
+[04-Jun-18 01:08 PM] blackjok3r#0000
+but the TX/s will be much higher than expected in that time.
+
+[04-Jun-18 01:25 PM] jl777#0000
+currently average BTC is still less than 3 payments, but this will change over time
+
+[04-Jun-18 01:25 PM] jl777#0000
+i think 15 minutes for each test is good
+
+[04-Jun-18 03:08 PM] blackjok3r#0000
+Also going to test a version that uses timestamp to calculate starting time. I think polling a webserver 16000 times a minute might be a bottleneck.
+
+[04-Jun-18 03:20 PM] blackjok3r#0000
+Also going to test a version that uses timestamp to calculate starting time. I think polling a webserver 32000 times a minute might be a bottleneck.
+
+[04-Jun-18 03:21 PM] jl777#0000
+polling even 100 times a minute seems overkill
+
+[04-Jun-18 03:21 PM] blackjok3r#0000
+The script checks on each block for a file of a webserver to tell it to start
+
+[04-Jun-18 03:22 PM] blackjok3r#0000
+because there is 16000+ continers, and block time is 30s
+
+[04-Jun-18 03:22 PM] blackjok3r#0000
+it could get overloaded. Going to test timestamp condition just so we have a backup plan.
+
+[04-Jun-18 04:04 PM] imylomylo#0000
+sounds like a fun challenge.  what's the trigger?
+
+[04-Jun-18 04:05 PM] blackjok3r#0000
+both methods seem to work fine
+
+[04-Jun-18 04:05 PM] blackjok3r#0000
+sorry I am here
+
+[04-Jun-18 04:05 PM] blackjok3r#0000
+for time stamp
+
+[04-Jun-18 04:06 PM] blackjok3r#0000
+for using website. Currently pulls from git, but I am not sure that will work. We like the website version better as we can manually start it whenever we are ready. but using a timestamp, we dont know exactly what time all the chains will be ready, so it will likley cost more $$$, because everything will need to be runnign for quite a long time, before blast is started.
+
+[04-Jun-18 04:06 PM] blackjok3r#0000
+if we miss time the blast... it will require starting everything from the start again.
+
+[04-Jun-18 04:06 PM] blackjok3r#0000
+```#fetch the start variable, if we have a start block height then the blaster will start
+if [ $start -eq 0 ] && [ $startblockheight -eq 0 ]; then
+  curl $STARTURL -o start
+  sleep 1
+  exit
+elif [ $start -eq 1 ] && [ $startblockheight -eq 0 ]; then
+  echo "startblockheight=$HEIGHT" > startblockheight
+  sleep 1
+  exit
+fi```
+
+[04-Jun-18 04:06 PM] blackjok3r#0000
+```#check the time, if we have a start block height then the blaster will start
+if [ $start -eq 0 ] && [ $startblockheight -eq 0 ]; then
+  #block=$(komodo-cli -ac_name=$chain getblock $HEIGHT)
+  time=$(komodo-cli -ac_name=$chain getblock $HEIGHT | jq -r .time)
+  if [ $time -ge $STARTTIME ]; then
+    echo "start=1" > start
+  fi
+  sleep 1
+  exit
+elif [ $start -eq 1 ] && [ $startblockheight -eq 0 ]; then
+  echo "startblockheight=$HEIGHT" > startblockheight
+  sleep 1
+  exit
+fi```
+
+[04-Jun-18 04:07 PM] blackjok3r#0000
+getting 8196 chains to do the same thing at the same time, is going to be the hardest part of the process.
+
+[04-Jun-18 04:07 PM] blackjok3r#0000
+Hopefully everything can be bactched up so we can test a small verison with say 1024 chains then just x8 that for full test.
+
+[04-Jun-18 11:43 PM] polycryptoblog#0000
+Slack for iOS Upload
+
+{Attachments}
+https://cdn.discordapp.com/attachments/449949868904022036/453342977327104002/Slack_for_iOS_Upload.jpeg
+
+[05-Jun-18 12:08 AM] kmdkrazy#0000
+blackjok3r - could you set a condition to start 4 times as many needed to ensure a perfect blast condition? Duplicates would get ignored... and then sync the timestamps for the usable nodes in the background? .... stager the times out to optimal running conditions for the hardware - dupliucate sync and adjust with scripts ....redundancy ...
+
+[05-Jun-18 12:14 AM] kmdkrazy#0000
+I imagine a Gatling gun
+
+[05-Jun-18 12:15 AM] shossain#0000
+All:17693
+
+[05-Jun-18 12:15 AM] kmdkrazy#0000
+Same user, same bullets, different barrel
+
+[05-Jun-18 12:16 AM] imylomylo#0000
+`curl   https://njeitldkqc.execute-api.ap-southeast-2.amazonaws.com/v0/blocknotify/activation` sample with code https://github.com/imylomylo/scaletest-blocknotify/blob/custom-header-blockheight/blocknotify/activation.js
+
+i can make a quick howto so you can control deployment of this mechanism with only activation blackjok3r - costs about $0.20 for 1 million requests.
+
+{Embed}
+https://github.com/imylomylo/scaletest-blocknotify/blob/custom-header-blockheight/blocknotify/activation.js
+imylomylo/scaletest-blocknotify
+scaletest-blocknotify - Serverless REST API to collect blocknotify data
+https://avatars3.githubusercontent.com/u/19399102?s=400&v=4
+
+[05-Jun-18 12:17 AM] imylomylo#0000
+if you wanted to stagger chain start up into clusters of 64, e.g. group1, 2, 3, 4 to start at different blockheights, just adjust the activation json object accordingly with your own key/value scheme
+
+[05-Jun-18 12:20 AM] imylomylo#0000
+kmdkrazy i haven't looked into how jok3r is doing.
+
+[05-Jun-18 12:20 AM] imylomylo#0000
+scales to buggery
+
+[05-Jun-18 12:20 AM] imylomylo#0000
+no db or anything, just a big function running infrastructure
+
+[05-Jun-18 12:40 AM] kmdkrazy#0000
+I would stager according to CPU/RAM usage / im sure there is going to be a wavelength yet to be disvovered..  - break it down to rediculas - 8 chains every 1 second for 8 seconds - would be an example - keep peak usage at 60-70% ish.  Then multiply it out from there- and im not sure how hes d
+
+[05-Jun-18 12:55 AM] blackjok3r#0000
+Yes, I thaught about something like this, because the CPU use doesn't actaully stay flat, each chain has bursts of CPU use then sits basically idle for a while. I was going to just cram as many chains onto a single vCPU as I could that kept the mempool full. I don't think staggering them by much will be needed, because using blocktime as a the condition of when events are called, they will already be randomly selected over a few minutes.
+
+[05-Jun-18 12:55 AM] blackjok3r#0000
+Sweet I will have a look at that. if we can basically Ddoss it from every node, fetching a 7 byte file this is the perfect solution.
+
+[05-Jun-18 12:57 AM] blackjok3r#0000
+Also I don't think having 2x the amount of chains is really feasible.
+
+[05-Jun-18 12:57 AM] kmdkrazy#0000
+Its random with the conditions beung used
+
+[05-Jun-18 12:57 AM] blackjok3r#0000
+The system is so simple, it should not have any errors. As long as they can al be told to "start" at the same time, the blocktime's will ensure all chains are staggered out.
+
+[05-Jun-18 12:57 AM] kmdkrazy#0000
+Im just thinking 2 gatlung guns aimed at thge sane target 'nay" have less errors
+
+[05-Jun-18 12:57 AM] blackjok3r#0000
+Also if 2 chains happen to call "block mine" and "blast loop" on the exact same second, I assume one will gain priotity and finish first, and the next time these events are called, they will be at differing times.
+
+[05-Jun-18 12:58 AM] blackjok3r#0000
+There is already 2 blasters for singel payment TX
+
+[05-Jun-18 12:58 AM] blackjok3r#0000
+but for 100paymetn TX I removed the second one, because it was causing mempool to get blasted to 50MB in some cases.
+
+[05-Jun-18 12:58 AM] kmdkrazy#0000
+I just imagined your situatiin and tried to remove that probkem.
+
+[05-Jun-18 12:58 AM] kmdkrazy#0000
+Just a back up for each - just in case and stagered to keep things from piling up
+
+[05-Jun-18 12:59 AM] kmdkrazy#0000
+My epiphany of the week - ...until next time...im out
+
+[05-Jun-18 01:05 AM] kmdkrazy#0000
+And if you have 2 identical twins - maybe you can use half from each to keep mempool down - in a redundant system that is
+
+[05-Jun-18 01:05 AM] kmdkrazy#0000
+No im out
+
+[05-Jun-18 01:11 AM] imylomylo#0000
+have you got an aws account, that way you can manage the whole thing.  if not, i can create an IAM role (sub-account) for you to deploy and make changes as needed without needing me in the path to restarts etc.  first option is quicker, i'm not familiar with IAM roles so much.
+
+[05-Jun-18 01:15 AM] smk762#0000
+best thing about long weekends? forgetting to turn alarm back on, waking up 3 hours late and calling in to use annual leave for an extra day off :trollface:
+
+[05-Jun-18 01:16 AM] blackjok3r#0000
+HAHAHA
+
+[05-Jun-18 01:16 AM] blackjok3r#0000
+We need an archtecture diagram, for AWS. I have a meeting on thursday morning. Should I use your meme version? 
+Do you think they will get a laugh out of it. Might need to write a page with written explanation too though.
+
+[05-Jun-18 01:21 AM] smk762#0000
+can use it, though probably stuff to add outside what I see from my side. form Lionel Richie onward, it's not AWS. Could migrate, but it'd mean a bit of time installing node modules, db etc.
+
+[05-Jun-18 01:22 AM] blackjok3r#0000
+There is no need to change your stats stuff to all AWS.
+
+[05-Jun-18 01:23 AM] blackjok3r#0000
+Once AWS has got all the data anything would work from there on.
+
+[05-Jun-18 01:24 AM] blackjok3r#0000
+the biggest thing is getting all that data at once so you can use it. AWS seems close to the only solution to this.
+
+[05-Jun-18 01:26 AM] blackjok3r#0000
+We will also play the card, that we used google on the first test, but we can make it much better on Amazon. I think thats a good idea.
+
+[05-Jun-18 01:27 AM] blackjok3r#0000
+This test needs an incredible amount of hardware infrastructure...
+
+[05-Jun-18 01:28 AM] blackjok3r#0000
+I wonder if they even have enough of it tbh. 🤔
+
+[05-Jun-18 01:29 AM] smk762#0000
+its not a roadmap, is a star chart
+
+[05-Jun-18 01:30 AM] smk762#0000
+image.png
+
+{Attachments}
+https://cdn.discordapp.com/attachments/449949868904022036/453369920366051328/image.png
+
+[05-Jun-18 01:55 AM] blackjok3r#0000
+I have no account, but I guess I should get one lol. Whats the process like?
+
+[05-Jun-18 03:09 AM] imylomylo#0000
+simple, sign up at http://aws.amazon.com and ok start=
+
+{Embed}
+http://aws.amazon.com
+Amazon Web Services (AWS) -  Cloud Computing Services
+Amazon Web Services offers reliable, scalable, and  inexpensive cloud computing services. Free to join, pay only for what you use.
+https://a0.awsstatic.com/libra-css/images/logos/aws_logo_smile_179x109.png
+
+[05-Jun-18 04:41 AM] blackjok3r#0000
+@Mylo I have AWS account. What do I need to do?
+
+[05-Jun-18 04:41 AM] blackjok3r#0000
+smk762 did you look at "Elastic Search" Not sure, but that seems like maybe it will do everything we want regarding data collection?
+
+[05-Jun-18 04:41 AM] blackjok3r#0000
+havent looked too far into it, jst a quick look
+
+[05-Jun-18 04:42 AM] smk762#0000
+yeah i read up a bit, and on the kibana stuff too.
+
+[05-Jun-18 04:42 AM] smk762#0000
+you mean the aws elastic search or the other one?
+
+[05-Jun-18 04:43 AM] smk762#0000
+https://www.elastic.co/ vs https://aws.amazon.com/elasticsearch-service/
+
+{Embed}
+https://www.elastic.co/
+Open Source Search & Analytics · Elasticsearch
+       | Elastic
+We're the creators of Elasticsearch, Kibana, Beats, and Logstash -- the Elastic Stack. Securely and reliably search, analyze, and visualize your data.
+https://www.elastic.co/static/images/elastic-logo-200.png
+
+{Embed}
+https://aws.amazon.com/elasticsearch-service/
+Amazon Elasticsearch Service – Amazon Web Services (AWS)
+Use Amazon Elasticsearch Service to easily deploy, operate and scale Elasticsearch on AWS. Launch your Amazon Elasticsearch cluster in minutes here!
+https://a0.awsstatic.com/main/images/logos/aws_logo_smile_179x109.png
+
+[05-Jun-18 04:47 AM] smk762#0000
+depends how much adaptability we want querying the data.
+
+[05-Jun-18 04:48 AM] imylomylo#0000
+Go to YourName -> My Security Credentials.
+
+Then quickest easiest "less safe" but less complicated method to get started is to go to "Access Keys" and create a new set of access keys.
+
+Keep them safe.
+
+You'll get an "Access Key ID" and a "Secret Access Key"
+
+[05-Jun-18 04:48 AM] smk762#0000
+all i really need is something that gives me all records since a timestamp
+
+[05-Jun-18 04:48 AM] blackjok3r#0000
+yeah DB should be able to do that surely?
+
+[05-Jun-18 04:48 AM] smk762#0000
+yeah, just gotta make the result something I can tap
+
+[05-Jun-18 04:50 AM] smk762#0000
+https://njeitldkqc.execute-api.ap-southeast-2.amazonaws.com/v0/blocknotify gives me 50 blocks. Timestamps / Height not in order so not sure whats missing
+
+[05-Jun-18 04:50 AM] smk762#0000
+8192 chains average 136.5 blocks/sec
+
+[05-Jun-18 04:50 AM] blackjok3r#0000
+https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html
+
+{Embed}
+https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Query.html
+Working with Queries - Amazon DynamoDB
+Search an Amazon DynamoDB table data where the query operations search only primary key attribute values.
+
+[05-Jun-18 04:51 AM] smk762#0000
+I dont want to query db too often interrupting writes, set to every 5 sec at the moment
+
+[05-Jun-18 04:51 AM] smk762#0000
+so need maybe 2000 record limit
+
+[05-Jun-18 04:51 AM] blackjok3r#0000
+Seems to me we just need to make a custom query you can poll it for
+
+[05-Jun-18 04:51 AM] blackjok3r#0000
+They claim it can endlessly scale so we shall test that out :troll:
+
+[05-Jun-18 04:51 AM] smk762#0000
+i was thinking ?since=timestamp&limit=2000
+
+[05-Jun-18 04:52 AM] imylomylo#0000
+nah doesn't work like that with GET VARS
+
+[05-Jun-18 04:52 AM] imylomylo#0000
+API GW -> Lambda -> DynamoDB, at each "->" there is some mangling.  I'm not going to have time to work on it for next 4 or 5 hours.
+
+[05-Jun-18 04:53 AM] smk762#0000
+sort=decending not critical
+
+[05-Jun-18 04:53 AM] blackjok3r#0000
+but it can be done? We dont need to look at other options?
+
+[05-Jun-18 04:53 AM] imylomylo#0000
+yes, but i need to make it work with that vogels framework so i'm not the bottleneck.
+
+[05-Jun-18 04:53 AM] imylomylo#0000
+that makes it eeeeeezy
+
+[05-Jun-18 04:54 AM] blackjok3r#0000
+cool. As long as it can be done. I need to get all the info for AWS meeting.
+
+[05-Jun-18 04:54 AM] blackjok3r#0000
+I already changed loads of stuff since I started out with the idea in my head.
+
+[05-Jun-18 04:55 AM] blackjok3r#0000
+But I think this was the last open thing, everything is is now pretty much settled. Dont stress too much about rushing it out. Just make sure it works good. 😄
+
+[05-Jun-18 04:55 AM] smk762#0000
+do i need to setup anything my end for vogels? just pointing at the api url right now
+
+[05-Jun-18 04:56 AM] imylomylo#0000
+just the api - if you want to use another example, i'm collecting data for 51% attack monitoring - but this is still WIP
+
+[05-Jun-18 04:57 AM] imylomylo#0000
+in case you didn't see blackjok3r
+
+[05-Jun-18 04:57 AM] imylomylo#0000
+oh cool
+
+[05-Jun-18 04:57 AM] blackjok3r#0000
+yep done.
+
+[05-Jun-18 04:57 AM] imylomylo#0000
+lemme create project for you to clone, will take 5 mins
+
+[05-Jun-18 04:58 AM] smk762#0000
+might play with it. got randomly generated json setup so got enough to finish up linking into client metrics.
+
+[05-Jun-18 05:01 AM] imylomylo#0000
+`npm install -g serverless`
+```
+~/.aws/credentials
+[default]
+aws_access_key_id = AKxxxxxxxxxxx
+aws_secret_access_key = y0xxxxxxxxx
+```
+blackjok3r ☝
+

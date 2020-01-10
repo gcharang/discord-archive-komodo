@@ -1,0 +1,348 @@
+==============================================================
+Guild: Komodo
+Channel: kmdice
+Topic: ./komodod -ac_name=KMDICE -ac_supply=10500000 -ac_reward=2500000000 -ac_halving=210000 -ac_cc=2 -addressindex=1 -spentindex=1 -addnode=144.76.217.232 &
+https://kmdice.pool-mining.xyz/ <- pool
+https://pool.forkwitch.com/  <- another pool
+https://minerpond.com <- another pool
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[22-Oct-18 03:13 PM] gt#2812
+the forkwitch pool has been weird at least from my limited pool experience
+
+[22-Oct-18 03:15 PM] Alright#0419
+thinking there's probably a tx in mempool that is breaking a consensus rule
+
+[22-Oct-18 03:15 PM] Alright#0419
+stratum's continually trying to put it into a block
+
+[22-Oct-18 03:15 PM] Alright#0419
+who has a good amount of hash rate, want to test if it's that?
+
+[22-Oct-18 03:15 PM] Llama#1330
+I do
+
+[22-Oct-18 03:16 PM] Llama#1330
+But I probably can’t help you
+
+[22-Oct-18 03:17 PM] Alright#0419
+Pool node needs to restart with `-minrelayfee=99999999`
+
+[22-Oct-18 03:17 PM] Alright#0419
+it'll reject all txs from the mempool
+
+[22-Oct-18 03:21 PM] Llama#1330
+I’m on pool.forkwitch
+
+[22-Oct-18 03:22 PM] Alright#0419
+@forkwitch can you try that?
+
+[22-Oct-18 03:23 PM] Alright#0419
+I need to know what error the daemon is giving when stratum tries to submit a block to it
+
+[22-Oct-18 03:27 PM] Decker#3767
+https://gist.github.com/DeckerSU/1c161fd93b0a1dbaa722343f9e18020d - gotcha ... now need to analyze what's wrong with the block format.
+
+[22-Oct-18 03:30 PM] Alright#0419
+@Decker 404'd
+
+[22-Oct-18 03:30 PM] Alright#0419
+oh nope, nevermind sorry
+
+[22-Oct-18 03:31 PM] Alright#0419
+is that latest block height
+
+[22-Oct-18 03:35 PM] Alright#0419
+can't even use submitblock on that 🤔
+
+[22-Oct-18 03:35 PM] Alright#0419
+bash shell doesn't seem to like that
+
+[22-Oct-18 03:41 PM] c2k#4915
+i put 1msol into blackjoker pool earlier but pulled after seeing the problems discussed in here.
+i can try again if someone wants
+
+[22-Oct-18 03:42 PM] Alright#0419
+someone running a pool needs to try mining empty blocks
+
+[22-Oct-18 03:42 PM] Alright#0419
+see if it works
+
+[22-Oct-18 03:42 PM] c2k#4915
+ah not me. sry
+
+[22-Oct-18 03:47 PM] forkwitch#6080
+@jl777c  Try https://pool.forkwitch.com, finds lot of blocks.
+
+[22-Oct-18 03:48 PM] Alright#0419
+not right now it ain't
+
+[22-Oct-18 03:48 PM] Alright#0419
+lol
+
+[22-Oct-18 03:48 PM] Alright#0419
+try mining empty blocks @forkwitch
+
+[22-Oct-18 03:48 PM] jl777c#5810
+something happened in the last 10 blocks
+
+[22-Oct-18 03:48 PM] jl777c#5810
+taking hours for them to be found
+
+[22-Oct-18 03:48 PM] Alright#0419
+mempool is huge
+
+[22-Oct-18 03:49 PM] Alright#0419
+couldn't begin to try to go through it looking for something weird
+
+[22-Oct-18 03:49 PM] Decker#3767
+we just need to investigate what's wrong with blockhex i posted above ... block header is correct ... need to check every of 432 txes in it ... may be one of these txes has wrong format.
+
+[22-Oct-18 03:49 PM] Alright#0419
+when you submit it, what error do you get?
+
+[22-Oct-18 03:49 PM] forkwitch#6080
+TX spammer maybe.
+
+[22-Oct-18 03:49 PM] Alright#0419
+should give you some info as to why it's rejected
+
+[22-Oct-18 03:50 PM] Decker#3767
+@Alright i already noticed it )
+
+{Attachments}
+https://cdn.discordapp.com/attachments/502423250421153802/503958425420431379/unknown.png
+
+[22-Oct-18 03:51 PM] forkwitch#6080
+Should i remove TX from mining to get one block minted?
+
+[22-Oct-18 03:51 PM] Alright#0419
+try it
+
+[22-Oct-18 03:51 PM] Decker#3767
+we don't need to mine empty blocks, it's easy to modify pool to ignore txes ... we should find a root of issue.
+
+[22-Oct-18 03:52 PM] Alright#0419
+trying to do that
+
+[22-Oct-18 03:52 PM] jl777c#5810
+seems there is a tx that gets into the mempool that will be rejected
+
+[22-Oct-18 03:52 PM] forkwitch#6080
+If we have TXhash i can only ban this one. Maybe better than to remove all transactions.
+
+[22-Oct-18 03:52 PM] Alright#0419
+if it can't mine empty blocks, it's not a tx that is the problem
+
+[22-Oct-18 03:52 PM] jl777c#5810
+it is mining a small number of tx
+
+[22-Oct-18 03:52 PM] Alright#0419
+https://github.com/jl777/komodo/blob/b4e1a4f87bf9baeb26b9403f1445ec7bd1b30210/src/main.cpp#L1501
+
+{Embed}
+https://github.com/jl777/komodo/blob/b4e1a4f87bf9baeb26b9403f1445ec7bd1b30210/src/main.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[22-Oct-18 03:52 PM] Alright#0419
+change that to a large number and rebuild
+
+[22-Oct-18 03:53 PM] Alright#0419
+`if (fLimitFree && nFees < 999999999)`
+
+[22-Oct-18 03:53 PM] Alright#0419
+will reject all txs from mempool
+
+[22-Oct-18 03:53 PM] Decker#3767
+and root of issue in incorrect block format ... pool generates a block and trying to submit it with `submitblock`, daemon reject the block, bcz it can't decode it ...
+
+[22-Oct-18 03:53 PM] Alright#0419
+oh change the transactions.js file in node-stratum-pool module
+
+[22-Oct-18 03:53 PM] jl777c#5810
+there is a consensus bug where it gets into mempool but it is invalid in a block
+
+[22-Oct-18 03:53 PM] Alright#0419
+yea so that doesn't sound like a tx that is causing it
+
+[22-Oct-18 03:54 PM] Alright#0419
+submit block would work if it were a specific tx causing it
+
+[22-Oct-18 03:54 PM] jl777c#5810
+maybe the error message is a catch all, somethings they arent to be trusted literally
+
+[22-Oct-18 03:54 PM] ComputerGenie 👴🏼📢#7004
+`daemon reject the block, bcz it can't decode it`
+I can't see how that's the issue when he says there's nothing in daemon debug
+
+[22-Oct-18 03:54 PM] jl777c#5810
+most likely is that mempool accepts it, so it is mined into a block and then fails validation
+
+[22-Oct-18 03:55 PM] ComputerGenie 👴🏼📢#7004
+`Block notification via p2p`
+
+[22-Oct-18 03:55 PM] Decker#3767
+now we have a blockhex ... and we can put any debug printouts in daemon to find the issue. just use `submitblock` with this `blockhex` ...
+
+[22-Oct-18 04:10 PM] siu - Chainmakers#3920
+its been more than 3 minutes waiting for the hex to paste 😂
+
+[22-Oct-18 04:13 PM] siu - Chainmakers#3920
+2 blocks went thorugh
+
+[22-Oct-18 04:14 PM] ComputerGenie 👴🏼📢#7004
+I've got 400k aimed at a solo pool that I know works, will see if it errors the same
+
+[22-Oct-18 04:30 PM] Llama#1330
+Lmk when the pool is fixed
+
+[22-Oct-18 04:43 PM] ComputerGenie 👴🏼📢#7004
+OK, confirmed that issue is not pool related fwiw
+
+[22-Oct-18 04:43 PM] siu - Chainmakers#3920
+how?
+
+[22-Oct-18 04:44 PM] ComputerGenie 👴🏼📢#7004
+The codebase for my solo pool is one I trust
+While it shares the same origin as webbys, the overwinter and taxes removal was done differently and more thoroughly
+
+[22-Oct-18 04:52 PM] jorian#4555
+mempool isn't cleared yet, somehow those transactions aren't mined
+
+[22-Oct-18 04:53 PM] ComputerGenie 👴🏼📢#7004
+there have to be blocks for txes to be mined *in*
+
+[22-Oct-18 04:53 PM] ComputerGenie 👴🏼📢#7004
+:trollface:
+
+[22-Oct-18 04:53 PM] ComputerGenie 👴🏼📢#7004
+there's only been 3 blocks in last hr
+
+[22-Oct-18 04:58 PM] siu - Chainmakers#3920
+But blocks are empty while mempool is full
+
+[22-Oct-18 04:58 PM] siu - Chainmakers#3920
+Do these txs eventually timeout?
+
+[22-Oct-18 04:59 PM] ComputerGenie 👴🏼📢#7004
+last block had 11 txes, so not really "empty"
+
+[22-Oct-18 04:59 PM] siu - Chainmakers#3920
+Sorry, not empty. But not as full as they should
+
+[22-Oct-18 05:02 PM] manfromafar (poolofd32th.club)#2786
+good there are only 6txs in the mem pool
+
+[22-Oct-18 05:03 PM] ComputerGenie 👴🏼📢#7004
+`only 6txs in the mem pool`
+Then we have different mempools 😛
+
+[22-Oct-18 05:03 PM] Llama#1330
+Is mining working rn?
+
+[22-Oct-18 05:03 PM] forkwitch#6080
+-ac_name=KMDICE getmempoolinfo
+{
+  "size": 707,
+  "bytes": 349668,
+  "usage": 977456
+}
+
+[22-Oct-18 05:03 PM] forkwitch#6080
+707
+
+[22-Oct-18 05:03 PM] manfromafar (poolofd32th.club)#2786
+🤔
+
+[22-Oct-18 05:03 PM] jl777c#5810
+mempool is not in consensus
+
+[22-Oct-18 05:04 PM] Alright#0419
+Siu, txs will time out after 2 weeks
+
+[22-Oct-18 05:04 PM] jl777c#5810
+different nodes see different mempools
+
+[22-Oct-18 05:04 PM] Llama#1330
+Is it an easy fix?
+
+[22-Oct-18 05:05 PM] jl777c#5810
+we need to find the killer tx that gets in the mempool but is invalid and makes the block rejecte
+
+[22-Oct-18 05:05 PM] manfromafar (poolofd32th.club)#2786
+_slowly mines with 14ksol_
+
+[22-Oct-18 05:06 PM] siu - Chainmakers#3920
+Of 707 how are we going to know?
+
+[22-Oct-18 05:06 PM] jl777c#5810
+printouts
+
+[22-Oct-18 05:07 PM] ComputerGenie 👴🏼📢#7004
+I can whittle them down some here in a bit
+
+[22-Oct-18 05:07 PM] manfromafar (poolofd32th.club)#2786
+😂  thanks new block for being on my side
+
+[22-Oct-18 05:07 PM] manfromafar (poolofd32th.club)#2786
+http://kmdice.explorer.dexstats.info/block/000000077be0fdd781d3ab45e143a9dba8fa89e8d6f68f8bc8370d92703d6cd9
+
+[22-Oct-18 05:10 PM] jorian#4555
+anyone able to place a bet in the mean time?
+
+[22-Oct-18 05:10 PM] Alright#0419
+@Decker how can I get nomp to output raw hex of block
+
+[22-Oct-18 05:11 PM] ComputerGenie 👴🏼📢#7004
+DeckerToday at 9:37 AM
+btw, may be this will useful, to print hex block simply edit pool.js with this:
+
+   ` function SubmitBlock(blockHex, callback) {
+        var rpcCommand, rpcArgs;
+        if (options.hasSubmitMethod) {
+            rpcCommand = 'submitblock';
+            rpcArgs = [blockHex];
+        } else {
+            rpcCommand = 'getblocktemplate';
+            rpcArgs = [{
+                'mode': 'submit',
+                'data': blockHex
+            }];
+        }
+        emitLog('Block hex : ' + blockHex);  // add this line
+        _this.daemon.cmd(rpcCommand,
+            rpcArgs,
+            function(results) {
+                for (var i = 0; i < results.length; i++) {`
+
+[22-Oct-18 05:11 PM] Alright#0419
+Ty
+
+[22-Oct-18 05:21 PM] siu - Chainmakers#3920
+seems like it unstuck
+
+[22-Oct-18 05:21 PM] siu - Chainmakers#3920
+or its creating blocks faster
+
+[22-Oct-18 05:22 PM] Llama#1330
+Someone tag me when it’s unstuck
+
+[22-Oct-18 05:24 PM] ComputerGenie 👴🏼📢#7004
+`e7d7e4e502eaf8bc791aa4fd2de2993a1f6e82fa32b8511306f51864c9cb1264` is the tx that whoever is blocking is leaving behind
+
+[22-Oct-18 05:31 PM] forkwitch#6080
+Notarisation transaction @ComputerGenie 👴🏼📢 .
+
+[22-Oct-18 05:32 PM] blubbi#0643
+is the pool working again
+
+[22-Oct-18 05:32 PM] ComputerGenie 👴🏼📢#7004
+I didn't look at it (other than to see it's staying in the mempool)
+
+[22-Oct-18 05:33 PM] Flexatron#8809
+!kmdtip @Llama  0.001 :trollface:
+

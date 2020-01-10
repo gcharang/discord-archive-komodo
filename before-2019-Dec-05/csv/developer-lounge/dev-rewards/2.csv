@@ -1,0 +1,211 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"455741312273219595";"jl777c#5810";"24-Oct-18 11:40 AM";"yes 04 is uncompressed";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 11:41 AM";"02/03 are compressed, just half the uncompressed";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 11:41 AM";"I am trying to find out what pubkey that is, the only other address in the vin is RQm8BNygniNVqVPRYXEosznRZ7uEiooqSm";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 11:41 AM";"so either it used that pubkey or some random pubkey";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 11:47 AM";"ok, let me double check the pubkey for that address";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 11:47 AM";"should it not be in the last transaction?";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 11:47 AM";"from RQm8BNygniNVqVPRYXEosznRZ7uEiooqSm to the Ledger address?";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 11:48 AM";"The raw hex for that is here: https://kmdexplorer.io/insight-api-komodo/rawtx/5395828ab01531681d56647d901148d63fc434bec243eb2058e97a24c201f008";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 11:48 AM";"it doesn't contain the string `03e595e6e348e8d8571eef291a2bda3f4d5ee9c7be1d36991108a9815e86b9ed26 `";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 11:52 AM";"unless it was a spend to RQm8BNygniNVqVPRYXEosznRZ7uEiooqSm it wont have the pubkey in it. you cant validateaddress RQm8BNygniNVqVPRYXEosznRZ7uEiooqSm";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 11:52 AM";"the mystery is why is the wrong pubkey being used...";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 11:52 AM";"are you able to make spends at all, with or without rewards";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 12:14 PM";"No, just tried with the same value as the input, same error";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 12:15 PM";"and just got the pubkey for `RQm8BNygniNVqVPRYXEosznRZ7uEiooqSm`, it's `0330b4191bd253364abe8c19976f196bbcc2f3e66724816ef70e7fe472b5f59d0c`";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 12:17 PM";"I thought a TX contained the pubkey for inputs you're signing, and that was how you verify the signature, is that not correct?";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 12:20 PM";"not a p2pkh that has the hash of the pubkey so you need to have the signature and the pubkey on the stack via scriptSig to allow the OP_EQUALVERIFY against the p2pkh scriptPubKey";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 12:24 PM";"I know the recipient address is the hash of the pubkey for a P2PKH TX but I thought when you spend a P2PKH input you need to include your pubkey in the TX. How else can you verify it? And how do you ""have the signature and the pubkey on the stack"" without including the pubkey in the TX?";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 12:29 PM";"I just checked, it does.
+The `RQm8BNygniNVqVPRYXEosznRZ7uEiooqSm` pubkey is included in the raw TX I linked above. That was going `RQm8BNygniNVqVPRYXEosznRZ7uEiooqSm` -> `RMqevVxyUkgJdSqYEKj5CK4XcX5UvqFsyj `";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 12:47 PM";"In the `scriptSig.asm`:
+
+```
+3044022022047c84f9dc59d57d54022b3a9aa61db2f78bea8edd513befacfb55439e560b02202d5b74c539b17a1785b10084556249fc9882778b8cf593a1eaaece6e6e2cc7e501 03e595e6e348e8d8571eef291a2bda3f4d5ee9c7be1d36991108a9815e86b9ed26
+```
+
+is everything after the space the stack?";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 12:48 PM";"and in a normal P2PKH TX will that always be only the pubkey?";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 12:54 PM";"3044022022047c84f9dc59d57d54022b3a9aa61db2f78bea8edd513befacfb55439e560b02202d5b74c539b17a1785b10084556249fc9882778b8cf593a1eaaece6e6e2cc7e501 <- sig";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 12:54 PM";"03e595e6e348e8d8571eef291a2bda3f4d5ee9c7be1d36991108a9815e86b9ed26 <- pubkey";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 12:55 PM";"the rmd160 of the pubkey needs to match the vout that is being spent";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 12:55 PM";"and of course the privkey for that pubkey needs to be in the wallet";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 12:57 PM";"using https://bitcoinvalued.com/tools.php -> 1L2ppsT9kmDkLNUG4SWLQr4XdaM1u3K7vL
+using https://www.dexstats.info/addressconverter.php?fromcoin=BTC&tocoin=KMD&address=1L2ppsT9kmDkLNUG4SWLQr4XdaM1u3K7vL";"";"";
+"455741312273219595";"jl777c#5810";"24-Oct-18 12:57 PM";"the pubkey is for address RUK1uPLSMb2KQNqTXcVTWNPjPqocVdQVne";"";"";
+"360402743543988225";"lukechilds#2707";"24-Oct-18 02:26 PM";"Thanks, I'll raise this on the Ledger dev slack";"";"";
+"287436626299453441";"luke#8628";"25-Oct-18 02:08 PM";"Hey! Do I understand this correctly for how the DEX rewards are paid out?
+
+1. Every time an atomic swap happens in BarterDEX, a 0.15% fee is charged to the Taker in the currency they are sending.
+2. That fee is sent to an address in that currency owned by someone at Komodo 
+3. Once enough fees are collected, the fees are converted into KMD.
+4. Once ""accumulated amount is of 1$ million worth of revshares"" a payout occurs, and everyone gets a percentage of the fees returned to them.
+
+My questions are 1. how do you know what addresses to send the reward KMD to? 2. how do you know how much to send to each address?";"";"";
+"455741312273219595";"jl777c#5810";"25-Oct-18 03:02 PM";"a snapshot of the DEX blockchain is made";"";"";
+"455741312273219595";"jl777c#5810";"25-Oct-18 03:02 PM";"that allows to solve both Q1 and Q2";"";"";
+"287436626299453441";"luke#8628";"25-Oct-18 03:55 PM";"ah, yes makes sense. thanks";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 05:53 AM";"@jl777c I got the incorrect pubkey issue working but I'm nw getting this when trying to broadcast the TX
+
+```
+16: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element). Code:-26
+```
+
+What does this error mean? That the signature is invalid? I’m definitely passing the correct derivation path for the input to the Ledger and the pubkey in `scriptSig` matches the pubkey for the input. Any ideas?";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 08:53 AM";"it means the signature was not valid. either you are signing the incorrect sigtxid or using the wrong privkey";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 09:06 AM";"That's really odd, as far as I can see I'm definitely using the correct privkey";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 09:06 AM";"there are no hardcoded values, I'm requesting the address from the Ledger device, looking up the available UTXOs on insight, and then sending them to the same address";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 09:07 AM";"This is the full tx:";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 09:08 AM";"```
+$ komodo-cli decoderawtransaction 0100000001cd560aa07d318c0044c17219bdaa64a49e9965dfb04aafe290f43b97b9171a24000000006b483045022100b6347bb40acf4dc4c9b40ac71b91c14b010fbe4531273763862a3b9d3ff6939502203525d25e5a8645eaaadef82185d6547e6e970912a23609434109e2e824bea6a8012102e4f4b2a6fc1b0b04ae652a961658802c94ffdbe5203ff45466b583c2ac6ec4ebffffffff0100ab9041000000001976a91489c53a986872ed85152facda1b3f306061c8234288ac0000000000000000
+{
+  ""txid"": ""de41f3cb9109d9e93d723aefd1dcc4f396b911d8e6cc6a75dd2e87996b5e2152"",
+  ""size"": 192,
+  ""version"": 1,
+  ""locktime"": 0,
+  ""vin"": [
+    {
+      ""txid"": ""241a17b9973bf490e2af4ab0df65999ea464aabd1972c144008c317da00a56cd"",
+      ""vout"": 0,
+      ""scriptSig"": {
+        ""asm"": ""3045022100b6347bb40acf4dc4c9b40ac71b91c14b010fbe4531273763862a3b9d3ff6939502203525d25e5a8645eaaadef82185d6547e6e970912a23609434109e2e824bea6a801 02e4f4b2a6fc1b0b04ae652a961658802c94ffdbe5203ff45466b583c2ac6ec4eb"",
+        ""hex"": ""483045022100b6347bb40acf4dc4c9b40ac71b91c14b010fbe4531273763862a3b9d3ff6939502203525d25e5a8645eaaadef82185d6547e6e970912a23609434109e2e824bea6a8012102e4f4b2a6fc1b0b04ae652a961658802c94ffdbe5203ff45466b583c2ac6ec4eb""
+      },
+      ""sequence"": 4294967295
+    }
+  ],
+  ""vout"": [
+    {
+      ""value"": 11.00000000,
+      ""valueSat"": 1100000000,
+      ""n"": 0,
+      ""scriptPubKey"": {
+        ""asm"": ""OP_DUP OP_HASH160 89c53a986872ed85152facda1b3f306061c82342 OP_EQUALVERIFY OP_CHECKSIG"",
+        ""hex"": ""76a91489c53a986872ed85152facda1b3f306061c8234288ac"",
+        ""reqSigs"": 1,
+        ""type"": ""pubkeyhash"",
+        ""addresses"": [
+          ""RMqevVxyUkgJdSqYEKj5CK4XcX5UvqFsyj""
+        ]
+      }
+    }
+  ],
+  ""vjoinsplit"": [
+  ]
+}
+```";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 09:09 AM";"does anything stand out to you as obviously wrong?";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 09:11 AM";"This is going from `RMqevVxyUkgJdSqYEKj5CK4XcX5UvqFsyj` to `RMqevVxyUkgJdSqYEKj5CK4XcX5UvqFsyj` which is the address for the derivation path `""44'/141'/0'/0/0""` on my Ledger.
+
+The Ledger shows the pubkey as `04e4f4b2a6fc1b0b04ae652a961658802c94ffdbe5203ff45466b583c2ac6ec4eb56aaf9d686b1f2035f9f45e63fa156a1bea03cdd67bf20d1735a9cb36c3632c8` which when compressed is `02e4f4b2a6fc1b0b04ae652a961658802c94ffdbe5203ff45466b583c2ac6ec4eb` which matches the pubkey in `scriptSig`.";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 09:23 AM";"locktime isnt set";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 09:24 AM";"the signing is against a modified tx, I call it is sigtxid, which takes the scriptSig and puts the scriptPubKey there of the entire tx, including nLockTime";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 09:24 AM";"if part of the code things nLockTime is set and created the sigtxid based on that, you are signing the wrong sigtxid";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 09:24 AM";"signing things properly is the biggest painfullest thing there is";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 09:51 AM";"Yep, learning that the hard way";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 09:52 AM";"From what I understood I thought locktime was required for the UTXO to accrue rewards, but a TX is still valid without it, it just won't accrue rewards";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 09:52 AM";"is that incorrect?";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 09:52 AM";"I was leaving out locktime for now because I just wanted to get the simplest TX possible signed by the Ledger";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 09:53 AM";"I just tried setting the locktime parameter in the Ledger library to 777, the resulting signed TX looks different but still gets rejected with the same error";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 09:57 AM";"it is still valid";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 09:58 AM";"the vin is a p2pkh and the pubkey matches, and the error indicates it is past the pubkey check, so the signature is failing";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 09:59 AM";"the three possible ways it can fail is invalid signature from valid privkey, invalid privkey, the wrong thing is being signed";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 09:59 AM";"the first would be rare and doubt it is happening with an already working system";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 09:59 AM";"second is likely not the issue as i am assuming the same automatic mechanism that is adding the pubkey is doing the signing, and they are a matched pair";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 10:00 AM";"which means it is most likely the sigtxid being wrong and likely it wont printout what it is actually signing, but that is the next step to see what the sigtxid it is signing is and compare it to what it should be";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 10:01 AM";"https://en.bitcoin.it/wiki/OP_CHECKSIG explains in detail how the sigtxid is calculated";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 10:07 AM";"ok, thanks, will look into that";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 10:07 AM";"I can't really print anything out because all the signing is happening on the device";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 10:09 AM";"Do you think it would be useful to dump the privkey from the Ledger, try and create and sign a transaction on my machine using the same key/UTXO and see if it it's valid";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 10:09 AM";"then if it is compare the two";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 10:09 AM";"that might give us some pointers where the Ledger TX is going wrong";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 10:19 AM";"signatures are non-deterministic, but if you can sign it on your system, then that eliminates the second issue and makes it pretty certain that the sigtxid is the problem";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 11:13 AM";"Manually crafting the TX on my machine works and doesn't get rejected";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 11:13 AM";"```
+$ komodo-cli decoderawtransaction 0100000001cd560aa07d318c0044c17219bdaa64a49e9965dfb04aafe290f43b97b9171a24000000006a47304402203a2dd63eb169c95fd5c0c4dd59f30b2b23cd43da167c3b303fd033f890fc97e602207fc0bdf16fb93a6d3986d4ec199e25c0dd3f2f55b01de0ab005a01e1a32c575b012102e4f4b2a6fc1b0b04ae652a961658802c94ffdbe5203ff45466b583c2ac6ec4ebffffffff0100ab9041000000001976a91489c53a986872ed85152facda1b3f306061c8234288ac00000000
+{
+  ""txid"": ""52c639ced3eaa5f94f1cc0d63ee84cbed6581d2dfa0df4c394e9157319613ff7"",
+  ""size"": 191,
+  ""version"": 1,
+  ""locktime"": 0,
+  ""vin"": [
+    {
+      ""txid"": ""241a17b9973bf490e2af4ab0df65999ea464aabd1972c144008c317da00a56cd"",
+      ""vout"": 0,
+      ""scriptSig"": {
+        ""asm"": ""304402203a2dd63eb169c95fd5c0c4dd59f30b2b23cd43da167c3b303fd033f890fc97e602207fc0bdf16fb93a6d3986d4ec199e25c0dd3f2f55b01de0ab005a01e1a32c575b01 02e4f4b2a6fc1b0b04ae652a961658802c94ffdbe5203ff45466b583c2ac6ec4eb"",
+        ""hex"": ""47304402203a2dd63eb169c95fd5c0c4dd59f30b2b23cd43da167c3b303fd033f890fc97e602207fc0bdf16fb93a6d3986d4ec199e25c0dd3f2f55b01de0ab005a01e1a32c575b012102e4f4b2a6fc1b0b04ae652a961658802c94ffdbe5203ff45466b583c2ac6ec4eb""
+      },
+      ""sequence"": 4294967295
+    }
+  ],
+  ""vout"": [
+    {
+      ""value"": 11.00000000,
+      ""valueSat"": 1100000000,
+      ""n"": 0,
+      ""scriptPubKey"": {
+        ""asm"": ""OP_DUP OP_HASH160 89c53a986872ed85152facda1b3f306061c82342 OP_EQUALVERIFY OP_CHECKSIG"",
+        ""hex"": ""76a91489c53a986872ed85152facda1b3f306061c8234288ac"",
+        ""reqSigs"": 1,
+        ""type"": ""pubkeyhash"",
+        ""addresses"": [
+          ""RMqevVxyUkgJdSqYEKj5CK4XcX5UvqFsyj""
+        ]
+      }
+    }
+  ],
+  ""vjoinsplit"": [
+  ]
+}
+```";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 11:13 AM";"https://www.kmdexplorer.io/tx/52c639ced3eaa5f94f1cc0d63ee84cbed6581d2dfa0df4c394e9157319613ff7";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 11:13 AM";"didn't get rejected";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 11:15 AM";"What do you mean by ""signatures are non-deterministic""?
+
+That the same input will result in a different signature? Because on the Ledger and on my machine, the same input results in the same output each time.";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 11:19 AM";"well, it depends on the entropy that is input, it could be deterministic";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 11:19 AM";"based on a specific implementation";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 11:19 AM";"but this indicates the ledger is signing the wrong rawtx";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 11:40 AM";"sorted it!";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 11:40 AM";"I was manually creating the output script for the ledger TX";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 11:40 AM";"and I had some null bytes on the end";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 11:41 AM";"!!";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 11:41 AM";"it does need to be 100% precise to the bit";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 11:41 AM";"glad it is sorted";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 11:41 AM";"yeah, thanks a lot for your help 🙌";"";"👏🏽 (1),🚀 (1)";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 12:21 PM";"First ever reward claim transaction signed from a Ledger!!!
+https://kmdexplorer.io/tx/a058096f1996e5cc6c422c35fc0af08bf54c4eff6583fbbfa5396cd8a8c62b98";"";"👏 (6),shexy (2),rum (2),yassinkomodo (1)";
+"455741312273219595";"jl777c#5810";"31-Oct-18 12:30 PM";"nLicktime needs to be a unixtimestamp";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 12:32 PM";"why is nLocktime required btw?";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 12:32 PM";"I don't quite understand";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 12:33 PM";"why can't all UTXOs be claimed and just use the block height they were confirmed as their age";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 12:52 PM";"speed";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 12:53 PM";"things are slow enough as it is, without required block lookups";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 12:53 PM";"CCduration uses the timestamp in the block";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 01:20 PM";"but `txheight` is already used in quite a few places in the interest calculations";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 01:22 PM";"so instead of
+
+```
+minutes= (tiptime - nLockTime) / 60)
+```
+
+it would be
+
+```
+minutes= (tipheight - txheight)
+```";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 01:23 PM";"at the time i couldnt be 100% sure in the accuracy, also height difference only approximates minutes";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 01:23 PM";"anyway, it is done and consensus is based on this, to change it would break consensus and create an entire update, for minimal gains";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 01:24 PM";"yeah, not advocating to change it, just wanted to understand why it's like this";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 01:24 PM";"it was done years ago";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 01:25 PM";"before I had a 100% assured way of having the block timestamp";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 01:25 PM";"also, it allows to implement mempool expiration without changing tx serialization";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 01:55 PM";"ok";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 01:56 PM";"and re setting the nLocktime to a unix timestamp";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 01:56 PM";"can I just use the current time or should it be slightly in the future?";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 01:57 PM";"is there a threshold where a nLocktime is too old and it won't get mined or will be rejected?";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 01:59 PM";"slightly in the past";"";"";
+"455741312273219595";"jl777c#5810";"31-Oct-18 01:59 PM";"cant be more than an hour in the past";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 01:59 PM";"ok";"";"";
+"360402743543988225";"lukechilds#2707";"31-Oct-18 02:01 PM";"doesn't that mean someone can just set nLocktime to 59 minutes in the past and claim after 5 minutes and rinse and repeat?";"";"";

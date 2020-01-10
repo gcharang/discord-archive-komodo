@@ -1,0 +1,337 @@
+==============================================================
+Guild: Komodo
+Channel: talk-mining
+Topic: ./komodod -ac_name=ZAWY24 -ac_adaptivepow=1 -ac_supply=1000000 -ac_reward=10000000000 -ac_cc=2 -addnode=5.9.102.210 &
+
+A channel to discuss mining. For useful links and more info click the pinned messages to the right.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[06-Aug-19 10:20 AM] jl777c#5810
+kept tweaking it to minimize things going offtrack, key changes are to put the exponential after the RST so it makes the harder diff easier, otherwise it was starting from the unmodified diff and easy blocks were spewing out
+
+[06-Aug-19 10:20 AM] jl777c#5810
+the other change i just made was to make it so exp() only triggers based on tipdiff. the exponential side is so fast to adjust with it looking at recent 12, and it inteferes with the RST
+
+[06-Aug-19 10:21 AM] jl777c#5810
+i also use min(origtarget, RST) value as there were cases where the RST value was higher than the original target
+
+[06-Aug-19 10:22 AM] jl777c#5810
+another strange thing that is making things act weird is that the target from the RST gets gradually easier as tipdiff increases, which is as expected, but then every so often it gets much harder. i cant see how that is possible, so it seems a bug.
+
+[06-Aug-19 10:22 AM] jl777c#5810
+i finally got a clean launchm but it is only to height 71
+
+[06-Aug-19 10:24 AM] jl777c#5810
+also my miners seem to be getting really lucky, solving 100 diff in a few seconds. i know it can happen every so often but seem to be happening a lot
+
+[06-Aug-19 10:26 AM] jl777c#5810
+oh, i also multiply the ct[] values by 2, 3, 4 depending on how long it took to solve. trying to approximate the effective diff during the block
+
+[06-Aug-19 10:27 AM] jl777c#5810
+63,1565086420,537107215,039b0f00000000000000000000000000,019394bd803c6ef32054ed069afb7fe3,4.17639641,4.28436539
+64,1565086439,537101260,0383cc00000000000000000000000000,007e9b04de2104fd1e57248ffe6130d7,4.28436539,4.38861862
+65,1565086444,536979521,01a84100000000000000000000000000,005798ce70ce4f3f45c13c22219917d3,9.08667790,4.62289207
+66,1565086449,536958685,0156dd00000000000000000000000000,006de8e5e19f37a11bc32d630d171c48,11.24371959,4.88920100
+67,1565086453,536930933,00ea7500000000000000000000000000,00a8960efceb8c3d571cc67fe7b80dba,16.44249513,5.20448361
+68,1565086482,537050916,02bf2400000000000000000000000000,005c735f4be1ed13bd5b3d45975740da,5.48262816,5.39735190
+69,1565086528,522424925,0023925d000000000000000000000000,000fc05590c40c099728196b81d0c595,108.37421806,5.83726666
+70,1565086531,536993541,01df0500000000000000000000000000,012f281ae5dc059c0b20b453dee07fd9,8.04781088,6.14413164
+71,1565087175,536962223,0164af00000000000000000000000000,00169f5dd372647b6fb1fa94a30e65d6,10.80806256,6.54005964
+72,1565087179,537003824,02073000000000000000000000000000,016f999e57c6e686ca4db928778ff81a,7.42517606,6.87885103
+
+[06-Aug-19 10:28 AM] jl777c#5810
+ht,timestamp,nBits,bnTarget, blockhash, diff, netdiff
+
+[06-Aug-19 10:28 AM] jl777c#5810
+hashes are truncated to top 128bits
+
+[06-Aug-19 10:29 AM] jl777c#5810
+first 64 blocks happen in 4 minutes, so it starts with 60 blocks surplus
+
+[06-Aug-19 10:30 AM] jl777c#5810
+after 9 blocks it is down to 54 block surplus. exp() kicked in once
+
+[06-Aug-19 10:32 AM] jl777c#5810
+mining with 7 cores and using 1 core seemed to have too much variance
+
+[06-Aug-19 10:34 AM] jl777c#5810
+72,1565087179,537003824,02073000000000000000000000000000,016f999e57c6e686ca4db928778ff81a,7.42517606,6.87885103
+73,1565087380,522164215,001f97f7000000000000000000000000,0002deb836778432df078e3ae90e7ac8,122.02018914,7.52481853
+74,1565087413,536983644,01b85c00000000000000000000000000,00bb21b6732635e19d43ca7b6ebc23a5,8.75434659,7.89692891
+
+[06-Aug-19 10:34 AM] jl777c#5810
+ht.75 tipdiff at 280...
+
+[06-Aug-19 10:35 AM] jl777c#5810
+between tipdiff 288 and 289, the target went from 00374... to 0000d6b....
+
+[06-Aug-19 10:36 AM] jl777c#5810
+at tipdiff 290 it is back to 0004...
+
+[06-Aug-19 10:36 AM] jl777c#5810
+and rised from there, but no idea how it gets 256x harder between 288 and 289
+
+[06-Aug-19 10:39 AM] jl777c#5810
+another one changed between tipdiff 63 and 64, but the altK values, changed a lot too, it seems with the same j, ii, tipdiff, the altK should be the same, but i am seeing wildly fluctuating values. sure seems like a bug in the code
+
+[06-Aug-19 10:42 AM] jl777c#5810
+adding printouts to help debug
+
+[06-Aug-19 10:46 AM] zawy#5864
+You've mentioned a lot of things very clearly so I can respond to them:  
+1) exp() was supposed to be last.   
+2) Yes, I figured the exp() would need adjusting like you said.  Remember I suggested 2xT for each of the pruior 12 instead of 1xT if it became a problem.   
+3) I would like to RST data before you did the min() inside the loop.  My comments there indicate I was expcting it to be a small problem but I wanted some form of not using min() to prevent it from accidentally going into the exp().   
+4) The bug of gettnig much harder is expected if your miners are doing point 5) which is finding hard blocks strangely quickly.  The Poisson has has that kind of distribution and this may be a fundamental bug in RST.  I am thinking about how to merge everything into a single equation.  
+
+Changing exp() is fine. But I need to see the RST data with the 2x harder difficulties (1/2 ct[]) stored on the chain before you made changes to it. What block times does that correspond to?    I don't understand what you're doing multiplying that by 2, 3, 4 because that makes it even easier than we had it before where the solvetimes were fast.
+
+[06-Aug-19 10:48 AM] jl777c#5810
+i am putting into ct[] targets that are 2x, 3x, or 4x harder
+
+[06-Aug-19 10:48 AM] jl777c#5810
+the logic is that for blocks that take a long time, most of the time the miners are trying to solve much harder targets
+
+[06-Aug-19 10:49 AM] jl777c#5810
+if it takes more than 3 minutes, i see it trying to to 10x harder than what it eventually solves
+
+[06-Aug-19 10:49 AM] jl777c#5810
+so i tried to put an in between value that is harder than what was solved, but trying to get closer to the average that was attempted
+
+[06-Aug-19 10:50 AM] jl777c#5810
+this had a beneficial effect. making it easier, made blocks come out very fast
+
+[06-Aug-19 10:50 AM] zawy#5864
+You kept to my original code well, so I'll try to look at what you're doing.
+
+[06-Aug-19 10:51 AM] jl777c#5810
+oh, i also used the blockhash instead of the target as i see the blockhash being a lot closer to the hashrate solve strength
+
+[06-Aug-19 10:51 AM] jl777c#5810
+for the ct[]
+
+[06-Aug-19 10:53 AM] jl777c#5810
+i think there is definitely some implementation issue, as i am seeing data that should be the same generate different results, that could explain most all the problems, in spite of that it is working decently
+
+[06-Aug-19 10:54 AM] jl777c#5810
+as diff has increased from 4 to 11, first 20 blocks is taking 45 minutes, so it made up 25 of the 60 excess blocks
+
+[06-Aug-19 10:55 AM] jl777c#5810
+oh, i was calling the RST 6 and 12, just not using its data, that is why there is different data
+
+[06-Aug-19 10:59 AM] jl777c#5810
+think i found the bug
+
+[06-Aug-19 11:01 AM] jl777c#5810
+pretty sure this will make things work much better
+
+[06-Aug-19 11:04 AM] jl777c#5810
+indeed, it is a hardforking change, the calcs were all messed up with large tipdiff.
+
+[06-Aug-19 11:04 AM] jl777c#5810
+starting again
+
+[06-Aug-19 11:05 AM] jl777c#5810
+good thing it only takes 4 minutes for the first 64 blocks
+
+[06-Aug-19 11:05 AM] zawy#5864
+The avg target they faced is always 2x higher than the target they solved because target linearly increases.  The Poisson may do something to this perspective that messes it up, but I do not see an error in the reasoning.  Without a modelling program, it would take a lot of work to experimentally derive the correct function, if that reasoning is in error.    If RST W=3 is fixed, W=6 and 12 should be fixed.  W=3 problems can't be isolated if the are mixed together. Without the data,  I do not know if where we left it yesterday needs adjusting or not.
+
+[06-Aug-19 11:06 AM] zawy#5864
+I mean's 2x lower
+
+[06-Aug-19 11:06 AM] jl777c#5810
+until now all data was contaminated
+
+[06-Aug-19 11:06 AM] zawy#5864
+lol, you mean you could not resist tampering with it?
+
+[06-Aug-19 11:06 AM] jl777c#5810
+was an implementation bug
+
+[06-Aug-19 11:07 AM] zawy#5864
+oh, I did not yet read your last comments.....did you just now find something?
+
+[06-Aug-19 11:07 AM] jl777c#5810
+yes, just now
+
+[06-Aug-19 11:07 AM] jl777c#5810
+fixed what is basically a data corruption bug
+
+[06-Aug-19 11:07 AM] jl777c#5810
+throw out all the past data
+
+[06-Aug-19 11:09 AM] zawy#5864
+Can you change  T to 15 so that we can have a first glance in 30 minutes?
+
+[06-Aug-19 11:10 AM] jl777c#5810
+target linearly gets easier, so by the time it is solved, it is the easiest target the miners have seen. the actual solved target goes onchain and i make the ct[] array more difficult (lower target) to compensate, scaled by amount of time it took. as the longer it takes, the more the median target was difficult as compared to the solved
+
+[06-Aug-19 11:10 AM] jl777c#5810
+it is at height 68 now
+
+[06-Aug-19 11:10 AM] zawy#5864
+You can also reduce the 50 to 15
+
+[06-Aug-19 11:11 AM] zawy#5864
+I do not expect W=3 to need more than 10.  W=12 needs at least 24
+
+[06-Aug-19 11:11 AM] zawy#5864
+So the 50 was overkill
+
+[06-Aug-19 11:11 AM] jl777c#5810
+should we use different past values for the different W?
+
+[06-Aug-19 11:13 AM] jl777c#5810
+target is progressively getting easier, no retrograde. ht 68 tipdiff at 230
+
+[06-Aug-19 11:14 AM] zawy#5864
+Oh, doh, yeah, avg target is something else....let me see....
+
+[06-Aug-19 11:15 AM] jl777c#5810
+tipdiff 350
+
+[06-Aug-19 11:16 AM] jl777c#5810
+when the RST doesnt adjust fast enough, the exp() now comes in and helps it reduce faster
+
+[06-Aug-19 11:16 AM] zawy#5864
+well, no, avg target seems to be 1/2
+
+[06-Aug-19 11:17 AM] jl777c#5810
+block found at 420
+
+[06-Aug-19 11:18 AM] jl777c#5810
+ht.69 in 22 seconds diff of 6, no RST (well there was but it was making it easier and that is why i added min(), without it could have been a very easy block)
+
+[06-Aug-19 11:18 AM] zawy#5864
+If it's working as good as I had hoped, RST should stop about 10 blocks after 64
+
+[06-Aug-19 11:18 AM] jl777c#5810
+ht 70 54 seconds 9.86 diff
+
+[06-Aug-19 11:19 AM] jl777c#5810
+ht 71 2 seconds, no RST
+
+[06-Aug-19 11:19 AM] zawy#5864
+and maybe turn off and on until digishield catches up, about 15 blocks later
+
+[06-Aug-19 11:19 AM] zawy#5864
+so far, working great?
+
+[06-Aug-19 11:19 AM] jl777c#5810
+made up 7 of the surplus blocks in first 8, so yes!
+
+[06-Aug-19 11:20 AM] jl777c#5810
+helps to not have horrible implementation bugs
+
+[06-Aug-19 11:22 AM] jl777c#5810
+first test run with clean data:
+64,1565089774,536990285,01d24d00000000000000000000000000,00be977637ff1c351221be1081e9be5e,8.26732176,4.53336304
+65,1565089780,536936005,00fe4500000000000000000000000000,00c040752eeb85b9d7583cff661293d5,15.16130767,4.82155420
+66,1565089788,536952689,013f7100000000000000000000000000,00c1ddbd6e6326d2d835fedb4411f3c2,12.06812429,5.10952741
+67,1565089801,537038937,02905900000000000000000000000000,01a6cdbf8ea7077c7491b908ac8daf01,5.87350097,5.31274225
+68,1565090221,522756891,0028a31b000000000000000000000000,0000e1f906085415f37c070535402c64,94.86542292,5.76040134
+69,1565090243,537027664,02645000000000000000000000000000,011cde9f3d250d96678a982df2387f52,6.29590053,6.00885899
+70,1565090297,536970965,0186d500000000000000000000000000,007a7eb9806b2c9e0e82b9e315188fe6,9.86372223,6.37068142
+71,1565090299,537007320,0214d800000000000000000000000000,0193f80fbf5730061ecd7594d4f5ef90,7.23487625,6.68555577
+72,1565090399,536903738,00803a00000000000000000000000000,0051ad55e47fed265e3e024a655779dc,30.06443063,7.25359411
+73,1565090406,536987196,01c63c00000000000000000000000000,0185066540436f61bb1c82523d9124c4,8.48693715,6.80035694
+
+[06-Aug-19 11:22 AM] zawy#5864
+hmmm, if it has not made up all the blocks in the past 50, how can it turn off?
+
+[06-Aug-19 11:22 AM] jl777c#5810
+it cant
+
+[06-Aug-19 11:23 AM] jl777c#5810
+but it doesnt generate a target that is harder to solve
+
+[06-Aug-19 11:23 AM] jl777c#5810
+altK over 1 million
+
+[06-Aug-19 11:24 AM] jl777c#5810
+most recent 3 solves were 236 seconds
+
+[06-Aug-19 11:24 AM] zawy#5864
+what's the needed difficulty?
+
+[06-Aug-19 11:24 AM] jl777c#5810
+digishield
+
+[06-Aug-19 11:24 AM] jl777c#5810
+as adjusted by ct[]
+
+[06-Aug-19 11:25 AM] jl777c#5810
+many moving parts
+
+[06-Aug-19 11:25 AM] zawy#5864
+i mean, what should the difficulty be right now to be perfect for your hashrate?
+
+[06-Aug-19 11:25 AM] zawy#5864
+if it were not trying to make up for lost blocks?
+
+[06-Aug-19 11:25 AM] jl777c#5810
+i think about 30
+
+[06-Aug-19 11:26 AM] jl777c#5810
+maybe 25
+
+[06-Aug-19 11:26 AM] zawy#5864
+are the diffs shown RST then Digi?
+
+[06-Aug-19 11:27 AM] jl777c#5810
+no, first is just converting the bnTarget
+
+[06-Aug-19 11:27 AM] jl777c#5810
+the second is calculating what a miner would need
+
+[06-Aug-19 11:28 AM] zawy#5864
+So current D is 2x that value?
+
+[06-Aug-19 11:28 AM] zawy#5864
+Can you get your script to output solvetimes so we don't need to do the subtraction?
+
+[06-Aug-19 11:29 AM] zawy#5864
+(and round off D)
+
+[06-Aug-19 11:29 AM] jl777c#5810
+it depends on how many of the past 17 blocks were RST, and what their solve times were
+
+[06-Aug-19 11:29 AM] zawy#5864
+or at least to 1 decimal place
+
+[06-Aug-19 11:29 AM] jl777c#5810
+ok.
+
+[06-Aug-19 11:30 AM] zawy#5864
+past 17 seems stable......I don't understant how it's catching up if the avg difficulty is 1/2 the needed difficulty
+
+[06-Aug-19 11:30 AM] zawy#5864
+past 17 D appears stable., so avg D seems to be about 2x7 = 12
+
+[06-Aug-19 11:30 AM] jl777c#5810
+magic?
+
+[06-Aug-19 11:30 AM] jl777c#5810
+the diff is growing as the blocks are coming in slower
+
+[06-Aug-19 11:32 AM] jl777c#5810
+made up 8 blocks now, at ht. 84
+
+[06-Aug-19 11:33 AM] zawy#5864
+let me see data
+
+[06-Aug-19 11:33 AM] jl777c#5810
+diff at 14, netdiff at 20.
+
+[06-Aug-19 11:33 AM] zawy#5864
+what's diff and netdiff?
+
+[06-Aug-19 11:34 AM] jl777c#5810
+i am not sure why netdiff is off... i think it calculates the adaptive diff based on that block
+
+[06-Aug-19 11:34 AM] jl777c#5810
+not sure why it sometimes is way off
+

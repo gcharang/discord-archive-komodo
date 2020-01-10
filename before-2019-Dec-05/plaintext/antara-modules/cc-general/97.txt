@@ -1,0 +1,483 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[21-Sep-18 08:09 AM] jl777c#5810
+once it is converted, technically it isnt a valid token as far as assets CC goes, it is the wrong evalcode
+
+[21-Sep-18 08:09 AM] jl777c#5810
+so it is only subject to the rules of the new CC
+
+[21-Sep-18 09:44 AM] TonyL#3577
+Thanks for clarification! Asked because wondered about the case when somebody can "spoil" all the tokens available on AC
+
+[21-Sep-18 09:53 AM] jl777c#5810
+yes, we need to worry about such hacks! it is possible for such bugs to still exist
+
+[21-Sep-18 12:10 PM] TonyL#3577
+@jl777c Have I use `FSM` branch for `tokencovert` ?
+
+[21-Sep-18 12:39 PM] TonyL#3577
+upd: found commits in FSM
+`tokenconvert evalcode tokenid pubkey amount`
+Which `pubkey` have I use - GatewaysPubkey as well? (found info about EVAL_GATEWAYS evalcode of 251)
+Also should I "convert" tokens before or after transfer to gateway pubkey or it's not principal?
+
+[21-Sep-18 12:44 PM] TonyL#3577
+Also I've noticed that `GatewaysPubkey` is the same in guide here: https://github.com/jl777/komodo/blob/FSM/src/cc/gateways.cpp and in AC which I'm using. Is it means that it's constant for any AC in Komodo cluster?
+
+{Embed}
+https://github.com/jl777/komodo/blob/FSM/src/cc/gateways.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[21-Sep-18 01:43 PM] jl777c#5810
+tokenconvert destpubkey
+
+[21-Sep-18 01:44 PM] jl777c#5810
+so you send the tokens and change the evalcode in the same operation
+
+[21-Sep-18 01:44 PM] jl777c#5810
+gatewayspubkey is global across all chains, yes
+
+[21-Sep-18 01:48 PM] TonyL#3577
+Oh, great. So this step ` transfer to gateways pubkey:` by `tokentransfer` from your guide no needed anymore to setup gateway
+
+[21-Sep-18 01:54 PM] jl777c#5810
+you need to tokenconvert it instead of tokentransfer
+
+{Reactions}
+👌 
+
+[21-Sep-18 01:55 PM] jl777c#5810
+tokenconvert is basically tokentransfer with an evalcode convert added
+
+[21-Sep-18 01:56 PM] TonyL#3577
+I see. And when I'll want to convert it back it'll transfer it to token CC pubkey with evalcode of assetsCC?
+
+[21-Sep-18 01:57 PM] jl777c#5810
+the gatewaysclaim automatically does an evalcode convert to assets CC, so after the claim it is freely tradeable asset
+
+[21-Sep-18 01:57 PM] jl777c#5810
+you do need to do a tokenconvert before doing a withdraw as withdraw is a gatewaysCC
+
+[21-Sep-18 01:58 PM] TonyL#3577
+Withdraw - means usage of tokens not in gatewaysCC ?
+upd oh `gatewayswithdraw` got it
+
+[21-Sep-18 02:03 PM] jl777c#5810
+withdraw means to send tokens to the withdraw address to get back real coins
+
+[21-Sep-18 02:04 PM] TonyL#3577
+And these tokens will be secondary tradable by `price` CC or it's possible to use `assetsCC` calls like a `tokenbid`/`tokenask` ? Trying to finish the puzzle in my head  😂
+
+[21-Sep-18 02:05 PM] xRobeSx#5136
+@Deleted User I found: https://github.com/interledger/python-crypto-conditions
+
+{Embed}
+https://github.com/interledger/python-crypto-conditions
+interledger/python-crypto-conditions
+Python implementation of Crypto-conditions. Contribute to interledger/python-crypto-conditions development by creating an account on GitHub.
+https://avatars3.githubusercontent.com/u/14062960?s=400&v=4
+
+{Reactions}
+👌 
+
+[21-Sep-18 02:06 PM] TonyL#3577
+Hmm  @xRobeSx here ^^ is only Readme.md with one line
+
+[21-Sep-18 02:07 PM] xRobeSx#5136
+yea I saw there isn't anything really there, but maybe someone's working on it?
+
+[21-Sep-18 02:07 PM] TonyL#3577
+Looks like someone wanted to 2 years ago but no luck 😂
+
+{Reactions}
+😂 
+
+[21-Sep-18 02:10 PM] TonyL#3577
+https://github.com/bigchaindb/cryptoconditions
+
+{Embed}
+https://github.com/bigchaindb/cryptoconditions
+bigchaindb/cryptoconditions
+Multi-algorithm, multi-level, multi-signature format for expressing conditions and fulfillments - bigchaindb/cryptoconditions
+https://avatars1.githubusercontent.com/u/17097586?s=400&v=4
+
+[21-Sep-18 02:10 PM] TonyL#3577
+`Python implementation of Crypto-Conditions.` maybe thats it
+
+[21-Sep-18 02:12 PM] xRobeSx#5136
+nice @TonyL , now there you go @Deleted User
+
+{Reactions}
+🐍 (2) 🍞 
+
+[21-Sep-18 02:21 PM] TonyL#3577
+```./komodo-cli -ac_name=ORCL tokenconvert 251 2aee23c469b8d9f06d810e118cf0af4d013be43507692304b718337314eb1bdf 03ea9c062b9652d8eff34879b504eda0717895d27597aaeb60347d65eed96ccb40 1000000
+error code: -1
+error message:
+tokenconvert evalcode tokenid pubkey amount```
+@jl777c what I'm doing wrong? (tried to send evalcode as hex also, also tried to send different params as string in "")
+
+[21-Sep-18 02:23 PM] jl777c#5810
+that looks good
+
+[21-Sep-18 02:24 PM] jl777c#5810
+I will try to duplicate
+
+[21-Sep-18 02:24 PM] jl777c#5810
+a CC vout has an evalcode
+
+[21-Sep-18 02:24 PM] jl777c#5810
+when an evalcode is spent, its validation is triggered
+
+[21-Sep-18 02:24 PM] jl777c#5810
+coverting to gateways CC lets you use tokens for gateway
+
+[21-Sep-18 02:24 PM] jl777c#5810
+converting to TBD CC lets you use tokens for TBD
+
+[21-Sep-18 02:25 PM] jl777c#5810
+converting back to assets CC lets you do assets CC things, like tokenbid
+
+[21-Sep-18 02:25 PM] TonyL#3577
+I did just `./komodo-cli -ac_name=ORCL tokencreate KMD 1000000 KMD_equivalent_token_for_gatewaysCC` and then after transaction mined call this `tokenconvert` above
+
+[21-Sep-18 02:26 PM] TonyL#3577
+```git log -1
+commit 44d8e00a25fbd877d06594eecde90cee56dfec4a (HEAD -> FSM, origin/FSM)
+Author: jl777 <jameslee777@yahoo.com>
+Date:   Thu Sep 20 07:52:46 2018 -1100
+
+    +print
+```
+
+[21-Sep-18 02:34 PM] jl777c#5810
+@TonyL pushed fix
+
+[21-Sep-18 02:41 PM] TonyL#3577
+@jl777c thanks, will check in ~40 mins
+
+[21-Sep-18 02:41 PM] TonyL#3577
+Dinner time hehe 🍝
+
+{Reactions}
+🍴 🍺 
+
+[21-Sep-18 02:42 PM] jl777c#5810
+🌻
+
+{Reactions}
+😊 🌼 
+
+[21-Sep-18 04:11 PM] TonyL#3577
+@jl777c tokenconvert call worked for last build
+Hmm there is a tricky thing: 
+```./komodo-cli -ac_name=ORCL tokencreate KMD 1000000 ```
+Creates token with ` "supply": 100000000000000`
+But ```./komodo-cli -ac_name=ORCL tokenconvert 251 2aee23c469b8d9f06d810e118cf0af4d013be43507692304b718337314eb1bdf 03ea9c062b9652d8eff34879b504eda0717895d27597aaeb60347d65eed96ccb40 1000000 ```
+Transfers actually `1000000`
+
+Not touched tokensCC for a week so forgot this specifics 😃
+
+[21-Sep-18 04:19 PM] TonyL#3577
+Created new token, trying to convert whole balance this time but receive this error
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/492731510110289930/unknown.png
+
+[21-Sep-18 04:37 PM] TonyL#3577
+```"hex": "01000000020170cd01de80659f4c238cf55915d824666f699b78f19fc3317654430f7502ec01000000484730440220508ac0817caf806d5f9f99878915e3a1c921b8efdd0329f580e49fa8eb2c25dc0220451f01135996522375d1d6715af7a15148dcf28cba018924d67c2eef7a1b886c01ffffffffb802b0f5cf6de692850e0e977710833fd322f69cd403bca8522147afebe95b24000000007b4c79a276a072a26ba067a565802102a6fccee9503330091a2a2d92741cea93fa0157688406e2c755cbcce7e96b30e7814023c37cf0620178500ffa4d5751b519e303d0fcd5998c63bd26c38d25ec60c9a0451e3a23c16d82e6ceef135a2a935317c9b1fb4ce0df0d1d570f2acfad03a612a100af038001e3a10001ffffffff030000000000000000302ea22c8020a0069246c7a984a2a867280233bed518dfae2d7097c62e2978cd901465dd95078103120c008203000401cc00407a10f35a0000302ea22c80207041859fe1a7919dd625cfa8f479a74a825c41d24283946e8a7544d5e3ba1c058103120c008203000401cc0000000000000000246a22e374245be9ebaf472152a8bc03d49cf622d33f831077970e0e8592e66dcff5b002b800000000"```
+
+[21-Sep-18 05:18 PM] jl777c#5810
+what chain are you on?
+
+[21-Sep-18 05:38 PM] SHossain#0007
+ORCL
+
+[21-Sep-18 05:39 PM] jl777c#5810
+params?
+
+[21-Sep-18 05:44 PM] SHossain#0007
+`./komodod -ac_cc=1 -ac_name=ORCL -addressindex=1 -spentindex=1 -ac_supply=1000 -ac_reward=10000000000000 -addnode=195.201.20.230 -addnode=195.201.137.5`
+
+[21-Sep-18 06:10 PM] jl777c#5810
+@TonyL pushed fix. it is a hardforking change
+
+{Reactions}
+👌 
+
+[21-Sep-18 06:18 PM] TonyL#3577
+@Alright You can shutdown ORCL
+
+{Reactions}
+👌 
+
+[22-Sep-18 05:16 AM] TonyL#3577 (pinned)
+AC on latest FSM
+`./komodod -ac_cc=1 -ac_name=ORCL1 -addressindex=1 -spentindex=1 -ac_supply=1000 -ac_reward=10000000000000 -addnode=159.69.45.70 -addnode=159.69.201.122`
+
+[22-Sep-18 05:16 AM] TonyL#3577
+Pinned a message.
+
+[22-Sep-18 09:07 AM] CMaurice#1685
+http://diyhpl.us/wiki/transcripts/baltic-honeybadger/2018/the-future-of-bitcoin-smart-contracts/
+
+[22-Sep-18 09:07 AM] CMaurice#1685
+Are links frowned upon in general around here? People seem to be much more sensitive about links than I have ever been
+
+[22-Sep-18 09:08 AM] CMaurice#1685
+the talk was given a few minutes ago
+
+[22-Sep-18 09:08 AM] jl777c#5810
+seems like very old info
+
+[22-Sep-18 09:09 AM] CMaurice#1685
+well, there's nothing new to the information, sure
+
+[22-Sep-18 09:10 AM] CMaurice#1685
+but I think it gives some realistic ideas about what the state of the smart contract market is right now
+
+[22-Sep-18 09:10 AM] TonyL#3577
+https://github.com/KomodoPlatform/Mastering_CryptoConditions hmm there is more realistic ideas as I think
+
+{Embed}
+https://github.com/KomodoPlatform/Mastering_CryptoConditions
+KomodoPlatform/Mastering_CryptoConditions
+How to write utxo based CryptoConditions contracts for KMD chains - by jl777 - KomodoPlatform/Mastering_CryptoConditions
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[22-Sep-18 09:11 AM] jl777c#5810
+how does 4 year old stuff give any relevant idea about current smart contracts?
+
+[22-Sep-18 09:15 AM] TonyL#3577
+@jl777c after ``` ./komodo-cli -ac_name=ORCL1 tokenconvert 251 68f27842af628985bb5602f5d03475311ea75ab572ee3d9a6600f28f936b6142 03ea9c062b9652d8eff34879b504eda0717895d27597aaeb60347d65eed96ccb40 100000000000000```
+tokenbalance return 0 for both gateways pubkey and my pubkey:
+
+```./komodo-cli -ac_name=ORCL1 tokenbalance 68f27842af628985bb5602f5d03475311ea75ab572ee3d9a6600f28f936b6142 03ea9c062b9652d8eff34879b504eda0717895d27597aaeb60347d65eed96ccb40
+{
+  "result": "success",
+  "CCaddress": "RBF65sz1K1QzJyzzrz8ZQHMJjn1ES2E3DG",
+  "tokenid": "68f27842af628985bb5602f5d03475311ea75ab572ee3d9a6600f28f936b6142",
+  "balance": 0
+}
+```
+```
+./komodo-cli -ac_name=ORCL1 tokenbalance 68f27842af628985bb5602f5d03475311ea75ab572ee3d9a6600f28f936b6142 03d82cb358ef7cb1d89becbba3ab1a1805ab4921984066c57e18a278de8f1a43cd
+{
+  "result": "success",
+  "CCaddress": "RCQAWQUKCa5MFnbbrG6st6YDfi8qNNRDy8",
+  "tokenid": "68f27842af628985bb5602f5d03475311ea75ab572ee3d9a6600f28f936b6142",
+  "balance": 0
+}
+```
+Where are my tokens now technically?
+
+[22-Sep-18 09:16 AM] jl777c#5810
+they are not assets CC tokens anymore, they are in limbo, but you want to gatewaysbind them
+
+{Reactions}
+👌 
+
+[22-Sep-18 09:19 AM] CMaurice#1685
+@jl777c  the speaker explains that there are no real services for even unsophisticated multisig technologies yet. Real world stuff, like escrow with solicitors for home sales and the like.
+
+[22-Sep-18 09:21 AM] jl777c#5810
+it will be a while before real world things are integrated with the blockchain. oracles is an enabling step for that. within a blockchain, there are plenty of things a lot more complex than multisig
+
+[22-Sep-18 12:59 PM] TonyL#3577
+```./komodo-cli -ac_name=ORCL1 gatewaysbind f2436b54f2a353bf5fa84b34e727457573a5e80e64a04272efe4571f51bde07d 1fa7299d755eb909f9835863fcafce74298a762648656404ab73b5661f43f829 KMD 100000000000000 1 1 03431a95c761c491e38a891425009cff5f9eaa3aa3d3d4945dd17f3d0bfcff2590 038daf51be54f97f90c21028fb989a53f1fc98bdf1a6cdc65fb265ddfd20a0be05
+{
+  "result": "error",
+  "error": "couldnt gatewaysbind"
+}
+```
+```
+Gateway bind.KMD (f2436b54f2a353bf5fa84b34e727457573a5e80e64a04272efe4571f51bde07d) globaladdr.RKWpoK6vTRtq5b9qrRBodLkCzeURHeEk33 token balance 0.00000000 != 1000000.00000000
+```
+Before I did `tokenconvert` for this token. Is it because this token not a token anymore? Have I do bind before convert?
+
+[22-Sep-18 01:00 PM] jl777c#5810
+seems a bug
+
+[22-Sep-18 01:00 PM] TonyL#3577
+Also found this in daemon logs:
+```2018-09-22 12:41:50 ERROR: CScriptCheck(): 4acc648488e3416f84e9793335bfab97d5e6d35bb189a1d31f2af6c6a6d668a9:1 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+2018-09-22 12:41:50 ERROR: AcceptToMemoryPool: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags 4acc648488e3416f84e9793335bfab97d5e6d35bb189a1d31f2af6c6a6d668a9
+2018-09-22 12:41:50 Misbehaving: 159.69.201.122:47382 (0 -> 100)
+2018-09-22 12:42:03 ERROR: CScriptCheck(): 4acc648488e3416f84e9793335bfab97d5e6d35bb189a1d31f2af6c6a6d668a9:1 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+2018-09-22 12:42:03 ERROR: AcceptToMemoryPool: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags 4acc648488e3416f84e9793335bfab97d5e6d35bb189a1d31f2af6c6a6d668a9
+2018-09-22 12:42:03 ERROR: CScriptCheck(): 4acc648488e3416f84e9793335bfab97d5e6d35bb189a1d31f2af6c6a6d668a9:1 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+2018-09-22 12:42:03 ERROR: AcceptToMemoryPool: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags 4acc648488e3416f84e9793335bfab97d5e6d35bb189a1d31f2af6c6a6d668a9
+2018-09-22 12:42:03 ERROR: CScriptCheck(): 4acc648488e3416f84e9793335bfab97d5e6d35bb189a1d31f2af6c6a6d668a9:1 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+```
+Investigating now what I did at this moment. Error message asked to report a lot
+
+[22-Sep-18 01:01 PM] jl777c#5810
+you converted all f2436b54f2a353bf5fa84b34e727457573a5e80e64a04272efe4571f51bde07d ?
+
+[22-Sep-18 01:01 PM] jl777c#5810
+this code is unvalidated, each step could have a bug
+
+[22-Sep-18 01:01 PM] TonyL#3577
+Yes, converted all supply
+
+[22-Sep-18 01:02 PM] TonyL#3577
+```./komodo-cli -ac_name=ORCL1 tokenconvert 251 f2436b54f2a353bf5fa84b34e727457573a5e80e64a04272efe4571f51bde07d 03ea9c062b9652d8eff34879b504eda0717895d27597aaeb60347d65eed96ccb40 100000000000000
+check RWkCyZfZC5Qyak22nYVghZikiC6hbUck7f 1000000.00000000
+{
+  "result": "success",
+  "hex": "01000000027de0bd511f57e4ef7242a0640ee8a573754527e7344ba85fbf53a3f2546b43f2020000004948304502210096870b1c3664ba6a95a5adebcf994a8e68c2b1d4e973370f92152d2360c12fd40220011fe6ba2ce30a7af991c83e58b0fcccdaa1ed15c3d1c87a3977e5b914ef3e6901ffffffff7de0bd511f57e4ef7242a0640ee8a573754527e7344ba85fbf53a3f2546b43f2000000007b4c79a276a072a26ba067a565802103431a95c761c491e38a891425009cff5f9eaa3aa3d3d4945dd17f3d0bfcff259081400bbb41c147ab2ccc4c70273081045891256ea733713224bc2bd4c70c77d6e3480b6bbe5b82e1041e886689464e145041a6ed44f82678bf19594138a33bebc53ea100af038001e3a10001ffffffff030000000000000000302ea22c80208eb0bbd9c4cd4e66c80b3873149532b451a9ef1490301ff6b4d956ce15a287388103120c008203000401cc00407a10f35a0000302ea22c80207041859fe1a7919dd625cfa8f479a74a825c41d24283946e8a7544d5e3ba1c058103120c008203000401cc0000000000000000246a22e374f2436b54f2a353bf5fa84b34e727457573a5e80e64a04272efe4571f51bde07d00000000"
+}
+```
+
+[22-Sep-18 01:02 PM] jl777c#5810
+bug is that gatewaysbind is looking for wrong place
+
+[22-Sep-18 01:03 PM] TonyL#3577
+@jl777c Transaction which cased this ```2018-09-22 12:41:50 ERROR: CScriptCheck(): 4acc648488e3416f84e9793335bfab97d5e6d35bb189a1d31f2af6c6a6d668a9:1 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+2018-09-22 12:41:50 ERROR: AcceptToMemoryPool: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags 4acc648488e3416f84e9793335bfab97d5e6d35bb189a1d31f2af6c6a6d668a9
+2018-09-22 12:41:50 Misbehaving: 159.69.201.122:47382 (0 -> 100)
+2018-09-22 12:42:03 ERROR: CScriptCheck(): 4acc648488e3416f84e9793335bfab97d5e6d35bb189a1d31f2af6c6a6d668a9:1 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+2018-09-22 12:42:03 ERROR: AcceptToMemoryPool: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags 4acc648488e3416f84e9793335bfab97d5e6d35bb189a1d31f2af6c6a6d668a9
+2018-09-22 12:42:03 ERROR: CScriptCheck(): 4acc648488e3416f84e9793335bfab97d5e6d35bb189a1d31f2af6c6a6d668a9:1 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+2018-09-22 12:42:03 ERROR: AcceptToMemoryPool: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags 4acc648488e3416f84e9793335bfab97d5e6d35bb189a1d31f2af6c6a6d668a9
+2018-09-22 12:42:03 ERROR: CScriptCheck(): 4acc648488e3416f84e9793335bfab97d5e6d35bb189a1d31f2af6c6a6d668a9:1 VerifySignature failed: Script evaluated without error but finished with a false/empty top stack element
+``` error is actually broadcasting of `tokencovert`
+
+[22-Sep-18 01:03 PM] TonyL#3577
+```./komodo-cli -ac_name=ORCL1 sendrawtransaction 01000000027de0bd511f57e4ef7242a0640ee8a573754527e7344ba85fbf53a3f2546b43f2020000004948304502210096870b1c3664ba6a95a5adebcf994a8e68c2b1d4e973370f92152d2360c12fd40220011fe6ba2ce30a7af991c83e58b0fcccdaa1ed15c3d1c87a3977e5b914ef3e6901ffffffff7de0bd511f57e4ef7242a0640ee8a573754527e7344ba85fbf53a3f2546b43f2000000007b4c79a276a072a26ba067a565802103431a95c761c491e38a891425009cff5f9eaa3aa3d3d4945dd17f3d0bfcff259081400bbb41c147ab2ccc4c70273081045891256ea733713224bc2bd4c70c77d6e3480b6bbe5b82e1041e886689464e145041a6ed44f82678bf19594138a33bebc53ea100af038001e3a10001ffffffff030000000000000000302ea22c80208eb0bbd9c4cd4e66c80b3873149532b451a9ef1490301ff6b4d956ce15a287388103120c008203000401cc00407a10f35a0000302ea22c80207041859fe1a7919dd625cfa8f479a74a825c41d24283946e8a7544d5e3ba1c058103120c008203000401cc0000000000000000246a22e374f2436b54f2a353bf5fa84b34e727457573a5e80e64a04272efe4571f51bde07d00000000
+AssetValidate (t)
+vin1 100000000000000, vout0 0 special case, vout1 100000000000000, transfer validated 1000000.00000000 -> 1000000.00000000 (-1 -1)
+4acc648488e3416f84e9793335bfab97d5e6d35bb189a1d31f2af6c6a6d668a9```
+
+[22-Sep-18 01:04 PM] TonyL#3577
+So maybe bug is on this stage
+
+[22-Sep-18 01:04 PM] jl777c#5810
+4acc648488e3416f84e9793335bfab97d5e6d35bb189a1d31f2af6c6a6d668a9 indicates it accepted the tokenconvert
+
+[22-Sep-18 01:05 PM] TonyL#3577
+```2018-09-22 12:42:03 ERROR: AcceptToMemoryPool: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags 4acc648488e3416f84e9793335bfab97d5e6d35bb189a1d31f2af6c6a6d668a9```
+Looks scary af))
+
+[22-Sep-18 01:06 PM] jl777c#5810
+it is already in the blockchain
+
+[22-Sep-18 01:16 PM] jl777c#5810
+./komodo-cli -ac_name=ORCL1 gatewaysbind f2436b54f2a353bf5fa84b34e727457573a5e80e64a04272efe4571f51bde07d 1fa7299d755eb909f9835863fcafce74298a762648656404ab73b5661f43f829 KMD 100000000000000 1 1 03431a95c761c491e38a891425009cff5f9eaa3aa3d3d4945dd17f3d0bfcff2590 038daf51be54f97f90c21028fb989a53f1fc98bdf1a6cdc65fb265ddfd20a0be05
+why are there 2 pubkeys at the end?
+
+[22-Sep-18 01:16 PM] TonyL#3577
+Pubkeys of my nodes
+
+[22-Sep-18 01:18 PM] jl777c#5810
+but you said 1 1 for M and N
+
+[22-Sep-18 01:19 PM] jl777c#5810
+and for now best to get things working with a single pubkey as there are so many moving parts
+
+[22-Sep-18 01:19 PM] TonyL#3577
+Hmm I followed yours example:
+``` ./c gatewaysbind a7398a8748354dd0a3f8d07d70e65294928ecc3674674bb2d9483011ccaa9a7a 1f1aefcca2bdea8196cfd77337fb21de22d200ddea977c2f9e8742c55829d808 KMD 100000000000000 1 1 02ebc786cb83de8dc3922ab83c21f3f8a2f3216940c3bf9da43ce39e2a3a882c92
+ e6c99f79d4afb216aa8063658b4222edb773dd24bb0f8e91bd4ef341f3e47e5e```
+
+[22-Sep-18 01:19 PM] TonyL#3577
+There 2 different pubkeys at the end
+
+[22-Sep-18 01:19 PM] TonyL#3577
+Will try with single now
+
+[22-Sep-18 01:21 PM] jl777c#5810
+my example has just 1 pubkey:
+ ./c gatewaysbind a7398a8748354dd0a3f8d07d70e65294928ecc3674674bb2d9483011ccaa9a7a 1f1aefcca2bdea8196cfd77337fb21de22d200ddea977c2f9e8742c55829d808 KMD 100000000000000 1 1 02ebc786cb83de8dc3922ab83c21f3f8a2f3216940c3bf9da43ce39e2a3a882c92
+
+[22-Sep-18 01:21 PM] TonyL#3577
+Oh it's an output
+
+{Reactions}
+☺ 
+
+[22-Sep-18 01:22 PM] jl777c#5810
+all pubkeys start with 02 or 03
+
+[22-Sep-18 01:22 PM] TonyL#3577
+Got it now, I thought that `gatewayid` output is a second pubkey
+
+[22-Sep-18 01:29 PM] jl777c#5810
+plz try with latest version it has debug prints
+
+[22-Sep-18 01:29 PM] TonyL#3577
+👍 Ok
+
+[22-Sep-18 01:32 PM] jl777c#5810
+FSM branch
+
+{Reactions}
+✔ 
+
+[22-Sep-18 01:33 PM] TonyL#3577
+@jl777c 
+```cc/CCtx.cpp: In function ‘int64_t CCtoken_balance(char*, uint256)’:
+cc/CCtx.cpp:261:58: error: ‘str’ was not declared in this scope
+             fprintf(stderr,"check %s %.8f\n",uint256_str(str,txid),(double)it->second.satoshis/COIN);
+                                                          ^~~
+Makefile:2965: recipe for target 'cc/libbitcoin_server_a-CCtx.o' failed
+make[2]: *** [cc/libbitcoin_server_a-CCtx.o] Error 1
+make[2]: *** Waiting for unfinished jobs....
+mv -f cc/.deps/libbitcoin_server_a-faucet.Tpo cc/.deps/libbitcoin_server_a-faucet.Po
+mv -f cc/.deps/libbitcoin_server_a-assets.Tpo cc/.deps/libbitcoin_server_a-assets.Po
+mv -f cc/.deps/libbitcoin_server_a-CCutils.Tpo cc/.deps/libbitcoin_server_a-CCutils.Po
+make[2]: Leaving directory '/root/komodo/src'
+Makefile:4634: recipe for target 'all-recursive' failed
+make[1]: *** [all-recursive] Error 1
+make[1]: Leaving directory '/root/komodo/src'
+Makefile:659: recipe for target 'all-recursive' failed
+make: *** [all-recursive] Error 1
+```
+
+[22-Sep-18 01:34 PM] jl777c#5810
+try again
+
+[22-Sep-18 01:38 PM] TonyL#3577
+Builded now
+
+[22-Sep-18 01:42 PM] TonyL#3577
+```./komodo-cli -ac_name=ORCL1 gatewaysbind f2436b54f2a353bf5fa84b34e727457573a5e80e64a04272efe4571f51bde07d 1fa7299d755eb909f9835863fcafce74298a762648656404ab73b5661f43f829 KMD 100000000000000 1 1 03431a95c761c491e38a891425009cff5f9eaa3aa3d3d4945dd17f3d0bfcff2590
+
+Gateway bind.KMD (f2436b54f2a353bf5fa84b34e727457573a5e80e64a04272efe4571f51bde07d) destaddr.RKWpoK6vTRtq5b9qrRBodLkCzeURHeEk33 globaladdr.RKWpoK6vTRtq5b9qrRBodLkCzeURHeEk33 token balance 0.00000000 != 1000000.00000000
+{
+  "result": "error",
+  "error": "couldnt gatewaysbind"
+}
+```
+Will try to create and convert new token
+
+[22-Sep-18 01:42 PM] jl777c#5810
+i think the bug could be the tokenconvert is sending to the wrong address
+
+[22-Sep-18 01:43 PM] jl777c#5810
+oh, what pubkey did you convert the tokens to?
+
+[22-Sep-18 01:43 PM] jl777c#5810
+it will only work if you converted to pubkey 03ea9c062b9652d8eff34879b504eda0717895d27597aaeb60347d65eed96ccb40
+
+[22-Sep-18 01:43 PM] TonyL#3577
+```./komodo-cli -ac_name=ORCL1 tokenconvert 251 f2436b54f2a353bf5fa84b34e727457573a5e80e64a04272efe4571f51bde07d 03ea9c062b9652d8eff34879b504eda0717895d27597aaeb60347d65eed96ccb40 100000000000000
+``` 
+GatewaysPubkey
+
+[22-Sep-18 01:44 PM] jl777c#5810
+my bad, it should be 241
+
+{Reactions}
+👌 
+

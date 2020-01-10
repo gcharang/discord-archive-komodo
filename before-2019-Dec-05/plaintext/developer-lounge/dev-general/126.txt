@@ -1,0 +1,447 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[17-Feb-19 09:30 AM] TonyL#3577
+```tcp        1      0 127.0.0.1:43158         127.0.0.1:38427         CLOSE_WAIT  8548/python3        ```
+After script executing and daemon stop Python still have connection to RPC port of daemon but I dont have tcp6 connection from daemon RPC port (38427 is rpc port of chain)
+
+[17-Feb-19 09:35 AM] TonyL#3577
+Just interesting - will after machine reboot and only single daemon running on this machine it behave the same way?
+
+{Attachments}
+https://cdn.discordapp.com/attachments/463445317136809984/546625800355577856/Hv7zi.png
+
+[17-Feb-19 09:49 AM] TonyL#3577
+started daemon 
+``` sudo netstat -nputw | grep 38427
+tcp6       0      0 127.0.0.1:38427         127.0.0.1:43196         TIME_WAIT   -    ``` 
+started script
+```sudo netstat -nputw | grep 38427
+tcp        0      0 127.0.0.1:43226         127.0.0.1:38427         ESTABLISHED 8745/python3        
+tcp6       0      0 127.0.0.1:38427         127.0.0.1:43196         TIME_WAIT   -                   
+tcp6       0      0 127.0.0.1:38427         127.0.0.1:43226         ESTABLISHED 8693/./komodod```
+after daemon stopped (but script isn't stopped so proxy object is alive):
+```
+tcp        1      0 127.0.0.1:43226         127.0.0.1:38427         CLOSE_WAIT  8745/python3        
+tcp6       0      0 127.0.0.1:38427         127.0.0.1:43226         FIN_WAIT2   -        
+```
+
+[17-Feb-19 09:50 AM] TonyL#3577
+Then started manually without problems and script stop
+
+{Attachments}
+https://cdn.discordapp.com/attachments/463445317136809984/546629477703090186/unknown.png
+
+[17-Feb-19 09:52 AM] Alright#0419
+https://github.com/KMDLabs/pos64staker/commit/aa3efe5f7efad08299b8d722ea59762fb39a542c
+
+{Embed}
+https://github.com/KMDLabs/pos64staker/commit/aa3efe5f7efad08299b8d722ea59762fb39a542c
+add restart daemon · KMDLabs/pos64staker@aa3efe5
+https://avatars1.githubusercontent.com/u/36680730?s=200&v=4
+
+[17-Feb-19 09:53 AM] Alright#0419
+https://github.com/KMDLabs/pos64staker/blob/aa3efe5f7efad08299b8d722ea59762fb39a542c/stakerlib.py#L477 
+this seems to work fine
+
+{Embed}
+https://github.com/KMDLabs/pos64staker/blob/aa3efe5f7efad08299b8d722ea59762fb39a542c/stakerlib.py
+KMDLabs/pos64staker
+Automated staker for PoS assetchains. Contribute to KMDLabs/pos64staker development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/42953759?s=400&v=4
+
+[17-Feb-19 09:54 AM] TonyL#3577
+```    while True:
+        try:
+            rpc_connection.getinfo()
+            continue
+        except Exception as e:
+            break
+```
+After you poking dead daemon proxy connection finishing at all?
+
+[17-Feb-19 09:54 AM] TonyL#3577
+Oh you just waiting here and poking 😃
+
+[17-Feb-19 09:55 AM] Alright#0419
+it waits until the daemon stops responding
+
+[17-Feb-19 09:55 AM] TonyL#3577
+So is it works now?
+
+[17-Feb-19 09:55 AM] Alright#0419
+yep yep
+
+[17-Feb-19 09:56 AM] TonyL#3577
+Oh ok, maybe before you not waited before daemon is down
+
+[17-Feb-19 09:56 AM] Alright#0419
+Thanks for the help, ultimately I just need a wait in that other while
+
+[17-Feb-19 09:56 AM] Alright#0419
+deamon booting up while getting spammed to hell with rpc commands is not good
+
+[17-Feb-19 09:56 AM] TonyL#3577
+Ah, not waited before it's up?
+
+[17-Feb-19 09:56 AM] Alright#0419
+https://github.com/KMDLabs/pos64staker/blob/aa3efe5f7efad08299b8d722ea59762fb39a542c/stakerlib.py#L508
+
+{Embed}
+https://github.com/KMDLabs/pos64staker/blob/aa3efe5f7efad08299b8d722ea59762fb39a542c/stakerlib.py
+KMDLabs/pos64staker
+Automated staker for PoS assetchains. Contribute to KMDLabs/pos64staker development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/42953759?s=400&v=4
+
+[17-Feb-19 09:56 AM] Alright#0419
+moved the sleep inside the try and it's good now
+
+[17-Feb-19 09:57 AM] Alright#0419
+problem was that it would wait just before the try than spam the hell out of the daemon with `getinfo` as it was booting up
+
+[17-Feb-19 09:57 AM] Alright#0419
+this seems to be the problem
+
+[17-Feb-19 09:58 AM] TonyL#3577
+I see 👍 Problem was not in network connections yep, since when system assigned port to client there is no reason to reassign port of server to client (and you even not creating new proxy)
+
+[17-Feb-19 09:58 AM] TonyL#3577
+Nice that it works now 😃
+
+[17-Feb-19 04:38 PM] Hermes#6934
+C# is very similar to javascript
+
+[17-Feb-19 04:38 PM] Hermes#6934
+def defines a variable ...if conditional statements are even the same
+
+[17-Feb-19 04:39 PM] Hermes#6934
+syntax only changed
+
+[17-Feb-19 08:20 PM] ComputerGenie 👴🏼📢#7004
+`getrawtransaction txid_here`
+`getrawtransaction txid_here 1` if you want raw *and* decoded
+
+{Reactions}
+👌 👍 
+
+[17-Feb-19 08:49 PM] dukeleto#7326
+@ComputerGenie 👴🏼📢 duh
+
+[17-Feb-19 08:49 PM] dukeleto#7326
+read the source code for full enlightenment 👼
+
+[17-Feb-19 08:50 PM] dukeleto#7326
+this is what it feels like looking around in the codebases of other weirdo old BTC forks, when you are used to the modern comforts of ZEC forks: https://twitter.com/alxglaser/status/944026884215656449
+
+{Embed}
+Alex Glaser (@alxglaser)
+https://twitter.com/alxglaser/status/944026884215656449
+Vintage computing for trusted radiation measurements. We built an information barrier for nuclear warhead inspections using an Apple IIe. 6502 processor borrowed from 1981 Atari arcade machine. See it live at #34c3 next week. https://t.co/4rjOwwzQYu
+https://pbs.twimg.com/media/DRnbRjxUQAAhxD_.jpg:large
+Twitter
+
+{Reactions}
+🤓 (2) 
+
+[17-Feb-19 10:25 PM] ComputerGenie 👴🏼📢#7004
+```dukeletoToday at 2:49 PM
+@ComputerGenie 凸(⊙▂⊙ )凸 duh```
+❓ @dukeleto 😕
+
+[18-Feb-19 01:04 AM] dukeleto#7326
+i was being cheeky. you know, others can do this thing, right? 👼
+
+[18-Feb-19 03:20 AM] dukeleto#7326
+if somebody wanted to make a Rust client for KMD, this might be a good place to start: https://github.com/paritytech/parity-zcash
+
+{Embed}
+https://github.com/paritytech/parity-zcash
+paritytech/parity-zcash
+Rust implementation of Zcash protocol . Contribute to paritytech/parity-zcash development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/14176906?s=400&v=4
+
+[18-Feb-19 09:48 AM] Mylo#8306
+https://github.com/n41r0j/komodorpc-rust-client
+
+{Embed}
+https://github.com/n41r0j/komodorpc-rust-client
+n41r0j/komodorpc-rust-client
+A Rust RPC client for Komodo (KMD). Contribute to n41r0j/komodorpc-rust-client development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/10341677?s=400&v=4
+
+[18-Feb-19 09:49 AM] Mylo#8306
+@jorian fyi @dukeleto  's  last comment.
+
+[18-Feb-19 09:51 AM] jorian#4555
+oh lol, a whole client in rust. i just made the rpc layer
+
+[18-Feb-19 09:53 AM] blackjok3r#3181
+I doubt it could be done in less than a few years even if you knew what you were doing.... There is so much code and its a bit of a maze lol.
+
+[18-Feb-19 10:07 AM] jorian#4555
+true, and it means there are 2 komodo codebases
+
+[18-Feb-19 10:07 AM] jorian#4555
+no-one wants that
+
+[18-Feb-19 10:07 AM] jorian#4555
+the biggest problem being james only knowing C
+
+[18-Feb-19 10:12 AM] blackjok3r#3181
+C isnt that bad anyway...  Its extremly powerful and fast, just have to get used to it. 😃
+
+[18-Feb-19 10:13 AM] blackjok3r#3181
+Still blows me away what you can do with it.
+
+[18-Feb-19 11:16 AM] dukeleto#7326
+Which is why some people call it "high level assembly" 😉
+
+[18-Feb-19 11:22 AM] jl777c#5810
+you can write C++ in C
+
+[18-Feb-19 11:23 AM] jl777c#5810
+or any sort of data table driven code, in C
+
+[18-Feb-19 11:23 AM] jl777c#5810
+why is it such a problem that I only code in C? I can pretend to code in other languages, just prefer to be 100x more efficient
+
+[18-Feb-19 02:36 PM] dukeleto#7326
+i also prefer James to be 100X more efficient
+
+[18-Feb-19 02:37 PM] ComputerGenie 👴🏼📢#7004
+conversely, if he were less efficient, I could keep up with each new project since I'm not
+
+[18-Feb-19 02:49 PM] freakbros#9074
+No shit he is crazy
+
+[18-Feb-19 03:24 PM] dukeleto#7326
+@jl777c this drop-in replacement for malloc reduces the memory of consumption of Firefox by 16% and Redis by 39%: https://github.com/plasma-umass/Mesh
+
+{Embed}
+https://github.com/plasma-umass/Mesh
+plasma-umass/Mesh
+A memory allocator that automatically reduces the memory footprint of C/C++ applications. - plasma-umass/Mesh
+https://avatars1.githubusercontent.com/u/1880823?s=400&v=4
+
+{Reactions}
+🆒 
+
+[18-Feb-19 03:24 PM] dukeleto#7326
+iguana and komodod could use a bit of a diet, they love RAM
+
+[18-Feb-19 03:25 PM] dukeleto#7326
+historical note: you will find my name in about:credits of Firefox, and that was related to reducing startup memory of firefox
+
+{Reactions}
+👏 (5) 👍 (6) rum (3) 
+
+[19-Feb-19 03:46 PM] josephnicholas GMT+8#5904
+Hi all, I may have some issues building SuperNET/KomodoPlatform on my Mac, I always get this error.
+```
+Undefined symbols for architecture x86_64:
+  "_crypto_generichash_blake2b_salt_personal", referenced from:
+      _bitcoin_sigtxid in iguana_sign.o
+```
+
+[19-Feb-19 03:48 PM] jl777c#5810
+install libsodium-dev
+
+[19-Feb-19 03:50 PM] josephnicholas GMT+8#5904
+There is no Homebrew equivalent.
+
+[19-Feb-19 03:53 PM] ComputerGenie 👴🏼📢#7004
+https://formulae.brew.sh/formula/libsodium
+
+{Embed}
+https://formulae.brew.sh/formula/libsodium
+libsodium
+Homebrew’s package index
+https://brew.sh/assets/img/homebrew-256x256.png
+
+{Reactions}
+🍻 
+
+[19-Feb-19 03:54 PM] josephnicholas GMT+8#5904
+installed that but still the same
+
+[19-Feb-19 03:59 PM] ComputerGenie 👴🏼📢#7004
+are you using 'zcutil/build**-mac**.sh'?
+
+[19-Feb-19 03:59 PM] josephnicholas GMT+8#5904
+I am building `KomodoPlatform` `master` branch
+
+[19-Feb-19 04:00 PM] josephnicholas GMT+8#5904
+the `m_onetime m_osx`
+
+[19-Feb-19 04:00 PM] ComputerGenie 👴🏼📢#7004
+oh
+
+[19-Feb-19 04:01 PM] jl777c#5810
+you want mm? mm2 is what to build
+
+[19-Feb-19 04:01 PM] ComputerGenie 👴🏼📢#7004
+I misread, thought you were trying to build komodo
+
+[19-Feb-19 04:02 PM] josephnicholas GMT+8#5904
+@jl777c I just want to debug KomodoPlatform, what branch should I use?
+
+[19-Feb-19 04:02 PM] jl777c#5810
+what are you trying to build?
+
+[19-Feb-19 04:03 PM] gcharang#6833
+do you want the software related to komodo blockchain
+or dPOW and DEX?
+
+[19-Feb-19 04:03 PM] josephnicholas GMT+8#5904
+yes dPow
+
+[19-Feb-19 04:03 PM] jl777c#5810
+you want to run your own notaries?
+
+[19-Feb-19 04:04 PM] jl777c#5810
+notaries only run on unix
+
+[19-Feb-19 04:04 PM] josephnicholas GMT+8#5904
+No, I just want to have a working builds that I can debug and follow in the code
+
+[19-Feb-19 04:04 PM] jl777c#5810
+builds of what?
+
+[19-Feb-19 04:05 PM] josephnicholas GMT+8#5904
+> notaries only run on unix
+Maybe that's why I have no problem building in Ubuntu
+
+[19-Feb-19 04:05 PM] jl777c#5810
+komodod is in the komodo repo not the SuperNET repo
+
+[19-Feb-19 04:05 PM] jl777c#5810
+dPoW notarizer only needs to be run by notaries
+
+[19-Feb-19 04:06 PM] josephnicholas GMT+8#5904
+Oh okay I was just curious how dPow notarizer works in code, like do code stepping when debugging, don't know if that's possible to do locally
+
+[19-Feb-19 04:06 PM] jl777c#5810
+you can certainly run it locally, but it wont participate in any notarization unless you setup a notary testnet
+
+[19-Feb-19 04:08 PM] josephnicholas GMT+8#5904
+Oh okay, well, I think that's my roadblock then, maybe its not possible in my current situation.
+
+[19-Feb-19 04:10 PM] jl777c#5810
+you will need 2+ unix nodes, then create a testnet description (based on elected)
+
+[19-Feb-19 04:11 PM] josephnicholas GMT+8#5904
+Is there like a Wiki to do that? Sorry a bit more of a step by step guy.
+
+[19-Feb-19 04:13 PM] josephnicholas GMT+8#5904
+Noted @Deleted User
+
+[19-Feb-19 07:44 PM] kimmel (Pungo.io)#2275
+I was reading some docs in my free time and found typos I think
+
+[19-Feb-19 07:44 PM] kimmel (Pungo.io)#2275
+
+{Attachments}
+https://cdn.discordapp.com/attachments/463445317136809984/547503717218516993/wcZ4erT4jOnEQAAAABJRU5ErkJggg.png
+
+[19-Feb-19 07:44 PM] kimmel (Pungo.io)#2275
+https://developers.komodoplatform.com/basic-docs/cryptoconditions/cc-gateways.html#create-an-oracle
+
+{Embed}
+https://developers.komodoplatform.com/basic-docs/cryptoconditions/cc-gateways.html
+Contract Module: Gateways | Komodo Documentation
+Documentation for developers building on Komodo
+
+[19-Feb-19 08:14 PM] dukeleto#7326
+@kimmel (Pungo.io) I think maybe @Bryan_Beus maintains those docs
+
+[19-Feb-19 08:14 PM] dukeleto#7326
+it should be able to be updated by submitting some typo fixes via the github web interface
+
+[19-Feb-19 08:15 PM] Bryan_Beus#6442
+@kimmel (Pungo.io) 
+
+I do maintain the docs on developers.komodoplatform.com
+
+These are new lines that I must have missed. Oracles is a tough one. 
+
+Let me take a look, hang on.
+
+[19-Feb-19 08:17 PM] Bryan_Beus#6442
+Ah, this is in gateways.
+
+[19-Feb-19 08:24 PM] Bryan_Beus#6442
+There's something wrong with this documentation, I'll need to take a deeper look. Thank you for pointing it out.
+
+[19-Feb-19 08:33 PM] dukeleto#7326
+special characters somewhere might be getting interpreted in an unexpected way, and changing markup/etc
+
+[19-Feb-19 08:33 PM] dukeleto#7326
+like using a _ in markdown without a \ before it will underline the rest of your text
+
+[19-Feb-19 08:49 PM] kimmel (Pungo.io)#2275
+thx! havent checked github interface, will take a look
+
+[19-Feb-19 09:48 PM] Bryan_Beus#6442
+There was a whole section that was somehow cut out from the original tutorial. 
+
+It looks as though I haven't even worked over most of this material. I don't know how this was missed. I looked through the Github contributors, and it's primarily me on this page, so I guess it's a mystery.
+
+Anyhow, fixing it all now. Thanks!
+
+[19-Feb-19 10:19 PM] dukeleto#7326
+another example of how awesome and friendly this dev community is
+
+{Reactions}
+💯 
+
+[20-Feb-19 04:40 AM] Bryan_Beus#6442
+@TonyL 
+
+Hi Tony, I spent some time today working over the documentation for Gateways. If I recall correctly, I believe you are the dev expert on this cc module?
+
+If so, can you please look through this documentation and review?
+
+I did as much as I could today to ensure accuracy, but I am certain there are still several mistakes.
+
+The easiest way to handle revisions is if you would please make a fork of the repo to your repository, make any changes you want locally by just writing right over the top wherever you need, and then when you are done, submit all revisions as a single pull request.
+
+https://github.com/KomodoPlatform/developer-docs/blob/dev/docs/basic-docs/cryptoconditions/cc-gateways.md
+
+{Embed}
+https://github.com/KomodoPlatform/developer-docs/blob/dev/docs/basic-docs/cryptoconditions/cc-gateways.md
+KomodoPlatform/developer-docs
+Contribute to KomodoPlatform/developer-docs development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[20-Feb-19 04:40 AM] Bryan_Beus#6442
+Let me know if this is something that you will have time to work on, thank you!
+
+[20-Feb-19 04:41 AM] Bryan_Beus#6442
+@kimmel (Pungo.io) 
+
+You can take a look at the above linked documentation, if you like. I think there are still errors, and I am working on uprooting those, but in the meantime, it can probably get you through.
+
+[20-Feb-19 08:20 AM] TonyL#3577
+@Bryan_Beus Hi! I think It's better to consult with GatewaysCC developer @Mihailo on this matter since few parameters in gatewaysbind and two new RPC  were  added. 
+I've not tested reworked gateways yet because working on rogue testing atm.
+
+[20-Feb-19 11:56 AM] Alright#0419
+@Bryan_Beus new `gatewaysbind` requires 4 new args, `pubtype p2shtype wiftype <depositaddress>`
+
+[20-Feb-19 11:56 AM] Alright#0419
+for KMD and R address based coins this is `60 85 188 <address>` I believe
+
+[20-Feb-19 01:57 PM] josephnicholas GMT+8#5904
+Hi all, just wanted to ask if Komodo's technology especially the asset chains support fungible and non-fungible tokens
+
+[20-Feb-19 01:57 PM] josephnicholas GMT+8#5904
+or is doable with CC
+
+[20-Feb-19 02:14 PM] josephnicholas GMT+8#5904
+Any support page for fungible @Deleted User ?
+

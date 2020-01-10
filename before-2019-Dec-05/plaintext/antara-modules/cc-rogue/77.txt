@@ -1,0 +1,358 @@
+==============================================================
+Guild: Komodo
+Channel: cc-rogue
+Topic: use FSM branch AND then build as normal
+ 
+./komodod -ac_name=ROGUE -ac_supply=1000000 -pubkey=<yourpubkey> -addnode=5.9.102.210  -ac_cclib=rogue -ac_perc=10000000 -ac_reward=100000000 -ac_cc=60001 -ac_script=2ea22c80203d1579313abe7d8ea85f48c65ea66fc512c878c0d0e6f6d54036669de940febf8103120c008203000401cc -daemon
+Guide here: https://github.com/KomodoPlatform/komodo/wiki/Get-Started-with-Rogue-Game
+Explorer: http://rogue.explorer.dexstats.info/
+Player's Handbook: https://github.com/jl777/komodo/blob/jl777/src/cc/rogue/rogue.doc
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[01-Mar-19 04:48 PM] TonyL#3577
+But if keystroke with "failed" status in log and not generated transaction - after I quit rogue how it'll be broadcasted
+
+[01-Mar-19 04:48 PM] jl777c#5810
+tui
+
+[01-Mar-19 04:48 PM] TonyL#3577
+Aha
+
+[01-Mar-19 04:49 PM] jl777c#5810
+when i put in logic to wait for confirmation, people complained about locked up system
+
+[01-Mar-19 04:49 PM] jl777c#5810
+so on exit, i now exit
+
+[01-Mar-19 04:49 PM] TonyL#3577
+Ok, I'll parse keystrokes.log I think to know the status
+
+[01-Mar-19 04:49 PM] jl777c#5810
+but that means that there could be 2 keystrokes tx in the mempool
+
+[01-Mar-19 04:50 PM] jl777c#5810
+1 that was there the moment of game end and another that is the last keystrokes
+
+[01-Mar-19 04:50 PM] jl777c#5810
+i think a good thing would be to do an extract, it prints the gold, etc
+
+[01-Mar-19 04:50 PM] jl777c#5810
+if that is sane, then do a bailout
+
+[01-Mar-19 04:50 PM] jl777c#5810
+if not, then dont. once you do a bailout, whatever happens is permanent
+
+[01-Mar-19 04:51 PM] jl777c#5810
+the utxo from the newgame tx is being spent and that is a onetime thing
+
+[01-Mar-19 04:51 PM] jl777c#5810
+i think extract as a sanity test is good. you can also see if there are 1 or 2 keystrokes tx in the mempool
+
+[01-Mar-19 04:51 PM] jl777c#5810
+and user can confirm the gold amounts extracted before issuing bailout
+
+[01-Mar-19 04:52 PM] jl777c#5810
+this way, we can at least troubleshoot any games that have a bad extraction, while they are still in that state. once it is bailed out, there isnt much i can do, nor can i find out what state it was in
+
+[01-Mar-19 04:53 PM] jl777c#5810
+extract should be able to extract the full gameplay even if it is in the mempool, but that needs to be tested
+
+[01-Mar-19 04:55 PM] TonyL#3577
+I need to know two things as I see;
+1) txids of keystrokes which were broadcasted - to wait until they mined
+2) explore if there any error = not broadcasted keystroke, ensure that it broadcasted and mined before bailout
+
+[01-Mar-19 04:55 PM] jl777c#5810
+keystrokes.log should have all that
+
+[01-Mar-19 04:55 PM] TonyL#3577
+Yep, so I'll just parse keystrokes.log
+
+[01-Mar-19 04:55 PM] jl777c#5810
+and get confirmation of bailout with extract command result
+
+[01-Mar-19 04:56 PM] jl777c#5810
+that way I can always fix whatever bug and rescue an otherwise would be deleted playerdata
+
+[01-Mar-19 04:56 PM] TonyL#3577
+Extract working before bailout as well?
+
+[01-Mar-19 04:56 PM] TonyL#3577
+Oh it doing first
+
+[01-Mar-19 04:56 PM] TonyL#3577
+Then baillout
+
+[01-Mar-19 04:56 PM] jl777c#5810
+it should, needs testing
+
+[01-Mar-19 04:56 PM] TonyL#3577
+Ok, I see
+
+[01-Mar-19 04:57 PM] jl777c#5810
+yes, extract to make sure it will be a happy result, then and only then bailout. that alone might solve the main issue of tears for lost playerdata
+
+[01-Mar-19 04:58 PM] jl777c#5810
+then as all the various edge cases are fixed, all the extract will return the happy data for safe bailout. extract is essentially a trial run for a bailout, without doing the actual bailout
+
+[01-Mar-19 04:58 PM] jl777c#5810
+only if there is any issue, would tui need to parse keystrokes to reconstruct what needs to be done
+
+[01-Mar-19 04:59 PM] jl777c#5810
+it could be that all keystrokes need to be confirmed before a proper extract
+
+[01-Mar-19 04:59 PM] jl777c#5810
+not sure
+
+[01-Mar-19 04:59 PM] jl777c#5810
+so, there seems to be a lot of questions that can be answered with a few changes to tui
+
+{Reactions}
+💯 
+
+[01-Mar-19 04:59 PM] TonyL#3577
+I'll look for `"status":"error"` in keystrokes.log but only when player stopped game - to not corrupt keystrokes consistency
+
+[01-Mar-19 05:00 PM] jl777c#5810
+yes
+
+[01-Mar-19 05:00 PM] jl777c#5810
+that and extract before bailout with user confirm of results
+
+[01-Mar-19 05:00 PM] TonyL#3577
+Great! Now it's clear what to do and why
+
+[01-Mar-19 05:00 PM] TonyL#3577
+Will start tomorrow from it
+
+[01-Mar-19 05:01 PM] TonyL#3577
+Now head not working good already - typing `keystokes` instead of `keystrokes` lol
+
+[01-Mar-19 05:01 PM] TonyL#3577
+So written code will be buggy 100% 😂
+
+[01-Mar-19 05:03 PM] TonyL#3577
+Dear ROGUERs - if you don't want to lose progress - it's better to not play now. I'll try to implement data saving ensuring on TUI side tomorrow.
+
+[01-Mar-19 05:05 PM] Cryptofist#7504
+@TonyL  So testing play bounty, lets say March 4th -7th ?
+
+[01-Mar-19 05:06 PM] TonyL#3577
+Let's not set deadlines
+
+[01-Mar-19 05:06 PM] Cryptofist#7504
+I'm still on the same version as of 2 days ago, everything works fine except that all warriors save
+
+[01-Mar-19 05:06 PM] Cryptofist#7504
+Sure
+
+[01-Mar-19 05:06 PM] TonyL#3577
+If it will work fine tomorrow we'll make it after tomorrow. If not - there will be no sense until it fixed
+
+[01-Mar-19 05:06 PM] Cryptofist#7504
+will switch to "Upcoming Play testing bounty: Stay tuned"
+
+[01-Mar-19 05:07 PM] Cryptofist#7504
+And add the instructions and info to view. Its a lot so having a head start on what to doc is good.
+
+[01-Mar-19 05:07 PM] Cryptofist#7504
+Ill delete all of the other posts I made as well.
+
+[01-Mar-19 05:07 PM] TonyL#3577
+You can just write that critical bugs were found
+
+[01-Mar-19 05:08 PM] TonyL#3577
+And first round of campaign is finished
+
+[01-Mar-19 05:08 PM] Cryptofist#7504
+Do you want me to keep documenting every time i play?
+
+[01-Mar-19 05:08 PM] Cryptofist#7504
+I think I have like... 12 games to submit
+
+[01-Mar-19 05:08 PM] TonyL#3577
+Btw ronyi earned reward because sent correct report
+
+{Reactions}
+👍 
+
+[01-Mar-19 05:08 PM] Cryptofist#7504
+yay ronyi!
+
+[01-Mar-19 05:08 PM] TonyL#3577
+Only winner again! 😃
+
+[01-Mar-19 05:08 PM] TonyL#3577
+Pinned a message.
+
+[01-Mar-19 05:09 PM] Cryptofist#7504
+Ill submit mine when I get a chance. I had some trouble understanding where to see if gold --> ROGUE properly
+
+[01-Mar-19 05:10 PM] ronyi#5719
+? 😄 I'm just playing.
+
+[01-Mar-19 05:10 PM] Cryptofist#7504
+There was a bounty for filling out the form. 😉  Thank you for all of your help !!!
+
+[01-Mar-19 05:10 PM] Cryptofist#7504
+Glad you have an awesome perspective about it
+
+[01-Mar-19 05:11 PM] ronyi#5719
+Now everything works well on my side, intresting. Last 8 play without any issue.
+
+{Reactions}
+yassinheart 
+
+[01-Mar-19 05:23 PM] TonyL#3577
+For me it happening in ~20% of such short games. So maybe you just was unlucky at first. Anyway hope TUI fix will help
+
+[01-Mar-19 06:00 PM] ronyi#5719
+hypothermia(secound time), kill "1 hit" and warrior is alive.
+
+[01-Mar-19 10:36 PM] Cryptofist#7504
+Finished my update, going to look it over a couple more times before sharing it. I'l be back here asap, going to try and rest up and beat being sick. 😃  See you all soon.
+
+[02-Mar-19 06:59 AM] TonyL#3577
+Have some progress 😃 Only left to detect errors in keystrokes and re-broadcast
+
+{Attachments}
+https://cdn.discordapp.com/attachments/542758401516634112/551297417241427978/unknown.png
+
+[02-Mar-19 07:03 AM] TonyL#3577
+Will assume that each second element I get from keystrokes.log for game is JSON response and left only it (params persists in JSON so I no need this list with call args)
+
+[02-Mar-19 07:06 AM] TonyL#3577
+A little inconsistency persists in JSONs:
+When transaction broadcasting fine its:
+```"result":"success"},"error":null,"id":"jl777"}```
+In case of error:
+```"status":"error","error":"couldnt find batontxid"},"error":null,"id":"jl777"}```
+
+[02-Mar-19 07:08 AM] TonyL#3577
+So in case of success I need to expect "result" key, in case of error "status" key
+
+[02-Mar-19 07:22 AM] TonyL#3577
+Hmm, not sure what can I do in case when no keystrokes at all for game in keystrokes.log:
+```Top Ten Scores:
+   Score Name
+ 1    79 : quit on level 1.
+39574
+39574
+Waiting for next block before bailout
+
+Keystrokes of this game:
+
+
+Extraction info:
+
+{'name': 'rogue', 'method': 'extract', 'gametxid': 'ee487efdb37d4df59b680f5f3fbfe93b7da8bc49e3b954f3b463f379b3680e96', 'rogueaddr': 'RVuzXY65FyJiPPWSBc9efATh6nb4M9MceR', 'status': 'error'}
+```
+
+[02-Mar-19 07:23 AM] TonyL#3577
+Aha, it was added with some delay
+
+[02-Mar-19 07:23 AM] TonyL#3577
+To file
+
+[02-Mar-19 07:23 AM] TonyL#3577
+So just have to scan file more until find something 😃
+
+[02-Mar-19 07:24 AM] jl777c#5810
+i can add local file logging for keystrokes if needed.
+
+[02-Mar-19 07:24 AM] TonyL#3577
+I'm parsing keystrokes.log
+
+[02-Mar-19 07:27 AM] jl777c#5810
+i guess that should work as good as it would be the same functions making the local log. ok, so it seems  we are maybe going to have a new level of reliability. instead of relying on luck for bailing out with the right warrior we can verify ahead of time. and even take corrective actions. what would be left are edge case bugs where the bug is reproduced with somehow an extract that isnt working properly
+
+{Reactions}
+🚀 
+
+[02-Mar-19 07:29 AM] TonyL#3577
+Oh yes, if progress not satisfy user - he can press button now and wait 10 seconds more, if no keystrokes found in log at all - it waiting until there will be some attempts, if keystroke broadcasted with error - it should rebroadcast it until get txid
+
+[02-Mar-19 07:29 AM] TonyL#3577
+Should me much better after polish it
+
+[02-Mar-19 07:31 AM] TonyL#3577
+Ohhh wrote Windows incompatible parser - just realised :/
+
+[02-Mar-19 07:31 AM] TonyL#3577
+```def find_game_keystrokes_in_log(gametxid):
+
+    p1 = subprocess.Popen(["cat", "keystrokes.log"], stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(["grep", gametxid], stdin=p1.stdout, stdout=subprocess.PIPE)
+    p1.stdout.close()
+    output = p2.communicate()[0]
+    keystrokes_log_for_game = bytes.decode(output).split("\n")
+    return keystrokes_log_for_game```
+
+[02-Mar-19 07:31 AM] TonyL#3577
+Unlikely Windows have `cat` and `grep`
+
+[02-Mar-19 07:39 AM] jl777c#5810
+I can change the format of keystrokes.log if needed to make it work on windows
+
+[02-Mar-19 07:44 AM] TonyL#3577
+In general it will be just a sweet dream if for each game will be creating `gametxid.keystrokes.log`
+
+[02-Mar-19 07:44 AM] TonyL#3577
+In `logs` folder let's say
+
+[02-Mar-19 07:45 AM] TonyL#3577
+So even if player will play gazillions of games files will be tiny
+
+[02-Mar-19 07:45 AM] jl777c#5810
+ok, i used to have it doing that, just not in a folder
+
+[02-Mar-19 07:45 AM] TonyL#3577
+Oh folder just for user-friendliness
+
+[02-Mar-19 07:46 AM] TonyL#3577
+Can be without folder if needed
+
+[02-Mar-19 07:47 AM] jl777c#5810
+ok, i will reenable that
+
+[02-Mar-19 07:48 AM] TonyL#3577
+Yay
+
+{Attachments}
+https://cdn.discordapp.com/attachments/542758401516634112/551309758997594125/unknown.png
+
+[02-Mar-19 07:48 AM] TonyL#3577
+Saved warrior first time with new features
+
+[02-Mar-19 07:54 AM] TonyL#3577
+That was great idea @jl777c ! Seems it might help
+
+[02-Mar-19 07:54 AM] TonyL#3577
+Just want to catch "baton not found case" now
+
+[02-Mar-19 07:54 AM] jl777c#5810
+does the extraction data show the amount of hold, hp, strength...
+
+[02-Mar-19 07:55 AM] TonyL#3577
+Yes - as value of "extracted" key
+
+[02-Mar-19 07:55 AM] jl777c#5810
+as long as the user sees that then if gold matches what they had, it should be the same player
+
+[02-Mar-19 07:55 AM] TonyL#3577
+Aha, just user have to remember how many he had
+
+[02-Mar-19 07:55 AM] jl777c#5810
+pushed a version that stores the raw keystrokes in seed.1, seed.2, ... files
+
+[02-Mar-19 07:55 AM] jl777c#5810
+seed.0 file is created by extract
+
+[02-Mar-19 07:56 AM] jl777c#5810
+so this way both can coexist. the first seed.N file that is 0 length indicates the prior one was the last
+
+[02-Mar-19 07:56 AM] TonyL#3577
+keystrokes.log remained as well?
+

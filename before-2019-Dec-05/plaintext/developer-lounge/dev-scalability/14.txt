@@ -1,0 +1,390 @@
+==============================================================
+Guild: Komodo
+Channel: dev-scalability
+Topic: Discussion about Komodo scalability. Komodo has demonstrated 20,000 TPS.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[05-Jun-18 05:03 AM] imylomylo#0000
+just found this: http://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html#increase-concurrent-executions-limit
+
+{Embed}
+http://docs.aws.amazon.com/lambda/latest/dg/concurrent-executions.html
+Managing Concurrency - AWS Lambda
+The unit of scale for AWS Lambda is a concurrent execution (see for more details). However, scaling indefinitely is not desirable in all scenarios. For example, you may want to control your concurrency for cost reasons, or to regulate how long it takes you to process a batch ...
+
+[05-Jun-18 05:03 AM] imylomylo#0000
+default is 100 concurrent function calls, so will need to apply to raise that limit.
+
+[05-Jun-18 05:03 AM] blackjok3r#0000
+These are all things I need to know exactly what to ask for.
+
+[05-Jun-18 05:03 AM] blackjok3r#0000
+I think that is what the meeting is for.
+
+[05-Jun-18 05:03 AM] imylomylo#0000
+1000 that page says, not 100.  sorry
+
+[05-Jun-18 05:04 AM] blackjok3r#0000
+Because blocks are faster at he start, we could start 1024 chain groups at once... once they run for 10mins, start next 1024 etc... This should slow down the requests for that start variable a lot.
+
+[05-Jun-18 05:08 AM] imylomylo#0000
+oh can probably send raw text
+
+[05-Jun-18 05:11 AM] blackjok3r#0000
+yeah saves me changing stuff. This looks super simple to change.
+
+[05-Jun-18 05:11 AM] blackjok3r#0000
+its only a few lines of code lol
+
+[05-Jun-18 05:12 AM] imylomylo#0000
+yeah - you win in some places, heaps.  some, you lose (like developer experience!)
+
+[05-Jun-18 05:12 AM] blackjok3r#0000
+`body: start=0`
+
+[05-Jun-18 05:12 AM] blackjok3r#0000
+is that what I should try?
+
+[05-Jun-18 05:13 AM] imylomylo#0000
+`body: "start=0"`
+
+[05-Jun-18 05:13 AM] blackjok3r#0000
+ok yep, forgot quotes
+
+[05-Jun-18 05:13 AM] imylomylo#0000
+oh and you need to add some `text/plain` headers, i'm just testing it
+
+[05-Jun-18 05:15 AM] imylomylo#0000
+`handler.js`
+```
+'use strict';
+
+module.exports.activation= (event, context, callback) => {
+  const response = {
+    statusCode: 200,
+    headers: { "Content-Type": "text/plain" },
+    body: "start:1",
+    };
+
+  callback(null, response);
+};
+```
+`serverless deploy --function activation`
+
+[05-Jun-18 05:15 AM] imylomylo#0000
+3s update
+
+[05-Jun-18 05:15 AM] blackjok3r#0000
+ok
+
+[05-Jun-18 05:16 AM] imylomylo#0000
+if you want to add logging, just hte usual `console.log("some comment")` and from command line `serverless logs --function activation`
+
+[05-Jun-18 05:18 AM] blackjok3r#0000
+Sweet works perfect. Cheers. I will test this out with blaster code, but I think all i need to change is the ENV var for URL 😄
+
+[05-Jun-18 05:18 AM] blackjok3r#0000
+getting the hang of this docker stuff finally.
+
+[05-Jun-18 05:19 AM] imylomylo#0000
+finally :trollface:
+
+[05-Jun-18 05:19 AM] blackjok3r#0000
+I think a few weeks was too long :troll:
+
+[05-Jun-18 05:19 AM] imylomylo#0000
+you're way ahead of me, i've forgotten what i learned.  i'm now limited to sudo su - docker start nexus and docker ps -a
+
+[05-Jun-18 05:20 AM] blackjok3r#0000
+I have like 5 commands I did everything with that I got off someone else.
+
+[05-Jun-18 05:20 AM] imylomylo#0000
+i got into docker because i went on an offshore sailing trip and needed to do nodejs dev, so needed some npm repo for offline work.
+
+[05-Jun-18 05:20 AM] blackjok3r#0000
+But the main thing was thinking about how to make the images, so that you need to make minimal changes.
+
+[05-Jun-18 05:21 AM] blackjok3r#0000
+Its pretty cool, to work with once I got my head around that.
+
+[05-Jun-18 05:21 AM] imylomylo#0000
+have fun with serverless, it's pretty cool stuff
+
+[05-Jun-18 05:21 AM] blackjok3r#0000
+put your layers in the wrong order... it takes foreve to build the image each time you make changes to something trivial.
+
+[05-Jun-18 05:21 AM] imylomylo#0000
+yeah ok...noted.
+
+[05-Jun-18 05:21 AM] imylomylo#0000
+😄
+
+[05-Jun-18 07:35 AM] jl777#0000
+When can we be ready for arbitary number of chains test?
+
+[05-Jun-18 07:36 AM] blackjok3r#0000
+as soon as I have AWS access to test how mnay chains per vCPU. Not sure of machine power compared to VULTR.
+
+[05-Jun-18 07:36 AM] blackjok3r#0000
+the meeting is on thursday, early morning my time.
+
+[05-Jun-18 07:37 AM] blackjok3r#0000
+and @Mylo needs to get the DB to submit the correct stats query to smk762
+
+[05-Jun-18 07:39 AM] jl777#0000
+ok, so lets get everything ready and validated, thursday we get approved and do the tests as soon after as we can. already we are notarizing so that is good
+
+[05-Jun-18 07:39 AM] jl777#0000
+also we have many hertzner dedicated servers that have RAM and SSD but not much available CPU cores. if you need such nodes, we can make them available
+
+[05-Jun-18 07:43 AM] blackjok3r#0000
+ok cool. those would be good for notary network if you want to expand that. I think some notaries wanted to run the testnet also. are we sticking with 64 chains for notarization? and do these chains have the be the same chains as the load test. 
+
+If so we can do this, just need the seed IP containers IP pushed to somewhere for a seed node list.
+
+[05-Jun-18 07:44 AM] jl777#0000
+i would like to verify we can notarize during the blast, but no need to notarize more than 64 chains
+
+[05-Jun-18 07:44 AM] blackjok3r#0000
+ok no problem, I will make it so.
+
+[05-Jun-18 06:50 PM] benohanlon#0000
+@benohanlon commented on polycryptoblog’s file https://komodo-platform.slack.com/files/U0JUJF8RX/FB118UCRX/image_uploaded_from_ios.jpg: ptytrader... for you?
+
+[05-Jun-18 06:52 PM] ptytrader#0000
+Already done bro
+
+[05-Jun-18 06:52 PM] ptytrader#0000
+😎
+
+[05-Jun-18 06:52 PM] patchkez#0000
+you do not have to use `sudo`,  if you add yourself into `docker` group
+
+[05-Jun-18 06:56 PM] patchkez#0000
+do not be shy to mention our names - emmanux, patchkez :trollface:
+
+[05-Jun-18 07:14 PM] patchkez#0000
+jl777 I am working on parser which can generate docker-compose yaml definition file for scale test. Sometimes ago there was discussion about generation of magic file taking too long and that you would be able to generate this for us. Such JSON structure (example) works for me and I can parse that with python:
+```
+[
+  {
+    "assetname": "TXSCL001",
+    "p2p": 12345,
+    "rpc": 12346,
+    "supply": 1700000,
+    "ac_cc": 1,
+    "ac_reward": 100000000,
+    "notarize": true
+  },
+  {
+    "assetname": "TXSCL002",
+    "p2p": 12347,
+    "rpc": 12348,
+    "supply": 1700000,
+    "ac_cc": 1,
+    "ac_reward": 100000000,
+    "notarize": false
+  }
+]
+```
+`"notarize": true` should be set for assetchains which should be notarized (first 64 chains?), these containers must be deployed differently (with ingress controller). Can you please generate such JSON file for us?
+
+[05-Jun-18 07:16 PM] jl777#0000
+yes, will have it done tomorrow
+
+[05-Jun-18 07:18 PM] patchkez#0000
+thanks
+
+[05-Jun-18 07:34 PM] shossain#0000
+the first 64 chains are already being notarized
+
+[05-Jun-18 11:58 PM] blackjok3r#0000
+Those chains will not be able to be used for the full stress test as they are too long
+
+[05-Jun-18 11:58 PM] blackjok3r#0000
+I need to start them again.
+
+[05-Jun-18 11:59 PM] blackjok3r#0000
+We will change the supply, so that they dont go on a fork.
+
+[06-Jun-18 12:22 AM] blackjok3r#0000
+The first 64 will be started maybe half a day or a day in advance of the rest and we will get them notarizing empty blocks well before the TxBlast is activated.
+
+[06-Jun-18 12:43 AM] blackjok3r#0000
+haha
+
+[06-Jun-18 02:13 PM] jl777#0000
+I updated the komodo_port.c to support -genjson
+
+[06-Jun-18 02:36 PM] patchkez#0000
+jl777 thanks. How exactly to use it? Like this?
+```
+gcc -o manychains komodo_port.c
+./manychains -genjson 8192 SCALE 1000000 > outfile.json
+```
+
+[06-Jun-18 02:45 PM] jl777#0000
+yes
+
+[06-Jun-18 03:41 PM] patchkez#0000
+jl777 ok, do I need to set also:
+```
+-ac_cc=
+-ac_end=
+-ac_reward= 
+-ac_halving= 
+-ac_decay=```
+? otherwise values are set to `0`
+
+[06-Jun-18 03:50 PM] jl777#0000
+if not set it is 0, ac_cc should be 3
+
+[06-Jun-18 04:07 PM] patchkez#0000
+right `{ "assetname": "SCALE000", "p2p": 59789, "rpc": 59790, "supply": 1000000, "ac_cc": 3, "ac_reward": 0, "notarize": true }`
+
+[06-Jun-18 04:17 PM] jl777#0000
+that is what you specified
+
+[06-Jun-18 08:36 PM] benohanlon#0000
+@benohanlon commented on smk762’s file https://komodo-platform.slack.com/files/U9HKUSY7K/FB1NBDD8V/image.png: I like this one smk762 can I use it?
+
+[06-Jun-18 09:50 PM] drsoares#0000
+When should I get my popcorn for tomorrow’s scaling text? 🍿:drooling_face:
+
+[06-Jun-18 10:53 PM] smk762#0000
+I have no problem with it being used, but all I really did was add a couple of KMD bumper stickers. Original source - https://www.flickr.com/photos/soap2222/5495730558
+
+{Embed}
+https://www.flickr.com/photos/soap2222/5495730558
+Where We're Going We Don't Need Roads - Painting
+Explore Soap2222's photos on Flickr. Soap2222 has uploaded 206 photos to Flickr.
+https://c2.staticflickr.com/6/5136/5495730558_a1a14393f2_b.jpg
+
+[07-Jun-18 06:03 AM] patchkez#0000
+@Steve Lee is there any chance that we get access to AWS so we can start preparing for scale tests?
+
+[07-Jun-18 10:25 AM] imylomylo#0000
+ah thanks for the tip, i'll try it tomorrow
+
+[07-Jun-18 02:59 PM] blackjok3r#0000
+https://drive.google.com/open?id=1qSLAyfW3fq0Rg2QxDurm6c5EjmW0NQKp
+
+[07-Jun-18 03:02 PM] blackjok3r#0000
+https://komodo-platform.slack.com/files/U5Z26MP60/FB3EBE402/untitled_diagram.png
+
+[07-Jun-18 08:33 PM] patchkez#0000
+blackjok3r here is docker-compose file for first 64 chains:
+https://github.com/patchkez/scaletest_containers/blob/master/docker-compose-first-64chains/docker-compose-64.yml
+In case there is problem getting access to AWS, I can deploy cluster on baremetal/instances if needed
+
+{Embed}
+https://github.com/patchkez/scaletest_containers/blob/master/docker-compose-first-64chains/docker-compose-64.yml
+patchkez/scaletest_containers
+Contribute to scaletest_containers development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/11808967?s=400&v=4
+
+[07-Jun-18 09:01 PM] n2okpride#0000
+i'll need to add credits
+
+[07-Jun-18 09:01 PM] n2okpride#0000
+patchkez do you know what the estimated cost would be?
+
+[07-Jun-18 09:34 PM] patchkez#0000
+@Steve Lee for first 64 chains, we need 3 x m4.16xlarge (3 x 64vCPUs, ) instances. Pricing for one instance is $3.84 per Hour, this makes 11.52$/hour for 3 instances. I am not sure how long we need to make this notarization test. @SHossain do you know? Then for this 8192 chains scale test - `16384 virtual CPUS = 256 x m4.16xlarge instances` are needed. But we will try to make this 8192 chains test short within 1 hour. For one chain we count with 2 vCPUs, maybe we will be able to limit it to less cores without loosing much performance.
+
+[07-Jun-18 09:37 PM] shossain#0000
+We don't need AWS for notary nodes. we have servers for this.
+
+[07-Jun-18 09:39 PM] shossain#0000
+the first 64 chains, i can manage them myself. jl777 told me we have enough servers to use for notarization. and, i can put 1 of my alien tech server for txblasting many chains
+
+[07-Jun-18 09:40 PM] jl777#0000
+notarization we can use the existing 2 nodes, its just a proof of concept
+
+[07-Jun-18 09:40 PM] jl777#0000
+for blasting i think it is best to use instances as that would need to scale up with the number of chains
+
+[07-Jun-18 09:40 PM] patchkez#0000
+ok
+
+[07-Jun-18 09:41 PM] jl777#0000
+of course more blasting from fixed servers would be fine but I dont think that works much beyond saturating a few chains per server, so best to make them instances
+
+[07-Jun-18 09:58 PM] n2okpride#0000
+patchkez i'm talking with AWS about getting some credits if we can wait
+
+[07-Jun-18 09:58 PM] n2okpride#0000
+if we need it quickly to get sizing and configuration prework done then we can expense now
+
+[07-Jun-18 09:58 PM] n2okpride#0000
+just let me know
+
+[08-Jun-18 01:34 AM] blackjok3r#0000
+The balsters and miners are the same docker image. You cannot seperate them out, unless I start all over again, and waste 2 weeks of work. They need to be deployed as docker image pairs. The first 64 will have ports open for 2-4 external servers to connect to. I was supplied with 4x4core servers yesterday to get all this working as a test. If a 4 core server can notarize 64 chains then we are set except for AWS credit for the mining/blasting nodes.
+
+[08-Jun-18 01:35 AM] blackjok3r#0000
+I cant see why a 4 core server cant do 64 chains, but maybe 16gb ram wont be enough, but I have a feeling extrapolating what my NN uses that it will be perfectly fine.
+
+[08-Jun-18 02:22 AM] imylomylo#0000
+is it just a matter of running up an AWS image and testing?  i can run one up for a cpl hour no probs
+
+[08-Jun-18 02:42 AM] blackjok3r#0000
+it uses kubernetes
+
+[08-Jun-18 02:43 AM] blackjok3r#0000
+But I gues for the 64 chain test I can just load it into a single AWS instance and do `docker-compose up -d`
+
+[08-Jun-18 02:44 AM] blackjok3r#0000
+I need to fix the docker-compose.yml patchkex made, as its a few versions old. I used a hacky workaround to pass and SSH tunnel for the p2p port from the mining node to the host to make the available to the outside world for my NN's to connect to it.
+
+[08-Jun-18 02:45 AM] blackjok3r#0000
+I am doing some other stuff for now and will come back to this, there is no use editing the file by hand for a few hours, when patch can probably just change the template and generate a new one in a few minutes.
+
+[08-Jun-18 09:57 AM] block_tech#0000
+Will the blast be today ?
+
+[08-Jun-18 02:44 PM] jorian#0000
+i lost you at crypto conditions
+
+[08-Jun-18 03:40 PM] smk762#0000
+https://www.reddit.com/r/komodoplatform/comments/8mhzj1/komodo_scalability_story_this_is_how_i_like_to/
+
+{Embed}
+https://www.reddit.com/r/komodoplatform/comments/8mhzj1/komodo_scalability_story_this_is_how_i_like_to/
+Komodo Scalability Story - this is how I like to explain how we ar...
+# Scaling Without Compromises ## About Komodo - Komodo team is concluding that we are not a platform but rather a technology provider. - We...
+https://i.redditmedia.com/ms0-NWNHAndyTDPdBl4XH8tvnnN_RxPFB9MEo1NnCEQ.jpg?w=320&s=3e5c6580fd647e003417c07d7d941165
+
+[09-Jun-18 01:02 AM] mylo5ha5#0000
+listening to this in the bg whilst doing some stats/explorer dev https://www.youtube.com/watch?v=oFJowHqnke8
+
+{Embed}
+CRYPTO 101 w/ Matthew Aaron
+https://www.youtube.com/watch?v=oFJowHqnke8
+Zilliqa: A Solution to the Scaling Debate w/ CEO Dr. Xinshu Dong
+*** this is not financial or legal advice*** So far it seems that there isn’t a great solution to the scaling issues that the blockchain face. Bigger blocks ...
+https://i.ytimg.com/vi/oFJowHqnke8/maxresdefault.jpg
+
+[09-Jun-18 01:02 AM] mylo5ha5#0000
+zilliqa scaling solution by sharding ^
+
+[11-Jun-18 09:37 AM] jl777#0000
+how are the shards secured?
+
+[11-Jun-18 09:38 AM] jl777#0000
+also does anybody have an AWS account, testing for scaling is currently stalled due to lack of working AWS account
+
+[11-Jun-18 09:44 AM] blackjok3r#0000
+I have a personal account I made, but I am not sure if I am allowed to make very large instances.
+
+[11-Jun-18 09:53 AM] grewalsatinder#0000
+@ns408 what you say?
+
+[11-Jun-18 09:56 AM] grewalsatinder#0000
+I can make an account with AWS, but Nitin has the know how and past connections to get big number of instances allowed.
+
+[11-Jun-18 09:56 AM] grewalsatinder#0000
+How many instances are required for this test?
+

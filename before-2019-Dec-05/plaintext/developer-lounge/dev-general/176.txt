@@ -1,0 +1,443 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[22-May-19 01:13 PM] dukeleto#7326
+are you getting segfaults or core dumps?
+
+[22-May-19 01:13 PM] dukeleto#7326
+and what is your open file limit? that could maybe have something to do with it
+
+[22-May-19 01:14 PM] ComputerGenie 👴🏼📢#7004
+`$ ulimit -n
+1000000
+`
+
+[22-May-19 01:16 PM] ComputerGenie 👴🏼📢#7004
+`are you getting segfaults or core dumps?`
+it doesn't explicitly state segfault like other issues have, if that's what you mean
+
+[22-May-19 01:18 PM] dukeleto#7326
+@ComputerGenie 👴🏼📢 run `ulimit -c unlimited` in the shell that starts komodod, and that will allow it to make `core` files, which help in debugging. Not sure if that is exactly what we need, but it's good for our debugging
+
+[22-May-19 01:19 PM] dukeleto#7326
+you can do `gdb komodod core`
+
+[22-May-19 01:19 PM] dukeleto#7326
+and then get lots of debug info, if we get a coredump
+
+[22-May-19 01:20 PM] ComputerGenie 👴🏼📢#7004
+```Reading symbols from komodod...done.
+//core: No such file or directory.```
+So, the answer is "no, no core dumps"
+
+[22-May-19 01:25 PM] dukeleto#7326
+not yet!
+
+[22-May-19 01:25 PM] dukeleto#7326
+without setting `ulimit -c unlimited`, they won't be created at all
+
+[22-May-19 01:25 PM] dukeleto#7326
+@ComputerGenie 👴🏼📢 when you say "it crashes", what is the exact behavior?
+
+[22-May-19 01:25 PM] dukeleto#7326
+a crash should make a core file
+
+[22-May-19 01:27 PM] ComputerGenie 👴🏼📢#7004
+the exact behavior is that komodod (for KMD) is no longer running (or no longer outwardly doing anything but still running) and there's nothing happening in debug log or std out
+
+[22-May-19 01:27 PM] cipi#4502
+btw, `sudo dmesg -e` will likely show a `segfault`
+
+[22-May-19 01:27 PM] dukeleto#7326
+oh, sounds like a hang
+
+[22-May-19 01:28 PM] ComputerGenie 👴🏼📢#7004
+sometimes it hangs other times it dies
+
+[22-May-19 01:28 PM] dukeleto#7326
+now that you have ulimit -c unlimited, when it next dies, it should make a `core` file in the current directory
+
+[22-May-19 01:28 PM] dukeleto#7326
+if it's hanging
+
+[22-May-19 01:28 PM] dukeleto#7326
+i would attach to that PID with gdb
+
+[22-May-19 01:28 PM] dukeleto#7326
+and look at the values of some variables with `x`
+
+[22-May-19 01:29 PM] dukeleto#7326
+https://giphy.com/gifs/nothing-shoot-chest-G6sJqVpD1U4jC
+
+{Embed}
+https://giphy.com/gifs/nothing-shoot-chest-G6sJqVpD1U4jC
+https://media2.giphy.com/media/G6sJqVpD1U4jC/giphy_s.gif?cid=73b8f7b15ce54ea5686f6b373230a06e&rid=giphy_s.gif
+
+[22-May-19 01:29 PM] dukeleto#7326
+when you are inspecting variables in gdb, you are reading the matrix
+
+[22-May-19 01:30 PM] dukeleto#7326
+@ComputerGenie 👴🏼📢 i would try to look at important variables, like block height or chain tip and see if something is corrupt. I don't know. You are swimming into the ocean and the other side can't be seen
+
+[22-May-19 01:30 PM] dukeleto#7326
+basically, every day in open source software maintenance :troll_lol:
+
+[22-May-19 01:31 PM] dukeleto#7326
+@ComputerGenie 👴🏼📢 another way to play this game, is switch to different branches of KMD, see if that changes anything
+
+[22-May-19 01:31 PM] dukeleto#7326
+@ComputerGenie 👴🏼📢 FSM branch is pretty stable, are you running on `dev` branch?
+
+[22-May-19 01:33 PM] ComputerGenie 👴🏼📢#7004
+currently dev branch, but have tried all through the hierarchy but master
+
+[22-May-19 01:33 PM] ComputerGenie 👴🏼📢#7004
+_played that game already_
+
+[22-May-19 01:33 PM] dukeleto#7326
+lol
+
+[22-May-19 01:33 PM] dukeleto#7326
+it's a weird issue
+
+[22-May-19 01:34 PM] dukeleto#7326
+@ComputerGenie 👴🏼📢 my guess is that only your specific pool config and usage pattern is tickling this, and most full nodes don't experience this
+
+[22-May-19 01:34 PM] dukeleto#7326
+that is my guess
+
+[22-May-19 01:34 PM] dukeleto#7326
+@ComputerGenie 👴🏼📢 and for good measure, make sure `dmesg` isn't reporting HD failures and shit
+
+[22-May-19 01:35 PM] dukeleto#7326
+@ComputerGenie 👴🏼📢 one of my favorite stories of why I love Git, is that Git started to freak out on an old laptop of mine. Giving me the strangest craziest internal errors you never want to see
+
+[22-May-19 01:35 PM] dukeleto#7326
+I thought I had discovered a git bug!! Was so happy
+
+[22-May-19 01:35 PM] dukeleto#7326
+Turns out, my SSD was failing and Git noticed and said wtfbbq
+
+[22-May-19 01:36 PM] dukeleto#7326
+My guess, is a failing HD could cause some really weird issues in KMD. Especially with full disk encryption enabled (which I did have enabled)
+
+[22-May-19 01:36 PM] dukeleto#7326
+imagine reading a block from disk and a few bits are flipped
+
+[22-May-19 01:36 PM] dukeleto#7326
+much bad such wow
+
+[22-May-19 01:38 PM] ComputerGenie 👴🏼📢#7004
+`my guess is that only your specific pool config and usage pattern`
+I'm inclined to agree, but since I can't figure out what "this" is, I don't know what to alter in the pool
+It's a maddening catch22
+
+[22-May-19 01:40 PM] dukeleto#7326
+@ComputerGenie 👴🏼📢 maybe "bisect your config"
+
+[22-May-19 01:41 PM] dukeleto#7326
+start making your config simpler, until the bug goes away? Turn off some features?
+
+[22-May-19 01:41 PM] dukeleto#7326
+Not sure if that is possible, but maybe
+
+[22-May-19 01:41 PM] dukeleto#7326
+turn everything off and see if you can make the problem go away, then slowly turn features on
+
+[22-May-19 01:41 PM] ComputerGenie 👴🏼📢#7004
+well, it's not the config itself, it has to be a call (or several) that's the issue
+
+[22-May-19 01:42 PM] Alright#0419
+can I get a tl;dr of what you're trying to do?
+
+[22-May-19 01:43 PM] dukeleto#7326
+@ComputerGenie 👴🏼📢 i assume that maybe this is related to calling getblocktemplate a bajillion times?
+
+[22-May-19 01:43 PM] dukeleto#7326
+maybe you can simulate what your pool is doing and trigger the issue
+
+[22-May-19 01:43 PM] dukeleto#7326
+I don't run pools, so I am just guessing, and telling you what I would probably do
+
+[22-May-19 01:43 PM] dukeleto#7326
+maybe there is a missing LOCK somewhere and this is a real bug, nobody knows
+
+[22-May-19 01:44 PM] ComputerGenie 👴🏼📢#7004
+`can I get a tl;dr of what you're trying to do?`
+Figure out why the crash/lock up that only you and I have ever experienced with komodod
+
+[22-May-19 01:44 PM] ComputerGenie 👴🏼📢#7004
+and have a pool that runs for more than 4 days
+
+[22-May-19 01:44 PM] dukeleto#7326
+this is a rare, organic, shade-grown bug
+
+[22-May-19 01:44 PM] dukeleto#7326
+only the best Fair Trade bugs for CG
+
+[22-May-19 01:44 PM] Alright#0419
+`gdb --args ./komodod -pubkey=<pubkey> <any other args>`
+wait a second 
+`run`
+
+[22-May-19 01:45 PM] Alright#0419
+that doesn't work?
+
+[22-May-19 01:45 PM] Alright#0419
+need to make sure komodod *is not* running
+
+[22-May-19 01:45 PM] dukeleto#7326
+@Alright thanks for jumping in, my arms are tired of swimming
+
+[22-May-19 01:47 PM] ComputerGenie 👴🏼📢#7004
+@Alright no, that doesn't work; gdb exits back to the gdb cli command prompt and later trace returns "no stack" or similar after crash
+
+[22-May-19 01:47 PM] ComputerGenie 👴🏼📢#7004
+and yes, I'm sure that komodod isn't otherwise running after a reboot
+
+[22-May-19 01:48 PM] Alright#0419
+what happens to debug log when you do that?
+
+[22-May-19 01:48 PM] Alright#0419
+where does it end?
+
+[22-May-19 01:48 PM] Alright#0419
+or does it not update it at all?
+
+[22-May-19 01:51 PM] ComputerGenie 👴🏼📢#7004
+it either ends visually as if pkill -9 was used (just stops) when komodod dies or the final entry is the one that has `ERROR: ContextualCheckBlock: contains a non-final transaction` when it hangs
+
+[22-May-19 01:55 PM] dukeleto#7326
+non-final error seems like a clue, but it could be a red herring
+
+[22-May-19 02:14 PM] Alright#0419
+https://github.com/jl777/komodo/blob/49f9276e8a98cf2be53f8bcd8494b9a0136a4e1a/src/main.cpp#L828
+
+https://github.com/jl777/komodo/blob/49f9276e8a98cf2be53f8bcd8494b9a0136a4e1a/src/primitives/transaction.h#L419
+```
+nSequence == std::numeric_limits<uint32_t>::max()
+```
+
+{Embed}
+https://github.com/jl777/komodo/blob/49f9276e8a98cf2be53f8bcd8494b9a0136a4e1a/src/main.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+{Embed}
+https://github.com/jl777/komodo/blob/49f9276e8a98cf2be53f8bcd8494b9a0136a4e1a/src/primitives/transaction.h
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[22-May-19 02:17 PM] Alright#0419
+@jl777c @dukeleto 
+`std::numeric_limits<uint32_t>::max()` could you explain what this is?
+
+[22-May-19 02:17 PM] ComputerGenie 👴🏼📢#7004
+joker came up with a patch that stops those bits from entirely crashing, but it hangs instead (which is the reason for needing the trace)
+
+[22-May-19 02:19 PM] jl777c#5810
+i think it is some sort of c++ way to do 0xffffffff
+
+[22-May-19 02:21 PM] blackjok3r#3181
+I have experianced the lock with mining.... it does it when I use really fast block times... IMO the lokc, for staking chains may have a bug.
+
+[22-May-19 03:52 PM] dukeleto#7326
+@Alright "largest number that will fit in a uint32"
+
+[22-May-19 03:53 PM] dukeleto#7326
+that is the c++ way to do it
+
+[22-May-19 03:53 PM] dukeleto#7326
+and also what james said, it gives you the largest uint32_t possible
+
+[23-May-19 02:46 PM] gcharang#6833
+Using `bitcore-lib-komodo` to generate a KMD address-privkey pair:
+https://docs.komodoplatform.com/komodo/use-bitcore-lib-komodo.html
+the library:
+https://github.com/DeckerSU/bitcore-lib-komodo/ 
+thanks to @Decker for providing the instructions
+
+{Embed}
+https://docs.komodoplatform.com/komodo/use-bitcore-lib-komodo.html
+Using bitcore-lib-komodo | Komodo Documentation
+Documentation for developers building on Komodo
+
+{Embed}
+https://github.com/DeckerSU/bitcore-lib-komodo/
+DeckerSU/bitcore-lib-komodo
+Contribute to DeckerSU/bitcore-lib-komodo development by creating an account on GitHub.
+https://avatars3.githubusercontent.com/u/22120003?s=400&v=4
+
+{Reactions}
+🔥 (3) 
+
+[23-May-19 04:47 PM] Mylo#8306
+handy.   i have a wif with a cpl hundred kmd that i've left a note saying the last 3 characters are wrong.   this lib makes it more easily discoverable of the correct wif!
+
+[23-May-19 06:14 PM] gcharang#6833
+https://github.com/gcharang/create-assetchain
+Simple scripts to create a Komodo assetchain using a single node for testing, inntalls **explorer** too if needed
+Instructions:
+
+- This repository automates the steps described in the doc: docs.komodoplatform.com/assetchains/create-asset-chain-single-node.html
+- Assumes Ubuntu desktop environment, may need tweaks for other environments
+
+Clone the repository and navigate into it.
+
+Step 1:
+Create a file named data and add the following contents:
+```
+name=<ASSETCHAIN-NAME>
+srcdir=/home/<USER>/komodo/src
+launch="komodod -ac_name=$name -ac_supply=10"
+datadir=/home/<USER>/coinData
+```
+- name is the assetchain's desired name
+- srcdir is the absolute location of the directory which contains komodod and komodo-cli
+- launch is the custom launch parameters of the assetchain, don't include -pubkey or -addnode
+- datadir is the directory to which the datadirectories of the second daemons are saved, no need to create it, the script will do it for you
+Step 2
+Create a file named keys and add the following contents:
+```
+pubkey1=02xxxxxxxxxxxxxxxxxx
+pubkey2=03xxxxxxxxxxxxxxxxxx
+privkey1=Uxxxxxxxxxxxxxxxxxx
+privkey2=Uxxxxxxxxxxxxxxxxxx
+```
+- pubkey1 and privkey1 are a pair of keys used to launch the first daemon
+- pubkey2 and privkey2 are a pair of keys used to launch the second daemon
+
+Step 3
+
+```
+./create-assetchain.sh explorer
+```
+
+{Embed}
+https://github.com/gcharang/create-assetchain
+gcharang/create-assetchain
+Simple scripts to create a Komodo assetchain using a single node for testing - gcharang/create-assetchain
+https://avatars1.githubusercontent.com/u/21151592?s=400&v=4
+
+{Reactions}
+🔥 (2) 
+
+[23-May-19 06:20 PM] TonyL#3577
+Thats great job @gcharang ! Will try to setup very own explorer now 😃
+
+[23-May-19 06:23 PM] gcharang#6833
+for just the explorer, you can use this: https://github.com/gcharang/komodo-install-explorer
+will work on a vps too
+
+{Embed}
+https://github.com/gcharang/komodo-install-explorer
+gcharang/komodo-install-explorer
+Install a komodo assetchain block explorer. Contribute to gcharang/komodo-install-explorer development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/21151592?s=400&v=4
+
+{Reactions}
+👌 📝 
+
+[23-May-19 06:25 PM] gcharang#6833
+@TonyL 
+```
+Note: When launching the assetchain for the first time after installing the explorer, add the -reindex parameter to its launch parameters.
+```
+
+{Reactions}
+📝 👍 
+
+[23-May-19 06:35 PM] TonyL#3577
+Yay
+
+{Attachments}
+https://cdn.discordapp.com/attachments/463445317136809984/581188376091164672/unknown.png
+
+[23-May-19 06:36 PM] TonyL#3577
+Explorer for test chain in a few secs - dreams come true 😃
+
+{Reactions}
+👏 
+
+[23-May-19 06:37 PM] CHMEX#0686
+github.com/CHMEX/explorer_notarized
+
+[23-May-19 06:37 PM] CHMEX#0686
+This shows notarized data if you want....
+
+{Reactions}
+📝 👍 (2) 
+
+[23-May-19 06:47 PM] gcharang#6833
+thanks @CHMEX will include in my repo
+
+[23-May-19 08:43 PM] blackjok3r#3181
+Thats awesome :shexy:
+
+[24-May-19 06:57 AM] Mylo#8306
+@gcharang this is great.  i just installed 4 explorers with no fuss on new chains.
+
+[24-May-19 06:58 AM] Mylo#8306
+i also made a mining node crash for some reason.
+
+[24-May-19 06:58 AM] Mylo#8306
+step 1. create seed node.
+
+[24-May-19 06:58 AM] Mylo#8306
+step 2. install explorer.
+
+[24-May-19 06:58 AM] Mylo#8306
+step 3, reindex seed node, no blocks
+
+[24-May-19 06:58 AM] Mylo#8306
+step 4. start mining node, crash on connect to seed
+
+[24-May-19 06:59 AM] Mylo#8306
+error message no longer in my buffer
+
+[24-May-19 06:59 AM] Mylo#8306
+not in debug.log either.
+
+[24-May-19 07:00 AM] Mylo#8306
+FSM branch too, so could be super exceptional way to make it break.
+
+[24-May-19 08:04 AM] gcharang#6833
+I think reindexing without mining blocks and before initial connection to any other node is an exceptional case
+The repo: https://github.com/gcharang/create-assetchain automates it all and takes no time
+it starts two daemons, takes care of their ports
+optionally , installs explorer and reindexes the 1st daemon  all automatically
+
+{Embed}
+https://github.com/gcharang/create-assetchain
+gcharang/create-assetchain
+Simple scripts to create a Komodo assetchain using a single node for testing - gcharang/create-assetchain
+https://avatars1.githubusercontent.com/u/21151592?s=400&v=4
+
+[24-May-19 09:21 AM] gcharang#6833
+@Mylo it might have been because I messedup and made zmq and p2pports conflict, please try again when you are free. It might not crash now
+
+[24-May-19 10:14 AM] gcharang#6833
+
+{Attachments}
+https://cdn.discordapp.com/attachments/463445317136809984/581424679873675286/Screenshot_from_2019-05-24_15-43-08.png
+
+{Reactions}
+😃 shexy 😎 
+
+[24-May-19 10:14 AM] gcharang#6833
+@CHMEX other than that, are there any other changes because of the patch?
+
+[24-May-19 10:15 AM] grewalsatinder#9653
+that's nice KMD specific status info! 👏 😎 : 😃
+
+[24-May-19 10:15 AM] CHMEX#0686
+no that's pretty much it....
+I have not figured out yet how to get it to the transaction itself
+

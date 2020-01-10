@@ -1,0 +1,481 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[06-Oct-18 11:53 AM] Bryan_Beus#6442
+This is what we have in our notes:
+```
+-ac_cc=1
+--------
+
+Setting ``-ac_cc=1`` permits smart contracts on the asset chain, but will not allow the asset chain to interact in cross-chain smart contracts with other asset chains.
+
+-ac_cc=2 to 100
+---------------
+
+The values of ``2`` through ``100`` indicate asset chains that can import functions across asset chains, but their coins are not fungible.
+
+For example, an asset chain may be able to query another asset chain on the same ``ac_cc`` cluster for details about a transaction.
+
+However, coins may not be transferred between blockchains.
+```
+
+[06-Oct-18 11:53 AM] Bryan_Beus#6442
+Ok.
+
+[06-Oct-18 11:53 AM] Bryan_Beus#6442
+Well, hmm...
+
+[06-Oct-18 11:54 AM] jl777c#5810
+when you start it prints what pubkey it is using
+
+[06-Oct-18 11:54 AM] jl777c#5810
+does it show a pubkey or ()
+
+[06-Oct-18 11:54 AM] Bryan_Beus#6442
+Here's the command I'm using to launch:
+```
+./komodod -pubkey=033a7af03e6c2a8199e95a90b46530ea677d2d526258b83ab5561f562cbf4bd08c -ac_name=AAB -ac_supply=10000 $1 &
+```
+
+[06-Oct-18 11:54 AM] Bryan_Beus#6442
+```
+siddhartha@aang:~/komodo/src$ ./komodod -pubkey=033a7af03e6c2a8199e95a90b46530ea677d2d526258b83ab5561f562cbf4bd08c -ac_name=AAB -ac_supply=10000 $1 &
+[4] 2525
+[3]   Done                    ./komodod -pubkey=033a7af03e6c2a8199e95a90b46530ea677d2d526258b83ab5561f562cbf4bd08c -ac_name=AAB -ac_supply=10000 $1
+siddhartha@aang:~/komodo/src$ call komodo_args.(./komodod) NOTARY_PUBKEY.(033a7af03e6c2a8199e95a90b46530ea677d2d526258b83ab5561f562cbf4bd08c)
+>>>>>>>>>> AAB: p2p.8170 rpc.8171 magic.6818d481 1746457729 10000 coins
+initialized AAB at 1538826851
+finished loading blocks AAB
+```
+
+[06-Oct-18 11:54 AM] jl777c#5810
+where is the -ac_cc=
+
+[06-Oct-18 11:54 AM] jl777c#5810
+./komodod -pubkey=033a7af03e6c2a8199e95a90b46530ea677d2d526258b83ab5561f562cbf4bd08c -ac_name=AAB -ac_supply=10000 $1 &
+
+[06-Oct-18 11:54 AM] jl777c#5810
+maybe the $1 but that assumes you pass it in each time
+
+[06-Oct-18 11:54 AM] Bryan_Beus#6442
+Oh, yes, I forgot that this time
+
+[06-Oct-18 11:55 AM] jl777c#5810
+precision is needed
+
+[06-Oct-18 11:55 AM] jl777c#5810
+why make a variable for something that is constant?
+
+[06-Oct-18 11:55 AM] jl777c#5810
+that only leads to the chance to forget
+
+[06-Oct-18 11:56 AM] Bryan_Beus#6442
+Did this:
+```
+siddhartha@aang:~/komodo/src$ call komodo_args.(./komodod) NOTARY_PUBKEY.(033a7af03e6c2a8199e95a90b46530ea677d2d526258b83ab5561f562cbf4bd08c)
+>>>>>>>>>> AAB: p2p.8170 rpc.8171 magic.6818d481 1746457729 10000 coins
+initialized AAB at 1538826913
+set addressindex, will reindex. sorry will take a while.
+set spentindex, will reindex. sorry will take a while.
+finished loading blocks AAB
+fAddressIndex.1/1 fSpentIndex.1/1
+fAddressIndex.1/1 fSpentIndex.1/1
+height.0 slowflag.1 possible.0 cmp.0
+
+```
+Still getting `to use CC contracts you need a valid pubkey`...
+
+[06-Oct-18 11:56 AM] Bryan_Beus#6442
+correction, this is the launch command:
+```
+./komodod -pubkey=033a7af03e6c2a8199e95a90b46530ea677d2d526258b83ab5561f562cbf4bd08c -ac_name=AAB -ac_supply=10000 -ac_cc=1 $1 &
+```
+
+[06-Oct-18 11:57 AM] Bryan_Beus#6442
+I don't have any variables. I know very little about shell scripting.
+
+[06-Oct-18 11:57 AM] Bryan_Beus#6442
+The $1 is just something that I put in there, because I see it in all the launch params for the other asset chains we have.
+
+[06-Oct-18 11:57 AM] Bryan_Beus#6442
+I can leave it out.
+
+[06-Oct-18 11:58 AM] jl777c#5810
+NOTARY_PUBKEY.(033a7af03e6c2a8199e95a90b46530ea677d2d526258b83ab5561f562cbf4bd08c)
+
+[06-Oct-18 11:58 AM] jl777c#5810
+your pubkey is noticed
+
+[06-Oct-18 11:58 AM] jl777c#5810
+it should be working now
+
+[06-Oct-18 11:59 AM] Bryan_Beus#6442
+```
+siddhartha@aang:~/komodo/src$ ./komodo-cli -ac_name=AAB faucetfund 10 
+error code: -1
+error message:
+to use CC contracts, you need to launch daemon with valid -pubkey= for an address in your wallet
+
+```
+
+[06-Oct-18 12:00 PM] jl777c#5810
+validateaddress R9e5YDky7ZrGwU8TL5v2TmscLZJMFVs3X8
+
+[06-Oct-18 12:01 PM] Bryan_Beus#6442
+Did this earlier.
+```
+siddhartha@aang:~/komodo/src$ ./komodo-cli -ac_name=AAB validateaddress "R9e5YDky7ZrGwU8TL5v2TmscLZJMFVs3X8"
+{
+  "isvalid": true,
+  "address": "R9e5YDky7ZrGwU8TL5v2TmscLZJMFVs3X8",
+  "scriptPubKey": "76a91403f346b76c0617b47427a85fb45c01262052aa3488ac",
+  "segid": 15,
+  "ismine": true,
+  "iswatchonly": false,
+  "isscript": false,
+  "pubkey": "033a7af03e6c2a8199e95a90b46530ea677d2d526258b83ab5561f562cbf4bd08c",
+  "iscompressed": true,
+  "account": ""
+}
+```
+
+[06-Oct-18 12:01 PM] Bryan_Beus#6442
+Should I be using `scriptPubKey`?
+
+[06-Oct-18 12:01 PM] jl777c#5810
+no, all seems right
+
+[06-Oct-18 12:01 PM] Bryan_Beus#6442
+Hmm... what could I be doing wrong then...
+
+[06-Oct-18 12:02 PM] jl777c#5810
+do a faucetaddress
+
+[06-Oct-18 12:02 PM] Bryan_Beus#6442
+```
+siddhartha@aang:~/komodo/src$ ./komodo-cli -ac_name=AAB faucetaddress
+error code: -1
+error message:
+to use CC contracts, you need to launch daemon with valid -pubkey= for an address in your wallet. ERR=-1
+
+
+```
+
+[06-Oct-18 12:02 PM] Bryan_Beus#6442
+maybe the pubkey isn't in my wallet?
+
+[06-Oct-18 12:03 PM] jl777c#5810
+"ismine": true,
+  "iswatchonly": false,
+  "isscript": false,
+  "pubkey": "033a7af03e6c2a8199e95a90b46530ea677d2d526258b83ab5561f562cbf4bd08c",
+
+[06-Oct-18 12:03 PM] Bryan_Beus#6442
+so, it's in my wallet
+
+[06-Oct-18 12:04 PM] jl777c#5810
+can you start from scratch and NEVER forget the -ac_cc=1
+
+[06-Oct-18 12:04 PM] Bryan_Beus#6442
+Sure, just make a new chain entirely?
+
+[06-Oct-18 12:04 PM] Bryan_Beus#6442
+Yes, I can do that.
+
+[06-Oct-18 12:04 PM] Bryan_Beus#6442
+It'll take a few minutes.
+
+[06-Oct-18 12:04 PM] jl777c#5810
+it could be running it with and wihout and with got into a bad state
+
+[06-Oct-18 12:05 PM] Bryan_Beus#6442
+interesting, gtk
+
+[06-Oct-18 12:06 PM] Bryan_Beus#6442
+launch command on machine 1:
+```
+./komodod -ac_name=AAC -ac_supply=100000 -ac_cc=1 -addnode=192.168.1.101 -gen -genproclimit=$(nproc) &
+```
+
+[06-Oct-18 12:09 PM] Mylo#8306
+Ah interesting about the start without and with ac_cc on an already existing chain.  I think I’ve hit this snag before if that is the case
+
+[06-Oct-18 12:13 PM] Mylo#8306
+Off-topic, but I’m using a Makefile and the `make` command to reduce errors when doing work with docker and vps deployment.      Same could be done with chains.  In all this test environment across multiple chains and testers
+
+[06-Oct-18 12:13 PM] Bryan_Beus#6442
+mining is up and running
+
+Here's the address:
+```
+siddhartha@aang:~/komodo/src$ ./komodo-cli -ac_name=AAC getnewaddress
+RHJqRaP2XaxSeSMY2eXHm3JcYfSTE2Am93
+siddhartha@aang:~/komodo/src$ ./komodo-cli -ac_name=AAC validateaddress "RHJqRaP2XaxSeSMY2eXHm3JcYfSTE2Am93"
+{
+  "isvalid": true,
+  "address": "RHJqRaP2XaxSeSMY2eXHm3JcYfSTE2Am93",
+  "scriptPubKey": "76a914581098d47077201512b18386d6c8646151c89e6d88ac",
+  "segid": 51,
+  "ismine": true,
+  "iswatchonly": false,
+  "isscript": false,
+  "pubkey": "0271ab1e303b382c88719bc6f4a2b00cf2486025b8681290fcd69bacf579bf0e21",
+  "iscompressed": true,
+  "account": ""
+}
+```
+
+[06-Oct-18 12:14 PM] Bryan_Beus#6442
+Here's the relaunch command:
+```
+./komodod -pubkey=0271ab1e303b382c88719bc6f4a2b00cf2486025b8681290fcd69bacf579bf0e21 -ac_name=AAC -ac_supply=100000 -ac_cc=1 -addnode=192.168.1.101 -gen -genproclimit=$(nproc) &
+```
+
+[06-Oct-18 12:15 PM] Bryan_Beus#6442
+There we go:
+```
+siddhartha@aang:~/komodo/src$ ./komodo-cli -ac_name=AAC faucetaddress
+{
+  "result": "success",
+  "FaucetCCaddress": "R9zHrofhRbub7ER77B7NrVch3A63R39GuC",
+  "Faucetmarker": "RKQV4oYs4rvxAWx1J43VnT73rSTVtUeckk",
+  "GatewaysPubkey": "03ea9c062b9652d8eff34879b504eda0717895d27597aaeb60347d65eed96ccb40",
+  "FaucetCCassets": "RRNhaZSNaXWJEMXfRKQSz4vTaXhX7ThMxn",
+  "myCCaddress": "RUEYyoS4E1yDyVh6EFZYTTY9EzGtpXHxbT",
+  "myaddress": "RHJqRaP2XaxSeSMY2eXHm3JcYfSTE2Am93"
+}
+```
+
+[06-Oct-18 12:15 PM] Bryan_Beus#6442
+Ok, so launching w/o the `ac_cc` param will mess up something permanently...
+
+I'll make a note of that.
+
+[06-Oct-18 12:17 PM] Mylo#8306
+🙏 thanks @Bryan_Beus appreesh that discovery 😃
+
+[06-Oct-18 12:17 PM] Bryan_Beus#6442
+:abusedsmily:
+
+[06-Oct-18 12:17 PM] jl777c#5810
+yes technically they are different chains
+
+[06-Oct-18 12:17 PM] Bryan_Beus#6442
+right
+
+[06-Oct-18 12:17 PM] jl777c#5810
+but sharing the same name, dir, etc
+
+[06-Oct-18 12:17 PM] jl777c#5810
+big mess
+
+[06-Oct-18 12:17 PM] Bryan_Beus#6442
+it's weird that the issue is permanent, though
+
+[06-Oct-18 12:17 PM] jl777c#5810
+wont work
+
+[06-Oct-18 12:17 PM] Bryan_Beus#6442
+okay
+
+[06-Oct-18 12:18 PM] Bryan_Beus#6442
+makes sense
+
+[06-Oct-18 12:18 PM] jl777c#5810
+every try sharing the same directory with two different things, using the same names
+
+[06-Oct-18 12:18 PM] jl777c#5810
+cant even imaging all the things that could go wrong
+
+[06-Oct-18 12:18 PM] jl777c#5810
+amazing it didnt just crash
+
+[06-Oct-18 12:18 PM] Bryan_Beus#6442
+hmm, okay
+
+[06-Oct-18 12:18 PM] Bryan_Beus#6442
+gtk
+
+[06-Oct-18 12:23 PM] Bryan_Beus#6442
+I'm going to separate out the documentation so that there's two tracks - one for people who just want to use the existing commands, and one for people who want to write an actual cc...
+
+For people who want to write an actual cc, I think we'll just leave them what you've already written, jl777
+
+For all the pleb devs, I almost wonder if all this can be combined with the rpc calls in the basic API docs.
+
+I'll wait 'till I finish them all to decide, but if it's just an rpc call, i don't see why not.
+
+[06-Oct-18 12:25 PM] Bryan_Beus#6442
+So, I'm doing something else wrong here:
+```
+siddhartha@aang:~/komodo/src$ ./komodo-cli -ac_name=AAC faucetfund 100
+{
+  "result": "success",
+  "hex": "010000000159114de885ac6429835feb3c8513288c647dd69b9f867d755dbfe8e9a4dec6d40000000049483045022100bc5d358be7efc890b22f0d70f73bbb6c3d3390419899db4ae47a44762fd126bb02204e737a41a813f15f5e74d2bbed0138372692f57fadd62049bc0cc462a43fe77301ffffffff0200e40b5402000000302ea22c8020e029c511da55523565835887e412e5a0c9b920801b007000df45e545f25028248103120c008203000401cc2884dcfa1509000023210271ab1e303b382c88719bc6f4a2b00cf2486025b8681290fcd69bacf579bf0e21ac00000000"
+}
+siddhartha@aang:~/komodo/src$ ./komodo-cli -ac_name=AAC faucetget
+{
+  "result": "error",
+  "error": "couldnt create faucet get transaction"
+}
+siddhartha@aang:~/komodo/src$ ./komodo-cli -ac_name=AAC faucetinfo
+{
+  "result": "success",
+  "name": "Faucet",
+  "funding": "0.00000000"
+}
+```
+
+[06-Oct-18 12:26 PM] SHossain#0007
+@Bryan_Beus if you are the only one mining for test, you can use `-genproclimit=1` instead of `-genproclimit=$(nproc)` to use less CPU core and it will still work fine.
+
+[06-Oct-18 12:26 PM] Bryan_Beus#6442
+oh, ya....
+
+[06-Oct-18 12:26 PM] SHossain#0007
+otherwise, most of your CPU threads will be mining
+
+[06-Oct-18 12:26 PM] Bryan_Beus#6442
+good point
+
+[06-Oct-18 12:27 PM] Bryan_Beus#6442
+I think there's a command for turning down the nproc without relaunching...
+
+[06-Oct-18 12:28 PM] jl777c#5810
+you didnt seem to do a sendrawtransaction of the hex like you need to
+
+[06-Oct-18 12:28 PM] jl777c#5810
+if you dont broadcast the rawtx, the rawtx is not broadcast
+
+[06-Oct-18 12:28 PM] jl777c#5810
+if the tx is not broadcast, no node processes it
+
+[06-Oct-18 12:28 PM] jl777c#5810
+if no node processes it, it is the same as if it didnt happen
+
+[06-Oct-18 12:28 PM] Bryan_Beus#6442
+setgenerate
+
+[06-Oct-18 12:28 PM] jl777c#5810
+setgenerate true 1
+
+[06-Oct-18 12:29 PM] Bryan_Beus#6442
+thx
+
+[06-Oct-18 12:29 PM] Bryan_Beus#6442
+okay, let's see...
+
+[06-Oct-18 12:29 PM] jl777c#5810
+also until it confirms, it isnt really active
+
+[06-Oct-18 12:30 PM] jl777c#5810
+there are some rate exceptions to this, but for the most part CC tx needs to confirm to take effect
+
+[06-Oct-18 12:30 PM] jl777c#5810
+rare
+
+[06-Oct-18 12:30 PM] Bryan_Beus#6442
+not seeing where/how to sendrawtransaction...
+
+[06-Oct-18 12:31 PM] Bryan_Beus#6442
+I don't seem to have `sendrawtransaction` in the basic API/rpc commands doc...
+
+[06-Oct-18 12:31 PM] Bryan_Beus#6442
+but I see it in `./komodo-cli -ac_name=AAC help sendrawtransaction`
+
+[06-Oct-18 12:32 PM] Bryan_Beus#6442
+oh, nm
+
+[06-Oct-18 12:32 PM] Bryan_Beus#6442
+I was looking in the ac params
+
+[06-Oct-18 12:32 PM] jl777c#5810
+it is a "norma" signed transaction as far as the daemon is concerned
+
+[06-Oct-18 12:34 PM] Bryan_Beus#6442
+do I need to sign it first? Is that what you're referring to about the "normal" signed tx?
+
+[06-Oct-18 12:34 PM] Bryan_Beus#6442
+just sendrawtransaction with the hex from `faucetfund` didn't seem to produce a result in `faucetinfo`
+
+[06-Oct-18 12:35 PM] jl777c#5810
+did you get a txid
+
+[06-Oct-18 12:35 PM] jl777c#5810
+did the txid confirm
+
+[06-Oct-18 12:36 PM] jl777c#5810
+when I say it needs to be confirmed to have any effect, i mean that until it is confirmed it wont have any effect
+
+[06-Oct-18 12:37 PM] Bryan_Beus#6442
+```
+  {
+    "account": "",
+    "address": "R9zHrofhRbub7ER77B7NrVch3A63R39GuC",
+    "category": "send",
+    "amount": -100.00000000,
+    "vout": 0,
+    "fee": -0.00010000,
+    "confirmations": 4,
+    "blockhash": "02c579c9f00b7f6b3ca9acd2b130d1c33af232e362d825b16a85ba8ba859779a",
+    "blockindex": 1,
+    "blocktime": 1538829230,
+    "expiryheight": 0,
+    "txid": "026e4db7cbc82067fa9166eb18e3b4ba5f2aaacfdc800c310e209faa51e864cf",
+    "walletconflicts": [
+    ],
+    "time": 1538829174,
+    "timereceived": 1538829174,
+    "vjoinsplit": [
+    ],
+    "size": 225
+  }
+```
+
+[06-Oct-18 12:37 PM] jl777c#5810
+"confirmations": 4,
+
+[06-Oct-18 12:37 PM] Bryan_Beus#6442
+right
+
+[06-Oct-18 12:37 PM] jl777c#5810
+ok so what does faucetinfo say now
+
+[06-Oct-18 12:38 PM] Bryan_Beus#6442
+Okay, it's registering now
+
+[06-Oct-18 12:38 PM] Bryan_Beus#6442
+```
+siddhartha@aang:~/komodo/src$ ./komodo-cli -ac_name=AAC faucetinfo
+{
+  "result": "success",
+  "name": "Faucet",
+  "funding": "100.00000000"
+}
+```
+
+[06-Oct-18 12:39 PM] Bryan_Beus#6442
+waiting on this command:
+
+```
+./komodo-cli -ac_name=AAC faucetget
+```
+
+If I understand correctly, this is supposed to take a minute or two to execute.
+
+[06-Oct-18 12:40 PM] SHossain#0007
+for `faucetget` you need to start the daemon with a new pubkey and no balance in it. ideally, you may need a 3rd node, since you are using 2 to mine and keep the network up.
+
+[06-Oct-18 12:41 PM] SHossain#0007
+why don't you just use the CCNG chain? params are pinned and there are nodes mining it. giving you flexibility only to test
+
+[06-Oct-18 12:41 PM] Bryan_Beus#6442
+Oh... so the command I executed isn't going to work...
+

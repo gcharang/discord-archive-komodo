@@ -1,0 +1,442 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[26-Nov-18 04:46 PM] Mihailo#5902
+And it is not in help list:
+```
+== Tokens ==
+tokenaddress [pubkey]
+tokenask numtokens tokenid price
+tokenbalance tokenid [pubkey]
+tokenbid numtokens tokenid price
+tokencancelask tokenid asktxid
+tokencancelbid tokenid bidtxid
+tokencreate name supply description
+tokenfillask tokenid asktxid fillunits
+tokenfillbid tokenid bidtxid fillamount
+tokeninfo tokenid
+tokenlist
+tokenorders [tokenid]
+tokentransfer tokenid destpubkey amount
+```
+
+[26-Nov-18 04:47 PM] dukeleto#7326
+help is dynamically generated, by looking for all defined RPCs
+
+[26-Nov-18 04:47 PM] dukeleto#7326
+so if it's not in help, are you sure you are running the latest binary? And you stopped and restarted the daemon since the last compile?
+
+[26-Nov-18 04:49 PM] Mihailo#5902
+Yep, done clean build, stopped the daemon and started again and still nothing.
+
+[26-Nov-18 04:49 PM] Mihailo#5902
+I'm on correct binary
+
+[26-Nov-18 04:49 PM] dukeleto#7326
+@Mihailo show me the diff
+
+[26-Nov-18 04:49 PM] dukeleto#7326
+https://giphy.com/gifs/show-money-maguire-9HQRIttS5C4Za
+
+{Embed}
+https://giphy.com/gifs/show-money-maguire-9HQRIttS5C4Za
+https://media1.giphy.com/media/9HQRIttS5C4Za/giphy_s.gif?cid=73b8f7b15bfc242a7735533759e5e380
+
+[26-Nov-18 04:49 PM] Mihailo#5902
+of server.cpp?
+
+[26-Nov-18 04:50 PM] dukeleto#7326
+of whatever you did, something is not right
+
+[26-Nov-18 04:50 PM] Mihailo#5902
+```
+diff --git a/src/rpc/server.cpp b/src/rpc/server.cpp
+index 70a124b8c..2b09093ed 100644
+--- a/src/rpc/server.cpp
++++ b/src/rpc/server.cpp
+@@ -468,6 +468,7 @@ static const CRPCCommand vRPCCommands[] =
+     { "tokens",       "tokencancelask",   &tokencancelask,    true },
+     { "tokens",       "tokenfillask",     &tokenfillask,      true },
+     //{ "tokens",       "tokenfillswap",    &tokenfillswap,     true },
++    { "tokens", "tokenconvert", &tokenconvert, true },
+ 
+     /* Address index */
+     { "addressindex",       "getaddressmempool",      &getaddressmempool,      true  },
+```
+
+[26-Nov-18 04:51 PM] dukeleto#7326
+why is tokenfillswap commented out?
+
+[26-Nov-18 04:51 PM] dukeleto#7326
+was it like that already?
+
+[26-Nov-18 04:51 PM] Mihailo#5902
+Yes it was like that before. Don't know from when...
+
+[26-Nov-18 04:52 PM] dukeleto#7326
+i am trying that 1 line diff on my pirate-komodo repo, to see what happens
+
+[26-Nov-18 04:54 PM] Mihailo#5902
+```cpp
+CRPCTable::CRPCTable()
+{
+    unsigned int vcidx;
+    for (vcidx = 0; vcidx < (sizeof(vRPCCommands) / sizeof(vRPCCommands[0])); vcidx++)
+    {
+        const CRPCCommand *pcmd;
+
+        pcmd = &vRPCCommands[vcidx];
+        mapCommands[pcmd->name] = pcmd;
+    }
+}
+```
+This should populate the table with all the commands from vRPCCommands list.
+
+[26-Nov-18 04:54 PM] dukeleto#7326
+yup. But also, this code has done this kind of stuff to me many times
+
+[26-Nov-18 04:54 PM] dukeleto#7326
+especially if you don't know about the argument conversion list in a different file, it will give you errors about invalid arguments or stringify when you don't want it to
+
+[26-Nov-18 04:54 PM] dukeleto#7326
+this seems different
+
+[26-Nov-18 04:56 PM] Mihailo#5902
+What is also wierd is that on other nodes where I also used the same code (without tokenconvert in the list), I have it in komodo-cli help 😮
+
+[26-Nov-18 04:56 PM] dukeleto#7326
+@Mihailo you didn't restart komodod
+
+[26-Nov-18 04:56 PM] dukeleto#7326
+i just tested it
+
+[26-Nov-18 04:56 PM] dukeleto#7326
+```$ ./src/komodo-cli -ac_name=SPLTEST tokenconvert
+error code: -1
+error message:
+tokenconvert evalcode tokenid pubkey amount
+```
+
+[26-Nov-18 04:56 PM] Mihailo#5902
+I just restarted it once again when you wrote me did I
+
+[26-Nov-18 04:56 PM] dukeleto#7326
+if you don't restart komodod, you will get method not found
+
+[26-Nov-18 04:57 PM] dukeleto#7326
+@Mihailo maybe you are restarting wrong komodod
+
+[26-Nov-18 04:57 PM] dukeleto#7326
+must be SPLTEST, not any other AC or KMD komodod
+
+[26-Nov-18 04:57 PM] Mihailo#5902
+Ahhhhhh, didn't supply AC name
+
+[26-Nov-18 04:58 PM] Mihailo#5902
+So it was doing it on KMD....
+
+[26-Nov-18 04:58 PM] Mihailo#5902
+Thnx and sorry 😩
+
+[26-Nov-18 04:58 PM] dukeleto#7326
+it happens, this stuff can be confusing
+
+[26-Nov-18 05:00 PM] dukeleto#7326
+once you have 39 komodo repos on 57 servers with 99 AC running different versions, it can get complicated 😃
+
+[26-Nov-18 05:00 PM] dukeleto#7326
+@jl777c i have a PR to fix that token RPC and fix a small test issue coming up
+
+[26-Nov-18 05:01 PM] jl777c#5810
+ok
+
+[26-Nov-18 05:01 PM] dukeleto#7326
+@jl777c do you prefer PR's to komodo that fix PirateChain things, or PR to piratechain and you cherry-pick things from that repo?
+
+[26-Nov-18 05:01 PM] dukeleto#7326
+our workflow is getting more complex, with these komodo forks
+
+[26-Nov-18 05:02 PM] dukeleto#7326
+for now I am sending stuff to KMD, since it seems PirateChain mostly pulls and just makes a few changes
+
+[26-Nov-18 05:02 PM] jl777c#5810
+just PR to FSM repo
+
+[26-Nov-18 05:02 PM] jl777c#5810
+everything is flowing from there
+
+[26-Nov-18 05:02 PM] dukeleto#7326
+jl777/komodo is the source of all Truth
+
+[26-Nov-18 05:02 PM] SHossain#0007
+yes
+
+[26-Nov-18 05:03 PM] SHossain#0007
+PirateNetwork will be updated automatically. We are just using that one, because it has a testing timestamp setup
+
+[26-Nov-18 05:03 PM] SHossain#0007
+better than messing up codes in James' repo
+
+[26-Nov-18 05:17 PM] dukeleto#7326
+@jl777c https://github.com/jl777/komodo/pull/984
+
+{Embed}
+https://github.com/jl777/komodo/pull/984
+Fsm by leto · Pull Request #984 · jl777/komodo
+Fix the missing tokenconvert RPC and add in ac_private test.
+To run this test: ./qa/pull-tester/rpc-tests.sh ac_private.py --tracerpc
+https://avatars1.githubusercontent.com/u/30298?s=400&v=4
+
+{Reactions}
+shexy 
+
+[26-Nov-18 05:17 PM] dukeleto#7326
+ac_private.py test is also passing on SPLTEST (yay)
+
+[26-Nov-18 05:17 PM] jl777c#5810
+so CC sapling is working?
+
+[26-Nov-18 05:18 PM] dukeleto#7326
+`./qa/pull-tester/rpc-tests.sh ac_private.py --tracerpc` # run them tests
+
+[26-Nov-18 05:18 PM] TonyL#3577
+It's working in regtest
+
+[26-Nov-18 05:18 PM] TonyL#3577
+But on chain without regtest it's not
+
+[26-Nov-18 05:18 PM] dukeleto#7326
+@jl777c our automated test suite does not cover everything, but there are no failures in regtest, which is a good sign
+
+[26-Nov-18 05:18 PM] siu - Chainmakers#3920
+``` ./komodo-cli -ac_name=SPLTEST sendrawtransaction 01000000012a488121f84959aca4b946ac51a07a7a90c3e24ed7a09beee6ce45161599244c0000000049483045022100e34a1d2f2003d945d733604c135636711c5ea4d43a58f1299f66530699d59cba02206fb5c1935104e0c978a5005614e679ff1a66f52a8188bda6fdc9a06338a080ee01ffffffff0500e40b5402000000302ea22c80200095ece5eee67e1f313e7ba2d156c7617106cd52b75c93ed3fb110ff3fba6e998103120c008203000401cc10270000000000002321024fa9afae455ace14d3c1373341b9eb0dd1b2a59ae073f45d28f9d129d6e97774ac10270000000000002321039d966927cfdadab3ee6c56da63c21f17ea753dde4b3dfd41487103e24b27e94eacd04666fa150900002321024fa9afae455ace14d3c1373341b9eb0dd1b2a59ae073f45d28f9d129d6e97774ac00000000000000002c6a2ae646544553540000000040420f000000000080969800000000000a00000000000000140000000000000000000000
+error code: -26
+error message:
+16: tx-overwinter-active
+```
+
+[26-Nov-18 05:18 PM] dukeleto#7326
+@TonyL what fails on "mainnet" ?
+
+[26-Nov-18 05:18 PM] TonyL#3577
+With behaviour which @SHossain reported above
+
+[26-Nov-18 05:18 PM] siu - Chainmakers#3920
+not on my side
+
+[26-Nov-18 05:18 PM] dukeleto#7326
+let's write a test for it 😃
+
+[26-Nov-18 05:18 PM] siu - Chainmakers#3920
+ok
+
+[26-Nov-18 05:18 PM] jl777c#5810
+@Decker that is a big clue. maybe regtest creates some new epochid
+
+[26-Nov-18 05:19 PM] dukeleto#7326
+ooooooh
+
+[26-Nov-18 05:19 PM] dukeleto#7326
+regtest might do some different stuff, i don't even know about epochid
+
+[26-Nov-18 05:19 PM] TonyL#3577
+So I thought that everything ok since tests passed, but it was ok only on regtest 😰
+
+[26-Nov-18 05:20 PM] dukeleto#7326
+such is life. Tests aren't perfect, but they sure are better than having nothing
+
+{Reactions}
+Komodo 
+
+[26-Nov-18 05:22 PM] dukeleto#7326
+@SHossain scrolling up, it seems we have a bug with `decoderawtransaction` ?
+
+[26-Nov-18 05:22 PM] SHossain#0007
+yes
+
+[26-Nov-18 05:22 PM] dukeleto#7326
+it doesn't show the xtn as "overwintered", and it should
+
+[26-Nov-18 05:23 PM] SHossain#0007
+the tx version is 1,
+
+[26-Nov-18 05:23 PM] dukeleto#7326
+so we need to see, is the bug in createrawtransaction?
+
+[26-Nov-18 05:24 PM] dukeleto#7326
+decoderawtransaction is just decoding, the bug probably is earlier
+
+[26-Nov-18 05:25 PM] dukeleto#7326
+the original createrawtransaction from KMD, sounds like it didn't (correctly) learn the new changes to xtn version. Or something was undone/overwritten in the merge
+
+[26-Nov-18 05:25 PM] dukeleto#7326
+i can write a test for this
+
+[26-Nov-18 05:27 PM] SHossain#0007
+that would be nice. we are waiting for the fix
+
+[26-Nov-18 05:27 PM] jl777c#5810
+CCtx functions use the internal signtransaction
+
+[26-Nov-18 05:27 PM] jl777c#5810
+which should automatically create sapling, but i didnt update the epoch stuff enough to trigger sapling tx
+
+[26-Nov-18 05:40 PM] jl777c#5810
+this never worked before, so it couldnt have been broken
+
+[26-Nov-18 05:40 PM] jl777c#5810
+by any github thing
+
+[26-Nov-18 05:53 PM] Mihailo#5902
+From time to time my nodes seem to get out of sync and then I have:
+```
+AcceptBlockHeader hashPrevBlock 013b2e54229d0e2b05a87415dc90d9b1b99dcb3e05200c07162e7ed21691cb72 not found
+AcceptBlock AcceptBlockHeader error
+ERROR: ProcessNewBlock: AcceptBlock FAILED
+```
+Is there something to prevent this. I have all 5 nodes connected to each other...
+
+[26-Nov-18 05:54 PM] SHossain#0007
+which repo and branch?
+
+[26-Nov-18 05:54 PM] SHossain#0007
+are you using latest source?
+
+[26-Nov-18 05:54 PM] Mihailo#5902
+latest FSM from jl777 repo
+
+[26-Nov-18 05:56 PM] Mihailo#5902
+Or maybe I'm not on latest FSM....
+
+[26-Nov-18 05:56 PM] Mihailo#5902
+Was there any fix regarding this?
+
+[26-Nov-18 05:56 PM] SHossain#0007
+you can ignore debug.log prints sometime unless you are having issues
+
+[26-Nov-18 05:56 PM] jl777c#5810
+there was a fix over the weekend for the sync problems
+
+[26-Nov-18 05:57 PM] SHossain#0007
+yes, latest source has fixes for sync issue
+
+[26-Nov-18 05:58 PM] Mihailo#5902
+Ok 👍
+
+[26-Nov-18 07:44 PM] Mihailo#5902 (pinned)
+@TonyL I have submitted PR for gateways changes. So the flow for withdraw is changed but it considers only oraclefeed. Everything else done by the user stays the same. The thing is that now there is gatewaymarkdone tx which needs to be confirmed/notarized before the withdraw will be done on external chain. For single sig gateways it will be done right after withdraw tx, and with multisig after it is completley signed. Then after markdone is confirmed (in TESTMODE it is 2 blocks) oraclefeed will execute the withdraw on KMD. Also withdraw will not start until withdraw tx is confirmed.
+To build daemon in test mode use:  `CONFIGURE_FLAGS='CPPFLAGS=-DTESTMODE' ./zcutil/build.sh -j8`
+You can start testing single signature gaetway just to confirm everything is working good. And I think I'll have multisig tested tomorrow so you can then proceed with that too.
+
+[26-Nov-18 07:46 PM] jl777c#5810
+it is merged into FSM
+
+[26-Nov-18 09:19 PM] TonyL#3577
+@Mihailo Great! Will re-test it tomorrow
+
+{Reactions}
+👌 
+
+[27-Nov-18 11:09 PM] TonyL#3577
+@Mihailo Tried non multisig gw - deposited without issues.
+Withdrawal is pending (oraclefeed is up and running):
+```./komodo-cli -ac_name=TONY1 gatewayspending bc17cbdf140ee569a5c9c6ddc63a0dab0d04a8822a7701858c3bc4c1c022dc0d KMD
+{
+  "coin": "KMD",
+  "pending": [
+    {
+      "txid": "a454d66aad65331966423dd431bdcfda0be929128ef7c9c6e972238b7dd9b8b5",
+      "txidaddr": "RSusQEbuuycWzMbGnNScf8veXUdWyt4drk",
+      "withdrawaddr": "RBBGCsq4rYw5JwmYoAt9qy9hGNF8rKgvo8",
+      "amount": "0.10000000",
+      "confirmed_or_notarized": false
+    }
+  ],
+  "queueflag": 0
+}
+```
+
+[27-Nov-18 11:10 PM] TonyL#3577
+More than 100 blocks passed since `gatewayswithdrawal`. What is the best way to troubleshoot?
+
+[28-Nov-18 12:01 AM] TonyL#3577
+Oh, chain was runned from daemon which was built without `CONFIGURE_FLAGS='CPPFLAGS=-DTESTMODE'`
+Proceed both deposit and withdrawal succesfull https://kmdexplorer.io/address/RBm4FN3JhjhbVFaGKJ8DQgtgPHKXvhFMs3
+
+[28-Nov-18 12:03 AM] TonyL#3577
+Noticed that "remaining": "0.90000000" and  "issued": "0.10000000" not changed after successful withdrawal:
+```{
+  "result": "success",
+  "name": "Gateways",
+  "pubkey": "02d389e879ca68809794c0ef29869b23b4dd8e22122fcc4e8b69adb1d33752dd9d",
+  "coin": "KMD",
+  "oracletxid": "3f93ad9d0fceb2237e3f7ffc66a0324d96ba99deb2926fd2961255f0bad94372",
+  "taddr": 0,
+  "prefix": 60,
+  "prefix2": 85,
+  "deposit": "RBm4FN3JhjhbVFaGKJ8DQgtgPHKXvhFMs3",
+  "tokenid": "77766e3965f93d3717035ad779ba090e3f3a27fc97a7bde87135e20e4b9de790",
+  "totalsupply": "1.00000000",
+  "remaining": "0.90000000",
+  "issued": "0.10000000"
+}
+```
+Are used tokens burn on withdrawal ?
+
+[28-Nov-18 01:15 AM] TonyL#3577
+@Bryan_Beus https://gist.github.com/tonymorony/fae7f3c6074808f7e849e791b0056221 
+I wrote down all calls and outputs in manual gateway preparation/creation, deposit/withdrawal flow to this gist. Hope it'll help for documentation.
+
+{Embed}
+https://gist.github.com/tonymorony/fae7f3c6074808f7e849e791b0056221
+gateway creation process calls/hexes/txids
+gateway creation process calls/hexes/txids. GitHub Gist: instantly share code, notes, and snippets.
+https://avatars1.githubusercontent.com/u/24797699?s=400&v=4
+
+[28-Nov-18 01:17 AM] Bryan_Beus#6442
+Thank you!
+
+[28-Nov-18 01:18 AM] Bryan_Beus#6442
+Yes, this looks great. Just what I need.
+
+{Reactions}
+👍 
+
+[28-Nov-18 07:19 AM] Mihailo#5902
+@TonyL I'm glad that single sig gateway works. Can you try multisig also, as I couldn't test it yet?
+
+[28-Nov-18 07:33 AM] Mihailo#5902
+Used tokens are not burnt, they are put back in gateways pubkey address so they can be reused...
+
+[28-Nov-18 08:43 AM] TonyL#3577
+@Mihailo Hmm, so it should be a bug that `remaining` and `issued` remains the same after successful withdrawal
+
+[28-Nov-18 09:36 AM] Mihailo#5902
+Probably. I don't know how it was made in the beginning, it probably looks all time deposits but it should look how much is in the gateway pubkey address.
+
+[28-Nov-18 10:04 AM] jl777c#5810
+updated FSM branch with support for creating sapling CC tx. @TonyL plz test all CC on a sapling active chain, each CMutableTransaction that is used must be explicitly enabled, so  it is possible for any CC tx to not be updated to version 4 (sapling) in which case it is invalid
+
+{Reactions}
+👌 
+
+[28-Nov-18 10:46 AM] TonyL#3577
+```./komodo-cli -ac_name=SPLTEST2 faucetfund 1000
+{
+  "result": "success",
+  "hex": "0400008085202f890101989416af9b13eda12e11e40467c0f86908ec570b2f1df30d24f3eb11973f600000000049483045022100b01c0e57c8cff9a9f6c0451757d06b4765efffd9fab22352b986d8dfe474c12f02205f155cb1d6197cfcaff9062f865f3eb6dd188256fa08f70d412fe1bd342ba5fa01ffffffff0200e8764817000000302ea22c8020e029c511da55523565835887e412e5a0c9b920801b007000df45e545f25028248103120c008203000401ccf090fb0501090000232103a52c3fc715c4e87fb80427e97c1f5c328e57ea64d1a7a3e1f442ed1a728b40f3ac000000006f0000000000000000000000000000"
+}
+```
+```./komodo-cli -ac_name=SPLTEST2 sendrawtransaction 0400008085202f890101989416af9b13eda12e11e40467c0f86908ec570b2f1df30d24f3eb11973f600000000049483045022100b01c0e57c8cff9a9f6c0451757d06b4765efffd9fab22352b986d8dfe474c12f02205f155cb1d6197cfcaff9062f865f3eb6dd188256fa08f70d412fe1bd342ba5fa01ffffffff0200e8764817000000302ea22c8020e029c511da55523565835887e412e5a0c9b920801b007000df45e545f25028248103120c008203000401ccf090fb0501090000232103a52c3fc715c4e87fb80427e97c1f5c328e57ea64d1a7a3e1f442ed1a728b40f3ac000000006f0000000000000000000000000000
+8b23f96695fc36cd1556c7c85a09c52e547bdc71c602da185cb1e1b4be1f5bad```
+
+[28-Nov-18 10:46 AM] TonyL#3577
+Broadcasted what is the good sign
+

@@ -1,0 +1,435 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[29-Sep-18 12:59 AM] Bryan_Beus#6442
+Gotta say, the possibilities of the asset chain parameters are pretty exciting!
+
+Loving the idea of doing disposable, short-term blockchains for rapid projects, tied to a long-term ecosystem currency for payouts.
+
+{Reactions}
+🇸 🇹 🇦 🇰 🇪 🇩 
+
+[29-Sep-18 01:25 AM] Bryan_Beus#6442
+Are there any plans to split ``ac_perc`` so that you can have one percentage for blocks mined, and another for transactions?
+
+Seems like it'd be useful...?
+
+[29-Sep-18 02:16 AM] blackjok3r#3181
+why?
+
+[29-Sep-18 02:17 AM] blackjok3r#3181
+there is not always a block reward.
+
+[29-Sep-18 02:29 AM] Bryan_Beus#6442
+You might want to have a higher pubkey reward for miner activity, but a lower reward for end-user activity, so that business developers can separate out the different audiences in their financial structure.
+
+[29-Sep-18 03:44 AM] TonyL#3577
+For gateway deposit I have to call `z_sendmany` where as first parameter I have to input wallet address from which I'm sending funds. This method "not super clever" and if funds on other address I'm just receive `"message": "Could not find any non-coinbase UTXOs to spend."` in `z_getoperationstatus`.
+For now I found only solution like a:
+1) get all addresses list
+`./komodo-cli getaddressesbyaccount ""`
+2) check balance for each address and provide user table `address - balance` so he'll able to choose needed address which will be used in `z_sendmany`
+
+Other idea to `getaccountaddress` send whole balance on it and then use this address in z_sendmany - but user will lose txfee on each call
+
+Is there some native call to get list of addresses with balances to assist user with sending address choice - maybe I'm missing something?
+
+[29-Sep-18 03:51 AM] TonyL#3577
+Oh call `listaddressgroupings` looks like right what I need
+Question ^^ isn't actual )
+
+[29-Sep-18 04:03 AM] Bryan_Beus#6442
+yep
+
+[29-Sep-18 04:05 AM] Bryan_Beus#6442
+listaddressgroupings is primarily to show which addresses are linked together (the first layer of arrays are organized according to relationships)
+
+But it does that the side use of determining which addresses have which amount.
+
+The other method I can remember off the top of my head is to do `listaddresses`, and then do a `getbalance` of each address, which may not be bad in a script, but isn't as useful in the terminal.
+
+{Reactions}
+👍 
+
+[29-Sep-18 05:32 AM] Bryan_Beus#6442
+Another question, in addition to the first:
+
+could you set `ac_decay` above 100000000? That would make it so that the block reward increases over time. 
+
+Not sure why you might want a coin that's scarce at first, and then becomes less valuable over time...
+
+but I guess that's what governments do, with inflation. 
+
+Maybe you'd want some inflation, so people are inclined not to hold the asset for too long, but instead keep it moving...
+
+[29-Sep-18 06:45 AM] jl777c#5810
+ac_decay I think is capped at 25%
+
+[29-Sep-18 06:45 AM] jl777c#5810
+you can just look at the code for such basic questions
+
+[29-Sep-18 08:09 AM] Mylo#8306
+yeah AppArmor is like SELinux in redhat, needs reboot on redhat last time i used it (v6).
+
+[29-Sep-18 08:09 AM] Mylo#8306
+i suppose
+
+[29-Sep-18 10:28 AM] Mylo#8306
+well....i'm going to be testing centos for compatibility with komod on redhat once some other things are finished.   any ideas if SELinux / AppArmor run in a container?
+
+[29-Sep-18 10:29 AM] Mylo#8306
+@Bryan_Beus mentioned redhat a few weeks ago, presumably for the enterprise market.  SuSE also has strong enterprise subscription product.
+
+[29-Sep-18 10:35 AM] Mylo#8306
+i don't like deb/ubnt naming conventions of packages.  iputils-ping vs dnsutils vs net-tools for ping, nslookup/dig, netstat
+
+[29-Sep-18 02:05 PM] Mylo#8306
+How does one specifiy a `-datadir` for a new assetchain?   komodod is stuck on "waiting for datadir" even if i create one with the name for the new assetchain to work with.
+
+[29-Sep-18 02:38 PM] Mylo#8306
+e.g.
+```
+komodod -ac_name=MYLO555 -ac_supply=555555 -datadir=~/.komodo/NODE2 -addnode=172.18.0.2 -gen -genproclimit=1 &
+[1] 33
+user@3986ed016f72:~/.komodo$ waiting for datadir
+>>>>>>>>>> MYLO555: p2p.15633 rpc.15634 magic.aa3b7cf8 2856025336 555555 coins
+^C
+user@3986ed016f72:~/.komodo$ waiting for datadir
+^C
+user@3986ed016f72:~/.komodo$ waiting for datadir
+
+```
+
+Use case:  shared data volume to two different machines in enterprise env.
+
+[29-Sep-18 02:58 PM] Nabob#5004
+check Node2 folder created before launch, i prefer to give absolute path
+
+[29-Sep-18 03:43 PM] dukeleto#7326
+@Mylo specify datadir and conf
+
+[29-Sep-18 03:44 PM] dukeleto#7326
+@Mylo and don't use ~ because sometimes that causes problems
+
+[29-Sep-18 03:44 PM] dukeleto#7326
+i ran into some bugs with datadir + conf in regtest mode, i had to specify both
+
+[29-Sep-18 04:46 PM] Mylo#8306
+sick thanks will test it out
+
+[29-Sep-18 04:58 PM] pbca26#5430
+try absolute path @Mylo
+
+[29-Sep-18 05:13 PM] Mylo#8306
+no such luck on both counts
+```
+user@3986ed016f72:~/.komodo$ komodod -ac_name=MYLO555 -ac_supply=555555 -datadir=/home/user/.komodo/NODE2 -conf=/home/user/.komodo/NODE2/MYLO555.conf -addnode=172.18.0.2 -gen -genproclimit=1 &
+[1] 39
+user@3986ed016f72:~/.komodo$ waiting for datadir
+>>>>>>>>>> MYLO555: p2p.15633 rpc.15634 magic.aa3b7cf8 2856025336 555555 coins
+waiting for datadir
+waiting for datadir
+```
+will play around with it, if you've both suggested something there's probably a magical combo of things that will kick it through
+
+[29-Sep-18 05:14 PM] Mylo#8306
+needed a conf file written first  ✅
+
+[29-Sep-18 05:15 PM] dukeleto#7326
+@Mylo look at how regtest stuff works
+
+[29-Sep-18 05:15 PM] Mylo#8306
+at what level?
+
+[29-Sep-18 05:15 PM] Mylo#8306
+in src?
+
+[29-Sep-18 05:15 PM] Mylo#8306
+or just how it spits stuff out?
+
+[29-Sep-18 05:16 PM] dukeleto#7326
+https://github.com/jl777/komodo/blob/master/qa/rpc-tests/cryptoconditions.py#L33
+
+{Embed}
+https://github.com/jl777/komodo/blob/master/qa/rpc-tests/cryptoconditions.py
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[29-Sep-18 05:16 PM] dukeleto#7326
+regtest uses -conf and -datadir
+
+[29-Sep-18 05:16 PM] dukeleto#7326
+-datadir is added in a different file, those are "extra args" added to the default ones
+
+[29-Sep-18 05:16 PM] Mylo#8306
+ok cheers
+
+[29-Sep-18 05:16 PM] dukeleto#7326
+i think kmd gets confused when not given both datadir + conf
+
+[29-Sep-18 05:17 PM] dukeleto#7326
+because there is logic to auto-calculate some stuff from AC name
+
+[29-Sep-18 05:17 PM] dukeleto#7326
+such as, the AC "BOBSTUFF" will always have the same rpc port, it's calculated from the name
+
+[29-Sep-18 05:17 PM] dukeleto#7326
+this also applies to file+directory structures for AC's
+
+[29-Sep-18 05:17 PM] dukeleto#7326
+so if you don't specify everything, things get confused. This is my guess as to what is going on
+
+[29-Sep-18 05:19 PM] Mylo#8306
+ok.   i can sorta see how you come to that conclusion.   in the past when i've tested stuff i've had to be very specific to get what i expect, but othertimes i'm a little bit 'huh?' and just continued without being too bothered if i didn't get my way.
+
+[29-Sep-18 05:19 PM] dukeleto#7326
+i had to do some special magic to get asset chains working with the KMD test suite
+
+[29-Sep-18 05:20 PM] dukeleto#7326
+the Zcash test suite we inherited never had any idea of such a thing
+
+[29-Sep-18 05:21 PM] dukeleto#7326
+make sure the datadir has correct permissions (not owned by root on accident/etc)
+
+[29-Sep-18 05:22 PM] Mylo#8306
+nice.  so general improvements all around.
+
+[29-Sep-18 05:23 PM] dukeleto#7326
+this is some of the magic, or some would call it "an ugly hack" 😃 https://github.com/jl777/komodo/blob/master/qa/rpc-tests/test_framework/util.py#L226
+
+{Embed}
+https://github.com/jl777/komodo/blob/master/qa/rpc-tests/test_framework/util.py
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[29-Sep-18 05:24 PM] dukeleto#7326
+but it makes things work
+
+[29-Sep-18 05:24 PM] dukeleto#7326
+REGTEST always has the same rpc port, but Zcash test suite wants to give every regtest daemon a random port, so I had to route around that
+
+[29-Sep-18 05:26 PM] Mylo#8306
+yeah getting nice warnings `unexpected fname.(/home/user/.komodo/MYLO555_NODE2) vs MYLO555 [MYLO555] n.7 len.32 (5_NODE2)`
+
+[29-Sep-18 05:27 PM] Mylo#8306
+we haven't even scratched the surface with REGTEST and all the ac_params yet have we?
+
+[29-Sep-18 05:29 PM] dukeleto#7326
+that warning, oh that warning
+
+[29-Sep-18 05:29 PM] dukeleto#7326
+i tried to fix it, but at the time that code runs, the code doesn't even know if it's running in regtest mode or not
+
+[29-Sep-18 05:30 PM] Mylo#8306
+ok...so it doesn't know it's got a -datadir either than i guess.
+
+[29-Sep-18 05:30 PM] dukeleto#7326
+i think that warning is essentially wrong
+
+[29-Sep-18 05:30 PM] Mylo#8306
+yeah it's working...blocks are mining.
+
+[29-Sep-18 05:30 PM] dukeleto#7326
+that warning never expected a full file path, it only ever expected a relative dir name
+
+[29-Sep-18 05:31 PM] dukeleto#7326
+i get that warning a bajillion times, one for every block mined. But everything works
+
+{Reactions}
+👍 
+
+[30-Sep-18 03:00 AM] designer#4893
+https://www.inrupt.com/blog/one-small-step-for-the-web
+
+{Embed}
+https://www.inrupt.com/blog/one-small-step-for-the-web
+One Small Step for the Web...
+I’ve always believed the web is for everyone. That's why I and others fight fiercely to protect it. The changes we’ve managed to bring have created a better and more connected world. But for all the good we’ve achieved, the web has evolved into an engine of inequity and...
+http://static1.squarespace.com/static/5b3e3ef4ec4eb767a0513abb/5babbb83e5e5f048cb8dc86f/5babbb9b085229b9e86c1ad6/1538191857935/step.jpg?format=1000w
+
+{Reactions}
+👍 
+
+[30-Sep-18 02:18 PM] Urakawa#7114
+Hello!
+How can i access the "cli" option from within Agama.. I look in settings and nothing.
+Also when input komodod.exe it freezes in NOTARY_PUBKEY  why?
+
+[30-Sep-18 02:55 PM] Urakawa#7114
+i want to access to  kodomod.exe command window, but i tried within Agama but i cant find the tab in settings... maybe is the Agama version. I'm updating now. thanks
+
+[30-Sep-18 03:02 PM] Urakawa#7114
+Thanks.. i know. My final intention is to set up
+
+[30-Sep-18 03:02 PM] Urakawa#7114
+Command to run PIRATE blockchain and connect with the network
+
+[30-Sep-18 03:03 PM] Urakawa#7114
+so far i can run the kmodod.exe but it freezes saying
+
+[30-Sep-18 03:04 PM] Urakawa#7114
+finished loading blocks.
+
+[30-Sep-18 03:04 PM] Urakawa#7114
+no sure.. but thanks
+
+[30-Sep-18 08:02 PM] dukeleto#7326
+regtest mode sure is nice for finding bugs: https://github.com/MyHush/hush/pull/140
+
+{Embed}
+https://github.com/MyHush/hush/pull/140
+Isolate notarization data for testnet + regtest to different files...
+I noticed that regtest tests could see the mainnet notarization data, which prompted this change.
+
+Isolates all NetworkID's to their own notarization data file
+Prevents regtest mode modifying m...
+https://avatars1.githubusercontent.com/u/30298?s=400&v=4
+
+[01-Oct-18 03:36 AM] joey#9690
+@Deleted User @grewalsatinder @polycryptoblog @blackjok3r @CrisF I put together a pretty neat idea, requesting some feedback on it https://github.com/metacoin/parallel-pow
+
+{Embed}
+https://github.com/metacoin/parallel-pow
+metacoin/parallel-pow
+parallel proof of work. Contribute to metacoin/parallel-pow development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/4959276?s=400&v=4
+
+{Reactions}
+👌 (2) 
+
+[01-Oct-18 03:37 AM] polycryptoblog#1173
+Sounds like merge mining
+
+{Reactions}
+👍 
+
+[01-Oct-18 03:41 AM] blackjok3r#3181
+Not a bad idea, someone porposed something similar for the early days of the scaletest... as the mining power required was the limiting factor there, and someone suggessted to merge mine all the AC with a single miner. Cutting the required CPUs down by like 8000x
+
+[01-Oct-18 03:41 AM] blackjok3r#3181
+LOL
+
+[01-Oct-18 03:44 AM] ComputerGenie 👴🏼📢#7004
+yes, that way I can own most of the ac chains at once 😈
+
+[01-Oct-18 03:46 AM] ComputerGenie 👴🏼📢#7004
+the down side of that idea, though, is that PIRATE likely wouldn't have near the hashrate it has
+
+[01-Oct-18 03:57 AM] joey#9690
+Similar to merge mining, except with merge mining, the hashrate isn't added together and the parent chain doesn't gain from exclusive hashrate on the childchain
+
+[01-Oct-18 04:08 AM] joey#9690
+How are AC chains secured?
+
+[01-Oct-18 04:09 AM] ComputerGenie 👴🏼📢#7004
+many use dPoW through the use of notary nodes
+
+[01-Oct-18 04:09 AM] ComputerGenie 👴🏼📢#7004
+Some are secure by both massive hash and dPoW
+
+[01-Oct-18 04:12 AM] joey#9690
+Right, I remember reading about this now, thank you
+
+[01-Oct-18 04:23 AM] blackjok3r#3181
+Yes STAKED is extremly sercure like Verus, although not quite as good as VERUS.
+
+[01-Oct-18 04:23 AM] blackjok3r#3181
+Or at least it will be when its launched for real.
+
+[01-Oct-18 04:23 AM] blackjok3r#3181
+we are using all PoW chains for current testing, just for ease of setup.
+
+[01-Oct-18 08:59 AM] Mylo#8306
+VRSC is the ticker if that's what you mean
+
+[01-Oct-18 09:11 AM] Mylo#8306
+more like a mining signalling protocol than merge mining.   how would parallel-pow deal with small chain re-orgs for the parallel consensus proof chain or would they be mining on delayed (already re-orgd) blocks?  would this dilute the value of some of the higher value chains because the high value motivates the miners to mine it?
+
+[01-Oct-18 12:47 PM] joey#9690
+@Mylo there's only one nonce, and one proof-of-work, so a re-org of PoW on one chain would re-org all chains. I think that's fine, set the block time high like with bitcoin and use FIBRE and you have close to zero reorgs ever (like bitcoin)
+
+[01-Oct-18 05:34 PM] ComputerGenie 👴🏼📢#7004
+for Komodo`"peerMagic": "f9eee48d"`, no?
+
+[01-Oct-18 05:37 PM] ComputerGenie 👴🏼📢#7004
+`        /**
+         * The message start string is designed to be unlikely to occur in normal data.
+         * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
+         * a large 32-bit integer with any alignment.
+         */
+        pchMessageStart[0] = 0xf9;
+        pchMessageStart[1] = 0xee;
+        pchMessageStart[2] = 0xe4;
+        pchMessageStart[3] = 0x8d;`
+
+[01-Oct-18 05:38 PM] ComputerGenie 👴🏼📢#7004
+in `chainparams.cpp`
+
+{Reactions}
+🤔 
+
+[01-Oct-18 05:39 PM] jl777c#5810
+arbitrary 32bits to prevent crosstalk of blockchains
+
+[01-Oct-18 05:49 PM] qmc#4355
+@cipi around ?
+
+[01-Oct-18 05:50 PM] qmc#4355
+or anyone who can lend a hand with a test transaction + technical question regarding listing with barterdex, for that matter ?
+
+[01-Oct-18 05:51 PM] qmc#4355
+@jl777c perhaps?
+
+[01-Oct-18 05:52 PM] ComputerGenie 👴🏼📢#7004
+`technical question regarding listing with barterdex`
+I'd say, "Ask away and someone that knows the answer might see it"
+
+[01-Oct-18 06:57 PM] KomodoWorld#8282
+https://codaprotocol.com/index.html this Coda protocol seems very interesting
+
+{Embed}
+https://codaprotocol.com/index.html
+Coda Cryptocurrency Protocol
+That means that no matter how many transactions are performed, verifying the blockchain remains inexpensive and accessible to everyone.
+https://codaprotocol.com/static/img/compare-outlined-png.png
+
+[01-Oct-18 10:48 PM] Mylo#8306
+impressive team
+
+[01-Oct-18 10:57 PM] Kyung-Nam Park#1723
+Hello
+
+[01-Oct-18 10:57 PM] Kyung-Nam Park#1723
+Could you tell which version is the official version?
+
+[01-Oct-18 10:57 PM] Kyung-Nam Park#1723
+https://github.com/KomodoPlatform/komodo/releases
+
+{Embed}
+https://github.com/KomodoPlatform/komodo/releases
+KomodoPlatform/komodo
+Komodo. Contribute to KomodoPlatform/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[01-Oct-18 11:19 PM] Kyung-Nam Park#1723
+Oh my god
+
+{Reactions}
+💯 
+
+[01-Oct-18 11:28 PM] qmc#4355
+Anyone know if I'd need electrum or electrumx for listing on hyperdex ?
+
+[01-Oct-18 11:28 PM] qmc#4355
+or no issue with either?
+
+[01-Oct-18 11:29 PM] qmc#4355
+Yeah, and my understanding is HyperDEX only lists coins with electrum servers
+

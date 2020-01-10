@@ -1,0 +1,381 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[08-Sep-18 12:44 AM] Bryan_Beus#6442
+I have a few listed above. I'm not sure if there's more?
+
+[08-Sep-18 12:45 AM] Bryan_Beus#6442
+I have `spentindex`, `unspentindex`, `timestampindex`, and `addressindex`
+
+[08-Sep-18 12:46 AM] dukeleto#7326
+the "result":null is a bug itself in handling internal errors
+
+[08-Sep-18 12:47 AM] dukeleto#7326
+it should be "result": "error", fyi
+
+[08-Sep-18 12:47 AM] dukeleto#7326
+reading backlog now
+
+[08-Sep-18 12:48 AM] dukeleto#7326
+@Bryan_Beus you want some description of those other indexes?
+
+[08-Sep-18 12:49 AM] Bryan_Beus#6442
+@dukeleto Oh, ya, well that would be up to you and @jl777c To solve, I guess.
+
+[08-Sep-18 12:49 AM] Bryan_Beus#6442
+Yes, I need info on those four index params, and also, do you know if there are more?
+
+[08-Sep-18 12:49 AM] Bryan_Beus#6442
+related to the index?
+
+[08-Sep-18 12:49 AM] dukeleto#7326
+yeah, i just wanted to let you know that it's not quite right, wouldn't want to put that in official docs
+
+[08-Sep-18 12:50 AM] Bryan_Beus#6442
+Ya, I didn't put anything with an error in the docs. Only successful responses.
+
+{Reactions}
+💯 
+
+[08-Sep-18 12:51 AM] dukeleto#7326
+@Bryan_Beus nothing is automatic, resyncs are not done automatically. manual deletion is necessary
+
+[08-Sep-18 12:51 AM] Bryan_Beus#6442
+Okay, g2k
+
+[08-Sep-18 12:51 AM] Bryan_Beus#6442
+deleting that now
+
+[08-Sep-18 12:52 AM] jl777c#5810
+with -ac_ccactivate=<height>, it does do an automatic reindex (once)
+
+[08-Sep-18 12:52 AM] jl777c#5810
+and by default it enables addressindex and spentindex
+
+[08-Sep-18 12:52 AM] dukeleto#7326
+adding or removing any index CLI option currently requires manual deletion of blockchain data and full resync, as far as I know
+
+[08-Sep-18 12:53 AM] Bryan_Beus#6442
+I've changed the relevant portion of the documentation to this:
+```
+The user should manually delete the blockchain data before initiating this parameter ===link to manual deletion instructions above===.
+```
+Let me know if you want something else.
+
+[08-Sep-18 12:54 AM] dukeleto#7326
+`Maintain a timestamp index for block hashes, used to query blocks hashes by a range of timestamps` for -timestampindex
+
+[08-Sep-18 12:55 AM] dukeleto#7326
+`Maintain a full spent index, used to query the spending txid and input index for an outpoint` for -spentindex
+
+[08-Sep-18 12:57 AM] Bryan_Beus#6442
+``timestampindex`` is a coin daemon parameter that instructs a KMD-based coin daemon to maintain a timestamp index for all blockhashes. It is initiated at run time and it is used to query blocks by a range of timestamps.
+
+[08-Sep-18 12:57 AM] dukeleto#7326
+@Bryan_Beus let me know what else you need, those come from src/init.cpp
+
+[08-Sep-18 12:59 AM] dukeleto#7326
+there is no -unspentindex
+
+[08-Sep-18 12:59 AM] Bryan_Beus#6442
+Ah, okay
+
+[08-Sep-18 12:59 AM] dukeleto#7326
+that is basically addressindex
+
+[08-Sep-18 01:00 AM] dukeleto#7326
+`    strUsage += HelpMessageOpt("-addressindex", strprintf(_("Maintain a full address index, used to query for the balance, txids and unspent outputs for addresses (default: %u)"), DEFAULT_ADDRESSINDEX));
+`
+
+[08-Sep-18 01:00 AM] dukeleto#7326
+that is what init.cpp says about addressindex
+
+[08-Sep-18 01:01 AM] jl777c#5810
+going from on to off, you can probably not do a resync as you wont notice its messed up, but the problem is if you turn it off and then back on. you would have a gap
+
+[08-Sep-18 01:01 AM] dukeleto#7326
+@jl777c there are recent BTC core commits to allow turning on and off, but I am not sure how easy it would be to merge
+
+[08-Sep-18 01:02 AM] dukeleto#7326
+and their code is specific to txindex, but maybe would apply to these indexes
+
+[08-Sep-18 01:02 AM] Bryan_Beus#6442
+Take a look at this and see if these are correct.
+
+Do a search for "Coin Daemon Maintenance" to get to the new section.
+
+https://github.com/siddhartha-komodo/KomodoPlatformDocs/blob/v0.0.1/docs/rebuild/03_Developer_Documentation/02-Komodo/01-Komodo-API.rst
+
+{Embed}
+https://github.com/siddhartha-komodo/KomodoPlatformDocs/blob/v0.0.1/docs/rebuild/03_Developer_Documentation/02-Komodo/01-Komodo-API.rst
+siddhartha-komodo/KomodoPlatformDocs
+From https://github.com/imylomylo/KomodoPlatformdocs - siddhartha-komodo/KomodoPlatformDocs
+https://avatars2.githubusercontent.com/u/33014953?s=400&v=4
+
+[08-Sep-18 01:02 AM] jl777c#5810
+seems quite a big chance to do incremental stuff with indexes
+
+[08-Sep-18 01:02 AM] jl777c#5810
+most people will just either have CC active and need the indexes or not
+
+[08-Sep-18 01:03 AM] jl777c#5810
+oh, I realized a lot of the power of CC is because of the addressindex/spentindex existing!
+
+[08-Sep-18 01:03 AM] jl777c#5810
+without it, many of the consensus things I am doing would be too slow
+
+[08-Sep-18 01:03 AM] jl777c#5810
+and very few coins have these insight explorer based indexes built into the main codebase
+
+[08-Sep-18 01:04 AM] jl777c#5810
+just one of those handy improvements that enabled some very powerful CC functions
+
+[08-Sep-18 01:04 AM] jl777c#5810
+even the simplest one, faucet, uses the addressindex
+
+[08-Sep-18 01:05 AM] Bryan_Beus#6442
+Out of curiosity, should developers enable this by default on an asset chain that uses cc?
+
+If so, maybe I should put a note in.
+
+[08-Sep-18 01:05 AM] jl777c#5810
+they should, but I changed the default to be on for ac_cc chains
+
+[08-Sep-18 01:06 AM] Bryan_Beus#6442
+Okay, I'll put that as a note in there. Seems relevant.
+
+[08-Sep-18 01:06 AM] jl777c#5810
+so it shouldnt be strictly needed, but I have seen some cases where it was
+
+[08-Sep-18 01:06 AM] jl777c#5810
+strange behavior when it wasnt set
+
+[08-Sep-18 01:06 AM] Bryan_Beus#6442
+Just `addressindex`? Or are the others on by default as well?
+
+[08-Sep-18 01:07 AM] jl777c#5810
+spentindex also
+
+[08-Sep-18 01:08 AM] Bryan_Beus#6442
+k, but not `timestamp`
+
+[08-Sep-18 01:09 AM] Bryan_Beus#6442
+got it. 
+
+alright, things are finally cooking.
+
+On to `Blockchain` API commands tomorrow. Moving faster now. Thank you for all the help getting set up.
+
+[08-Sep-18 01:09 AM] Bryan_Beus#6442
+Er, Monday... 😃
+
+[08-Sep-18 01:09 AM] dukeleto#7326
+👍
+
+[08-Sep-18 01:11 AM] dukeleto#7326
+timestamp index makes it fast to ask the question "which blocks happened between these 2 dates?", which otherwise would require looking thru all or many blocks. I don't think KMD is using it much yet
+
+[08-Sep-18 05:11 AM] jspook16#3059
+anyone know how to add an asset chain to agama locally? its one i created so its not official or anything
+
+[08-Sep-18 05:35 AM] jspook16#3059
+thank you
+
+{Reactions}
+👍 (2) 
+
+[08-Sep-18 05:54 AM] jspook16#3059
+does the guide work for the portable Agama? I'm missing some of the directories in the guide @webworker01
+
+[08-Sep-18 05:57 AM] jspook16#3059
+im trying to add it to the portable Agama (not the mobile). komodoplatform.com has an option for a portable download
+
+[08-Sep-18 05:59 AM] jspook16#3059
+yeah could be. I'll keep poking around and see what I find
+
+[08-Sep-18 06:00 AM] jspook16#3059
+i should be asleep but i finally got an asset chain going lol
+
+[08-Sep-18 06:03 AM] jspook16#3059
+didnt realize that......i got two machines going.....both mining and staking
+
+[08-Sep-18 06:04 AM] jspook16#3059
+thanks for the insight........might create a second one if I can get one fully integrated first
+
+[08-Sep-18 09:12 PM] Alright#0419
+trying to sync from fresh with all the indexes enabled. Deleted everything except wallet.dat in `~/.komodo` then put 
+```
+txindex=1
+spentindex=1
+addressindex=1
+timestampindex=1
+```
+in `~/.komodo/komodo.conf`
+but the debug.log shows 
+```
+2018-09-08 21:10:07 LoadBlockIndexDB: transaction index disabled
+2018-09-08 21:10:07 LoadBlockIndexDB: address index disabled
+2018-09-08 21:10:07 LoadBlockIndexDB: timestamp index disabled
+2018-09-08 21:10:07 LoadBlockIndexDB: spent index disabled
+```
+
+[08-Sep-18 09:15 PM] Alright#0419
+Ehhh, ignore that, tried it again and it worked properly, not sure what I changed
+
+[08-Sep-18 09:41 PM] jorian#4555
+can someone explain why
+```
+{"method":"validateaddress","params":["RGfw56VB4mjLHjgZYCokw18w1knmcKcVi6"]}
+``` returns valid 200 response, but
+```
+{"method":"gettransaction","params":["3a49cf6441ec58e95936a27d498305f31822ffdcc5ddd987acacc9d8efa05697"]}
+``` yields a 500 bad request? when looking at komodo-cli help, the way the params are set up look the same
+
+[08-Sep-18 09:55 PM] Alright#0419
+is that transaction from an address that is in your wallet?
+
+[08-Sep-18 09:56 PM] Alright#0419
+if not, you're looking for `getrawtransaction <txid> 1` instead
+
+[08-Sep-18 09:58 PM] jorian#4555
+ah. thanks
+
+[08-Sep-18 09:58 PM] jorian#4555
+it will be in my wallet but i took a random one for testing
+
+[09-Sep-18 02:33 PM] dukeleto#7326
+gettransaction is often not what you want, getrawtransaction is usually what people want
+
+[09-Sep-18 09:59 PM] Vova Shevchyk#1106
+Hi everybody. I have created a dice and now I am trying to make a det, But I can't
+
+ubuntu@maven:~/src$ ./komodo-cli -ac_name=EE_CHAIN dicebet EE cd3a3c43cb1089729ca6ff4f517d359225865f0e83e5d5b85e6ca709869540c5 5 2
+{
+  "result": "error",
+  "error": "cant find dice entropy inputs"
+}
+
+
+Can anybody help me to understand why do I get this error? 😃
+
+[09-Sep-18 10:06 PM] TonyL#3577
+Hi @Vova Shevchyk ! Most probably it's because diceplan has nt enough UTXOs.
+ Add some entropy txs by `diceaddfunds` and try place bet again
+
+[09-Sep-18 10:09 PM] Vova Shevchyk#1106
+Thanks @TonyL , that was my first though, I added some funds, but nothing changed. Do you know how many txs do I need exactly? I am playing in my net with my coin, so I don't have to much txs 😃
+
+[09-Sep-18 10:10 PM] TonyL#3577
+One `diceaddfunds` tx should be enough to place one bet in one block
+
+[09-Sep-18 10:14 PM] TonyL#3577
+@Vova Shevchyk Was the `diceaddfunds` transaction mined?
+
+[09-Sep-18 10:14 PM] Vova Shevchyk#1106
+yeap... that's the issue 😃
+
+[09-Sep-18 10:14 PM] Vova Shevchyk#1106
+thanks
+
+[09-Sep-18 10:15 PM] TonyL#3577
+👍 `setgenerate true` will help I guess 😃
+
+[09-Sep-18 10:16 PM] Vova Shevchyk#1106
+what is that for?
+
+[09-Sep-18 10:17 PM] TonyL#3577
+Enabling mining so transactions should pass trough faster
+
+[09-Sep-18 10:17 PM] TonyL#3577
+`komodo-cli -ac_name=name setgenerate true`
+
+[09-Sep-18 10:19 PM] Vova Shevchyk#1106
+what is the difference to -gen?
+
+[09-Sep-18 10:22 PM] TonyL#3577
+`-gen` enables mining on daemon start as komodod parameter, `setgenerate` enabling/disabling mining on fly (komodo-cli call). I just thought maybe your tx stucked because you not mining
+
+[09-Sep-18 10:22 PM] Vova Shevchyk#1106
+I see
+
+[09-Sep-18 10:22 PM] Vova Shevchyk#1106
+I made 4 additional funds, and mining was on. Dice info shows that transactions were received, but I still get the same error
+
+{
+  "result": "error",
+  "error": "cant find dice entropy inputs"
+}
+
+[09-Sep-18 10:22 PM] Vova Shevchyk#1106
+😭
+
+[09-Sep-18 10:23 PM] TonyL#3577
+What do you receiving in daemon logs?
+
+[09-Sep-18 10:24 PM] Vova Shevchyk#1106
+76a91488dc3c2e051ac56aa5112fba52dee94582d8456988ac script vs 2102726487c3f34fce704527c9a8e07d7bcc6f6f45f807ad18edb3a7621b746fdafbac (E) entropy vin.1 fundingPubKey mismatch ee0dbaad0bbd31b2ad5bde63aa61e723fb1a4bdab2a6dc76f371b5cd4b98d050
+numentropy tx 3: 802.00000000
+cant find dice entropy inputs
+
+[09-Sep-18 10:24 PM] Vova Shevchyk#1106
+looks like pubkey issue
+
+[09-Sep-18 10:25 PM] TonyL#3577
+Aha, looks like
+
+[09-Sep-18 10:28 PM] TonyL#3577
+Put as value of `pubkey=` with which you're starting daemon pubkey from `ac_name=name getaccountaddress ""` -> `ac_name=name  validateaddress addressfromprevcall` and try to gamble again 😃
+
+[09-Sep-18 10:29 PM] TonyL#3577
+I think you'll need to re-create your diceplan
+
+[09-Sep-18 10:30 PM] Vova Shevchyk#1106
+I didn't understand 😃 could explain
+
+[09-Sep-18 10:31 PM] TonyL#3577
+1) Call `ac_name=name getaccountaddress ""` to get wallet address
+2) Call `ac_name=name  validateaddress %walletaddress%` to get the pubkey 
+3) Use this pubkey for `pubkey=` parameter when starting AC daemon
+
+[09-Sep-18 10:32 PM] Vova Shevchyk#1106
+Now it's super clear, thanks. Will do that now
+
+{Reactions}
+👍 
+
+[09-Sep-18 10:32 PM] Vova Shevchyk#1106
+I used the same pubkey for both daemons, on my server and my machine
+shame on me
+
+[09-Sep-18 10:37 PM] TonyL#3577
+Oh, its not a shame - tricky thing)) Option with same pubkeys should work if you import same WIF to both wallets first by `importaddress`
+
+[09-Sep-18 10:46 PM] Vova Shevchyk#1106
+I just created new
+
+[09-Sep-18 10:46 PM] Vova Shevchyk#1106
+so it didn't work 😦
+
+[09-Sep-18 10:46 PM] TonyL#3577
+@Vova Shevchyk Same error?
+
+[09-Sep-18 10:47 PM] Vova Shevchyk#1106
+not yet. Just reset everything, created new wallets, pubkey and started daemons. Now creating dice
+
+{Reactions}
+🙌 
+
+[09-Sep-18 10:54 PM] Vova Shevchyk#1106
+🕺🏻
+
+[09-Sep-18 10:54 PM] Vova Shevchyk#1106
+I made a bet!
+
+[09-Sep-18 10:54 PM] Vova Shevchyk#1106
+😃
+

@@ -1,0 +1,425 @@
+==============================================================
+Guild: Komodo
+Channel: talk-mining
+Topic: ./komodod -ac_name=ZAWY24 -ac_adaptivepow=1 -ac_supply=1000000 -ac_reward=10000000000 -ac_cc=2 -addnode=5.9.102.210 &
+
+A channel to discuss mining. For useful links and more info click the pinned messages to the right.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[02-Jul-18 05:57 PM] daemonfox#6136
+one miner connects gets shares looks good
+
+[02-Jul-18 05:57 PM] daemonfox#6136
+but those errors pop every block update and restarts stratum
+
+[02-Jul-18 05:58 PM] ComputerGenie#2331
+tls off in kmd pool config
+
+[02-Jul-18 05:58 PM] ComputerGenie#2331
+?
+
+[02-Jul-18 05:58 PM] daemonfox#6136
+yup
+
+[02-Jul-18 06:00 PM] ComputerGenie#2331
+what is your .komodo/komodo.config?
+
+[02-Jul-18 06:00 PM] daemonfox#6136
+one sec
+
+[02-Jul-18 06:00 PM] daemonfox#6136
+here is the line from blockTemplate.js
+
+[02-Jul-18 06:00 PM] daemonfox#6136
+// generate the fees and coinbase tx
+    var blockReward = (this.rpcData.miner) * 100000000;
+    if (payFoundersReward === true) {
+        if (!this.rpcData.founders || this.rpcData.founders.length <= 0) {
+            console.log('Error, founders reward missing for block template!');
+        } else {
+            blockReward = (this.rpcData.miner + this.rpcData.founders) * 100000000;
+        }
+    }
+
+[02-Jul-18 06:02 PM] daemonfox#6136
+komodo.conf
+
+[02-Jul-18 06:02 PM] daemonfox#6136
+rpcuser=user
+
+rpcpassword=nope
+
+server=1
+daemon=1
+txindex=1
+rpcport=7771
+
+rpcallowip=127.0.0.1
+addnode=5.9.102.210
+addnode=78.47.196.146
+addnode=178.63.69.164
+addnode=88.198.65.74
+addnode=5.9.122.241
+addnode=144.76.94.38
+blocknotify=node /home/daemonfox/z-nomp/scripts/cli.js blocknotify komodo %s
+
+[02-Jul-18 06:03 PM] ComputerGenie#2331
+take out the blocknotify and see if that makes a difference
+
+[02-Jul-18 06:03 PM] ComputerGenie#2331
+if you use p2p, notify is almost always meaningless
+
+[02-Jul-18 06:04 PM] daemonfox#6136
+p2p disabled until i get the rest working
+
+[02-Jul-18 06:04 PM] ComputerGenie#2331
+so, enable it
+
+[02-Jul-18 06:05 PM] ComputerGenie#2331
+`    "p2p": {
+        "enabled": true,
+        "host": "127.0.0.1",
+        "port": 7770,
+        "disableTransactions": false
+    }`
+
+[02-Jul-18 06:05 PM] daemonfox#6136
+is 7770 the default no config to set or I need to set that somewhere as well?
+
+[02-Jul-18 06:05 PM] ComputerGenie#2331
+you will need teh magic that I posted earlier
+
+[02-Jul-18 06:05 PM] ComputerGenie#2331
+7770 is default iirc
+
+[02-Jul-18 06:05 PM] daemonfox#6136
+ok ty ill check that shortly
+
+[02-Jul-18 06:06 PM] daemonfox#6136
+trying without the blocknotify first
+
+[02-Jul-18 06:06 PM] daemonfox#6136
+then ill add p2p
+
+[02-Jul-18 06:06 PM] ComputerGenie#2331
+p2p port *should be* rpc -1
+
+[02-Jul-18 06:08 PM] ComputerGenie#2331
+not that it totally matters in this setting, but if you don't enable p2p, you'll be relying 100% on your `blockRefreshInterval`
+
+[02-Jul-18 06:08 PM] ComputerGenie#2331
+so, make sure that is set at a realistic number
+
+[02-Jul-18 06:09 PM] ComputerGenie#2331
+_once did something stupid and set the blockRefreshInterval on a CHIPS stratum for 10 minutes 🤦🏿_
+
+[02-Jul-18 07:39 PM] daemonfox#6136
+"payFoundersReward": false
+
+[02-Jul-18 07:39 PM] daemonfox#6136
+you didnt have that in the json you posted...
+
+[02-Jul-18 07:40 PM] ComputerGenie#2331
+there might be some disparity in settings due to the only copy I have is way older, but since null = not 'true' there shouldn't be any need for it in kmd config
+
+[02-Jul-18 07:41 PM] ComputerGenie#2331
+_hasn't use a downloaded stratum (other than to help someone test their stuff) for quite some time_
+
+[02-Jul-18 07:47 PM] Alright#0419
+```
+{
+    "name": "komodo",
+    "symbol": "kmd",
+    "algorithm": "equihash",
+    "txfee": 0.00005
+}
+```
+should work just fine
+
+[02-Jul-18 07:48 PM] Alright#0419
+are you able to do any RPC commands from the computer you're running z-nomp on?
+
+[02-Jul-18 07:48 PM] Alright#0419
+might want to start there
+
+[02-Jul-18 09:06 PM] daemonfox#6136
+yes i have full RPC access to mu komodod
+
+[02-Jul-18 09:06 PM] daemonfox#6136
+I am only getting erros in z-nomp now but hsraes are coming through
+
+[02-Jul-18 09:07 PM] daemonfox#6136
+z-nomp and komodod live in the same instance
+
+[02-Jul-18 09:07 PM] daemonfox#6136
+2018-07-02 17:06:27 [Pool]      [komodo] (Thread 4) getblocktemplate call failed for daemon instance 0 with error {"type":"request error","message":"socket hang up"}
+/home/daemonfox/z-nomp/node_modules/stratum-pool/lib/pool.js:586
+                        result.response.miner = subsidy.miner;
+                                                        ^
+
+[02-Jul-18 09:07 PM] daemonfox#6136
+even with p2p working
+
+[02-Jul-18 09:08 PM] ComputerGenie#2331
+Try this version and see if you still have an issue:
+https://github.com/xRobeSx/kmd-nomp
+
+{Embed}
+https://github.com/xRobeSx/kmd-nomp
+xRobeSx/kmd-nomp
+kmd-nomp is mining pool software for Komodo(KMD)
+https://avatars2.githubusercontent.com/u/6279232?s=400&v=4
+
+[02-Jul-18 09:08 PM] daemonfox#6136
+i have
+
+[02-Jul-18 09:08 PM] daemonfox#6136
+started there
+
+[02-Jul-18 09:08 PM] daemonfox#6136
+same exact issue
+
+[02-Jul-18 09:10 PM] ComputerGenie#2331
+😐
+
+[02-Jul-18 09:12 PM] daemonfox#6136
+i do get this as komodod finishes and becomes available...
+
+[02-Jul-18 09:12 PM] daemonfox#6136
+finished loading blocks
+READY for  RPC calls at 1530564679! done PASSPORT  refid.33
+ FindBucketIndex violation: from val 29940.000000
+
+[02-Jul-18 09:16 PM] daemonfox#6136
+function GetBlockTemplate(callback) {
+        function getBlockSubsidyandTemplate(callback) {
+            _this.daemon.cmd('getblocksubsidy',
+                [],
+                function (result) {
+                    callback = function (subsidy) {getBlockTemplate(subsidy)};
+                    var subsidy = result[0].response;
+                    callback(subsidy);
+                });
+        }
+
+
+        function getBlockTemplate(subsidy) {
+
+            _this.daemon.cmd('getblocktemplate',
+                [{"capabilities": ["coinbasetxn", "workid", "coinbase/append"]}],
+                function (result) {
+                    if (result.error) {
+                        emitErrorLog('getblocktemplate call failed for daemon instance ' +
+                            result.instance.index + ' with error ' + JSON.stringify(result.error));
+                        callback(result.error);
+                    } else {
+                        result.response.miner = subsidy.miner;  //<<<< THIS LINE 586 pool.js
+                        result.response.founders = (subsidy.founders || subsidy.community);
+                        var processedNewBlock = _this.jobManager.processTemplate(result.response);
+                        callback(null, result.response, processedNewBlock);
+                        callback = function () {
+                        };
+                    }
+                }, true
+            );
+        }
+
+        getBlockSubsidyandTemplate();
+    }
+
+[02-Jul-18 09:17 PM] daemonfox#6136
+thats the function causing all the commotion i just have no idea why
+
+[02-Jul-18 09:19 PM] ComputerGenie#2331
+when you look at the code, you have to go back further (in progression, not lines)
+`undefined` basically means that the spot you keep looking at wasn't passed any actual variable
+
+[02-Jul-18 11:17 PM] daemonfox#6136
+can you limit how many threads z-nomp opens?
+
+[02-Jul-18 11:17 PM] daemonfox#6136
+I have 8c/16t and it opens 16 rpc threads everytime
+
+[02-Jul-18 11:24 PM] ComputerGenie#2331
+clustering.... forks
+auto = 1 per core
+any number = that many threads
+
+[02-Jul-18 11:50 PM] BlackJesus#6161
+@daemonfox did you fix your znomp
+
+[02-Jul-18 11:53 PM] Alright#0419
+@daemonfox config.json
+
+```
+    "clustering": {
+        "enabled": false
+```
+
+[03-Jul-18 01:43 AM] bishop#9773
+Got nomp all setup on my node, soloing atm
+
+[03-Jul-18 01:45 AM] BlackJesus#6161
+@bishop what guide did you follow
+
+[03-Jul-18 01:45 AM] BlackJesus#6161
+The zcash z-nomp? With komodo in the coins daemon folder opposed to zcash
+
+[03-Jul-18 01:49 AM] bishop#9773
+xrobes repo, komodo in the daemon folder
+
+[03-Jul-18 01:49 AM] bishop#9773
+Already got my first block 😄
+
+[03-Jul-18 01:55 AM] BlackJesus#6161
+Awesome
+
+[03-Jul-18 01:56 AM] BlackJesus#6161
+I need to stop being lazy and just sit down and set it up on my old mining rig (sold all the graphics cards it's bare bone) when my new Psu comes in.
+
+[03-Jul-18 01:58 AM] bishop#9773
+I figured I had a full node running already so why not setup a private pool for all my miners and maybe hit my luck with a massive block from rewards not being collected
+
+[03-Jul-18 01:59 AM] BlackJesus#6161
+That's my whole reason for buying z9's
+
+[03-Jul-18 01:59 AM] BlackJesus#6161
+Playing the lottery especially after block 1 million
+
+[03-Jul-18 08:26 AM] NutellaLicka#4241
+@bishop what's your hash rate?
+
+[03-Jul-18 10:46 AM] jansako#3330
+Hi all, anyone knows what is the 'expected' number of blocks one can find with a z9 mini at this point? 
+I mine on a pool (for now), it shows 'luckdays' for my miner around 0.7-0.8 or so on average. I read that as if I were to solo mine, I would get between 1-2 locks per day. 
+The interesting part is that they pay out  8-9KMD/day, which is more like 2-3 blocks (looking at the avg block sizes). The 'pool luck' shows as average for that period too so it is not that the pool is finding more blocks than 'expected'.
+One obvious conclusion is that the pool stats are 'skewed' to make you feel that you are getting paid more that if you were solo mine, but I am reluctant to jump to that.
+
+Again, anyone solomining with a z9 mini, how many blocks do you get/day?
+
+THX!
+
+[03-Jul-18 10:47 AM] jansako#3330
+I would appreciate a PM if you are reluctant to share publicly...
+
+[03-Jul-18 10:50 AM] ComputerGenie#2331
+Extrapolating backwards from my increase, @jansako, I'd say 3-4 blocks per day "expected" per mini solo mining (influenced by luck and NN timings)
+
+[03-Jul-18 10:51 AM] ComputerGenie#2331
+however, it should always be noted that scale does have some impact on find rate
+
+[03-Jul-18 10:53 AM] ComputerGenie#2331
+Unless it's a 0 fee pool, over time you'll always make less mining in a pool; how well you can, personally, cope with variance is highly individual
+
+[03-Jul-18 10:54 AM] jansako#3330
+Thank you!
+
+[03-Jul-18 10:55 AM] jansako#3330
+Yeah, we had that discussion. Is the pool fee more or less than the electricity used by the PC running your local stratum/VPS fee 😃
+
+[03-Jul-18 10:56 AM] jansako#3330
+Are you sharing the costs by running other stratums etc
+
+[03-Jul-18 10:57 AM] ComputerGenie#2331
+for the average person, the electricity used by the PC running your local stratum is less than the electricity used by the PC dealing with email and social media 😉
+
+[03-Jul-18 12:25 PM] daemonfox#6136
+@BlackJesus @Alright I have it up... down to a single thread
+
+[03-Jul-18 12:26 PM] daemonfox#6136
+not connecting any miners to it yet to see if the getblocktemplate error still happens
+
+[03-Jul-18 12:26 PM] daemonfox#6136
+which it just did sigh...
+
+[03-Jul-18 12:26 PM] daemonfox#6136
+2018-07-03 08:25:59 [Pool]      [komodo] (Thread 1) getblocktemplate call failed for daemon instance 0 with error {"type":"request error","message":"socket hang up"}
+
+[03-Jul-18 12:26 PM] ComputerGenie#2331
+how new/old is your pull of komodo?
+
+[03-Jul-18 12:27 PM] daemonfox#6136
+from the last 48 hours
+
+[03-Jul-18 12:27 PM] ComputerGenie#2331
+what komodo branch?
+
+[03-Jul-18 12:28 PM] daemonfox#6136
+https://github.com/jl777/komodo
+
+{Embed}
+https://github.com/jl777/komodo
+jl777/komodo
+komodo - Komodo
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[03-Jul-18 12:28 PM] ComputerGenie#2331
+not what repo, what branch
+
+[03-Jul-18 12:29 PM] daemonfox#6136
+current git
+
+[03-Jul-18 12:29 PM] ComputerGenie#2331
+dev? master? jl777?
+
+[03-Jul-18 12:29 PM] daemonfox#6136
+git clone https://github.com/jl777/komodo
+
+{Embed}
+https://github.com/jl777/komodo
+jl777/komodo
+komodo - Komodo
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[03-Jul-18 12:29 PM] daemonfox#6136
+thats all i ran then the build commands
+
+[03-Jul-18 12:30 PM] daemonfox#6136
+its the first three lines of all these guides right after updating the OS
+
+[03-Jul-18 12:30 PM] daemonfox#6136
+and deps
+
+[03-Jul-18 12:30 PM] ComputerGenie#2331
+`git checkout -f jl777
+git pull
+zcutil/build.sh -j8`
+
+[03-Jul-18 12:31 PM] daemonfox#6136
+do i need to remove the existing komodo folder but leave my .komodo?
+
+[03-Jul-18 12:31 PM] ComputerGenie#2331
+no, do that from inside your komodo clone folder and the code will do the rest
+
+[03-Jul-18 12:31 PM] daemonfox#6136
+ok
+
+[03-Jul-18 12:33 PM] ComputerGenie#2331
+I think my personal 1080TIs are about deded 😭
+
+[03-Jul-18 12:33 PM] ComputerGenie#2331
+3 (2k+ sols) on COQUI and a block diff of 1 😐
+
+[03-Jul-18 12:39 PM] daemonfox#6136
+and its off!
+
+[03-Jul-18 12:39 PM] ComputerGenie#2331
+"off"?
+
+[03-Jul-18 12:40 PM] daemonfox#6136
+hopefully it was just a build error from the wrong branch
+
+[03-Jul-18 12:40 PM] daemonfox#6136
+off = building
+
+{Reactions}
+👍🏿 
+
+[03-Jul-18 12:40 PM] daemonfox#6136
+like off and away it goes
+
+[03-Jul-18 12:40 PM] daemonfox#6136
+and tyvm for your help
+

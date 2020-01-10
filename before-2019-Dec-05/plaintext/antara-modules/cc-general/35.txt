@@ -1,0 +1,430 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[07-Aug-18 04:41 PM] Alright#0419
+It did unlock a previous `rewardslock`
+
+[07-Aug-18 04:43 PM] Alright#0419
+`./komodo-cli -ac_name=AT1 rewardsunlock over10k fa2501e6d7ae5de7a4c21f237457654af51e979a6b2e34c9f582dc7eac79a49e completelygarbagedata` worked fine too
+
+[07-Aug-18 04:53 PM] Alright#0419
+seems I just unlocked 1 node's `rewardslock` from another node
+
+[07-Aug-18 04:54 PM] Alright#0419
+@SHossain @siu - Chainmakers do either of you have a `rewardslock` currently? I want to try to unlock it
+
+[07-Aug-18 04:54 PM] jl777c#5810
+if the locktxid is null then it picks the first one
+
+[07-Aug-18 04:55 PM] jl777c#5810
+anybody should be able to unlock any locked txid
+
+[07-Aug-18 04:55 PM] jl777c#5810
+completelygarbage probably just parsed to null txid
+
+[07-Aug-18 04:56 PM] jl777c#5810
+if you send in a valid txid that isnt a locked txid it should make an error
+
+[07-Aug-18 04:56 PM] Alright#0419
+A little bit confused why anyone can unlock any locked txid
+
+[07-Aug-18 05:02 PM] SHossain#0007
+i don't have any locked funds on this chain yet
+
+[07-Aug-18 05:05 PM] Alright#0419
+by spamming `./komodo-cli -ac_name=AT1 rewardsunlock FREE 1538ed0463d881660a76a47b3a46ea5d93dafb90fc7340a1c5162e4fe04fa009 $garbage` It seems I'm unlocking txs from other rewards plans
+
+[07-Aug-18 05:13 PM] jl777c#5810
+the idea is to allow rewards plans via SPV
+
+[07-Aug-18 05:13 PM] jl777c#5810
+that allows a "server" node to unlock all the rewards
+
+[07-Aug-18 05:14 PM] jl777c#5810
+this is explained in comments at the top of rewards.cpp
+
+[07-Aug-18 05:15 PM] jl777c#5810
+since the unlock address is constrained to being the address specified by whoever locked it, it doesnt seem to matter much that anybody can unlock any matured locked reward
+
+[07-Aug-18 05:19 PM] Alright#0419
+`minseconds 86400 maxseconds 172800
+duration 159812 (1533662263 - 1533502451) numblocks 2638 (7995 - 5357)
+amount 100.00000000 10000000000.00000000 317 -> duration.159812 reward 0.00506760` This reward is off I think
+
+[07-Aug-18 05:19 PM] siu - Chainmakers#3920
+i dont have locked funds either
+
+[07-Aug-18 05:20 PM] Alright#0419
+Plan had 10000% APR
+
+[07-Aug-18 05:20 PM] Alright#0419
+locked 100 for a little more than a day
+
+[07-Aug-18 05:20 PM] siu - Chainmakers#3920
+the last ones i had printed that i had already spent the funds
+
+[07-Aug-18 05:20 PM] siu - Chainmakers#3920
+so i guess they unlocked automatically somehow
+
+[07-Aug-18 05:20 PM] Alright#0419
+```
+{
+  "result": "success",
+  "fundingtxid": "fa2501e6d7ae5de7a4c21f237457654af51e979a6b2e34c9f582dc7eac79a49e",
+  "name": "over10k",
+  "sbits": 30170811438823023,
+  "APR": "10000.00000000",
+  "minseconds": 86400,
+  "maxseconds": 172800,
+  "mindeposit": "1.00000000",
+  "funding": "4036699.93415940"
+}
+```
+
+[07-Aug-18 05:22 PM] Alright#0419
+and `rewardunlock` can unlock other plan's `rewardlock`s. I just created a brand new plan and did `rewardunlock` on it and it released txs from a different plan. 
+`./komodo-cli -ac_name=AT1 rewardsunlock 1all 677c8d8e02fb20a0fbd4cc23ab6282f5c56f03bb4f72736391eaeedd22181615 garbage`
+
+[07-Aug-18 05:22 PM] Alright#0419
+That^ released a tx on that over10k plan
+
+[07-Aug-18 05:24 PM] jl777c#5810
+yes rewards can be unlocked by anybody, so it seems no point to restrict it to plans
+
+[07-Aug-18 05:24 PM] jl777c#5810
+10000% APR likely overflowed, probably I will need to add a cap to rewards percentage
+
+[07-Aug-18 05:24 PM] jl777c#5810
+not sure where the APR overflow starts
+
+[07-Aug-18 05:30 PM] Alright#0419
+Not sure if this matters all that much, but you can create 2 or more plans with the same name if you create them in the same block. 
+```
+./komodo-cli -ac_name=AT1 rewardsinfo cfc823f1b89f8947918f6454105e2a65d7a71722ac37eba3e5ffd80b8230cfc0
+{
+  "result": "success",
+  "fundingtxid": "cfc823f1b89f8947918f6454105e2a65d7a71722ac37eba3e5ffd80b8230cfc0",
+  "name": "double",
+  "sbits": 111516182736740,
+  "APR": "10000.00000000",
+  "minseconds": 86400,
+  "maxseconds": 172800,
+  "mindeposit": "1.00000000",
+  "funding": "100.00000000"
+}
+~/komodo/src$ ./komodo-cli -ac_name=AT1 rewardsinfo 9d5250b295390e548e57af842c2f19d6e384b9a4d930a8a612eab5d265877481
+{
+  "result": "success",
+  "fundingtxid": "9d5250b295390e548e57af842c2f19d6e384b9a4d930a8a612eab5d265877481",
+  "name": "double",
+  "sbits": 111516182736740,
+  "APR": "10000.00000000",
+  "minseconds": 86400,
+  "maxseconds": 172800,
+  "mindeposit": "1.00000000",
+  "funding": "100.00000000"
+}
+```
+
+[07-Aug-18 05:31 PM] Alright#0419
+Need to test if that actually causes problems still
+
+[07-Aug-18 05:35 PM] jl777c#5810
+that is a good bug!
+
+[07-Aug-18 06:39 PM] Yassin#3685
+@Alright sent me your adress kmd, i will sent to you 777 Kmd!! :yassinkomodo:
+
+{Reactions}
+😍 Komodo (2) 
+
+[07-Aug-18 06:47 PM] dukeleto#7326
+still have some bugs to squash in how regtest ACs are managed in the test suite, but i finally got CC tests running: ```DEBUG:BitcoinRPC:-7-> validateaddress ["RWPg8B91kfK5UtUN7z6s6TeV9cHSGtVY8D"]
+DEBUG:BitcoinRPC:<-7- {"account": "", "ismine": true, "isvalid": true, "iscompressed": true, "segid": 32, "iswatchonly": false, "address": "RWPg8B91kfK5UtUN7z6s6TeV9cHSGtVY8D", "pubkey": "02676d00110c2cd14ae24f95969e8598f7ccfaa675498b82654a5b5bd57fc1d8cf", "isscript": false, "scriptPubKey": "76a914e7948c7995f4347f31eb55c8ea77e8f6e97b372c88ac"}
+DEBUG:BitcoinRPC:-8-> faucetaddress []
+DEBUG:BitcoinRPC:<-8- {"FaucetCCaddress": "R9zHrofhRbub7ER77B7NrVch3A63R39GuC", "myCCaddress": "RCuoYrXABKT6SoReQHCkoBxxgb2aqEs86z", "result": "success", "Faucetmarker": "RKQV4oYs4rvxAWx1J43VnT73rSTVtUeckk", "myaddress": "RWPg8B91kfK5UtUN7z6s6TeV9cHSGtVY8D"}
+Stopping nodes
+DEBUG:BitcoinRPC:-9-> stop []
+DEBUG:BitcoinRPC:<-9- "REGTEST Komodo server stopping"
+Cleaning up
+Tests successful
+--- Success: cryptoconditions.py ---
+
+
+
+Tests completed: 1
+successes 1; failures: 0```
+
+[07-Aug-18 06:49 PM] dukeleto#7326
+the test suite wants to create it's own foo.conf for the test komodod, but with an AC we want to use the auto-generated one, which has the correct rpc user/pass/etc
+
+[07-Aug-18 06:49 PM] dukeleto#7326
+this caused some issues, because the name of an AC determines it's port by default (REGTEST always gets 64368), but the inherited code wanted to use a randomized port and also had different rpc user/pass
+
+[07-Aug-18 06:59 PM] dukeleto#7326
+here is a gist of the full output (i have lots of debug stuff printing currently): https://gist.github.com/leto/128eda4ad56f0eed7b1c29a6905516d9
+
+{Embed}
+https://gist.github.com/leto/128eda4ad56f0eed7b1c29a6905516d9
+CC Tests running!!!
+CC Tests running!!!
+https://avatars1.githubusercontent.com/u/30298?s=400&v=4
+
+[07-Aug-18 07:52 PM] dukeleto#7326
+```        # Begin actual CC tests
+
+        # Faucet tests
+        faucet  = rpc.faucetaddress()
+        assert_equal(faucet['result'], 'success')
+        # verify all keys look like valid AC addrs, could be better
+        for x in ['myCCaddress', 'FaucetCCaddress', 'Faucetmarker', 'myaddress']:
+            assert_equal(faucet[x][0], 'R')
+
+        # Dice tests
+        dice  = rpc.diceaddress()
+        assert_equal(dice['result'], 'success')
+        for x in ['myCCaddress', 'DiceCCaddress', 'Dicemarker', 'myaddress']:
+            assert_equal(dice[x][0], 'R')
+```
+
+[07-Aug-18 07:53 PM] dukeleto#7326
+look how easy it is to write CC tests in python, once all the setup junk is done
+
+[07-Aug-18 07:53 PM] dukeleto#7326
+those are our first tests for faucet and dice
+
+[07-Aug-18 07:57 PM] dukeleto#7326
+those are from https://github.com/letolabs/komodo/blob/cctests/qa/rpc-tests/cryptoconditions.py
+
+{Embed}
+https://github.com/letolabs/komodo/blob/cctests/qa/rpc-tests/cryptoconditions.py
+letolabs/komodo
+komodo - Komodo
+https://avatars0.githubusercontent.com/u/648647?s=400&v=4
+
+[07-Aug-18 08:13 PM] Alright#0419
+@jl777c can you explain what this means please for `rewardsunlock` 
+`vin.1+: funding CC vout.0 from 'F' and 'A' and 'U'`
+
+[07-Aug-18 08:14 PM] jl777c#5810
+vins1, 2, 3, .... (however many) are all 'F' 'A' or 'U' outputs
+
+[07-Aug-18 08:15 PM] jl777c#5810
+all the vout.0 from the 'F' 'A' 'U' are the CC outputs
+
+[07-Aug-18 08:15 PM] Alright#0419
+I'm looking at a `rewardsunlock` tx, and the vin1 seems to be from a different rewards plan. Is that expected?
+
+[07-Aug-18 08:15 PM] jl777c#5810
+that would be a bug
+
+[07-Aug-18 08:16 PM] jl777c#5810
+is this where 2 plans confirmed the same block?
+
+[07-Aug-18 08:16 PM] Alright#0419
+Not the `double` plan, no
+
+[07-Aug-18 08:16 PM] jl777c#5810
+oh, then it is a more serious bug
+
+[07-Aug-18 08:17 PM] Alright#0419
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/476483953801297943/rewardsunlockraw
+
+[07-Aug-18 08:17 PM] Alright#0419
+unlocked this `./komodo-cli -ac_name=AT1 rewardsunlock FREE 1538ed0463d881660a76a47b3a46ea5d93dafb90fc7340a1c5162e4fe04fa009 830c1c7ff784988e71633700871746719016d5e1f34ba0aac74d4bf58415e06d`
+
+[07-Aug-18 08:17 PM] Alright#0419
+The vin1 of it seems to be from my `over10k` plan
+
+[07-Aug-18 08:18 PM] jl777c#5810
+seems to be? you can know for sure by looking at opreturn from the vin
+
+[07-Aug-18 08:18 PM] Alright#0419
+one moment
+
+[07-Aug-18 08:19 PM] jl777c#5810
+it would have 'over10k' in the opreturn data
+
+[07-Aug-18 08:20 PM] Alright#0419
+Ah, forget what I said. It has FREE in it. Good to know how to check for that now
+
+[07-Aug-18 08:20 PM] Alright#0419
+Didn't think i had funded this plan from the node I was seeing the address for
+
+[07-Aug-18 08:21 PM] jl777c#5810
+the fundingtxid should also be in it
+
+[07-Aug-18 08:21 PM] Alright#0419
+so I assumed it was from a different plan
+
+[07-Aug-18 08:21 PM] jl777c#5810
+for unlock, any valid CC vout can be spent
+
+[07-Aug-18 08:21 PM] jl777c#5810
+there are the CC vouts to the rewardsCCaddress
+
+[07-Aug-18 08:22 PM] jl777c#5810
+which pays for the rewards
+
+[07-Aug-18 08:22 PM] jl777c#5810
+the principal comes back from original locked deposit
+
+[07-Aug-18 08:25 PM] Alright#0419
+Did you see what I said about the faucet contract btw? A miner can censor faucetget txs other than their own, so the faucet essentially becomes a second coinbase at that point
+
+[07-Aug-18 08:25 PM] Alright#0419
+if you mine the block, you are guaranteed to get the faucet that block
+
+[07-Aug-18 08:28 PM] jl777c#5810
+evil miners are not good for faucets
+
+[07-Aug-18 08:50 PM] dukeleto#7326
+just realized the test plan gdoc has 4 tabs, mindblown.gif
+
+[07-Aug-18 08:51 PM] dukeleto#7326
+this is exactly what I need to write automated python tests
+
+[07-Aug-18 08:51 PM] dukeleto#7326
+and is a pretty nice way to learn about CC via the RPC interface
+
+[07-Aug-18 09:03 PM] dukeleto#7326
+Pinned a message.
+
+[07-Aug-18 09:06 PM] dukeleto#7326
+@jl777c i found a coredump 😃
+
+[07-Aug-18 09:06 PM] dukeleto#7326
+@jl777c calling `faucetget` without ever funding it seems to dump core
+
+[07-Aug-18 09:11 PM] Alright#0419
+```
+./komodo-cli -ac_name=AT1 rewardsunlock FREE 1538ed0463d881660a76a47b3a46ea5d93dafb90fc7340a1c5162e4fe04fa009
+{
+  "result": "success",
+  "hex": "0100000002192f6c233219fc5434bb0ae7ab8ce63913af61ccb0d4f0f565d42ec50857063c000000007b4c79a276a072a26ba067a565802103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb98140f2b06dce7d97bf0020868a96c81da3d60d58d0adb2bd0615b5b48fd2ad33e45a33bf8fe27913fbdf02b49aa9ded7a52677653134006a18806467fbba701b24e0a100af038001e5a10001ffffffff7a8095e4d1a60458524ae02f6d2adc789f479ffabd669308d5b56afda1371656000000007b4c79a276a072a26ba067a565802103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb9814036f3913d0636d97aad80f75e31a9db5892bb7a5e469795988ef70f585060e3b626ab6e6c3e601329b6b4231c77fc0869d746b9fa2573103f489025aa3ddcfcada100af038001e5a10001ffffffff036be84c4817000000302ea22c802065686d47a4049c2c845a71895a915eb84c04445896eec5dc0be40df0b31372da8103120c008203000401cc85bc355402000000232103ba0a42e46075c475444339605031c846b25f614dbeef2b656abcf67f0592e328ac00000000000000002c6a2ae555465245450000000009a04fe04f2e16c5a14073fc90fbda935dea463a7ba4760a6681d86304ed381500000000"
+}
+```
+This tx's OP_RETURN has `FREE` in it. It's vin0's OP_RETURN has `over10k` in it. It's vin1's OP_RETURN has `0APR` in it. 3 separate plans 🤔 
+
+http://cctest.explorer.dexstats.info/tx/df16d7b7abc9ee7fd8e96af2cf187576e7bd912a5ac8873c7475472806951df1
+
+[07-Aug-18 09:17 PM] Alright#0419
+Problem (I think) is that it's unlocking `over10k` `rewardslock` txs when I do `rewardunlock FREE`
+
+[07-Aug-18 09:17 PM] Alright#0419
+not sure how the `0APR` plan came into the equation. I had just created it
+
+[07-Aug-18 09:20 PM] dukeleto#7326
+```$ ./komodo-cli -ac_name=AT1 faucetfund 1
+error code: -1
+error message:
+basic_string::_M_construct null not valid```
+
+[07-Aug-18 09:20 PM] dukeleto#7326
+what is that about?
+
+[07-Aug-18 09:22 PM] Alright#0419
+Strange, just ran that same command and it worked
+
+[07-Aug-18 09:22 PM] Alright#0419
+anything in the stdout?
+
+[07-Aug-18 09:22 PM] Alright#0419
+do you have the privkey for the pubkey set?
+
+[07-Aug-18 09:23 PM] Alright#0419
+oh, do you have coins?
+
+[07-Aug-18 09:29 PM] dukeleto#7326
+nope
+
+[07-Aug-18 09:29 PM] dukeleto#7326
+i am finding bugs 😃
+
+[07-Aug-18 09:30 PM] dukeleto#7326
+should the RPC return JSON that explains the error, or throw an exception?
+
+[07-Aug-18 09:32 PM] dukeleto#7326
+@jl777c when I give `tokenaddress` a pubkey it gives me an additional key `CCaddress` back, when no pubkey given, it's not there. Is this expected?
+
+[07-Aug-18 09:43 PM] Alright#0419
+Guessing it's this ` assetsaddress <pubkey> // all assets end up in a special address for each pubkey`
+
+[07-Aug-18 09:43 PM] Alright#0419
+the special address
+
+[08-Aug-18 12:07 AM] Mylo#8306
+which gdoc @dukeleto ?
+
+[08-Aug-18 04:22 AM] dukeleto#7326
+https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=0
+
+{Embed}
+https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit
+Smart Contract Test Plan
+faucet
+
+
+ Faucet Contract
+ Availalble RPC calls, What does this Call do?, Example Test Command, Example Expected Output, What to Check, Comments, Testing Result
+ faucetaddress[ pubkey], Will display central faucet address and your faucet contract address for your pubkey.
+ pub...
+https://lh4.googleusercontent.com/jG0EwoRG0GKTwPpnAwZivN2UkcMWt-qr3QUTPsmy2nz8nNGRLIBXezodcKzZoKg9bFwJDQ=w1200-h630-p
+
+{Reactions}
+👍 
+
+[08-Aug-18 04:54 AM] dukeleto#7326
+should I mine AT1 coins for testing?
+
+[08-Aug-18 04:55 AM] dukeleto#7326
+i can mine some regtest coins but it's also nice to test things on our current live chain
+
+[08-Aug-18 04:58 AM] CHMEX#0686
+You can get one per block from the faucet or just your address and I send you a few in 20 mins
+
+[08-Aug-18 05:01 AM] dukeleto#7326
+@CHMEX thanks, now it makes sense ` ./komodo-cli -ac_name=AT1 faucetget` gave me some funds
+
+[08-Aug-18 05:02 AM] dukeleto#7326
+i have noticed that fauceget coredumps if the faucet has no funding (which I tried on regtest)
+
+[08-Aug-18 05:03 AM] CHMEX#0686
+Might be a good testcase
+
+[08-Aug-18 05:04 AM] dukeleto#7326
+same for `faucetfund` when there are no funds
+
+[08-Aug-18 05:05 AM] dukeleto#7326
+https://github.com/letolabs/komodo/blob/cctests/qa/rpc-tests/cryptoconditions.py#L75 shows the current CC tests i am working on
+
+{Embed}
+https://github.com/letolabs/komodo/blob/cctests/qa/rpc-tests/cryptoconditions.py
+letolabs/komodo
+komodo - Komodo
+https://avatars0.githubusercontent.com/u/648647?s=400&v=4
+
+[08-Aug-18 05:05 AM] dukeleto#7326
+which will get hooked up to Travis CI soon
+
+[08-Aug-18 05:26 AM] dukeleto#7326
+`tokencreate` seems to fail hard if there are no funds, as well
+
+[08-Aug-18 08:14 AM] jl777c#5810
+I had problems returning error messages, so it usually just returns null if something didnt work and prints to console the details
+
+[08-Aug-18 08:14 AM] jl777c#5810
+faucetget without any funding isnt crashing for me
+
+[08-Aug-18 08:15 AM] jl777c#5810
+<CC>address <pubkey> returns that pubkey's CC address in addition to the contract's CC address
+

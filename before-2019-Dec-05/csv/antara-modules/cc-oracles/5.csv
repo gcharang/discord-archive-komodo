@@ -1,0 +1,189 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"405011811511828481";"Alright#0419";"21-Feb-19 08:53 AM";"@gcharang @Bryan_Beus 
+`Data is submitted using the hexstr property. The first portion of the hexstr property must include ===; this sets the string length for the rest of the data. The second portion of the hexstr property is the data itself.`
+I'm not sure what this means by `The first portion of the hexstr property must include ===`";"";"";
+"405011811511828481";"Alright#0419";"21-Feb-19 08:54 AM";"the first or first and second bytes must be the length of the data in hex";"";"";
+"423176312354635779";"gcharang#6833";"21-Feb-19 08:56 AM";"thanks @Alright 
+can you explain step by step how the data should be submitted like an example:
+
+need to submit data of type `s -> < 256 char string` : the data is : `Hello world`";"";"";
+"405011811511828481";"Alright#0419";"21-Feb-19 08:57 AM";"Couple minutes";"";"";
+"423176312354635779";"gcharang#6833";"21-Feb-19 08:57 AM";"thanks";"";"";
+"405011811511828481";"Alright#0419";"21-Feb-19 08:57 AM";"I can give you a script that will do it for you";"";"";
+"405011811511828481";"Alright#0419";"21-Feb-19 08:58 AM";"s will be first byte only because data must be less than 256 char";"";"";
+"423176312354635779";"gcharang#6833";"21-Feb-19 09:00 AM";"this is something I don't understand, so to add an explanation and How to to the docs, I need to understand it properly, i.e., how to format the data and to include its length in the submitted data. 
+
+Give me the script and any other resources that will help me understanding this";"";"";
+"424224648889106444";"Mihailo#5902";"21-Feb-19 09:00 AM";"First byte should be length of data, and then the data should be hex representation of string";"";"";
+"424224648889106444";"Mihailo#5902";"21-Feb-19 09:02 AM";"This should be the value for `teststring` data: 0a74657374737472696e67";"";"";
+"424224648889106444";"Mihailo#5902";"21-Feb-19 09:02 AM";"0a is length";"";"";
+"423176312354635779";"gcharang#6833";"21-Feb-19 09:02 AM";"""Hello world"" is 11 chars: so first byte should be `<11> in hex`?";"";"";
+"424224648889106444";"Mihailo#5902";"21-Feb-19 09:02 AM";"and folowing is teststring in hex";"";"";
+"424224648889106444";"Mihailo#5902";"21-Feb-19 09:03 AM";"first byte should be 0b 😉";"";"";
+"423176312354635779";"gcharang#6833";"21-Feb-19 09:03 AM";"ah got it.";"";"";
+"423176312354635779";"gcharang#6833";"21-Feb-19 09:04 AM";"Will there be a case where first 2 bytes denote the length?";"";"";
+"424224648889106444";"Mihailo#5902";"21-Feb-19 09:04 AM";"Yes, that is for S format";"";"";
+"424224648889106444";"Mihailo#5902";"21-Feb-19 09:04 AM";"And D format";"";"";
+"424224648889106444";"Mihailo#5902";"21-Feb-19 09:04 AM";"s and d are for one byte length, and S and D for two byte length";"";"";
+"405011811511828481";"Alright#0419";"21-Feb-19 09:05 AM";"Little endian";"";"";
+"424224648889106444";"Mihailo#5902";"21-Feb-19 09:05 AM";"Yes";"";"";
+"423176312354635779";"gcharang#6833";"21-Feb-19 09:09 AM";"I just looked up hex representations for t,e,s,t,.... and  endianness
+t=74
+e=65
+s=73 ...... and so on. So writing them in the exact order that we read is little endian, and reverse order is big endian?";"";"";
+"424224648889106444";"Mihailo#5902";"21-Feb-19 09:10 AM";"little endian is just for lenght bytes, then you add data as it is";"";"";
+"424224648889106444";"Mihailo#5902";"21-Feb-19 09:10 AM";"So only when you have two bytes for length you will put 0a0074657374737472696e67";"";"";
+"423176312354635779";"gcharang#6833";"21-Feb-19 09:13 AM";"so the order changes byte by byte? and are we using big endian ness for anyother data type in cc?";"";"";
+"423176312354635779";"gcharang#6833";"21-Feb-19 09:13 AM";"anyother data type -- where the user who is using rpc need to deal with";"";"";
+"455741312273219595";"jl777c#5810";"21-Feb-19 09:14 AM";"i dont use bigendian";"";"";
+"455741312273219595";"jl777c#5810";"21-Feb-19 09:14 AM";"almost all things are little endian";"";"";
+"405011811511828481";"Alright#0419";"21-Feb-19 09:14 AM";"```
+#!/usr/bin/env python3
+import sys
+import codecs
+import time
+import readline
+
+
+while True:
+    message = input(""Type message: "")
+    #convert message to hex
+    rawhex = codecs.encode(message).hex()
+
+    #get length in bytes of hex in decimal
+    bytelen = int(len(rawhex) / int(2))
+    hexlen = format(bytelen, 'x')
+
+    #get length in big endian hex
+    if bytelen < 16:
+        bigend = ""000"" + str(hexlen)
+    elif bytelen < 256:
+        bigend = ""00"" + str(hexlen)
+    elif bytelen < 4096:
+        bigend = ""0"" + str(hexlen)
+    elif bytelen < 65536:
+        bigend = str(hexlen)
+    else:
+        print(""message too large, must be less than 65536 characters"")
+        continue
+
+    #convert big endian length to little endian, append rawhex to little endian length
+    lilend = bigend[2] + bigend[3] + bigend[0] + bigend[1]
+    fullhex = lilend + rawhex
+
+    print(fullhex)
+```";"";"👍 (1)";
+"405011811511828481";"Alright#0419";"21-Feb-19 09:15 AM";"this is for S oracle^";"";"";
+"424224648889106444";"Mihailo#5902";"21-Feb-19 09:15 AM";"No, just the length is little endian. When you have one byte length then it is just that byte 0a (no endian ness). And when you have two byt length then it is little endian 0a00. Data is given in order it is written. There is no endian ness for data.";"";"👍 (1)";
+"423176312354635779";"gcharang#6833";"21-Feb-19 09:15 AM";"Got it mihailo";"";"";
+"455741312273219595";"jl777c#5810";"21-Feb-19 09:15 AM";"also just because you can specific up to 65535 in 2 bytes, doesnt mean you can go past the 10000 byte limit";"";"";
+"423176312354635779";"gcharang#6833";"21-Feb-19 09:16 AM";"""10000 byte limit"" -- is it for all cc txns or all transactions?";"";"";
+"405011811511828481";"Alright#0419";"21-Feb-19 09:17 AM";"10kb limit is on OP_RETURN itself I believe";"";"";
+"405011811511828481";"Alright#0419";"21-Feb-19 09:17 AM";"so actual oracle limit is a bit smaller";"";"";
+"424224648889106444";"Mihailo#5902";"21-Feb-19 09:17 AM";"I think it is good to split it in 8k chunks";"";"";
+"423176312354635779";"gcharang#6833";"21-Feb-19 09:18 AM";"noted @Mihailo .
+k is 1000 or 1024? sorry for the noob questions 😅";"";"";
+"424224648889106444";"Mihailo#5902";"21-Feb-19 09:20 AM";"K for kilobyte - t is 1024. So 8192 will fit in 10000 limit and will be good round nubmber for chunk";"";"";
+"405011811511828481";"Alright#0419";"21-Feb-19 09:20 AM";"probably worth noting in the doc that d and D are almost always better to use than s and S";"";"";
+"405011811511828481";"Alright#0419";"21-Feb-19 09:21 AM";"the only benefit of s/S is that it will show human readable text in `oraclessamples` output";"";"👌 (2)";
+"424224648889106444";"Mihailo#5902";"21-Feb-19 09:21 AM";"Yes, it is for raw data.";"";"";
+"405011811511828481";"Alright#0419";"21-Feb-19 09:21 AM";"but it essentially uses twice as much space on the chain";"";"";
+"424224648889106444";"Mihailo#5902";"21-Feb-19 09:21 AM";"Correct";"";"";
+"423176312354635779";"gcharang#6833";"21-Feb-19 09:22 AM";"thanks guys. Will add all these to the doc and come back if I have more questions";"";"";
+"424224648889106444";"Mihailo#5902";"21-Feb-19 09:22 AM";"👍";"";"";
+"423176312354635779";"gcharang#6833";"21-Feb-19 06:23 PM";"for s/S types are the characters to be considered ASCII?";"";"";
+"405011811511828481";"Alright#0419";"22-Feb-19 01:03 PM";"@gcharang when you do `oraclessamples`, it will try to decode the hex stored as ASCII";"";"";
+"423176312354635779";"gcharang#6833";"22-Feb-19 01:05 PM";"so `oraclessamples`  treats each byte after the length bytes as a single ascii character?";"";"";
+"423176312354635779";"gcharang#6833";"22-Feb-19 01:05 PM";"@Alright";"";"";
+"405011811511828481";"Alright#0419";"22-Feb-19 01:05 PM";"yes";"";"👍 (1)";
+"405011811511828481";"Alright#0419";"22-Feb-19 01:06 PM";"or well";"";"";
+"405011811511828481";"Alright#0419";"22-Feb-19 01:06 PM";"multi byte unicode characters should work as well";"";"";
+"405011811511828481";"Alright#0419";"22-Feb-19 01:06 PM";"so no?";"";"🤔 (1)";
+"423176312354635779";"gcharang#6833";"22-Feb-19 01:07 PM";"how will the code know to consider between `multi byte unicode characters` and `single byte ascii`?";"";"";
+"405011811511828481";"Alright#0419";"22-Feb-19 01:07 PM";"it just does? 🤷";"";"";
+"405011811511828481";"Alright#0419";"22-Feb-19 01:07 PM";"question for jl I'd say";"";"";
+"423176312354635779";"gcharang#6833";"22-Feb-19 01:08 PM";"for s/S types are the characters to be considered ASCII? @jl777c";"";"";
+"405011811511828481";"Alright#0419";"22-Feb-19 01:10 PM";"not sure that's the best question to ask";"";"";
+"405011811511828481";"Alright#0419";"22-Feb-19 01:10 PM";"the answer to that is *yes*";"";"";
+"405011811511828481";"Alright#0419";"22-Feb-19 01:10 PM";"but it's not byte by byte because multi-byte unicode characters work";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 01:11 PM";"s/S is displayed as ascii";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 01:11 PM";"d/D is displayed as hex so it could be anything";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 01:11 PM";"not sure how multibyte unicode works, if it does, it is accidental";"";"";
+"423176312354635779";"gcharang#6833";"22-Feb-19 01:11 PM";"if unicode characters are submitted to s/S type oracle, the display will be gibberish?";"";"";
+"405011811511828481";"Alright#0419";"22-Feb-19 01:11 PM";"it does 🤣";"";"";
+"405011811511828481";"Alright#0419";"22-Feb-19 01:12 PM";"display works";"";"";
+"405011811511828481";"Alright#0419";"22-Feb-19 01:12 PM";"it ""just works""";"";"😂 (1)";
+"455741312273219595";"jl777c#5810";"22-Feb-19 01:12 PM";"int32_t oracle_parse_data_format(std::vector<uint8_t> data,std::string format)";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 01:13 PM";"for (i=0; i<slen; i++)
+                    str[i] = data[offset++];
+                str[i] = 0;";"";"";
+"455741312273219595";"jl777c#5810";"22-Feb-19 01:14 PM";"i just get a null string of specified length and null terminate it. then sprintf the resulting string";"";"";
+"365714438864633856";"dukeleto#7326";"26-Feb-19 04:30 PM";"I plan to enable oracle CC on the new HUSH AC, anything I need to know? What is the difference if the chain launches on `dev` branch vs `FSM` currently?";"";"";
+"455741312273219595";"jl777c#5810";"26-Feb-19 04:31 PM";"FSM is bleeding edge
+dev is cutting edge
+beta is usually stable
+master is updated only for critical bugs or consensus changes";"";"";
+"405011811511828481";"Alright#0419";"26-Feb-19 07:20 PM";"@dukeleto I believe the only practical difference between dev and FSM right now is all the new cclib CCs";"";"";
+"405011811511828481";"Alright#0419";"26-Feb-19 07:21 PM";"no difference for oracles";"";"";
+"365714438864633856";"dukeleto#7326";"27-Feb-19 07:47 AM";"groovy, thanks";"";"";
+"424224648889106444";"Mihailo#5902";"27-Feb-19 10:37 AM";"Oracles haven't been changed for sometime, so dve and FSM should be same.";"";"👍 (1)";
+"403152410182156290";"jusoaresf#3291";"08-Mar-19 10:53 AM";"couldn't we do...
+```python
+#get length in big endian hex
+    if bytelen < 65536:
+        bigend = (""000""+str(hexlen))[-4:]
+    else:
+        print(""message too large, must be less than 65536 characters"")
+```
+instead of
+
+```python
+#get length in big endian hex
+    if bytelen < 16:
+        bigend = ""000"" + str(hexlen)
+    elif bytelen < 256:
+        bigend = ""00"" + str(hexlen)
+    elif bytelen < 4096:
+        bigend = ""0"" + str(hexlen)
+    elif bytelen < 65536:
+        bigend = str(hexlen)
+    else:
+        print(""message too large, must be less than 65536 characters"")
+``` 
+and save a few comparisons for lengthy content?";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Mar-19 01:18 PM";"grewalsatinderToday at 2:15 AM
+example scenario:
+- data of N bytes to sell.
+- the seller can't be always online/connected to transmit data over blockchain.
+- the data is once shared/put on blockchain (in OP_RETURN??) and each buyer has to pay to get the encrypted data.
+
+I'm unclear on this encryption/decryption part.
+will the data be encrypted with single decryption key to decrypt or is it possible that each buyer uses their own decryption key for this encrypted data?
+is there a solution to this already?";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 01:20 PM";"is it possible for seller to encrypt some data knowing only the buyer's pubkey that only the buyer can decrypt?";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 01:20 PM";"I've been thinking about this. It requires a key to be exchanged elsewhere, yes?";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 01:21 PM";"that is all you need";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Mar-19 01:21 PM";"I was thinking from the same point of view from a website. the kinda same experience, where seller doesn't know any buyer prior to putting the data to sell on the website.";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 01:21 PM";"the seller would describe the data, then register as a publisher";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 01:22 PM";"then people would fund the oracle for a onetime payment, the publisher would see that payment and publish encrypted data to the buyers pubkey";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 01:22 PM";"using curve25519 there is easy way to encrypt, pretty sure secp256k1 can do the same";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 01:24 PM";"https://medium.com/@dealancer/how-to-using-bitcoin-key-pairs-to-for-encrypted-messaging-a0a980e627b1";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Mar-19 01:26 PM";"thanks, gonna quick read it 🙂 👍";"";"";
+"405011811511828481";"Alright#0419";"22-Mar-19 01:29 PM";"awesome, I can use this for trollbox pms";"";"";
+"455741312273219595";"jl777c#5810";"22-Mar-19 01:30 PM";"it took me one google search to find this";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Mar-19 01:30 PM";"I was thinking of a Nextflix like application using this concept 😛";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Mar-19 01:31 PM";"bloackjok3r already done the streaming, was only trying to understand partially";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Mar-19 01:37 PM";"read the link.
+So if the buyers need to decrypt the data, the seller needs their `pubkeys`.
+In an example of a movie app, It will be instead a Cinema or MutiPlex like app, where the viewers first buy the ticket, then sit through the session to watch the movie.";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Mar-19 01:37 PM";"The movie is played for the next viewer set again, for N sessions.";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Mar-19 01:38 PM";"It just doesn't stay in the Cinema forever to view unlike Netflix etc.";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Mar-19 01:39 PM";"So, that concept I understand is possible to make based on this understanding.
+```Let’s say, Alice wants to send Bob an encrypted text Greetings form Alice!. All she needs to know is Bob’s Bitcoin address and her own WIF (wallet import format) key. Bob will decrypt this text knowing Alice’s Bitcoin address and his own WIF key.
+
+They will use ECDH algorithm to obtain a shared secret, which will be used for 256-bit symmetric AES encryption. Note that ECDH(public key A, private key B) = ECDH(public key B, private key A) = shared secret.```";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Mar-19 01:39 PM";"If it's a Medium.com like blogs, that looks odd.
+It won't be a blog anymore then 🤔";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Mar-19 01:40 PM";"a blog's intro posted in publicly plain text and the rest of the blog posted in a pay to decrypt text.....";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Mar-19 01:42 PM";"hmm.... in that case it is more like a patreon.com like model 😃";"";"";
+"347922216429813760";"grewalsatinder#9653";"22-Mar-19 01:43 PM";"the subscribers subscribe to the creator and the content posted by creator is viewable only by the subscribers";"";"";

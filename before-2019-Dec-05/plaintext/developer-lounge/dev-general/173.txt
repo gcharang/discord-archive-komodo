@@ -1,0 +1,490 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[14-May-19 07:29 PM] coinmonks || CoinCodeCap#8469
+ok checkout <https://cryptofi.co> ..i build this and it's support KMD ..check it out ..would love feedback
+
+[15-May-19 03:31 AM] FishyGuts#5085
+Nice site.  Good concept that can be built into many different tools/services.  Do you mind if I approach you about something @coinmonks || CoinCodeCap ?
+
+[15-May-19 09:50 AM] Crabby Paddy#6239
+anyone here can explain in simplified terms how to figure out how many utxos to have in each segid for optimal staking?
+
+[15-May-19 09:56 AM] mrlynch#5735
+your best bet is in #kmdlabs
+
+[15-May-19 10:36 AM] mike5#0291
+#coinmonks good start with cryptofi
+
+[15-May-19 01:53 PM] coinmonks || CoinCodeCap#8469
+@FishyGuts hit me
+
+[16-May-19 11:17 AM] ComputerGenie 👴🏼📢#7004
+Can someone, please, tell me what causes komodod to get here:
+<https://github.com/jl777/komodo/blob/dev/src/miner.cpp#L806>
+
+[16-May-19 11:19 AM] ComputerGenie 👴🏼📢#7004
+It's a KMD wallet and it keeps freezing and all that's in debug is:
+`2019-05-16 10:51:24 ERROR: ContextualCheckBlock: contains a non-final transaction`
+
+[16-May-19 11:20 AM] jl777c#5810
+likely some transaction in the mempool turned out to be invalid in a block
+
+[16-May-19 11:20 AM] jl777c#5810
+nLockTime set to more than median blocktime from last 17
+
+[16-May-19 11:21 AM] blackjok3r#3181
+Try to get the pool to update the block template more often maybe?
+
+[16-May-19 11:21 AM] ComputerGenie 👴🏼📢#7004
+it runs every 55 secs and KMD is the only chain it happens on
+
+[16-May-19 11:22 AM] blackjok3r#3181
+Yes because of nLockTime being set and used on KMD I would say, as jl said.
+
+[16-May-19 11:22 AM] blackjok3r#3181
+I think once nearly all ndoes get the 200 block tx expirt default rather than the ridiclous 20 it has been set at, these kind of theing will just go away
+
+[16-May-19 11:23 AM] ComputerGenie 👴🏼📢#7004
+any idea what I can do to stop it from locking up?
+
+[16-May-19 11:24 AM] blackjok3r#3181
+no lol... I need a ndoe in the locked state to see what is holding the lock
+
+[16-May-19 11:24 AM] blackjok3r#3181
+then maybe we can fix it... deadlocks are extremly tricky to fix
+
+[16-May-19 11:26 AM] blackjok3r#3181
+wait. I see the problem here
+
+[16-May-19 11:26 AM] blackjok3r#3181
+fixing
+
+[16-May-19 11:26 AM] blackjok3r#3181
+what branch do you use?
+
+[16-May-19 11:26 AM] blackjok3r#3181
+@ComputerGenie 👴🏼📢
+
+[16-May-19 11:27 AM] ComputerGenie 👴🏼📢#7004
+from dev on down, I've been trying to narrow this down for weeks now
+
+[16-May-19 11:27 AM] blackjok3r#3181
+i'll push a fixto my beta, any chance you can test that beforeI make  PR?
+
+[16-May-19 11:29 AM] ComputerGenie 👴🏼📢#7004
+sure, KMD chain is locked so I have to reboot the pool itself anyway
+the only problem is that it's entirely sporadic and may happen 5 times a day or once every 5 days
+
+[16-May-19 11:29 AM] blackjok3r#3181
+I see exactly what is causing it to lock, I thaught that IF was redundant and nothing could enter it 😆
+
+[16-May-19 11:33 AM] blackjok3r#3181
+https://github.com/blackjok3rtt/komodo/commit/c2261146d94225aeda6ddede7496d208d5b5188a
+This should do the trick. If the block fails now, it will just fail anmd create a new one, without locking up 😃
+
+{Embed}
+https://github.com/blackjok3rtt/komodo/commit/c2261146d94225aeda6ddede7496d208d5b5188a
+Fix KMD lockup on pools, try new fix electrum crash. · blackjok3r...
+https://avatars1.githubusercontent.com/u/30971146?s=200&v=4
+
+{Reactions}
+🙌 
+
+[16-May-19 11:34 AM] ComputerGenie 👴🏼📢#7004
+sweet
+
+[16-May-19 11:35 AM] ComputerGenie 👴🏼📢#7004
+all these times and this was the 1st time getblocktemplate actually returned an error I could even start looking at
+
+[16-May-19 11:35 AM] blackjok3r#3181
+it doesnt build yet. wait a few minutes
+
+[16-May-19 11:37 AM] blackjok3r#3181
+fixed.
+
+[16-May-19 11:43 AM] ComputerGenie 👴🏼📢#7004
+any chance this will also fix `"Cannot get a block template while no peers are connected or chain not in sync!"` return when it's both in sync and has peers? 😛
+
+[16-May-19 11:47 AM] blackjok3r#3181
+pretty sure that error is just wrong
+
+[16-May-19 11:47 AM] blackjok3r#3181
+never really worked out what triggers it myself. Pushed a couple of updates that should be safer... that IF is too confusing, so just sticking another if in there to be sure.
+
+[16-May-19 11:48 AM] ComputerGenie 👴🏼📢#7004
+I just ignore it because it never lasts for more than 1-4 seconds, I've assumed it's loop or work queue related
+
+[16-May-19 11:50 AM] blackjok3r#3181
+`if (Params().MiningRequiresPeers() && (IsNotInSync() || fvNodesEmpty))`
+out of that, `IsNotInSync` is probably what causes it by a guess... if it decides its back in sync in a few seconds then I dont see a problem
+
+[16-May-19 11:52 AM] ComputerGenie 👴🏼📢#7004
+OK, added and restarted the pool, will see what happens (hopefully nothing eventful)
+tnks again
+
+[16-May-19 11:53 AM] blackjok3r#3181
+thank you! so much code has changed, hopefully we can catch and fix all these little edge cases before fork
+
+[16-May-19 11:54 AM] ComputerGenie 👴🏼📢#7004
+_just wants to stop looking like shit because he, of all people, can't keep a pool running for a whole week_ :troll_hardcore:
+
+{Reactions}
+😂 
+
+[16-May-19 01:30 PM] dukeleto#7326
+https://github.com/jl777/komodo/pull/1486
+
+{Embed}
+https://github.com/jl777/komodo/pull/1486
+Prevent creation of shielded transactions when chain is not synced...
+This implements all items described in zcash#3996 to mitigate metadata leakage when creating zaddr xtns during sync.
+This has no effect on ac_public=1 chains such as KMD, but will improve privacy o...
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+{Reactions}
+shexy (5) 😍 
+
+[16-May-19 01:33 PM] dukeleto#7326
+that will help Pirate and all chains with zaddrs be more private
+
+[16-May-19 05:42 PM] mrlynch#5735
+outstanding
+
+[16-May-19 05:44 PM] jorian#4555
+dukeleto is on fire
+
+[16-May-19 05:56 PM] PTYX#6840
+Great work 😍 😍
+
+[17-May-19 05:53 AM] gcharang#6833
+```bash
+# creates the tmux session called ssh_tmux if none exists or reattaches to a already existing session with that name.
+if [[ -z "$TMUX" ]] && [ "$SSH_CONNECTION" != "" ]; then
+    tmux attach-session -t ssh_tmux || tmux new-session -s ssh_tmux
+fi
+```
+adding the above lines to your `.bashrc` file makes connections to your VPS always be a tmux session that survives between different sessions as long as the VPS is not rebooted
+
+there is https://github.com/tmux-plugins/tmux-resurrect to help with system restarts but I haven't tested it
+blackjoker's recommendation: https://github.com/gpakosz/.tmux  for a config thats looks very cool and just works
+
+just wanted to share as these make working on a VPS so much better
+
+{Embed}
+https://github.com/tmux-plugins/tmux-resurrect
+tmux-plugins/tmux-resurrect
+Persists tmux environment across system restarts. Contribute to tmux-plugins/tmux-resurrect development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/8289877?s=400&v=4
+
+{Embed}
+https://github.com/gpakosz/.tmux
+gpakosz/.tmux
+🇫🇷 Oh My Tmux! Pretty & versatile tmux configuration made with ❤️ (imho the best tmux configuration that just works) - gpakosz/.tmux
+https://avatars0.githubusercontent.com/u/553208?s=400&v=4
+
+[17-May-19 05:59 AM] gcharang#6833
+are there instructions somewhere to setup an explorer for a single assetchain?
+
+i.e., I created an asset chain using 2 VPS
+the chain is running
+want to explore the chain with a block explorer
+
+I am aware of  the repo: https://github.com/DeckerSU/komodo-explorers-install
+but it installs all the assetchains wholesale, I am looking for a solution that works for a single assetchain whose daemon is running
+
+{Embed}
+https://github.com/DeckerSU/komodo-explorers-install
+DeckerSU/komodo-explorers-install
+Install script for KMD and assets Insight explorer install - DeckerSU/komodo-explorers-install
+https://avatars3.githubusercontent.com/u/22120003?s=400&v=4
+
+[17-May-19 06:00 AM] CHMEX#0686
+Yes u can use that one and adjust it
+
+[17-May-19 06:01 AM] CHMEX#0686
+Let me find the script i m using
+
+{Reactions}
+👍 
+
+[17-May-19 06:42 AM] CHMEX#0686
+
+{Attachments}
+https://cdn.discordapp.com/attachments/463445317136809984/578834744746180619/singleexplorer.sh
+
+[17-May-19 06:43 AM] CHMEX#0686
+the coin.conf needs to have special indexes
+
+server=1
+whitelist=127.0.0.1
+txindex=1
+addressindex=1
+timestampindex=1
+spentindex=1
+zmqpubrawtx=tcp://127.0.0.1:8400
+zmqpubhashblock=tcp://127.0.0.1:8400
+rpcallowip=127.0.0.1
+rpcport=8300
+rpcuser=bitcoin
+rpcpassword=local321
+uacomment=bitcore
+showmetrics=0
+
+[17-May-19 06:43 AM] CHMEX#0686
+@gcharang ^
+
+[17-May-19 06:56 AM] gcharang#6833
+thanks  @CHMEX 
+
+so, I need to replace this line:
+```
+declare -a kmd_coins=(CHAINNAME)
+```
+with say
+```
+declare -a kmd_coins=RFOX
+```
+for RFOX chain
+run the script
+run the `RFOX-explorer-start.sh` script that is generated
+unblock port 3100
+and going to http://VPS-IP-ADDRESS:3100 from my local computer should work?
+
+[17-May-19 06:57 AM] CHMEX#0686
+in theory yes
+
+[17-May-19 06:57 AM] CHMEX#0686
+and the daemon it's to run...
+
+{Reactions}
+👍 
+
+[17-May-19 06:58 AM] gcharang#6833
+will try
+
+[17-May-19 07:53 AM] gcharang#6833
+it needed 
+```
+sudo apt --yes install build-essential pkg-config libc6-dev libevent-dev m4 g++-multilib autoconf libtool libncurses5-dev unzip git python zlib1g-dev wget bsdmainutils automake libboost-all-dev libssl-dev libprotobuf-dev protobuf-compiler libqt4-dev libqrencode-dev libdb++-dev ntp ntpdate
+sudo apt --yes install libcurl4-gnutls-dev
+sudo apt --yes install curl
+
+# install nodejs, n and other stuff
+sudo apt --yes install libsodium-dev npm
+sudo apt --yes install libzmq3-dev
+
+# install nvm
+wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.33.0/install.sh | bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
+# switch node setup with nvm
+nvm install v4
+# https://stackoverflow.com/questions/17509669/how-to-install-an-npm-package-from-github-directly
+
+npm install git+https://git@github.com/DeckerSU/bitcore-node-komodo # npm install bitcore
+```
+and `ln -s /usr/bin/nodejs /usr/bin/node` will document this
+
+{Reactions}
+3040_kingpeepo shexy 
+
+[17-May-19 04:20 PM] gcharang#6833
+https://github.com/gcharang/komodo-install-explorer
+
+To install an explorer for any assetchain
+
+{Embed}
+https://github.com/gcharang/komodo-install-explorer
+gcharang/komodo-install-explorer
+Install a komodo assetchain block explorer. Contribute to gcharang/komodo-install-explorer development by creating an account on GitHub.
+https://avatars1.githubusercontent.com/u/21151592?s=400&v=4
+
+{Reactions}
+👍 (4) 
+
+[18-May-19 05:54 PM] gilardh#8348
+Thanks @gcharang, I will try for the 3rd time to install an explorer with your indications. I have only one program on my VPS and it feels lonely.
+
+{Reactions}
+👍 
+
+[19-May-19 03:39 AM] Greer#0666
+I'm trying again to get komodo to build in alpine.  While I deal with the glibc vs musl issues watching this build over I'm wondering what the actual build and run (I can probably figure out the runtime deps) dependencies are for komodod, what is listed on the github repo seems to include a lot of unnecessary crud and doesn't list some dependencies that are only included if you do not use --no-install-recommends.
+
+[19-May-19 03:45 AM] dukeleto#7326
+@Greer https://github.com/jl777/komodo/tree/master/depends/packages
+
+{Embed}
+https://github.com/jl777/komodo/tree/master/depends/packages
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[19-May-19 03:45 AM] Greer#0666
+tks, it was right there all along.
+
+[19-May-19 03:27 PM] KomodoWorld#8282
+https://twitter.com/arnaucube/status/1130073960853508096?s=19 @grewalsatinder you may like this
+
+{Embed}
+arnaucube (@arnaucube)
+https://twitter.com/arnaucube/status/1130073960853508096?s=19
+zkSNARK implementation in Go from scratch
+Needs improvements, but helped me to understand a bit the concepts.
+Allows the complete flow:
+- circuit compilation
+- trusted setup generation
+- witness calculation
+- generation of proofs
+- verification of proofs
+https://t.co/Y7MQ3...
+Twitter
+
+{Reactions}
+👍 
+
+[19-May-19 03:53 PM] dukeleto#7326
+interesting
+
+[19-May-19 04:29 PM] grewalsatinder#9653
+Awesome!
+
+[19-May-19 04:36 PM] mrlynch#5735
+i need that
+
+[19-May-19 07:45 PM] BigSlim#9710
+so you guys require all 5 coins to have nodes running for a notary on KMD?
+
+[19-May-19 07:46 PM] jl777c#5810
+dont understand the question. nobody is required to run to be a notary node
+
+[19-May-19 07:47 PM] BigSlim#9710
+ok better comment
+
+[19-May-19 07:47 PM] BigSlim#9710
+in order to run a KMD notary node, is it required to run all 5 of the listed coin nodes (compiled from source) ?
+
+[19-May-19 07:48 PM] BigSlim#9710
+I was reviewing the notary node docs
+
+[19-May-19 07:48 PM] jl777c#5810
+5? there are more like 50
+
+[19-May-19 07:48 PM] jl777c#5810
+https://www.dexstats.info/explorers.php
+
+{Embed}
+https://www.dexstats.info/explorers.php
+Dexstats Dashboard - BarterDEX
+Explorer Links and Money Supply Data for KMD Ecosystem Coins
+
+[19-May-19 07:48 PM] BigSlim#9710
+I know little to nothing about kmd
+
+[19-May-19 07:48 PM] jl777c#5810
+a notary runs all coins that are notarized
+
+[19-May-19 07:48 PM] BigSlim#9710
+just reviewing the git repo
+
+[19-May-19 07:49 PM] jl777c#5810
+https://developers.komodoplatform.com/
+
+{Embed}
+https://developers.komodoplatform.com/
+Komodo Documentation
+Documentation for developers building on Komodo
+
+[19-May-19 07:49 PM] jl777c#5810
+there is a lot of code, probably better to get started with the docs
+
+[19-May-19 07:49 PM] BigSlim#9710
+dexstats is built on kmd?
+
+[19-May-19 07:49 PM] jl777c#5810
+it is a website
+
+[19-May-19 07:50 PM] jl777c#5810
+it runs all the daemons to get useful stats from them
+
+[19-May-19 07:51 PM] BigSlim#9710
+are these all erc20's ?
+
+[19-May-19 07:51 PM] jl777c#5810
+?
+
+[19-May-19 07:51 PM] jl777c#5810
+komodo is not ETH
+
+[19-May-19 07:51 PM] jl777c#5810
+they are all coins
+
+[19-May-19 07:58 PM] BigSlim#9710
+Still trying to find docs showing what komodo is, other than a platform to build other things on.
+
+[19-May-19 07:58 PM] jorian#4555
+what is wrong with https://developers.komodoplatform.com/ ?
+
+{Embed}
+https://developers.komodoplatform.com/
+Komodo Documentation
+Documentation for developers building on Komodo
+
+[19-May-19 07:58 PM] BigSlim#9710
+prob the whitepaper is a good start
+
+[19-May-19 07:59 PM] SHossain#0007
+http://komodoplatform.com/whitepaper
+
+[19-May-19 07:59 PM] BigSlim#9710
+I don't want to build on komodo, I want to learn what it actually is
+
+[19-May-19 07:59 PM] BigSlim#9710
+like bitcoin is a currency
+
+[19-May-19 07:59 PM] BigSlim#9710
+eth is a platform to build off of
+
+[19-May-19 07:59 PM] BigSlim#9710
+ect...
+
+[19-May-19 07:59 PM] jorian#4555
+then indeed the whitepaper
+
+[19-May-19 07:59 PM] BigSlim#9710
+Interesting POW though, will need to read some
+
+[19-May-19 08:00 PM] jorian#4555
+komodo is a lot
+
+[19-May-19 08:00 PM] jorian#4555
+be prepared
+
+[19-May-19 08:00 PM] BigSlim#9710
+yea, lots of channels so lots to see
+
+[19-May-19 08:01 PM] KomodoWorld#8282
+the wp is old, it misses a lot of new things
+
+[19-May-19 08:01 PM] KomodoWorld#8282
+try starting from my guide: https://komodoworld.blog/2018/11/16/komodoworlds-short-guide-to-komodo/
+
+{Embed}
+komodoworld
+https://komodoworld.blog/2018/11/16/komodoworlds-short-guide-to-komodo/
+KomodoWorld’s Short Guide to Komodo
+Last changes: 16-april-2019Disclaimer: this is my own take on Komodo, the tech is steadily evolving and the project is in the process of ‘rebranding’ that includes how it will present a…
+https://komodoworldblog.files.wordpress.com/2018/07/cropped-logome.jpeg?w=200
+
+[19-May-19 08:02 PM] BigSlim#9710
+oh hey, brew install packages, nice
+
+[19-May-19 08:03 PM] BigSlim#9710
+thanks @KomodoWorld
+

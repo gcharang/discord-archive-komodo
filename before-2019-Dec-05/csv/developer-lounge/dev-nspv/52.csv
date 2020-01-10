@@ -1,0 +1,143 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"395274075985018880";"Regnar#6164";"24-Aug-19 09:34 PM";"I added a neater address book for that GUI (was just displaying Python dictionary, now it is a table), you can click a contact in the address book and it prefills the ""send to address"" field. It also has multiple themes you can change on the fly and it will save your theme so you don't have to keep changing it on start up.";"";"🚀 (2)";
+"232679450301431808";"blackjok3r#3181";"25-Aug-19 10:39 PM";"https://github.com/jl777/libnspv/pull/112/files
+Fixed the bandwidth issue with this pull request. 
+Should be able to make verified txns off chain tip now I think. Although I would need to implement it.";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 07:46 AM";"Not quite right still. 😦 Still wokring on it.";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 07:47 AM";"@blackjok3r thanks!
+i noticed you got rid of the bestknownheight field, but for the html display it is needed. i also made a NSPV_longestchain global to use, but i am not sure if i am setting it correctly. it also seems that the last_validated_header is very rarely set";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 07:47 AM";"ok, it does seem it is better, but still not quite right.";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 07:48 AM";"I didnt get rid of it, it just was not updating for me, so i removed it form RPC. Np to put back";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 07:48 AM";"i set the bestknownheight to just the highest reported height";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 07:48 AM";"yes still not right. I have a new version in testing right now";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 07:48 AM";"and using the last_validated_header as the in sync version";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 07:49 AM";"It seems also that some nodes that show as conencted do not respond... And never seemt o update anything...";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 07:50 AM";"it also seems that there is no need to get all headers from a node, if we know the latest validated header from any node, then couldnt we just request that header from another node and if it returns the same, then assume the earlier ones are ok?";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 07:50 AM";"Yes. this is how its working";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 07:51 AM";"It fetches quickly until it has all the headers that link back to the last notarization.";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 07:51 AM";"then slows down to 1 node at a time.";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 07:51 AM";"ok, bandwidth is indeed much reduced";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 07:51 AM";"yes, but my code is buggy still./ Hopefulyl wont take too much longer :abusedsmily:";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 07:55 AM";"@Sir Seven it seems that after a while some fullnodes go non-responsive. can you stress test a node to see if you can reliably reproduce this state on a small chain like ILN";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 08:50 AM";"`https://github.com/jl777/libnspv/pull/113/files` 
+This is better. I find that it eventually only gets data from node 1 after while.. Other nodes are being sent requests, but do not respond. Have a few ideas, to mess with later on.";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 09:25 AM";"@blackjok3r it is strange that it isnt talking to more than a few nodes... before these changes, it was talking to all of them";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 09:26 AM";"i also see cases where bestknownheight is less than the ""in sync"" height, which seems a bit strange and not sure how that could happen";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 09:31 AM";"To slow it down, I had to slow it down... This means that it is no longer, polling every peer for the same block height every time.";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 09:33 AM";"Once it has enough headers to match back to chain tip, the last height it saw from each node that is a valid header (links back to last notarization) is saved.. Maybe we need to speed it up a little more, Although they all do eventually end up quite close. 
+My bestknownheight is still gettting stuck.. 
+```{
+    ""nodeid"": 6,
+    ""protocolversion"": 3,
+    ""ipaddress"": ""136.243.58.134"",
+    ""port"": 7770,
+    ""lastping"": 1566811951,
+    ""time_started_con"": 1566809171,
+    ""time_last_request"": 1566811978,
+    ""services"": 1879048197,
+    ""missbehavescore"": 0,
+    ""bestknownheight"": 1503652,
+    ""last_validated_header"": 1503714
+  }
+```
+This is why I commented it out earlier.";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 09:34 AM";"ALso I have left my KMD nSPV ndoe running a while and ti is now talking to all peers. Will do some investigation on this see what I can work out.";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 09:34 AM";"Seems an  intermittent  problem";"";"";
+"272003866906722306";"TonyL#3577";"26-Aug-19 09:42 AM";"@Sir Seven feel free to consult me on stress test matter - there is ready scripts for spam";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 09:43 AM";"I think there needs to be some way to detect if a node has responded to a request. This will make things much easier.";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 09:44 AM";"Currently it must loop from notarization height  forwards to chain tip, but if a node does not respond, it must go back and fetch this header from another node. This seems to at times take many attempts.";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 09:44 AM";"The new logic that checks block heights are cached, helps a lot but its still doing undefined weird things.";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 09:46 AM";"Also by slowing things down like this, it may lose some of its reorg handling.... Not too sure, need to test that.";"";"";
+"262577806456782848";"Sir Seven#7158";"26-Aug-19 09:51 AM";"@jl777c @TonyL Got it. Full node I've set for tests works fine for pretty much a week now, it might be a problem with libnspv stopping connection to the full node.
+Well, just a few thoughts.";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 09:53 AM";"@blackjok3r maybe just have all incoming packets update a last responded timestamp, then you can check that to see how active a node is. it feels like you are pruning away most of the nodes and only talking to one. maybe a bit of randomization in node selection?";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 09:53 AM";"The timer is set for each node.";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 09:53 AM";"I think I know whats going on, just have to mess with it longer";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 09:54 AM";"on the plus side, the bandwidth used is way down!";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 09:54 AM";"Yes maybe too much lol.";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 09:55 AM";"I am not actualky bannign any nodes so far, but I do want to try to make it try to find new peers, when one is not responding.";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 09:56 AM";"If the lastvalidated height has not updated in a long time, I can try to force requests to that node, then if it fails to respond, drop it and try to add a new one.. 
+Also may make th ban clear after some time, so it doesnt end up banning too many nodes permenantly.";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 09:57 AM";"Seems to me that getting a reliable set of peers will solve most of the edge case bugs.";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 09:59 AM";"all the active nodes were responding using the old bruteforce method";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 10:00 AM";"yes, they are rsp[onding for me now also.... its only sometimes... maybe its something i changed not sure.. Will try to sort it.";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 10:03 AM";"Before the way it worked, was to poll every node for the same block height at the same time...
+I have changed it so each nodes counter/timer is seperate with a random delay... so it only polls one at  a time.";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 10:04 AM";"This is used by the libbtc code, but was disabled for ours... Maybe the 2 are not playing nicely together and I need to rethink how to do it.";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 10:12 AM";"ok. it does seem the issue is algorithmic and not networking related";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 10:18 AM";"yes agree";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 10:58 AM";"Might have found it... Just a matter of tuning the delay now so that it does not go so fast.";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 12:13 PM";"libnspv html wallet is now localizable into different languages. we just need a file in the same format at ~/libnspv/html/languages/english.json
+we need at least the following languages: french, italian, chinese, chinese simplified, japanese, korean, russian and spanish.
+those are the languages with seed words. however, the html can support basically any language, just need the language.json file";"";"🔥 (2),👆 (1),🗾 (1),🆗 (1),KMD (3)";
+"371114647052615681";"Mylo#8306";"26-Aug-19 12:16 PM";"does libnspv use keepalive packets in it's protocol?";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 12:16 PM";"@CrisF  japanese ?";"";"👍 (1)";
+"455741312273219595";"jl777c#5810";"26-Aug-19 12:16 PM";"@Mylo it does send regular ping messages, it is a normal bitcoin protocol peer";"";"";
+"371114647052615681";"Mylo#8306";"26-Aug-19 12:17 PM";"ok cool thanks!";"";"";
+"459028995024093194";"kmdkrazy#8280";"26-Aug-19 12:22 PM";"Muy bueno....Domo arigoto";"";"";
+"412482228359266328";"CrisF#3405";"26-Aug-19 12:29 PM";"@blackjok3r, will check.
+Where should I look for `~/libnspv/html/languages/english.json`";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 12:31 PM";"https://github.com/jl777/libnspv/blob/jl777/html/languages/english.json";"";"🙏 (1),3040_kingpeepo (2)";
+"412482228359266328";"CrisF#3405";"26-Aug-19 12:34 PM";"Ok, I'll sort out the Japanese. 🇯🇵";"";"👍 (1)";
+"412482228359266328";"CrisF#3405";"26-Aug-19 01:00 PM";"Just having a look at it and have a question:
+Should this text be `previous` or `private`?
+https://github.com/jl777/libnspv/blob/fe6e9dc3d74ae2be45f144dd4e6e372f10449d60/html/languages/english.json#L112";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 01:01 PM";"@CrisF  previous";"";"";
+"347922216429813760";"grewalsatinder#9653";"26-Aug-19 01:01 PM";"Previous";"";"👍 (1)";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 01:03 PM";"@jl777c  I think I sorted it. 🙂";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 01:03 PM";"Your change to longest chain is good too, solves display issues";"";"";
+"412482228359266328";"CrisF#3405";"26-Aug-19 01:04 PM";"Ok, thanks 👍";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 01:07 PM";"hindi is now supported and seems to work, at least everything is in incomprehensible scribbles to me with hindi";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 01:08 PM";"you can select a language on startup with -l=hindi";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 01:18 PM";"now, all the current languages has its corresponding .json file in the html/languages dir, just need to edit the english text into the target language";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 01:20 PM";"The NSPV_longestchain, should that just be the highest height, or a validated height? That links back?";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 01:20 PM";"not sure it matters, as it also has validated header";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 01:20 PM";"validated is probably better";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 01:21 PM";"ok. takes about 5mins to sync KMD for me after start...Doesnt seem too bad. Will make PR soon.";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 01:22 PM";"@CMaurice jl777 branch should now work with android. can you confirm?";"";"";
+"347922216429813760";"grewalsatinder#9653";"26-Aug-19 01:38 PM";"@jl777c https://github.com/jl777/libnspv/pull/120";"";"";
+"347922216429813760";"grewalsatinder#9653";"26-Aug-19 01:38 PM";"hindi language file is fully translated.";"";"";
+"439780323497082880";"CMaurice#1685";"26-Aug-19 01:52 PM";"can confirm `./onetime' builds jl777 branch from a fresh clone";"";"";
+"439780323497082880";"CMaurice#1685";"26-Aug-19 01:52 PM";"and the html is served @jl777c";"";"";
+"439780323497082880";"CMaurice#1685";"26-Aug-19 01:53 PM";"lots of things to try later , looks amazing";"";"💯 (2)";
+"439780323497082880";"CMaurice#1685";"26-Aug-19 02:16 PM";"heh, didn't think to just remove the -march flag";"";"";
+"347922216429813760";"grewalsatinder#9653";"26-Aug-19 02:44 PM";"https://github.com/jl777/libnspv/pull/121";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 03:51 PM";"@grewalsatinder  @jl777c  
+When I try to use the HTML wallet with firefix, it is crashing my nSPV daemon on login.";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 03:51 PM";"Preints somethingabout  jpeg  pulls listunspent then crashes.";"";"";
+"347922216429813760";"grewalsatinder#9653";"26-Aug-19 03:55 PM";"yes, I got that too";"";"";
+"347922216429813760";"grewalsatinder#9653";"26-Aug-19 03:55 PM";"```
+got utxos response 78.47.196.146:7770 1566834900 size.97 numtxos.0
+nspv(22837,0x700000c0e000) malloc: Incorrect checksum for freed object 0x7fed32005200: probably modified after being freed.
+Corrupt value: 0x3662306431623365
+nspv(22837,0x700000c0e000) malloc: *** set a breakpoint in malloc_error_break to debug
+Abort trap: 6
+```";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 03:57 PM";"https://imgur.com/JR8XQ7i.png";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 04:08 PM";"let me disable the jpg stufff";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 04:09 PM";"that should stop the crashing";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 04:10 PM";"ok thanks. The html wallet looks nice btw @grewalsatinder  
+Very cool";"";"👍 (1)";
+"455741312273219595";"jl777c#5810";"26-Aug-19 04:10 PM";"ok try now";"";"";
+"347922216429813760";"grewalsatinder#9653";"26-Aug-19 04:10 PM";"thanks @blackjok3r 🙂";"";"";
+"347922216429813760";"grewalsatinder#9653";"26-Aug-19 04:13 PM";"help translate nSPV to other languages please:
+https://github.com/jl777/libnspv/tree/jl777/html/languages";"";"";
+"347922216429813760";"grewalsatinder#9653";"26-Aug-19 04:13 PM";"as many as possible";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 04:15 PM";"@jl777c  Seems working now. 🙂 Will amke PR in nexzt few hours with fixed sync, still trying to find optimal rate of polling nodes to keep syncwhile not over doing it.";"";"";
+"262577806456782848";"Sir Seven#7158";"26-Aug-19 04:17 PM";"Getting random crashes working with html wallet in browser.
+Same backtrace:
+https://paste.ubuntu.com/p/GjQsmrGXGf/
+
+Just like moving from Wallet to Info to Peers pages. Can't get set 100% way to reproduce.";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 04:18 PM";"thats in the periodic polling code. maybe some mutex are needed, looks like jokrs new code";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 04:18 PM";"I have fix ready, can push now if needed to test it";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 04:18 PM";"Mine is working fine";"";"";
+"262577806456782848";"Sir Seven#7158";"26-Aug-19 04:19 PM";"Oh, ok. Push it when ready then.";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 04:19 PM";"ok";"";"";
+"262577806456782848";"Sir Seven#7158";"26-Aug-19 04:20 PM";"Didn't get how to switch html wallet lang. Parameter should be passed at nspv start or as parameter in browser(AE `&l=language`)?";"";"";
+"232679450301431808";"blackjok3r#3181";"26-Aug-19 04:22 PM";"https://github.com/jl777/libnspv/pull/122
+This is syncing KMD for me in about 130s after start... But may still be a little heavy on bandwidth, once synced";"";"";
+"347922216429813760";"grewalsatinder#9653";"26-Aug-19 04:22 PM";"@Sir Seven from Account page can change to any wallet language";"";"";
+"347922216429813760";"grewalsatinder#9653";"26-Aug-19 04:22 PM";"or can be used at start like `./nspv KMD -l=hindi`";"";"";
+"347922216429813760";"grewalsatinder#9653";"26-Aug-19 04:23 PM";"the name of the language file (without .json)";"";"";
+"455741312273219595";"jl777c#5810";"26-Aug-19 04:26 PM";"yes, the idea is that whatever installer would default to the systems language with the -l=<language> parameter";"";"";

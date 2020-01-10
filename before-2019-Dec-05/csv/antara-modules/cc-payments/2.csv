@@ -1,0 +1,133 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"232679450301431808";"blackjok3r#3181";"25-Mar-19 05:55 AM";"@Alright  
+Yes I never saw any of the op return transactions so didnt write code to validate it. And that rounding problem is know n about, not sure  how to fix it. Will try to get op ret spending done today. I think it should be quite easy.";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Mar-19 06:58 AM";"https://github.com/blackjok3rtt/komodo/commit/867962c1e200a5bdcf3f963d4198e8e8955d2cb6
+Added op_return validation";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 06:59 AM";"useopret is to make opret spends possible so you can have an -ac_script and -mineropret options for a chain to solve the initial usecase that started this";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 06:59 AM";"we also need to make sure the excess mining fees cant be used to trick the CC";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 07:00 AM";"and maybe other CC are vulnerable to that trick too?";"";"🤔 (1)";
+"232679450301431808";"blackjok3r#3181";"25-Mar-19 08:21 AM";"I have a quyestion about the rounding error. Reading over this channel again, you guys were changing the code that did the tx fee stuff.. Is it possible that the tx on the PAY chain that is failing was a result of the changes at that time?
+I am really struggling with this one thing, as the code in the RPC and the validation is exactly the same. Doesnt make any sense why the result comes out diffrent.";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 08:23 AM";"PAY originally didnt have the txidpk vout, but there was no validation at first. it is possible we need to do height activation on  PAY, or maybe just make a new chain for clean testing with all the latest";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 08:23 AM";"if new tx all validate, then likely it is just a historical issue";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Mar-19 08:25 AM";"I think that may be the case. With the new validation for op return spending I think validation is complete.,.. but I havent not enforced a couple of returns as errors because it stops PAY syncing.";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Mar-19 08:25 AM";"Also noticed there is a change to main.cpp I commented out something to get komodod to build.";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Mar-19 08:25 AM";"Will make PR with op ret valdiation and revert that change shortly";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 08:34 AM";"if you rebase, it will pull in the changes needed for komodo_events";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 08:35 AM";"lets just make a new chain for clean testing. also alright found some miner attack with giant txfee";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 08:36 AM";"and maybe some other issues, so lets get all those fixed after payments CC is stable";"";"👍 (1)";
+"455741312273219595";"jl777c#5810";"25-Mar-19 10:08 AM";"maybe allocation should become an int64_t ? seems saving a bit of space is not worth it if we end up with rounding errors and the txidopret is using int32_t";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 10:11 AM";"since we need to make a new chain anyway, might as well just break backward compatibility";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 10:11 AM";"so I vote for int64_t all around for all allocation variables";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 10:18 AM";"@blackjok3r can you make pull request for converting to int64?";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Mar-19 10:19 AM";"sure, I already changed it in a few places";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Mar-19 10:19 AM";"will do the rest now";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 10:41 AM";"merged. ok, so now it should be all good. though do we have protection from Alright evil miner attack?";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 10:42 AM";"all spends from global addresses or 1of2 address with global address being one of the 1of2, is subject to this one where the miner makes a giant txfee and reduces the output";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 10:42 AM";"so the payment amount would be reduced and match all the ratios but 99% of the funds going to the txfee";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Mar-19 10:44 AM";"not sure we have fixed that no ... I still dont quite understand it, will try to sort that tomorrow, have whole day reserved for work.";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 10:47 AM";"should just be a matter to make sure the txfee is 10000 sats";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 10:47 AM";"so sum of vins - sum of outputs == 10000";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 10:47 AM";"rewards CC has this problem too";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 10:47 AM";"evil evil miner";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Mar-19 10:49 AM";"yes he explained it as a rewards bug, I assume it also affects payments. I will fix it";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 10:50 AM";"it was also an issue with some of the other CC";"";"";
+"455741312273219595";"jl777c#5810";"25-Mar-19 11:49 AM";"@blackjok3r make sure to rebase, found some more int32 that needed int64";"";"👍 (1)";
+"232679450301431808";"blackjok3r#3181";"22-Apr-19 10:14 AM";"@Alright  @Exile13  
+I have got payments CC working to be paid by the miner. My parameters of my plans in this chain are stupid, but the important thing to do was to fund the contracts. You can use the notes here as a guide to create your own chains:
+https://github.com/blackjok3rtt/komodo/blob/489485252b68597bc9173328ed21674b58f90b8b/src/cc/hempcoin_notes.txt
+The branch you need for now is: `git clone https://github.com/blackjok3rtt/komodo.git -b jl777` 
+I will merge this to jls repo once it has had some more testing. I think I covered every base, such as creating diffrent ac_script/ac_pubkey chains to make sure all coinbases were paid to the right pubkeys etc, but its possible I have missed something, its been a long 2 days. 
+You can sync the chain I created in the example with that branch by running the following command:
+`./komodod -ac_name=TESTHC -ac_supply=1000000 -ac_reward=100000000000 -ac_cc=2 -ac_script=2ea22c8020987fad30df055db6fd922c3a57e55d76601229ed3da3b31340112e773df3d0d28103120c008203000401ccb8 -ac_founders=150 -ac_blocktime=20 -ac_nk=96,5 -earlytxid=810bd62fb8353fad20267ff2050684b8829affa3edf6b366633931530791dfce -addnode=103.6.12.112`
+Please test rewards contract works,  and try your own `paymentsrelease` transactions to verify those continue to work. Then make a new chain with better more sane rewards contract and chain parameters.";"";"";
+"482773501435052032";"Exile13#4458";"22-Apr-19 10:15 AM";"Oooooh";"";"";
+"482773501435052032";"Exile13#4458";"22-Apr-19 10:16 AM";"Ty";"";"";
+"482773501435052032";"Exile13#4458";"22-Apr-19 10:16 AM";"Gimme 6-7 hrs and I'll dl";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Apr-19 10:17 AM";"np still getting public chain ready. Likelyt most of this stuff will confuse the crap out of you it mostly for Alright, but you can test rewards and paymetns release on this chain I already bootstrapped, until he knows how to start his own chains.";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Apr-19 10:22 AM";"to my knowledge this is by far the most complicated assetchain KMD has created. I could ahve used more params, but it didnt seem nessary lol/";"";"";
+"482773501435052032";"Exile13#4458";"22-Apr-19 05:35 PM";"thank you @blackjok3r";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Apr-19 05:42 PM";"Thanks";"";"";
+"482773501435052032";"Exile13#4458";"22-Apr-19 05:42 PM";"thats pretty awsome";"";"";
+"482773501435052032";"Exile13#4458";"22-Apr-19 05:45 PM";"i follow, not all the technical syntax, but i understand i believe how the payments will work, my question is about the premine? is this a arbitrary numerical value?";"";"";
+"482773501435052032";"Exile13#4458";"22-Apr-19 05:45 PM";"or is that the result of the first 100 blocks mined";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Apr-19 05:46 PM";"It is. Whatever u specify it yo be and its paid to a Random address in ur wallet";"";"";
+"482773501435052032";"Exile13#4458";"22-Apr-19 05:47 PM";"or am i confusing it";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Apr-19 05:47 PM";"Please read the .text file.o.made?";"";"";
+"482773501435052032";"Exile13#4458";"22-Apr-19 05:47 PM";"yes";"";"";
+"482773501435052032";"Exile13#4458";"22-Apr-19 05:47 PM";"sorry";"";"";
+"232679450301431808";"blackjok3r#3181";"22-Apr-19 05:48 PM";"Snapshot stuff not implemented yet";"";"";
+"482773501435052032";"Exile13#4458";"22-Apr-19 05:48 PM";"ok";"";"";
+"482773501435052032";"Exile13#4458";"22-Apr-19 05:48 PM";"thank you";"";"";
+"405011811511828481";"Alright#0419";"22-Apr-19 08:16 PM";"@blackjok3r thanks";"";"";
+"405011811511828481";"Alright#0419";"22-Apr-19 08:16 PM";"I'm still confused how I'm supposed to get ac_script before starting the chain";"";"";
+"405011811511828481";"Alright#0419";"22-Apr-19 08:17 PM";"The payments scriptpubkey isn't the same across chains? Those notes say I can get it from a different chain, how?";"";"";
+"232679450301431808";"blackjok3r#3181";"23-Apr-19 01:32 PM";"https://www.youtube.com/watch?v=CC5ca6Hsb2Q";"";"6849_pepeold (1)";
+"232679450301431808";"blackjok3r#3181";"25-Apr-19 02:42 AM";"@Alright  The ac_script is the script of the payments global address.";"";"";
+"232679450301431808";"blackjok3r#3181";"25-Apr-19 02:43 AM";"then we endode the OP_RETURN into a special payload on the end of this to tell the CC  what plan this payment is for.";"";"";
+"232679450301431808";"blackjok3r#3181";"29-Apr-19 09:32 AM";"Just did the first Payments Airdrop TX. 😄";"";"";
+"242635006516658197";"jorian#4555";"29-Apr-19 10:30 AM";"nice";"";"";
+"455741312273219595";"jl777c#5810";"29-Apr-19 10:37 AM";"trustless airdrops are within sight";"";"";
+"242635006516658197";"jorian#4555";"29-Apr-19 10:47 AM";"but not for KMD";"";"";
+"242635006516658197";"jorian#4555";"29-Apr-19 10:47 AM";"unless KMDCC becomes a thing";"";"";
+"232679450301431808";"blackjok3r#3181";"29-Apr-19 12:25 PM";"few minor issues to iron out... While thinking about how Alright would try to break it... I tried my own test, of making an aiur drop tx, sending it before the next snapshot happens, then mining empty blocks with it stuck in mempool until the next snapshot happens (after sending coins) so the airdroip is now invalid.. 
+And it did what I thaught it would, and got stuck in the mempool of the miner, preventing it from mining blocks. I think I found solution though, just remove the tx from mempool when it is rejected by CC_EVAL... as its  difficult to make a payments airdrop TX and this ""attack vector"" (which can happen by accident dure to network latency etc) can only happen once a day, I think this method will work just fine. Testing this stuff is time consuming... But Better do it properly than have it break later after we build stuff on top of it.";"";"";
+"232679450301431808";"blackjok3r#3181";"29-Apr-19 01:02 PM";"damn it this test has take 4 attempts now to test the fix. So hard to do.";"";"";
+"232679450301431808";"blackjok3r#3181";"29-Apr-19 01:14 PM";"ok sweet it works";"";"";
+"406179072922746882";"polycryptoblog#1173";"29-Apr-19 10:28 PM";"This cc would eliminate a majority of my headache for the coin I’m trying to design to reward various offchain efforts like boinc .  With a little more complexity like using oracles to pull APIs  and some function for proportional distribution ( vs. set percentage talked about above )  DAOs are on the horizon .";"";"";
+"406179072922746882";"polycryptoblog#1173";"29-Apr-19 10:28 PM";"Really excited to see how this turns out";"";"";
+"232679450301431808";"blackjok3r#3181";"30-Apr-19 02:23 AM";"If you want to discuss or suggest any features for it hit me up man @polycryptoblog , I'm trying to design it so that we can easily build on top of it with new stuff. So far it handles, a set % to a set of addresses, and it also does a daily snapshot of the entire chain and saves the top 5000 addresses, of which you can supply a list of addresses to ignore, and select your chosen top amount.";"";"";
+"406179072922746882";"polycryptoblog#1173";"30-Apr-19 04:36 AM";"@blackjok3r About to get some sleep right now but will definitely message you tomorrow  with some ideas.  I’ve been thinking how to handle payments manually I can convert those ideas to descriptions of onchain mechanisms. This cc I see becoming ubiquitous.";"";"";
+"455741312273219595";"jl777c#5810";"30-Apr-19 06:03 AM";"yes with snapshot capability, decentralized autonomous org (DAO) is as easy as having a profit/fee making service payout to the snapshot address";"";"";
+"455741312273219595";"jl777c#5810";"30-Apr-19 06:04 AM";"@blackjok3r we need to be able to specify the minimum amount that can be used for a payment release";"";"";
+"232679450301431808";"blackjok3r#3181";"30-Apr-19 06:04 AM";"that is already there? Pretty sure";"";"";
+"455741312273219595";"jl777c#5810";"30-Apr-19 06:04 AM";"then anybody can generate the tx when there is more than that";"";"";
+"455741312273219595";"jl777c#5810";"30-Apr-19 06:05 AM";"i havent looked at all the parameters, so if already there that is good. A min/max amount per address is also useful";"";"";
+"232679450301431808";"blackjok3r#3181";"30-Apr-19 06:06 AM";"I have exclude address, min relaeasre, locked blocks, top address to pay. Its done is such a way that adding extra params isnt hard, but will be hard forking to any existing chains.. which right now is zero. So getting eveything needed soon is a very good idea.";"";"";
+"455741312273219595";"jl777c#5810";"30-Apr-19 06:07 AM";"in case of min/max you probably have to iterate the payout calculation to get it to spend close to the specified amount";"";"";
+"232679450301431808";"blackjok3r#3181";"30-Apr-19 06:08 AM";"min/max seems fairly difficult really, harder than the rest of the things.";"";"";
+"232679450301431808";"blackjok3r#3181";"30-Apr-19 06:09 AM";"btw the max sigops is 4000, so we can only fo 3999 vouts per tx";"";"";
+"232679450301431808";"blackjok3r#3181";"30-Apr-19 06:10 AM";"I was thinking maybe an opposite to top param, so that the plan could be divided into 2, so we can pay ~8000 address, but it means the funding has to come from 2 places.";"";"";
+"455741312273219595";"jl777c#5810";"30-Apr-19 06:22 AM";"maybe then there can be payoutindex, where it can specified the nth 4000 address groups, for chains with many addresses";"";"";
+"455741312273219595";"jl777c#5810";"30-Apr-19 06:23 AM";"there is a dustthreshold? either for source or destination amount";"";"";
+"455741312273219595";"jl777c#5810";"30-Apr-19 06:23 AM";"i guess a fixed payout to the top N addresses would be useful and easy to calculate";"";"";
+"232679450301431808";"blackjok3r#3181";"30-Apr-19 06:23 AM";"not really... currentlyit just truncates anything under 5000 address.";"";"";
+"455741312273219595";"jl777c#5810";"30-Apr-19 06:24 AM";"you said the time to do changes is now, before any chain uses it";"";"";
+"232679450301431808";"blackjok3r#3181";"30-Apr-19 06:24 AM";"dust threshold didnt save any time. in my testing so I just left it out.";"";"";
+"232679450301431808";"blackjok3r#3181";"30-Apr-19 06:24 AM";"however it can be done at the plan end wihtout issue.";"";"";
+"232679450301431808";"blackjok3r#3181";"30-Apr-19 06:24 AM";"easy change";"";"";
+"232679450301431808";"blackjok3r#3181";"30-Apr-19 06:25 AM";"for now focusing on tidying it up and checking its stable etc. trying to break it. Will have a think about whats possible to add from these suggestions";"";"";
+"232679450301431808";"blackjok3r#3181";"30-Apr-19 06:26 AM";"havent started on tokens at all... but as thats a seperate funcid, it should not really amtter if we add it later I think.";"";"";
+"455741312273219595";"jl777c#5810";"30-Apr-19 06:26 AM";"true";"";"";
+"232679450301431808";"blackjok3r#3181";"30-Apr-19 09:27 AM";"```To add to snapshot parameters:
+    - miniumum amount that can be paid to an address. why max? as you can just do multiple releases and bypass it.
+    - diffrent pay out that pays static amount to top N address. 
+    - change 5000 address limitation to dust threshold parameter?
+    - extra RPC to merge all payments utxos to a single utxo, wihtout letting someone constantly DOS spend it. some threshold of utxos allows this to happen? 
+    - second ""top"" param so a range of address can be paid, rather than just the top. 
+        -could be used to pay more than 3999 address, but no way to stop someone paying bottom address over and over wihtout some extra protections, of some kind, unsolved problem.
+    - work out the maximum number exclude scriptpubkeys. (maybe just check op_return size on plan create? )```";"";"";
+"232679450301431808";"blackjok3r#3181";"30-Apr-19 09:27 AM";"come up with these. Most of them are simple additions.";"";"";
+"455741312273219595";"jl777c#5810";"30-Apr-19 09:31 AM";"it seems maybe it is enough to pay the top 4000 addresses";"";"";
+"455741312273219595";"jl777c#5810";"30-Apr-19 09:32 AM";"too many issues with having a single airdrop split into multiple tx";"";"";
+"232679450301431808";"blackjok3r#3181";"30-Apr-19 11:45 AM";"Yes agreed, it was just an idea, but couldn't think of a safe implementation";"";"";
+"406179072922746882";"polycryptoblog#1173";"30-Apr-19 11:03 PM";"@blackjok3r  dm’d some ideas for when you wake";"";"";
+"232679450301431808";"blackjok3r#3181";"01-May-19 01:40 AM";"Thanks";"";"";
+"232679450301431808";"blackjok3r#3181";"09-May-19 06:28 AM";"I have verified the rewind snapshot is working 100% without any errors. using stopat for a snapshot height, and doing a snapshot is returning exactly the same result.  Seems unless merge RPC has any bugs paymentsCC is ready to be used.";"";"";
+"232679450301431808";"blackjok3r#3181";"13-May-19 11:02 AM";"@dimxy  
+https://github.com/blackjok3rtt/komodo/blob/jl777/src/cc/payments.cpp#L434
+Any chance you can check this code for me? for some strange reason the bignum stuff is returning two diffrent values, in RPC and validation. There was a bug that was not doing this rtest properly, and basically allowing any number though. It was only just found. When trying to fix it, I can no longer make payments release txns. 
+
+Flow is in RPC:
+1) add all address balances together in RPC to get `mpzTotalAllocations` (this matches validation) 
+2) set the allocation for the address in RPC to `mpzValue` 
+3) multiply mpzValue with the amount to be released
+4) divide this with the `mpzTotalAllocations`  to get the vout nValue. 
+
+Flow in Validation:
+1) Check change is in vout 1, and also check txfee amount. 
+2) subtract the change and txfee paid from the total tx valueout to get the total amount paid to the actual recipients.  (this matches check prints) 
+3)  multiply the balance of the address with the total amount paid (checkamount)
+4) Divide this number by the total allocations";"";"👌 (1)";
+"232679450301431808";"blackjok3r#3181";"13-May-19 11:04 AM";"it must be something silly. Its not out by very much";"";"";
+"232679450301431808";"blackjok3r#3181";"13-May-19 11:04 AM";"Thanks 😃";"";"";

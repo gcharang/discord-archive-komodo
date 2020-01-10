@@ -1,0 +1,442 @@
+==============================================================
+Guild: Komodo
+Channel: cc-musig
+Topic: ./komodod -ac_name=MUSIG -ac_supply=100000 -ac_reward=10000000 -pubkey=<yourpub> -ac_cclib=sudoku -ac_cc=2 -addnode=5.9.102.210 &
+faucet is funded, do faucetget and sendrawtransaction
+Messages: 97
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[28-Feb-19 04:29 PM] gcharang#6833
+ah! easist setup is to use vps with static ip.
+
+[28-Feb-19 04:30 PM] josephnicholas GMT+8#5904
+Yeah, but one question, how do I change my config so that I can connect to specific port? Since as far as I can see my nodes have diff p2pport that's why it won't connect
+
+[28-Feb-19 04:38 PM] josephnicholas GMT+8#5904
+even with 6 confirmations it can't be seen in the explorer.
+
+[28-Feb-19 04:38 PM] gcharang#6833
+Is the explorer on the same node showing the confs?
+
+[28-Feb-19 04:41 PM] gcharang#6833
+Also, I know how to change rpcport, but afaik the p2pport is default. @josephnicholas GMT+8 
+I would recommend you do `getinfo` call on both nodes and compare if 
+```
+  "p2pport": 33924,
+  "rpcport": 33925,
+  "magic": 103274924,
+```
+are same on both nodes
+
+[28-Feb-19 04:42 PM] gcharang#6833
+if "magic" is different, then they are different chains and won't talk to each other
+
+[28-Feb-19 04:42 PM] josephnicholas GMT+8#5904
+Oh no. So how do I create a chain that have same p2p port?
+
+[28-Feb-19 04:44 PM] gcharang#6833
+"magic": is the more important number, if thats the same, then others will be correct.
+https://developers.komodoplatform.com/basic-docs/installations/creating-asset-chains.html#creating-a-new-asset-chain
+
+{Embed}
+https://developers.komodoplatform.com/basic-docs/installations/creating-asset-chains.html
+Building a Komodo Asset Chain | Komodo Documentation
+Documentation for developers building on Komodo
+
+[28-Feb-19 04:44 PM] gcharang#6833
+have you seen this doc?
+
+[28-Feb-19 04:44 PM] josephnicholas GMT+8#5904
+No, I will read
+
+[28-Feb-19 04:45 PM] gcharang#6833
+that has most of the info and tips. Feel free to ask here if there are any further troubles. Someone will answer
+
+[28-Feb-19 04:59 PM] josephnicholas GMT+8#5904
+Thanks @gcharang
+
+{Reactions}
+👍 
+
+[28-Feb-19 05:05 PM] gcharang#6833
+@blackjok3r what does `str()` do in https://raw.githubusercontent.com/jl777/komodo/jl777/src/musigtest.py
+
+[28-Feb-19 05:06 PM] blackjok3r#3181
+it converts the output to a string.. seems without that daemon returned error
+
+[28-Feb-19 05:07 PM] gcharang#6833
+@blackjok3r `tmp = str([i, len(pubkeys), combinedpk, pkhash, msg, i])`whats the purpose of  the `i` after `msg`?
+
+[28-Feb-19 05:08 PM] blackjok3r#3181
+that is for using 1 node to simulate many.
+
+[28-Feb-19 05:08 PM] gcharang#6833
+you modified the rpc call?
+
+[28-Feb-19 05:08 PM] blackjok3r#3181
+if its not there.. then it does nothing.. or at least thats how it should work
+
+[28-Feb-19 05:08 PM] gcharang#6833
+ah got it
+
+[02-Mar-19 06:17 AM] josephnicholas GMT+8#5904
+@jl777c there is a variable error in `desttxid`
+```dilithium.c: In function ‘int64_t dilithium_inputs(CCcontract_info*, CMutableTransaction&, CPubKey, uint256, int64_t, int32_t, char*)’:
+dilithium.c:3297:211: error: ‘desttxid’ was not declared in this scope
+ t[numvouts-1].scriptPubKey) == 'Q' || dilithium_sendopretdecode(checktxid,vintx.vout[numvouts-1].scriptPubKey) == 'x') && desttxid == checktxid )
+```
+
+[02-Mar-19 06:46 AM] jl777c#5810
+pushed fix
+
+[02-Mar-19 07:04 AM] josephnicholas GMT+8#5904
+Thanks
+
+[03-Mar-19 08:00 AM] jl777c#5810
+@CHMEX it seems musig explorer needs an update
+
+[03-Mar-19 09:18 AM] CHMEX#0686
+musig is back and updated
+
+[04-Mar-19 11:41 AM] jl777c#5810
+added handle uniqueness to latest MUSIG
+
+{Reactions}
+👍 
+
+[04-Mar-19 07:46 PM] Alright#0419
+@CHMEX musig explorer is forked
+
+[04-Mar-19 07:46 PM] Alright#0419
+I had nodes do the same, I had to resync after rebuilding libcc.so and komodod
+
+[04-Mar-19 09:44 PM] CHMEX#0686
+resynching now hope it wil make it...
+
+[04-Mar-19 09:44 PM] CHMEX#0686
+off to bed...
+
+[12-Mar-19 04:13 PM] gcharang#6833
+@blackjok3r 
+testing musig on the latest jl777 branch.
+```bash
+./komodo-cli -ac_name=MUSIG1 cclib nonce 18 '["8897e150bfb07d3f967ffadb4b0f3c84ea73a94c0d715c4b7e6d9c816c5113a9",1,"03035897a2bb653805490a88b5a90821403ce29f355fb0093690746082f6a0a618"]'
+{
+  "added_index": 1,
+  "status": "not enough nonces",
+  "result": "success"
+}
+```
+any thing I might have done wrong?
+
+[13-Mar-19 01:39 AM] blackjok3r#3181
+it doesnt have enough nonces ?
+
+[13-Mar-19 01:40 AM] blackjok3r#3181
+@gcharang  Its also possible that I broke it when I merged the single node test in.
+
+[13-Mar-19 01:42 AM] blackjok3r#3181
+what you need to do is ` "added_index": 1,` needs to be added for ALL nodes, for single node this *should* mean you dont need to add yourself. 
+That said I had to chagne that for single node simulation, so that was skipped, maybe it is applying to multi node aswell, although its should not. I will have a look at it soon. 
+There was a nasty bug with the noncstep and I had to make it extremly strict about proceeding or it would crashe the daemon evey time.
+
+[13-Mar-19 05:11 AM] gcharang#6833
+I was only testing with 2 nodes so this may not have affected it?
+
+[13-Mar-19 05:16 AM] blackjok3r#3181
+well.. like I said it could be a bug
+
+[13-Mar-19 05:16 AM] blackjok3r#3181
+try sending the nonce to yourself
+
+[13-Mar-19 05:17 AM] blackjok3r#3181
+like so all nonce are sent to all nodes, even to them self
+
+[13-Mar-19 05:17 AM] blackjok3r#3181
+if that works its a bug on my end
+
+[13-Mar-19 06:33 AM] gcharang#6833
+will try
+
+[13-Mar-19 08:49 AM] gcharang#6833
+@blackjok3r 
+I tried adding the commitment produced on the same node to itself, but that too errored.
+You will have to take a look at the code sometime
+
+{Reactions}
+👍 
+
+[13-Mar-19 12:17 PM] sφldat#8733
+https://twitter.com/airratchet/status/1105792022051471360
+
+{Embed}
+Schafer Geb. Scheier Lydia (@airratchet)
+https://twitter.com/airratchet/status/1105792022051471360
+I find this on github @KomodoPlatform 's dev: https://t.co/e5sA73yQQ9 … It's only on sidechain, or you will be implement this on #main network? Quantum Resistant?  SUPERCOP? #KOMODO #KMD
+Twitter
+
+[13-Mar-19 12:18 PM] sφldat#8733
+https://twitter.com/airratchet/status/1105794844100837376
+
+{Embed}
+Schafer Geb. Scheier Lydia (@airratchet)
+https://twitter.com/airratchet/status/1105794844100837376
+And this... https://t.co/7TnXYHmtzs … - The whole world is thinking how to connect the blockchain and the real world in #IoT , and you already have an #oracle and you are silent? 🙂 #komodo #kmd @KomodoPlatform
+Twitter
+
+[14-Mar-19 07:06 PM] Alright#0419
+```
+komodo-cli -ac_name=MUSIG cclib keypair 19 "[%22rand%22]"
+error: couldn't parse reply from server
+komodo-cli -ac_name=MUSIG cclib handleinfo 19 "[%22wrk%22]"
+error: couldn't parse reply from server
+```
+Suddenly getting this on one of my machines after rebuilding to latest jl777 branch. Isn't happening on any other machine with seemingly the same build. Has anyone ever seen this before? I don't see any relevant changes to jl777 branch that would have affected this
+
+[14-Mar-19 07:06 PM] Alright#0419
+normal commands such as `getinfo` work fine, seems to be isolated to this specific machine and cclib method
+
+[14-Mar-19 07:10 PM] Alright#0419
+rebuilding fixed it, strange as I used the same exact script to rebuild all nodes and only this node had a problem
+
+[14-Mar-19 07:23 PM] Alright#0419
+ubuntu 18.04
+
+[14-Mar-19 07:29 PM] Alright#0419
+what is "it"?
+
+[18-Mar-19 03:53 AM] blackjok3r#3181
+@gcharang  
+https://github.com/jl777/komodo/pull/1336
+I think this fixes musig. If you have a change to test it after it gets merged.
+
+{Embed}
+https://github.com/jl777/komodo/pull/1336
+Fix sendmany bug for Alright  by blackjok3rtt · Pull Request #133...
+sendmany was using the first value seen for all multiple address's. This make's it use the amount specified, while still allowing to send multiple utxo to the same address.
+https://avatars3.githubusercontent.com/u/30971146?s=400&v=4
+
+[18-Mar-19 05:11 AM] gcharang#6833
+will do
+
+[18-Mar-19 09:37 AM] gcharang#6833
+@blackjok3r daemon crashed on adding nonce from the other node
+
+[18-Mar-19 09:37 AM] blackjok3r#3181
+😡
+
+[18-Mar-19 09:38 AM] blackjok3r#3181
+I dont really understand why it does that ... The problem is that it must have all nonce before moving past, but it seems if its strict enough ... then it can never pass., as soon as you remvoe that limit then it crashes
+
+[18-Mar-19 09:38 AM] gcharang#6833
+have you taken a look at this spec: https://github.com/ElementsProject/secp256k1-zkp/blob/secp256k1-zkp/src/modules/musig/musig.md#signing-participant ?
+
+{Embed}
+https://github.com/ElementsProject/secp256k1-zkp/blob/secp256k1-zkp/src/modules/musig/musig.md
+ElementsProject/secp256k1-zkp
+Experimental fork of libsecp256k1 with support for pedersen commitments and range proofs. - ElementsProject/secp256k1-zkp
+https://avatars2.githubusercontent.com/u/12729539?s=400&v=4
+
+[18-Mar-19 09:38 AM] blackjok3r#3181
+maybe the check there needs to be diffrent, and actuall check the nonnces rather than just counting them
+
+[18-Mar-19 09:38 AM] blackjok3r#3181
+Dont need to ... I had it working with over 2000 keys
+
+[18-Mar-19 09:39 AM] blackjok3r#3181
+as long as 100% of nonce are in each memporyt struct it works without crashing
+
+[18-Mar-19 09:39 AM] blackjok3r#3181
+My script does this, but its only on a singel node and therefor uselsss
+
+[18-Mar-19 09:41 AM] blackjok3r#3181
+can you edit this line so it has the debug print?
+https://github.com/jl777/komodo/blob/d8d7463ea05274a28a00dc193cfc39c19296ba60/src/cc/musig.cpp#L590
+
+{Embed}
+https://github.com/jl777/komodo/blob/d8d7463ea05274a28a00dc193cfc39c19296ba60/src/cc/musig.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[18-Mar-19 09:41 AM] blackjok3r#3181
+what you need to know, is that its added both indexes...
+
+[18-Mar-19 09:41 AM] blackjok3r#3181
+if they are both there, then it should not crash.
+
+[18-Mar-19 09:42 AM] gcharang#6833
+One thing that became clear to me after looking at the above doc is:
+when there are 3 nodes
+node1 produces only one nonce after both the commitments from the other nodes are added
+I used to think it will produce a nonce for each commitment added
+
+[18-Mar-19 09:42 AM] gcharang#6833
+will change that line and run it again
+
+[18-Mar-19 09:42 AM] blackjok3r#3181
+no on every step it MUST have every single hash generated by every node
+
+[18-Mar-19 09:42 AM] blackjok3r#3181
+The python script shows how I acheived this `musigtest.py`
+
+[18-Mar-19 09:43 AM] blackjok3r#3181
+but it only works on a single node
+
+[18-Mar-19 09:43 AM] gcharang#6833
+it will have them but it produces a hash only after data from all the other nodes is added to it
+
+[18-Mar-19 09:43 AM] blackjok3r#3181
+yes and the code doesnt check very well that they are all there... its works until nonce step
+
+[18-Mar-19 09:43 AM] blackjok3r#3181
+then crashes if all data isnt avalible
+
+[18-Mar-19 09:44 AM] blackjok3r#3181
+really stumped me... we added checks to not let it pass unless every hash is there, but it seems somehow it stil l lets you proceed. 
+I think maybe, we need to just force that a node must send its own hash to itself liek I did in my script...
+
+[18-Mar-19 09:44 AM] blackjok3r#3181
+Or the counter needs to actually check the hashes are there rather than just counting how many you added, because user error will just crashiit every time otherwise
+
+[18-Mar-19 09:46 AM] gcharang#6833
+I was testing it with only 2 nodes.
+added nonce from second node and it crashed so no user error in this case
+
+[18-Mar-19 09:53 AM] blackjok3r#3181
+I dont really understand how it does it tbh ... it will still crash is the steps beforehand didn assign everything
+
+[18-Mar-19 09:54 AM] blackjok3r#3181
+We need a proper check on each stage that checks the actual hashes are there, not just counting them.
+
+[18-Mar-19 09:54 AM] blackjok3r#3181
+But I dont know how to make that.
+
+[18-Mar-19 10:11 AM] gcharang#6833
+@blackjok3r 
+here's the error:
+```bash
+NONCE: struct_size.1 using_struct.0 added_index.1 numnounces.2 num.2
+[libsecp256k1] illegal argument: !secp256k1_fe_is_zero(&ge->x)
+fish: “./komodod -ac_name=MUSIG6 -ac_s…” terminated by signal SIGABRT (Abort)
+```
+
+[18-Mar-19 11:20 PM] Bryan_Beus#6442
+CC MuSig is now added to the developers.komodoplatform.com tech docs:
+
+https://developers.komodoplatform.com/basic-docs/cryptoconditions/cc-musig.html#introduction
+
+{Embed}
+https://developers.komodoplatform.com/basic-docs/cryptoconditions/cc-musig.html
+Contract Module: MuSig | Komodo Documentation
+Documentation for developers building on Komodo
+
+[09-Apr-19 03:43 PM] gcharang#6833
+@Alright 
+`makecclib` has been updated
+I am not able to figure out how to specify the dynamic module to be built during the `komodod` build process
+
+[09-Apr-19 04:05 PM] jl777c#5810
+copy the libcc.so that you want into ~/komodo/src and relink komodod
+
+[09-Apr-19 04:05 PM] jl777c#5810
+it builds with whatever libcc.so it finds there
+
+[09-Apr-19 04:06 PM] gcharang#6833
+thanks
+
+[11-Apr-19 10:17 AM] gcharang#6833
+@jl777c 
+I am documenting the rpc for dilithium,
+```json
+    {
+      "evalcode": 19,
+      "funcid": "S",
+      "name": "dilithium",
+      "method": "sign",
+      "help": "msg [hexseed]",
+      "params_required": 1,
+      "params_max": 2
+    },
+```
+for the `sign` rpc, are there any restrictions on what msg can be?
+For the command,:
+```bash
+./komodo-cli -ac_name=MUSIG cclib sign 19 '["Quantum Resistance is awesome!","a70a8e7d2281beaf0762a11590fb566d7af32325ae4252609149de37658e2eb5"]'
+```
+I am getting 
+```json
+{
+  "status": "error",
+  "error": "couldnt parse message to sign"
+}
+```
+
+[11-Apr-19 11:29 AM] Alright#0419
+it's a debug rpc for the most part
+
+[11-Apr-19 11:29 AM] Alright#0419
+it doesn't actually seem to have a purpose other than to check that underlying dilithium features are working
+
+[11-Apr-19 11:31 AM] Alright#0419
+did you try something like 
+`./komodo-cli -ac_name=MUSIG cclib sign 19 "[%22Quantum Resistance is awesome!%22,%22a70a8e7d2281beaf0762a11590fb566d7af32325ae4252609149de37658e2eb5%22]'"`
+?
+
+[11-Apr-19 11:39 AM] gcharang#6833
+@Alright yeah this %22 format didn't work either
+
+[11-Apr-19 11:40 AM] Alright#0419
+I'm not sure I ever tested signing with a specific key, only the test mode signing with 1 arg
+
+[11-Apr-19 11:40 AM] Alright#0419
+does that work for you?
+
+[11-Apr-19 11:40 AM] Alright#0419
+`./komodo-cli -ac_name=MUSIG cclib sign 19 "[%22Quantum Resistance is awesome!%22]"`
+
+[11-Apr-19 11:41 AM] gcharang#6833
+No, this too doesn't work
+
+[11-Apr-19 11:41 AM] Alright#0419
+moment, let me look at notes
+
+[11-Apr-19 11:43 AM] Alright#0419
+Ah it doesn't work on arbitrary strings, forgot about this
+
+[11-Apr-19 11:43 AM] Alright#0419
+think it needs to be 32 bytes of hex
+
+[11-Apr-19 11:43 AM] Alright#0419
+again it's just a debug rpc, never actually used
+
+[11-Apr-19 11:44 AM] gcharang#6833
+Ah got it, thats why it has been saying  `couldnt parse message to sign` will try with a 32 byte string
+
+[11-Apr-19 11:57 AM] gcharang#6833
+thanks alright, thats working
+
+[11-Apr-19 01:54 PM] gcharang#6833
+@Alright i've added the rpc to dilithium doc: https://docs.komodoplatform.com/basic-docs/customconsensus/dilithium.html
+
+I haven't changed much from your content.
+Just added rpc from this line: https://github.com/KomodoPlatform/Documentation/blob/master/docs/basic-docs/customconsensus/dilithium.md#L1657
+
+{Embed}
+https://docs.komodoplatform.com/basic-docs/customconsensus/dilithium.html
+Dilithium | Komodo Documentation
+Documentation for developers building on Komodo
+
+{Embed}
+https://github.com/KomodoPlatform/Documentation/blob/master/docs/basic-docs/customconsensus/dilithium.md
+KomodoPlatform/Documentation
+Contribute to KomodoPlatform/Documentation development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[03-Nov-19 10:28 PM] Regnar#6164
+```- Musig
+  - Insert Musig CC proof of concept here - [link]```
+
+Hey all, if you have any proof of concepts, or built something cool for Musig CC, please let me know. The goal is to build out a list of concepts using CCs to help show other developers what is possible and add this to the Komodo docs page. TUIs are good too!
+

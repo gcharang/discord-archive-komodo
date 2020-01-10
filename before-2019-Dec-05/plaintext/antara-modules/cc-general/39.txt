@@ -1,0 +1,420 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[10-Aug-18 10:24 PM] jl777c#5810
+-j64
+
+[10-Aug-18 10:25 PM] dukeleto#7326
+😃
+
+[10-Aug-18 10:27 PM] dukeleto#7326
+@jl777c it's not a big concern for me, but I still see a lot of this in our test suite: ```02676d00110c2cd14ae24f95969e8598f7ccfaa675498b82654a5b5bd57fc1d8cf <- pubkey
+02676d00110c2cd14ae24f95969e8598f7ccfaa675498b82654a5b5bd57fc1d8cf <- origpubkey
+7b170de460cd61b1e4c850cb9ea3b6f38b7b5e9f89ff6c5a4c8ce8112b72bb69 hash vs 0f0f0a0000000000000000000000000000000000000000000000000000000000 ht.100 special.0 special2.0 flag.0 notaryid.-1 mod.30 error
+02676d00110c2cd14ae24f95969e8598f7ccfaa675498b82654a5b5bd57fc1d8cf <- pubkey
+02676d00110c2cd14ae24f95969e8598f7ccfaa675498b82654a5b5bd57fc1d8cf <- origpubkey
+3e67a178d690748b319e9ccf63c0ae92a0e8c7114bc48ab87de117cf16b78692 hash vs 0f0f0a0000000000000000000000000000000000000000000000000000000000 ht.100 special.0 special2.0 flag.0 notaryid.-1 mod.30 error
+02676d00110c2cd14ae24f95969e8598f7ccfaa675498b82654a5b5bd57fc1d8cf <- pubkey
+02676d00110c2cd14ae24f95969e8598f7ccfaa675498b82654a5b5bd57fc1d8cf <- origpubkey
+unexpected fname.(/tmp/testVsadvs/node0) vs REGTEST [REGTEST] n.7 len.21 (s/node0)```
+
+[10-Aug-18 10:28 PM] jl777c#5810
+quirks of regtest mode... no idea what it could be, the strange fname is especially strange
+
+[10-Aug-18 10:28 PM] dukeleto#7326
+i get an especially weird bug that doesn't cause the test suite to fail
+
+[10-Aug-18 10:29 PM] dukeleto#7326
+at the end of the test suite running, there is an error about not being able to create the `./regtest` directory somewhere in the datadir
+
+[10-Aug-18 10:29 PM] dukeleto#7326
+it's weird, because it doesn't make anything fail, but I figure it's related to the above printouts
+
+[10-Aug-18 10:30 PM] dukeleto#7326
+one test run generates about 5000 lines of that output(!)
+
+[10-Aug-18 10:31 PM] dukeleto#7326
+it's not blocking me for now
+
+[10-Aug-18 10:32 PM] siu - Chainmakers#3920
+@dukeleto sure
+
+[10-Aug-18 10:36 PM] dukeleto#7326
+I refactored each set of tests (faucet/reward/dice/token) to it's own function, so I can re-use the tests against various wallets scenarios: different amounts of funds, p2pk vs p2kpkh, etc. I think it's better than copying tests around to different files that only have slight changes
+
+[10-Aug-18 10:36 PM] Alright#0419
+Can't get a naked `rewardsunlock <fundingtxid>` to work anymore
+
+[10-Aug-18 10:37 PM] dukeleto#7326
+more deets plz
+
+[10-Aug-18 10:37 PM] dukeleto#7326
+do you have just mined utxos? any errors?
+
+[10-Aug-18 10:37 PM] Alright#0419
+Also having trouble unlocking ones while I pass it the rewardslock txid
+
+[10-Aug-18 10:37 PM] Alright#0419
+but it may be because I set 0 as minimum lock time for these
+
+[10-Aug-18 10:38 PM] Alright#0419
+I have ones eligible to unlock that were 1 day minimum that I can't unlock
+
+[10-Aug-18 10:38 PM] Alright#0419
+trying to find the txids for it
+
+[10-Aug-18 10:38 PM] Alright#0419
+```
+APR 10.00000000 minseconds.0 maxseconds.172800 mindeposit 1.00000000
+minseconds 0 maxseconds 172800
+duration 351 (1533940508 - 1533940157) numblocks 12 (2349 - 2337)
+amount 10.00000000 10000000000.00000000 317 -> duration.351 reward 0.00001113
+amount 10.00000000 -> reward 0.00001113
+```
+
+```
+./komodo-cli -ac_name=AT2 rewardsunlock 0time 062211921373a002306628024d2ac0c912b79ace5baed673473b1325e87e7006 774fd5e18d388c1554a908aadf423b05f298761f7537dc037f537578fc3ceabd
+{
+  "error": "couldnt create rewards unlock transaction"
+}
+```
+
+[10-Aug-18 10:39 PM] dukeleto#7326
+@Alright does it change if you put quotes around the hex?
+
+[10-Aug-18 10:39 PM] siu - Chainmakers#3920
+ok...
+
+[10-Aug-18 10:39 PM] siu - Chainmakers#3920
+yesterday i set a rewards lock
+
+[10-Aug-18 10:39 PM] siu - Chainmakers#3920
+http://cctest.explorer.dexstats.info/tx/fda4265334bb1a106aff02d4aa03273120241066889f843e58989eb39d3270e8
+
+[10-Aug-18 10:39 PM] Alright#0419
+putting quotes around txids does not help
+
+[10-Aug-18 10:39 PM] Alright#0419
+same result
+
+[10-Aug-18 10:40 PM] dukeleto#7326
+i didn't even know we had a cctest explorer, cool
+
+[10-Aug-18 10:40 PM] siu - Chainmakers#3920
+yep
+
+[10-Aug-18 10:40 PM] Alright#0419
+oh that needs to be rebuilt from latest
+
+[10-Aug-18 10:40 PM] Alright#0419
+the explorer
+
+[10-Aug-18 10:40 PM] Alright#0419
+going down for a couple minutes
+
+[10-Aug-18 10:40 PM] siu - Chainmakers#3920
+this is the plan
+
+[10-Aug-18 10:40 PM] dukeleto#7326
+@Alright also verify that `0time` is in `rewardslist` ?
+
+[10-Aug-18 10:40 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=AT2 rewardsinfo 30655be8685b93f48c9dfe6d01e4651dffca436778136abffffd006df50df8f3
+{
+  "result": "success",
+  "fundingtxid": "30655be8685b93f48c9dfe6d01e4651dffca436778136abffffd006df50df8f3",
+  "name": "SIU",
+  "sbits": 5589331,
+  "APR": "10.00000000",
+  "minseconds": 86400,
+  "maxseconds": 2592000,
+  "mindeposit": "10.00000000",
+  "funding": "112061.00000000"
+}
+```
+
+[10-Aug-18 10:41 PM] Alright#0419
+is
+
+[10-Aug-18 10:41 PM] siu - Chainmakers#3920
+i tried to unlock ```./komodo-cli -ac_name=AT2 rewardsunlock SIU 30655be8685b93f48c9dfe6d01e4651dffca436778136abffffd006df50df8f3 fda4265334bb1a106aff02d4aa03273120241066889f843e58989eb39d3270e8 
+{
+  "result": "success",
+  "hex": "0100000002e870329db39e98583e849f8866102420312703aad402ff6a101abb345326a4fd000000007b4c79a276a072a26ba067a565802103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb981407c2c667ab61de82900a727c028aaa35fe9017ab04f34bfb36356ca36ce0d984b607b58f384cc0a4de67fb6769ee4ba29d85c62921dd5f90b004b861f3f6993a2a100af038001e5a10001fffffffff3f80df56d00fdffbf6a13786743caff1d65e4016dfe9d8cf4935b68e85b6530000000007b4c79a276a072a26ba067a565802103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb981405361954d065375eb0c35e8d5e705437c74a65b1bfe6d9a0e2a23b261df88386850a40cf0916d96898203708630ab5f2ec735598609124db02340e3ab1c3d6c7ea100af038001e5a10001ffffffff03a3ea604e18090000302ea22c802065686d47a4049c2c845a71895a915eb84c04445896eec5dc0be40df0b31372da8103120c008203000401cc4d9eb6d4e800000023210225583e18a48116c4c9571f530240f22affe00f95804f1947d59fbc7b825763f6ac00000000000000002c6a2ae5555349550000000000f3f80df56d00fdffbf6a13786743caff1d65e4016dfe9d8cf4935b68e85b653000000000"
+}
+```
+
+[10-Aug-18 10:42 PM] dukeleto#7326
+```5060-    hex = RewardsUnlock(0,name,fundingtxid,txid);
+5061-    if ( hex.size() > 0 )
+5062-    {
+5063-        result.push_back(Pair("result", "success"));
+5064-        result.push_back(Pair("hex", hex));
+5065:    } else result.push_back(Pair("error", "couldnt create rewards unlock transaction"));```
+
+[10-Aug-18 10:42 PM] Alright#0419
+try it without the lock txid
+
+[10-Aug-18 10:42 PM] dukeleto#7326
+that is the relevant code
+
+[10-Aug-18 10:42 PM] Alright#0419
+siu just `./komodo-cli -ac_name=AT2 rewardsunlock SIU 30655be8685b93f48c9dfe6d01e4651dffca436778136abffffd006df50df8f3`
+
+[10-Aug-18 10:42 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=AT2 rewardsunlock SIU 30655be8685b93f48c9dfe6d01e4651dffca436778136abffffd006df50df8f3
+{
+  "error": "couldnt create rewards unlock transaction"
+}
+```
+
+[10-Aug-18 10:42 PM] dukeleto#7326
+James changed RewardsUnlock yesterday
+
+[10-Aug-18 10:43 PM] Alright#0419
+do you have any more locked?
+
+[10-Aug-18 10:43 PM] dukeleto#7326
+for it to return "" instead of 0
+
+[10-Aug-18 10:43 PM] siu - Chainmakers#3920
+oohh wait
+
+[10-Aug-18 10:43 PM] dukeleto#7326
+i am not sure if that is related
+
+[10-Aug-18 10:43 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=AT2 sendrawtransaction 0100000002e870329db39e98583e849f8866102420312703aad402ff6a101abb345326a4fd000000007b4c79a276a072a26ba067a565802103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb981407c2c667ab61de82900a727c028aaa35fe9017ab04f34bfb36356ca36ce0d984b607b58f384cc0a4de67fb6769ee4ba29d85c62921dd5f90b004b861f3f6993a2a100af038001e5a10001fffffffff3f80df56d00fdffbf6a13786743caff1d65e4016dfe9d8cf4935b68e85b6530000000007b4c79a276a072a26ba067a565802103da60379d924c2c30ac290d2a86c2ead128cb7bd571f69211cb95356e2dcc5eb981405361954d065375eb0c35e8d5e705437c74a65b1bfe6d9a0e2a23b261df88386850a40cf0916d96898203708630ab5f2ec735598609124db02340e3ab1c3d6c7ea100af038001e5a10001ffffffff03a3ea604e18090000302ea22c802065686d47a4049c2c845a71895a915eb84c04445896eec5dc0be40df0b31372da8103120c008203000401cc4d9eb6d4e800000023210225583e18a48116c4c9571f530240f22affe00f95804f1947d59fbc7b825763f6ac00000000000000002c6a2ae5555349550000000000f3f80df56d00fdffbf6a13786743caff1d65e4016dfe9d8cf4935b68e85b653000000000
+30803593aa984c67ada966f42b4d775f7c5d835bea30374d9f0f3fa092cbf0ba
+```
+
+[10-Aug-18 10:43 PM] siu - Chainmakers#3920
+got it
+
+[10-Aug-18 10:43 PM] siu - Chainmakers#3920
+got a typo on the first try
+
+[10-Aug-18 10:43 PM] siu - Chainmakers#3920
+http://cctest.explorer.dexstats.info/tx/30803593aa984c67ada966f42b4d775f7c5d835bea30374d9f0f3fa092cbf0ba
+
+[10-Aug-18 10:43 PM] Alright#0419
+do you have any more locked coins eligible to be unlocked in SIU plan
+
+[10-Aug-18 10:44 PM] siu - Chainmakers#3920
+got it!
+
+[10-Aug-18 10:44 PM] siu - Chainmakers#3920
+no
+
+[10-Aug-18 10:44 PM] siu - Chainmakers#3920
+just that tx
+
+[10-Aug-18 10:44 PM] siu - Chainmakers#3920
+i just wanted to do a simple test since i had issues before
+
+[10-Aug-18 10:44 PM] Alright#0419
+I'm trying to figure out if this is a problem with having 0 as minimum lock time or a problem with `rewardsunlock` itself
+
+[10-Aug-18 10:46 PM] siu - Chainmakers#3920
+do a rewards plan with 0 days minimun lock?
+
+[10-Aug-18 10:47 PM] Alright#0419
+```
+{
+  "result": "success",
+  "fundingtxid": "062211921373a002306628024d2ac0c912b79ace5baed673473b1325e87e7006",
+  "name": "0time",
+  "sbits": 435627324464,
+  "APR": "10.00000000",
+  "minseconds": 0,
+  "maxseconds": 172800,
+  "mindeposit": "1.00000000",
+  "funding": "15439.99972528"
+}
+```
+
+[10-Aug-18 10:47 PM] Alright#0419
+try running this `./komodo-cli -ac_name=AT2 rewardsunlock 0time 062211921373a002306628024d2ac0c912b79ace5baed673473b1325e87e7006`
+
+[10-Aug-18 10:48 PM] Alright#0419
+for some reason you were able to unlock coins from the SIU plan, but my node was not
+
+[10-Aug-18 10:48 PM] dukeleto#7326
+@jl777c found a small bug which raises a question
+
+[10-Aug-18 10:49 PM] dukeleto#7326
+@jl777c tokeninfo fails hard if you give it a tokenid that does not exist, i would like to return a nicer error message
+
+[10-Aug-18 10:50 PM] dukeleto#7326
+i thought i had to change the return type of that RPC from a single item to JSON, but I see that is not the case. I will just make it return a nice error when there is no tokenid found
+
+[10-Aug-18 11:03 PM] siu - Chainmakers#3920
+```    "account": "",
+    "address": "RKvQKpkJgfMB5CbJQ2p6rUW4CZd7w2heQw",
+    "category": "receive",
+    "amount": 10000.01150541,
+    "vout": 1,
+    "confirmations": 5,
+    "blockhash": "00e8ec18a6c8b2f9cae68b836be871ce1b806ec525ef20db10138d7077e18f15",
+    "blockindex": 1,
+    "blocktime": 1533941049,
+    "expiryheight": 0,
+    "txid": "30803593aa984c67ada966f42b4d775f7c5d835bea30374d9f0f3fa092cbf0ba",
+    "walletconflicts": [
+    ],
+    "time": 1533940990,
+    "timereceived": 1533940990,
+    "vjoinsplit": [
+    ],
+    "size": 492
+  }
+```
+
+[10-Aug-18 11:04 PM] siu - Chainmakers#3920
+i left the funds for one day
+
+[10-Aug-18 11:04 PM] siu - Chainmakers#3920
+at 10% APR
+
+[10-Aug-18 11:06 PM] siu - Chainmakers#3920
+i would think thatr 10% APR for one day on 10000 coins should be 1 or 2 coins reward
+
+[10-Aug-18 11:06 PM] siu - Chainmakers#3920
+or am i wrong?
+
+[10-Aug-18 11:06 PM] Alright#0419
+~2.739726027
+
+[10-Aug-18 11:06 PM] siu - Chainmakers#3920
+0.10/12=0.0083
+
+[10-Aug-18 11:07 PM] siu - Chainmakers#3920
+0.0083/30=0.0003
+
+[10-Aug-18 11:07 PM] siu - Chainmakers#3920
+0.0003*10000=2.77
+
+[10-Aug-18 11:07 PM] siu - Chainmakers#3920
+so 2.77 coins should have been my reward
+
+[10-Aug-18 11:08 PM] siu - Chainmakers#3920
+http://cctest.explorer.dexstats.info/tx/fda4265334bb1a106aff02d4aa03273120241066889f843e58989eb39d3270e8
+
+[10-Aug-18 11:08 PM] siu - Chainmakers#3920
+this is my original deposit of 10000 coins yesterday
+
+[10-Aug-18 11:08 PM] Alright#0419
+can you try `./komodo-cli -ac_name=AT2 rewardsunlock 0time 062211921373a002306628024d2ac0c912b79ace5baed673473b1325e87e7006` from the same node you were able to do that `rewardsunlock` from
+
+[10-Aug-18 11:08 PM] Alright#0419
+Seems I'm unable to do any `rewardsunlock`s
+
+[10-Aug-18 11:08 PM] siu - Chainmakers#3920
+and this is the unlock today: http://cctest.explorer.dexstats.info/tx/30803593aa984c67ada966f42b4d775f7c5d835bea30374d9f0f3fa092cbf0ba
+
+[10-Aug-18 11:09 PM] siu - Chainmakers#3920
+```./komodo-cli -ac_name=AT2 rewardsunlock 0time 062211921373a002306628024d2ac0c912b79ace5baed673473b1325e87e7006
+{
+  "error": "couldnt create rewards unlock transaction"
+}
+siu@T460:~/komodo/src$ 
+```
+
+[10-Aug-18 11:26 PM] Alright#0419
+kind of random, but I found this interesting. Why is this time stamp so far off?
+
+[10-Aug-18 11:27 PM] Alright#0419
+after that I got 
+```
+2018-08-10 23:25:28 ERROR: CheckEquihashSolution(): invalid solution
+2018-08-10 23:25:28 ERROR: CheckBlockHeader(): Equihash solution invalid
+2018-08-10 23:25:28 CheckBlock header errorKomodoMiner:
+```
+
+[10-Aug-18 11:27 PM] Alright#0419
+when it thought it found another block that is
+
+[10-Aug-18 11:28 PM] Alright#0419
+oh wait I posted the wrong block
+
+[10-Aug-18 11:28 PM] siu - Chainmakers#3920
+```b3de7107cde5fd97c3217b2b44f0e5f03858be42712ddfc91d8108406d58ee8a winnings 60000.00000000 bet 10000.00000000 at odds 5:1
+```
+
+[10-Aug-18 11:28 PM] siu - Chainmakers#3920
+woot!
+
+[10-Aug-18 11:28 PM] siu - Chainmakers#3920
+won 6k!
+
+[10-Aug-18 11:30 PM] Alright#0419
+```
+2018-08-10 23:21:10 generated 100000.0001 height.2362
+2018-08-10 23:21:10 UpdateTip: new best=0073a0e93cc207bc26601c303baed4167e72fb95b22e6ce0a15ac26dfe9f61b6  height=2362  log2_work=19.160896  tx=3151  date=2018-08-10 23:12:17 progress=1.000000  cache=0.4MiB(933tx)
+```
+time stamp off by 9 minutes
+
+[10-Aug-18 11:30 PM] Alright#0419
+O.o
+
+[10-Aug-18 11:35 PM] Alright#0419
+did someone just add funds to this plan? 
+```
+./komodo-cli -ac_name=AT2 rewardsinfo 190b57b2b3a145e39cc486304629da630fe8395d47d38986db396bf5c4aa3137
+{
+  "result": "success",
+  "fundingtxid": "190b57b2b3a145e39cc486304629da630fe8395d47d38986db396bf5c4aa3137",
+  "name": "time",
+  "sbits": 1701669236,
+  "APR": "5.00000000",
+  "minseconds": 0,
+  "maxseconds": 432000,
+  "mindeposit": "1.00000000",
+  "funding": "1001540.00000000"
+}
+```
+
+[10-Aug-18 11:35 PM] siu - Chainmakers#3920
+i didnt
+
+[10-Aug-18 11:38 PM] Alright#0419
+@dukeleto ?
+
+[10-Aug-18 11:38 PM] Alright#0419
+I didn't add that 1540
+
+[10-Aug-18 11:39 PM] siu - Chainmakers#3920
+no idea
+
+[10-Aug-18 11:39 PM] siu - Chainmakers#3920
+can you spot the address it came from?
+
+[10-Aug-18 11:42 PM] Alright#0419
+`rewardslock` is adding to the funding
+
+[10-Aug-18 11:42 PM] Alright#0419
+Has it always done that?
+
+[10-Aug-18 11:42 PM] Alright#0419
+Also, this could be a coincidence, but any time I send something like this `./komodo-cli -ac_name=AT2 rewardscreatefunding ttest1 1000000 5 0.01 5 1` the block timestamp is off by a couple minutes
+
+[10-Aug-18 11:43 PM] Alright#0419
+the 0.01 is time, so maybe?
+
+[10-Aug-18 11:46 PM] Alright#0419
+I do believe that was just a couple coincidences in row lol
+
+[11-Aug-18 12:25 AM] siu - Chainmakers#3920
+i think there is something weird in the fundingtx APR math
+
+[11-Aug-18 12:47 AM] siu - Chainmakers#3920
+i get this ```f14254f63171f8511e989a6ea22aa8cb353d2dc7f5d50fa5c81fbcb2b5d839f5 winnings 60000.00000000 bet 10000.00000000 at odds 5:1
+```
+

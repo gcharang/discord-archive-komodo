@@ -1,0 +1,388 @@
+==============================================================
+Guild: Komodo
+Channel: cc-musig
+Topic: ./komodod -ac_name=MUSIG -ac_supply=100000 -ac_reward=10000000 -pubkey=<yourpub> -ac_cclib=sudoku -ac_cc=2 -addnode=5.9.102.210 &
+faucet is funded, do faucetget and sendrawtransaction
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[25-Feb-19 06:17 AM] jl777c#5810
+this is why a lot of coders cant do the trailblazing. they need to understand everything to make the first step, but when you are starting in a totally new place, it is more efficient to stumble about learning how it really works
+
+{Reactions}
+💯 
+
+[25-Feb-19 06:17 AM] jl777c#5810
+like this annoying issue of broken results if called without all the data, or the crash if using external scratchpad
+
+[25-Feb-19 06:19 AM] blackjok3r#3181
+yeah sometimes it feels like beating your head against a wall...
+
+[25-Feb-19 06:19 AM] blackjok3r#3181
+ok will start on this now... need to think about how best to do it. Hopefully only takes a few hours.
+
+[25-Feb-19 06:31 AM] gcharang#6833
+building latest musig. Error:
+```
+checking for Berkeley DB C++ headers... no
+configure: error: libdb_cxx headers missing, Bitcoin Core requires this library for wallet functionality (--disable-wallet to disable wallet functionality)
+Makefile:556: recipe for target 'config.status' failed
+make: *** [config.status] Error 1
+```
+Any help?
+
+[25-Feb-19 06:32 AM] blackjok3r#3181
+frech clone is only way i found to fix that.
+
+[25-Feb-19 06:32 AM] blackjok3r#3181
+oh wait
+
+[25-Feb-19 06:33 AM] blackjok3r#3181
+build komodod first
+
+[25-Feb-19 06:33 AM] blackjok3r#3181
+then makecclib
+
+[25-Feb-19 06:33 AM] blackjok3r#3181
+then build komodod again
+
+[25-Feb-19 06:33 AM] blackjok3r#3181
+😃
+
+[25-Feb-19 06:33 AM] blackjok3r#3181
+maybe? maybe this is something else than what im thinking it is
+
+[25-Feb-19 06:41 AM] jl777c#5810
+yes, that sequence is usually what is needed
+
+[25-Feb-19 06:42 AM] jl777c#5810
+configure: error: libdb_cxx headers missing, Bitcoin Core requires this library for wallet functionality (--disable-wallet to disable wallet functionality)
+that error means to run build.sh again
+
+[25-Feb-19 06:42 AM] jl777c#5810
+we arent end users, are we? we cant expect all the builds to just magically work as things are updated left and right
+
+[25-Feb-19 06:43 AM] jl777c#5810
+so if things are not building, then figure out how to solve it. if you cant do that, you need to wait the months it takes for builds to automagically work in all configs
+
+[25-Feb-19 06:44 AM] jl777c#5810
+to be on the cutting edge means to not get stopped by simple issues, or even complex ones
+
+[25-Feb-19 06:45 AM] gcharang#6833
+Well, I googled about the error, most suggestions were to change the version of berkely db to 4.8 and download it from bitcoin core's ppa. Tried that too. Still didn't work. So asked here
+
+[25-Feb-19 06:45 AM] jl777c#5810
+this error is always happening with the komodo builds, you never saw that before?
+
+[25-Feb-19 06:46 AM] jl777c#5810
+whenever the makefile change, it seems to get all confused. in any case using build.sh is not any magical deep understanding required
+
+[25-Feb-19 06:47 AM] gcharang#6833
+didn't see this particular error before. I knew to run build.sh again for an error that had `all recursive failed` or something likethat. 
+Will run build.sh again next time if I run into build errors 👍
+
+[25-Feb-19 06:48 AM] jl777c#5810
+yes, any build error, run build.sh
+
+[25-Feb-19 06:48 AM] jl777c#5810
+if still a problem make clean and build.sh, that seems to be needed sometimes
+
+[25-Feb-19 06:48 AM] jl777c#5810
+in extreme cases a fresh clone
+
+[25-Feb-19 06:48 AM] jl777c#5810
+so there are three levels of using build.sh if normal make doesnt work
+
+{Reactions}
+👍 
+
+[25-Feb-19 07:37 AM] blackjok3r#3181
+@grewalsatinder  I think I found the bug you were encountering yesterday. When i'm finished this PR it should be safe to test again. 😃
+
+[25-Feb-19 07:54 AM] grewalsatinder#9653
+@blackjok3r awesome!
+waiting!
+
+[25-Feb-19 07:54 AM] grewalsatinder#9653
+😃
+
+[25-Feb-19 07:54 AM] blackjok3r#3181
+yeah its one thing to make it work on a single node, but to make it work on a single node OR multiple is proviong quite difficult... its crashign it that exact place everyt single time for me atm, but not able to fix ti so far
+
+[25-Feb-19 07:58 AM] blackjok3r#3181
+tbh I'm not sure how I even got it to work in the first place... im doing the same thing here and its not working 😂
+
+[25-Feb-19 08:03 AM] blackjok3r#3181
+I think I worked it out 😃
+
+[25-Feb-19 09:02 AM] blackjok3r#3181
+`777544930008856e3b6f131470413f5d682ecb8010e2fbe2ebdbeea7b66ce3dd`
+
+[25-Feb-19 09:16 AM] blackjok3r#3181
+https://github.com/jl777/komodo/pull/1282
+@jl777c  
+If you could test this for 2/3 nodes @grewalsatinder  that would be helpful. I think it works. Definatly works on a single node, however the free of memory is not working, and requires a daemon restart to free the memory used before you can do another combine send and spend.
+
+{Embed}
+https://github.com/jl777/komodo/pull/1282
+Update to musig.cpp to enable use of single node. by blackjok3rtt ...
+Should also fix crash on nonce step for multiple nodes. Should work for multiple nodes, but needs to be tested.
+https://avatars3.githubusercontent.com/u/30971146?s=400&v=4
+
+[25-Feb-19 09:17 AM] blackjok3r#3181
+To use the `musigtest.py`, just start the daemon without -pubkey. Then run the script inside `komodo/src` once you have some coins, either mine or faucetget. Changed script to take less than 1 coin sends aswell, and added much more helpful prints so you can see what is happening.
+
+[25-Feb-19 09:18 AM] blackjok3r#3181
+Above 2000 pubkeys doesnt seem to play very nice, seems to take far too much ram.
+
+[25-Feb-19 10:22 AM] blackjok3r#3181
+One thing I noticed while doing this, its possible to change pubkey in runtime, at least with this. For MUSIG chain you can change pubkey as many times as you like.
+
+[25-Feb-19 11:01 AM] grewalsatinder#9653
+great! will test after rest 🙂
+
+[25-Feb-19 11:01 AM] grewalsatinder#9653
+thanks!
+
+[25-Feb-19 02:12 PM] gcharang#6833
+In the response for cclibinfo
+```json    
+{
+      "evalcode": 18,
+      "funcid": "P",
+      "name": "musig",
+      "method": "combine",
+      "help": "pubkeys ...",
+      "params_required": 2,
+      "params_max": 999999999
+    }
+```
+
+- whats the description of "funcid"? 
+- is it always going to be a character? 
+@jl777c
+
+[25-Feb-19 02:12 PM] jl777c#5810
+yes, for rpc that dont generate a tx, just a mneumonic. for tx, it is the funcid in the opreturn
+
+[25-Feb-19 02:14 PM] gcharang#6833
+Is there any use for someone using the rpc interface ?
+
+[25-Feb-19 02:20 PM] jl777c#5810
+not that I can think of
+
+[25-Feb-19 02:21 PM] gcharang#6833
+thanks
+
+[25-Feb-19 02:37 PM] gcharang#6833
+@jl777c are the below statements true?
+```md
+- The node that broadcasts it's `hex` of the spend transaction receives the funds in the multisig address.
+- If both nodes broadcast their `hex` of the spend transaction, which ever transaction confirms first, the corresponding node gets credited with the spend.
+```
+
+[25-Feb-19 02:45 PM] jl777c#5810
+no
+
+[25-Feb-19 02:45 PM] jl777c#5810
+neither are true
+
+[25-Feb-19 02:45 PM] jl777c#5810
+well maybe it is
+
+[25-Feb-19 02:45 PM] jl777c#5810
+it depends on the details of the spend
+
+[25-Feb-19 02:46 PM] jl777c#5810
+i guess using the spend rpc, yes it would be the case. but the idea is that all signers will verify the tx that is being signed
+
+[25-Feb-19 02:54 PM] gcharang#6833
+@jl777c  Ok. So they are currently true for someone using the RPC.
+I am guessing the `calcmsg` RPC will be modified in the future to include a `recipient pubkey`?
+
+[25-Feb-19 03:13 PM] jl777c#5810
+you pass in the destination scriptPubKey already
+
+[25-Feb-19 03:41 PM] gcharang#6833
+@jl777c as I understand it, the scriptPubKey that is being passed in, belongs to the vout that returns change to the sender. 
+And I am not sure how this scriptPubKey is being used right now
+
+[25-Feb-19 03:43 PM] jl777c#5810
+that is where the funds are sent
+
+[26-Feb-19 01:01 AM] blackjok3r#3181
+that confused me for ages... why it was using the change scriptPubKey ... its the destination of the spennd, took a while to work that one out lol
+
+[26-Feb-19 06:47 AM] jl777c#5810
+i just wanted a scriptPubKey that I would be able to spend
+
+[26-Feb-19 06:47 AM] jl777c#5810
+doesnt have to be the change
+
+[26-Feb-19 06:48 AM] jl777c#5810
+can be any scriptPubKey, it is just the destination for funds
+
+[26-Feb-19 07:35 AM] blackjok3r#3181
+yes might be a good thing to put in docs. Has anyone tested musig since my PR yesterday?
+
+[27-Feb-19 01:29 PM] gcharang#6833
+@jl777c what is `pk_hash`?
+In the source, I have found
+```
+pk_hash: The 32-byte hash of the original public keys
+```
+does that mean the original pubkeys are concatenated and hashed? to get a 32 byte hash?
+
+[27-Feb-19 01:32 PM] jl777c#5810
+yes, it identifies a specific set of pubkeys for the in-memory data structure
+
+[27-Feb-19 01:42 PM] gcharang#6833
+Got it.
+
+[27-Feb-19 02:59 PM] gcharang#6833
+@jl777c if the signers wanted to spend to <pubkeyA>, the calcmessage method will be:
+```
+./komodo-cli -ac_name=MUSIG  cclib calcmsg 18 '["sendtxid1","21<<pubkeyA>>ac"]'
+ ```
+Is that so?
+
+[27-Feb-19 03:01 PM] jl777c#5810
+yes
+
+[27-Feb-19 03:01 PM] gcharang#6833
+and they will spend only the amount added through the txid: `sendtxid1`?
+
+[27-Feb-19 03:02 PM] jl777c#5810
+it will only spend the sendtxid/vout0
+
+[27-Feb-19 03:04 PM] gcharang#6833
+can the musig address be funded using the `sendtoaddress` rpc, i.e., convert `combined_pk` to address format and use `sendtoaddress`? @jl777c
+
+[27-Feb-19 03:05 PM] jl777c#5810
+no
+
+[27-Feb-19 03:05 PM] jl777c#5810
+the musig send must be used
+
+[27-Feb-19 03:06 PM] gcharang#6833
+Ok
+
+[27-Feb-19 03:06 PM] jl777c#5810
+ultimately such would be possible, but not anytime soon
+
+[27-Feb-19 03:06 PM] gcharang#6833
+Got it.
+
+[28-Feb-19 03:51 AM] josephnicholas GMT+8#5904
+Hi @grewalsatinder I am testing some dilithium workflow, how would I generate a random 32 bytes? Should it be generated based on the asset chain right?
+
+[28-Feb-19 03:51 AM] josephnicholas GMT+8#5904
+THanks
+
+[28-Feb-19 03:52 AM] josephnicholas GMT+8#5904
+I am stuck on the signing part
+
+[28-Feb-19 03:53 AM] grewalsatinder#9653
+any 32 bytes data which is a hex is fine
+
+[28-Feb-19 03:53 AM] grewalsatinder#9653
+for testing, I just used a privkey of an address
+
+[28-Feb-19 03:54 AM] grewalsatinder#9653
+used my own kmdgo go test code to generate that privkey, but a new tester can probably try using some online website to generate random 32 byte hex string
+
+[28-Feb-19 03:54 AM] grewalsatinder#9653
+the example shows a hex string
+
+[28-Feb-19 04:03 AM] Alright#0419
+@grewalsatinder @josephnicholas GMT+8 have either of you been able to successfully broadcast a dilithium spend tx?
+
+[28-Feb-19 04:03 AM] Alright#0419
+can't get it to work, not sure what I'm doing wrong
+
+[28-Feb-19 04:04 AM] grewalsatinder#9653
+At the time I tested spend feature was pending 
+Didn't try again, got busy
+
+[28-Feb-19 04:04 AM] grewalsatinder#9653
+My test txt file must here in chat log
+
+[28-Feb-19 02:07 PM] gcharang#6833
+If there are 3 signers and
+-  **node1** produces  `nonce13` using `commitment3` from **node3**
+-  **node1** produces  `nonce12` using `commitment2` from **node2**
+so it will send back `nonce13` to **node3** and `nonce12` to  **node2**. thats it correct? **node2** won't need  `nonce13` ? @jl777c
+
+[28-Feb-19 02:11 PM] gcharang#6833
+@jl777c is the `spend` method updated to spend to the `scriptPubkey` provided or is it spending to the pubkey of it's own node right now?
+
+[28-Feb-19 02:35 PM] blackjok3r#3181
+every node needs every nonce
+
+[28-Feb-19 02:36 PM] blackjok3r#3181
+if you know any python look at the `musigtest.py` I think its resasonably easy to follow
+
+[28-Feb-19 02:36 PM] blackjok3r#3181
+for each node, it loops all nodes and gives them the nonce it has. same for the next 3 steps
+
+[28-Feb-19 02:47 PM] gcharang#6833
+so does node2 run both these commands and another 2 with ind:2
+```
+./komodo-cli -ac_name=MUSIG cclib nonce 18 '["pkhash",0,"nonce produced by n0 using commit from n2"]'
+```
+and
+```
+./komodo-cli -ac_name=MUSIG cclib nonce 18 '["pkhash",0,"nonce produced by n0 using commit from n3"]'
+```
+notice both the above commands have ind: 0
+
+[28-Feb-19 02:47 PM] gcharang#6833
+@blackjok3r ^
+
+[28-Feb-19 02:50 PM] blackjok3r#3181
+```i = 0
+nonces = []
+for pubkey in pubkeys:
+    ret = rpc.setpubkey(pubkey)
+    n = 0
+    for commitment in commitments:
+        tmp = str([pkhash, n, commitment, i])
+        ret = rpc.cclib("commit", "18", tmp)
+        try:
+            nonces.append(ret['nonce'])
+        except:
+            x = 1
+        n = n + 1
+i = i + 1```
+
+[28-Feb-19 02:50 PM] blackjok3r#3181
+I think so. each node has to send everything to all other nodes
+
+[28-Feb-19 02:51 PM] blackjok3r#3181
+except itself... but for the script I disabled the need to skip yourself. for simplicity
+
+[28-Feb-19 04:06 PM] josephnicholas GMT+8#5904
+Hi, after doing `sendrawtransaction` to broadcast my tx, how do I verify if it is successful?
+
+[28-Feb-19 04:07 PM] josephnicholas GMT+8#5904
+After I broadcast the transaction it seems to be not showing on the explorer
+
+[28-Feb-19 04:24 PM] gcharang#6833
+`./komodo-cli -ac_name=MUSIG getrawtransaction <txid> 1`
+
+[28-Feb-19 04:25 PM] gcharang#6833
+@josephnicholas GMT+8 at the bottom of the response for the above command, there is`rawconfirmations`
+
+[28-Feb-19 04:26 PM] josephnicholas GMT+8#5904
+@gcharang thanks, but I should be mining also right so that there will confirmations?
+
+[28-Feb-19 04:27 PM] gcharang#6833
+yes you should be mining for txns to be confirmed.
+
+[28-Feb-19 04:27 PM] gcharang#6833
+But if you are using MUSIG chain, some one is already mining it so you don't need to @josephnicholas GMT+8
+
+[28-Feb-19 04:28 PM] josephnicholas GMT+8#5904
+Yes, I am trying to create my own chain locally with 2 computers, but they dont seem to connect, thats why I can't mine
+

@@ -1,0 +1,242 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"10-Mar-19 08:31 AM";"https://pastebin.com/qnAaVZrN";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"10-Mar-19 08:32 AM";"``` ""result"": ""error"",
+  ""error"": ""couldnt gatewaysbind""``";"";"";
+"424224648889106444";"Mihailo#5902";"10-Mar-19 08:36 AM";"Can you check tokenbalance from that node where are you trying bind?";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"10-Mar-19 08:37 AM";"```smk762@pool:~/komodo$ komodo-cli -ac_name=GWST tokeninfo b4e3fe456286339d3796e45726e700dcbd2839a6a74dc3ea87b5da5bc9cefe27
+{
+  ""result"": ""success"",
+  ""tokenid"": ""b4e3fe456286339d3796e45726e700dcbd2839a6a74dc3ea87b5da5bc9cefe27"",
+  ""owner"": ""03d14cc6bba8802e08bef9c1079b590d8af05f0f759cdf7119a460478d740d2142"",
+  ""name"": ""KMD"",
+  ""supply"": 100000000,
+  ""description"": ""manualtest""
+}
+smk762@pool:~/komodo$ komodo-cli -ac_name=GWST tokenbalance b4e3fe456286339d3796e45726e700dcbd2839a6a74dc3ea87b5da5bc9cefe27
+{
+  ""result"": ""success"",
+  ""CCaddress"": ""RXNDLfPwvoVLxcBssxwE4rSEw5EMN9PS1q"",
+  ""tokenid"": ""b4e3fe456286339d3796e45726e700dcbd2839a6a74dc3ea87b5da5bc9cefe27"",
+  ""balance"": 100000000
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"10-Mar-19 08:38 AM";"Reproduced on my side also (latest FSM), before on a little out-dated (built from FSM with commits around March 6) daemon it worked fine
+```Gateway bind.KMD (b4e3fe456286339d3796e45726e700dcbd2839a6a74dc3ea87b5da5bc9cefe27) destaddr.RKWpoK6vTRtq5b9qrRBodLkCzeURHeEk33 globaladdr.RKWpoK6vTRtq5b9qrRBodLkCzeURHeEk33 token balance 0.00000000 != 1.00000000```";"";"";
+"455741312273219595";"jl777c#5810";"10-Mar-19 09:10 AM";"seems like we have some conflicting commits going on if that is the case. we need to do a full regression test to make sure nothing else has broken";"";"";
+"455741312273219595";"jl777c#5810";"10-Mar-19 09:10 AM";"for all the CC";"";"";
+"272003866906722306";"TonyL#3577";"10-Mar-19 09:23 AM";"Tests passing - seems nothing really bad happened (in regtest mode at least)";"";"";
+"272003866906722306";"TonyL#3577";"10-Mar-19 09:30 AM";"Just interesting - we had issue with same prints in september (tokenconvert was in flow this time)";"https://cdn.discordapp.com/attachments/522052568466194450/554234509441105920/unknown.png";"";
+"424224648889106444";"Mihailo#5902";"10-Mar-19 09:53 AM";"@dimxy has anything been changed with tokens recently?";"";"";
+"424224648889106444";"Mihailo#5902";"10-Mar-19 09:53 AM";"I cannot check this now, will do it in couple of hours";"";"";
+"272003866906722306";"TonyL#3577";"10-Mar-19 10:04 AM";"Hmm created new chain on latest jl777 (trying to isolate it now)
+On mining node (no any daemon prints):
+```./komodo-cli -ac_name=TONYL1 tokencreate KMD 1 Test
+{
+  ""result"": ""error"",
+  ""error"": ""cant find normal inputs""
+}
+``` 
+
+On non mining node with 0 balance:
+```./komodo-cli -ac_name=TONYL1 tokencreate KMD 1 Test
+{
+  ""result"": ""success"",
+  ""hex"": ""0400008085202f89010076d70be60d9c883f17a64137c44145c020a42132be06c642550aeedbcfb5d40000000048473044022073b6636d08613ac586e16ae2689d53aede718551ad92ed81753812c1549f8aa802200ef4d4d50375e088d1854ee5a11d5914c3a386efb5102518fbc63365f475046901ffffffff041027000000000000302ea22c8020432de388aabcb6b4e3326351d1d815cee8be9a8d37b055cd1c0cf8782e5c50c08103120c008203000401cc00e1f50500000000302ea22c8020e91003cc1cc20451e4b37b4f864089229791a8454e296b3c3b22ccc5b353d19c8103120c008203000401cce0707c48180900002321020b154d089c5e9aa070bbd4b21d15ee6275a0fa31b82842edd23fc40c9c812214ac00000000000000002f6a2df26321020b154d089c5e9aa070bbd4b21d15ee6275a0fa31b82842edd23fc40c9c812214034b4d44045465737400000000650000000000000000000000000000""
+}
+```";"";"";
+"424224648889106444";"Mihailo#5902";"10-Mar-19 12:02 PM";"@smk762 -  dracocanis ominator I think you are not on latest FSM, looking at your printout I cannot see those in the code so it must be some older version.
+Pull latest FSM and try, and also now the printout has a debug category so start the KMD daemon with -debug=gatewayscc to get gateways print";"";"👌 (1)";
+"424224648889106444";"Mihailo#5902";"10-Mar-19 12:04 PM";"@smk762 -  dracocanis ominator I see in the end that you are on FSM and it seems on latest commit. But please rebuild the daemon it may be on some older code...
+`make clean; make -j8'";"";"♻ (1)";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"10-Mar-19 12:15 PM";"I think I rm -rf'd to set that one up, but will give it a shot";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"11-Mar-19 01:01 PM";"tried again on two different nodes. Reused test chain from yesterday. pulled and make'd fsm repo in new folders. same error";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"11-Mar-19 01:02 PM";"```{
+  ""result"": ""error"",
+  ""error"": ""couldnt gatewaysbind""
+}```
+```
+set taddr, prefix, prefix2 for kmd
+Gateway bind.kmd (a38b75b38bcc5a55664f916da7d34623086eb896161663d48b799512955694d4) destaddr.RKWpoK6vTRtq5b9qrRBodLkCzeURHeEk33 globaladdr.RKWpoK6vTRtq5b9qrRBodLkCzeURHeEk33 token balance 0.00000000 != 1.00000000```";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"11-Mar-19 01:02 PM";"will try again tomorrow on completely frsh vps, on fresh chain.";"";"";
+"272003866906722306";"TonyL#3577";"11-Mar-19 02:21 PM";"I setup fresh chain on latest FSM with only my nodes in it and binded 1of1 GW succesfully @smk762 -  dracocanis ominator :
+https://paste.ubuntu.com/p/nDG3fYqSf6/";"";"";
+"272003866906722306";"TonyL#3577";"11-Mar-19 02:23 PM";"I did it from node which not mine (transferred coins from mining node to it)";"";"";
+"272003866906722306";"TonyL#3577";"11-Mar-19 02:26 PM";"I rebuilt daemons without `CONFIGURE_FLAGS='CPPFLAGS=-DTESTMODE' flag";"";"";
+"272003866906722306";"TonyL#3577";"11-Mar-19 02:28 PM";"Will try now to do the same but with daemons built with such flag";"";"";
+"272003866906722306";"TonyL#3577";"11-Mar-19 02:42 PM";"https://paste.ubuntu.com/p/PcW6gSMBzX/ binded fine as well";"";"👍 (1)";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"11-Mar-19 03:24 PM";"will update once mine is up and running with fresh chain";"";"";
+"424224648889106444";"Mihailo#5902";"12-Mar-19 10:42 AM";"@smk762 -  dracocanis ominator You're definitevly on wrong version. Perhaps some other komodod is in your path and it is using that one intead of latest. Try to rebuild the source and start it with ./komodod from komodo source dir.";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 10:43 AM";"just about to start again, new VPS, FMS built zcash params almost downloaded";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 10:45 AM";"apologies for confusion, was using established VPS with LABS chains on, but used different folder for FSM, and ./komodod from fsm/src folder so thought it should work";"";"";
+"424224648889106444";"Mihailo#5902";"12-Mar-19 10:47 AM";"Well, the chain should not affect it if you are starting from beginning. Probably the VPS was using some other daemon from path... It should be fine now on new VPS, but basically there is no need to make everything fresh, you should be able just to use latest FSM and start daemon from there...";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 10:51 AM";"is it safe to use older vps to mine new chain on launch?";"";"";
+"424224648889106444";"Mihailo#5902";"12-Mar-19 10:52 AM";"You can use any VPS you want, but you must be on same version of KMD daemon on that node";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 10:53 AM";"k, might be cause of issue before... will maintain 2 completely clean vps for testing just in case.";"";"";
+"424224648889106444";"Mihailo#5902";"12-Mar-19 10:54 AM";"When you broadcast the tx, if the two nodes differently validate the tx one may reject it. And then you have fork....";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 10:55 AM";"had symlinks to komodod on other vps, thought was running ./ in FSM maybe did it wrong";"";"";
+"272003866906722306";"TonyL#3577";"12-Mar-19 10:57 AM";"I advice to not use symlinks for komodod on testing machines because usually many different komodods needed";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 10:58 AM";"_today I learned...._ 🎓";"";"";
+"272003866906722306";"TonyL#3577";"12-Mar-19 10:58 AM";"Aliases - real power 😀";"";"realpirate (1)";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 01:15 PM";"pebak confirmed";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 01:15 PM";"```./komodo-cli -ac_name=WTFCC gatewaysinfo 360393c740744a3cc87a77b7bba7f7e0e5b016e3292ffdf178994eeaef9ad58e
+{
+  ""result"": ""success"",
+  ""name"": ""Gateways"",
+  ""pubkey"": ""034f7517f50ab0941042be15ba1f2d4c97faf3b1689a63f619b71e857a2e94a8d2"",
+  ""coin"": ""KMD"",
+  ""oracletxid"": ""4dd6baf56b4089a4ebd2506276ab5745e1f9cd291a97faf8cab1b5d07cf61877"",
+  ""taddr"": 0,
+  ""prefix"": 60,
+  ""prefix2"": 85,
+  ""deposit"": ""R9b9xouRfGRLqDNDc6ns6rLhV9aDACdAhG"",
+  ""tokenid"": ""59b2d51f9fe63f77be4dc77a3ac8ec8722093a3613b63ca6433029c64bddf774"",
+  ""totalsupply"": ""1.00000000"",
+  ""remaining"": ""1.00000000"",
+  ""issued"": ""0.00000000""
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"12-Mar-19 01:19 PM";"WTF - means World Taekwondo Federation I hope 😃";"";"🥋 (1)";
+"272003866906722306";"TonyL#3577";"12-Mar-19 01:31 PM";"@smk762 -  dracocanis ominator When you'll have a chance - please test deposit/withdrawals and we can proceed to multisignature cases";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 01:32 PM";"yep, doing that bit now. been adding utxos to oracle, almost ready to continue";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 02:14 PM";"got down to gatewaysdeposit, and hit this 
+```error code: -26
+error message:
+16: tx-overwinter-expired
+```";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 02:15 PM";"docs are using z_sendmany and z_getoperationstatus. Maybe I should not have.";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 02:20 PM";"line 772 and 784 on https://github.com/KomodoPlatform/developer-docs/blob/master/docs/basic-docs/cryptoconditions/cc-gateways.md";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 02:21 PM";"Also missing a comma between the z_sendmany destination adresses json on line 772.
+ I'm done for the night, wil try again tommorow 💤";"";"";
+"424224648889106444";"Mihailo#5902";"12-Mar-19 02:34 PM";"@Smk-High  This usually happens when TX is created and broadcasted later but the default number of blocks when it expires passes. I think it is 60 by default. Did you get this on broadcasting gatewatsdeposit?";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 02:58 PM";"yep. running through manually so was a delay, though not that long surely";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 02:58 PM";"```  ""blockhash"": ""07a19dee9d76cdf16ba1fe5f11a0bbc0dca02e15701a4a5303d459ddca3f8ac6"",
+  ""height"": 1265684,
+  ""confirmations"": 1,
+  ""rawconfirmations"": 6,
+  ""time"": 1552398840,
+  ""blocktime"": 1552398840
+}
+```";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 02:58 PM";"at time of sendmany";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 02:59 PM";"```smk762@pool:~/komodo/src$ ./komodo-cli getinfo | jq '.blocks'
+1265691
+smk762@pool:~/komodo/src$ ./komodo-cli gettxoutproof '[""c9f```";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 02:59 PM";"at next step, 16 blk later";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 02:59 PM";"```
+1265745
+smk762@pool:~/komodo/src$ 
+
+```";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 02:59 PM";"now";"";"";
+"424224648889106444";"Mihailo#5902";"12-Mar-19 03:00 PM";"The KMD tx has nothing to do with it...";"";"";
+"424224648889106444";"Mihailo#5902";"12-Mar-19 03:00 PM";"On which tx you have overwinter?";"";"";
+"242635006516658197";"jorian#4555";"12-Mar-19 03:00 PM";"wtfcc is just ccftw backwards";"";"😄 (1)";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 03:00 PM";"my bas, false alrm";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 03:01 PM";"*bad *alarm";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 03:01 PM";"sentraw to kmd, not wtfcc 😩";"";"";
+"424224648889106444";"Mihailo#5902";"12-Mar-19 03:02 PM";"Don't worry, I had so many false alarms until I got gateways fully. They are complex and very fragile 😉";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 03:03 PM";"yeah... I need some good sleep...";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 03:04 PM";"docs took a bit of work to figure out what each param was in the full guide. command strings not explicit. Might update some bits to make it easier to follow.";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"12-Mar-19 03:04 PM";"had to scroll around to see what hash was what";"";"";
+"424224648889106444";"Mihailo#5902";"12-Mar-19 03:06 PM";"Best doc to use is this: https://developers.komodoplatform.com/basic-docs/cryptoconditions/cc-gateways.html#gatewayscc-tutorial-and-overview";"";"";
+"424224648889106444";"Mihailo#5902";"12-Mar-19 03:06 PM";"I think it is the most recently updated";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"13-Mar-19 01:54 AM";"thanks, that the one I was looking at, but the full example section. The bit above is mare detailed 👍";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"13-Mar-19 12:10 PM";"does this mean I did it?
+```./komodo-cli -ac_name=WTFCC gatewaysinfo 360393c740744a3cc87a77b7bba7f7e0e5b016e3292ffdf178994eeaef9ad58e
+{
+  ""result"": ""success"",
+  ""name"": ""Gateways"",
+  ""pubkey"": ""034f7517f50ab0941042be15ba1f2d4c97faf3b1689a63f619b71e857a2e94a8d2"",
+  ""coin"": ""KMD"",
+  ""oracletxid"": ""4dd6baf56b4089a4ebd2506276ab5745e1f9cd291a97faf8cab1b5d07cf61877"",
+  ""taddr"": 0,
+  ""prefix"": 60,
+  ""prefix2"": 85,
+  ""deposit"": ""R9b9xouRfGRLqDNDc6ns6rLhV9aDACdAhG"",
+  ""tokenid"": ""59b2d51f9fe63f77be4dc77a3ac8ec8722093a3613b63ca6433029c64bddf774"",
+  ""totalsupply"": ""1.00000000"",
+  ""remaining"": ""0.90000000"",
+  ""issued"": ""0.10000000""
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"13-Mar-19 12:13 PM";"@smk762 -  dracocanis ominator Check `tokenbalance` also for `tokenid`";"";"";
+"272003866906722306";"TonyL#3577";"13-Mar-19 12:14 PM";"If you have the tokens - it means you did it";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"13-Mar-19 12:14 PM";"``` ./komodo-cli -ac_name=WTFCC gatewayswithdraw 360393c740744a3cc87a77b7bba7f7e0e5b016e3292ffdf178994eeaef9ad58e KMD 03bf7d3739ba826c95bf7fbb6d9987af65383db92b3a6d193aaac149efdb0a53f3 0.01
+{
+  ""result"": ""success"",
+  ""hex"": ""0400008085202f890200736aa9690e7e3e863725867ffdb99d50a990bd4e3545c687ef3b3bb889ea7a0000000049483045022100ac42faf58bb033b983de679f03702dffdbb5aab159b670320351ca7713361e1a022076f64d844df3ecce48b4045689f9747032e5a36a287ca2326cde38c125b3d9ac01ffffffff917d3e2fb40bb50797b419e381827d65c383abbba4925598d7a8e1d01049ab5f000000007b4c79a276a072a26ba067a565802103bf7d3739ba826c95bf7fbb6d9987af65383db92b3a6d193aaac149efdb0a53f381409ecc5c23ca4bdf61dc0ba08a5ae582fbdfb5580c2769d90ee413f27498866cbc3fb69d7109cc4fa97c35fa3501811a3a26cf9ab05309162ef7831af592d4701ba100af038001f2a10001ffffffff051027000000000000302ea22c802091abda62a548f9c7f5beb19d16f01714ae3d4e526f3266fc8d347d6123f3d77b8103120c008203000401cc40420f0000000000302ea22c8020bed294e15cd2e327d2f1e6bcf55e2ebe571b7bc2e672363950ca680c8b89226381032210008203000401cc4054890000000000302ea22c802066241eeef033a0ba86996beac93e58db4b222ccfa01b86239f4ae2ab0dcde4518103120c008203000401ccf078724e18090000232103bf7d3739ba826c95bf7fbb6d9987af65383db92b3a6d193aaac149efdb0a53f3ac00000000000000009a6a4c97f27459b2d51f9fe63f77be4dc77a3ac8ec8722093a3613b63ca6433029c64bddf774012103ea9c062b9652d8eff34879b504eda0717895d27597aaeb60347d65eed96ccb401350f1578ed59aefea4e9978f1fd2f29e316b0e5e0f7a7bbb7777ac83c4a7440c7930336034b4d442103bf7d3739ba826c95bf7fbb6d9987af65383db92b3a6d193aaac149efdb0a53f340420f000000000000000000c70500000000000000000000000000""
+}
+```";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"13-Mar-19 12:22 PM";"Looks like it worked 😃";"";"yassinkomodo (1)";
+"424224648889106444";"Mihailo#5902";"13-Mar-19 12:22 PM";"So, I finally made gateways work like a charm (for now) 😛";"";"💎 (1),💪 (2)";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"13-Mar-19 12:23 PM";"I feel like a kid who managed to ride a bike without falling off for a change. 😂";"";"";
+"424224648889106444";"Mihailo#5902";"13-Mar-19 12:23 PM";"Without helper wheels 😛";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"13-Mar-19 12:23 PM";"I'm gonna do it a few more times to get the hang of it.";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"13-Mar-19 12:23 PM";"and make some notes on the way so I dont forget...";"";"";
+"424224648889106444";"Mihailo#5902";"13-Mar-19 12:24 PM";"After that, I suggest you try multisig gateways. There will be more stuff to learn, and ofc more stuff to go wrong 😛";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"13-Mar-19 12:25 PM";"tbh, some bits werent working and then they did, and I wasn't sure why lol. could be waiting for confs, but I switched around pubkeys a bit too.";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"13-Mar-19 12:25 PM";"made it work, but keen to make sure I know *how and why* it works";"";"";
+"272003866906722306";"TonyL#3577";"13-Mar-19 12:26 PM";"@smk762 -  dracocanis ominator Did you receive KMD back on withdrawal?";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"13-Mar-19 12:26 PM";"thanks for your patience so far 💂";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"13-Mar-19 12:26 PM";"yep";"";"👏 (2)";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"13-Mar-19 12:27 PM";"feelsgoodman :awthanks:";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"17-Mar-19 06:12 AM";"spotted a strangeness in tokensCC";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"17-Mar-19 06:12 AM";"```smk762@smk762-2:~/komodo/src$ ./komodo-cli -ac_name=ALKEMY tokenbalance 46aee0b733f14f7d57b46e6712769a79921e7235f784f3795a09ed3bcb575d56 """"
+{
+  ""result"": ""success"",
+  ""CCaddress"": ""RAMvUfoyURBRxAdVeTMHxn3giJZCFWeha2"",
+  ""tokenid"": ""46aee0b733f14f7d57b46e6712769a79921e7235f784f3795a09ed3bcb575d56"",
+  ""balance"": 0
+}
+smk762@smk762-2:~/komodo/src$ ./komodo-cli -ac_name=ALKEMY tokenbalance 46aee0b733f14f7d57b46e6712769a79921e7235f784f3795a09ed3bcb575d56 
+{
+  ""result"": ""success"",
+  ""CCaddress"": ""RJSjqUvdVagJ8FaNzr3seEFnXdWsJ4JJeV"",
+  ""tokenid"": ""46aee0b733f14f7d57b46e6712769a79921e7235f784f3795a09ed3bcb575d56"",
+  ""balance"": 10000000
+}
+```";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"17-Mar-19 06:13 AM";"pubkey not given as a param returns different address/balance to if pubkey param is `""""`";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"17-Mar-19 06:15 AM";"if pubkey param given, returns same address with either quoted or unquoted";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"17-Mar-19 06:15 AM";"``` ./komodo-cli -ac_name=ALKEMY tokenbalance 46aee0b733f14f7d57b46e6712769a79921e7235f784f3795a09ed3bcb575d56  0329d94e36ab60fbbdf053cf55707c969b3ce0d3a19adc28b584cafbf91364f3e4
+{
+  ""result"": ""success"",
+  ""CCaddress"": ""RJSjqUvdVagJ8FaNzr3seEFnXdWsJ4JJeV"",
+  ""tokenid"": ""46aee0b733f14f7d57b46e6712769a79921e7235f784f3795a09ed3bcb575d56"",
+  ""balance"": 10000000
+}
+smk762@smk762-2:~/komodo/src$ ./komodo-cli -ac_name=ALKEMY tokenbalance 46aee0b733f14f7d57b46e6712769a79921e7235f784f3795a09ed3bcb575d56  ""0329d94e36ab60fbbdf053cf55707c969b3ce0d3a19adc28b584cafbf91364f3e4""
+{
+  ""result"": ""success"",
+  ""CCaddress"": ""RJSjqUvdVagJ8FaNzr3seEFnXdWsJ4JJeV"",
+  ""tokenid"": ""46aee0b733f14f7d57b46e6712769a79921e7235f784f3795a09ed3bcb575d56"",
+  ""balance"": 10000000
+}
+```";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"17-Mar-19 06:16 AM";"also same as if no pubkey given, so odd one out is empty quotes";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"17-Mar-19 06:20 AM";"if invalid pubkey, returns same as empty quotes, whether quoted or not";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"17-Mar-19 06:20 AM";"```smk762@smk762-2:~/komodo/src$ ./komodo-cli -ac_name=ALKEMY tokenbalance 46aee0b733f14f7d57b46e6712769a79921e7235f784f3795a09ed3bcb575d56 any_otherstring
+{
+  ""result"": ""success"",
+  ""CCaddress"": ""RAMvUfoyURBRxAdVeTMHxn3giJZCFWeha2"",
+  ""tokenid"": ""46aee0b733f14f7d57b46e6712769a79921e7235f784f3795a09ed3bcb575d56"",
+  ""balance"": 0
+}
+smk762@smk762-2:~/komodo/src$ ./komodo-cli -ac_name=ALKEMY tokenbalance 46aee0b733f14f7d57b46e6712769a79921e7235f784f3795a09ed3bcb575d56 ""any_otherstring""
+{
+  ""result"": ""success"",
+  ""CCaddress"": ""RAMvUfoyURBRxAdVeTMHxn3giJZCFWeha2"",
+  ""tokenid"": ""46aee0b733f14f7d57b46e6712769a79921e7235f784f3795a09ed3bcb575d56"",
+  ""balance"": 0
+}
+```";"";"";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"17-Mar-19 06:22 AM";"is this expected behavior? if so please enlighten me 👽";"";"";
+"455741312273219595";"jl777c#5810";"17-Mar-19 07:54 AM";"no args defaults to the -pubkey";"";"";
+"455741312273219595";"jl777c#5810";"17-Mar-19 07:54 AM";"having an arg means it uses what is passed in as a pubkey, in this case 0000000000... 00000 is my guess";"";"";
+"455741312273219595";"jl777c#5810";"17-Mar-19 07:55 AM";"the code has different behavior based on number of parameters";"";"";
+"455741312273219595";"jl777c#5810";"17-Mar-19 07:55 AM";"if there is a parameter, it parses it";"";"👍 (1)";
+"448777271701143562";"smk762 -  dracocanis ominator#7640";"18-Mar-19 12:44 PM";"@Mihailo the claimvout value usind in gateways deposit -  in docs it says, `on the first use, this value should be 0`.
+Does this value increment for subsequent uses?";"";"";
+"424224648889106444";"Mihailo#5902";"18-Mar-19 12:59 PM";"@@smk762 -  dracocanis ominator No, that is wrongly said. It will always be 0.";"";"👍 (1)";
+"272003866906722306";"TonyL#3577";"18-Mar-19 01:03 PM";"Btw if it const - why is it using as call argument?";"";"";
+"424224648889106444";"Mihailo#5902";"18-Mar-19 01:41 PM";"@TonyL  @smk762 -  dracocanis ominator Well, I've just looked at the code. It could be variable, but we made it to be 0 and the marker to be the vout.1 in the docs and always used it like that. So you can put any vout, and the sentence `on the first use, this value shoule be 0` was meant when you start using gateways, until you figure out everything lets keep this at 0 😉";"";"";

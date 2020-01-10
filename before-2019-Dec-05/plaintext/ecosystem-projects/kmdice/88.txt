@@ -1,0 +1,374 @@
+==============================================================
+Guild: Komodo
+Channel: kmdice
+Topic: ./komodod -ac_name=KMDICE -ac_supply=10500000 -ac_reward=2500000000 -ac_halving=210000 -ac_cc=2 -addressindex=1 -spentindex=1 -addnode=144.76.217.232 &
+https://kmdice.pool-mining.xyz/ <- pool
+https://pool.forkwitch.com/  <- another pool
+https://minerpond.com <- another pool
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[10-Nov-18 03:19 PM] siu - Chainmakers#3920
+But still, this is going to be some time in the future
+
+[10-Nov-18 03:20 PM] blackjok3r#3181
+why make the dealer hande thousands of simultaneous bets
+
+[10-Nov-18 03:20 PM] siu - Chainmakers#3920
+We need to be able to let those people play with granma friendly gui
+
+[10-Nov-18 03:20 PM] blackjok3r#3181
+if you dont heva enough player to fill the blcks 🤷
+
+[10-Nov-18 03:20 PM] siu - Chainmakers#3920
+So that when social security check comes, grandma can spend it betting on kmdice
+
+{Reactions}
+😂 
+
+[10-Nov-18 03:21 PM] blackjok3r#3181
+welll tbh ... the chain will be so large soon no grandma will be able to sync it on her smartphone :trollface:
+
+[10-Nov-18 03:22 PM] ComputerGenie 👴🏼📢#7004
+OK, so I'm saying that pool(s) still aren't patched for the 128-256 tx bug
+
+[10-Nov-18 03:22 PM] ComputerGenie 👴🏼📢#7004
+`Height     Age     Transactions     Mined by     Size
+32668     2 minutes ago     257         170670
+32667     an hour ago     7         5627`
+
+[10-Nov-18 03:23 PM] blackjok3r#3181
+make more bets ? every block must have more than 256 bets in it 😄
+
+[10-Nov-18 03:23 PM] ComputerGenie 👴🏼📢#7004
+lol
+
+[10-Nov-18 03:24 PM] blackjok3r#3181
+seems legit fix to me 😄
+
+[10-Nov-18 03:24 PM] Alright#0419
+forkwitch said he patched his pool I believe
+
+[10-Nov-18 03:24 PM] Alright#0419
+@ComputerGenie 👴🏼📢 you sure of that?
+
+[10-Nov-18 03:24 PM] blackjok3r#3181
+I think its a daemon issue not the pool as such
+
+[10-Nov-18 03:24 PM] Alright#0419
+makes me think that patch doesn't work properly
+
+[10-Nov-18 03:24 PM] Alright#0419
+@forkwitch
+
+[10-Nov-18 03:24 PM] ComputerGenie 👴🏼📢#7004
+what was said and what reality seems to indicate...
+
+[10-Nov-18 03:24 PM] blackjok3r#3181
+the pool can try and make a block with that range of tx but the daemon will reject it
+
+[10-Nov-18 03:24 PM] Alright#0419
+surprised no one has done it on zcash yet
+
+[10-Nov-18 03:25 PM] Alright#0419
+put 129 txs in mempool and NH
+
+[10-Nov-18 03:26 PM] ComputerGenie 👴🏼📢#7004
+lol
+
+[10-Nov-18 03:26 PM] Decker#3767
+if it's needed for tests - i can launch a pool and rent nicehash for ~7 hours ...
+
+[10-Nov-18 03:26 PM] ComputerGenie 👴🏼📢#7004
+@Alright I'm too cowardly, do it and let me know results
+
+[10-Nov-18 03:28 PM] jl777c#5810
+in some places, bitcoin requires optimal varint encoding
+
+[10-Nov-18 03:28 PM] jl777c#5810
+so if you use 2 bytes for 129 to 255, it could be rejecting it, even though it is valid varint, it isnt optimal
+
+[10-Nov-18 03:29 PM] jl777c#5810
+the code fix for the pools that i saw used non-optimal varint
+
+[10-Nov-18 03:29 PM] Decker#3767
+https://github.com/z-classic/node-stratum-pool/issues/39#issuecomment-436327781 - that's why i changed patch.
+
+{Embed}
+https://github.com/z-classic/node-stratum-pool/issues/39
+Wrong VARINT encoding for Transaction Count field in Blocktemplate...
+We have wrong varint encoding here https://github.com/z-classic/node-stratum-pool/blob/master/lib/blockTemplate.js#L91 for transaction count in block. Let's see results of default implementatio...
+https://avatars3.githubusercontent.com/u/22120003?s=400&v=4
+
+[10-Nov-18 03:29 PM] jl777c#5810
+about to test some fixes that might break the chain.. trying to properly fix the entropy reused detection
+
+[10-Nov-18 03:30 PM] Decker#3767
+with this:
+```        /* https://en.bitcoin.it/wiki/Protocol_documentation#Variable_length_integer */
+        if (this.txCount < 0xfd){
+            var varInt = new Buffer(txCount, 'hex');
+        }
+        else if (this.txCount <= 0xffff){
+            var varInt = new Buffer.concat([Buffer('FD', 'hex'), util.reverseBuffer(new Buffer(txCount, 'hex'))]);
+        }```
+i mined 180 tx in block without any issues ... and it's not rejected ...
+
+[10-Nov-18 03:31 PM] siu - Chainmakers#3920
+We will have electrum cc soon
+
+[10-Nov-18 03:31 PM] siu - Chainmakers#3920
+I hope :trollface:
+
+[10-Nov-18 03:31 PM] ComputerGenie 👴🏼📢#7004
+I'm still thinking that there's other parts of znomp that contribute to the issue (given that I didn't always experience same thing with 'aayanl/equihash-solomining' derivitive pool)
+
+[10-Nov-18 03:39 PM] Alright#0419
+@forkwitch can you verify you have decker's above code?
+
+[10-Nov-18 03:39 PM] jorian#4555
+you should DM him
+
+[10-Nov-18 03:40 PM] Alright#0419
+🤷
+
+[10-Nov-18 03:40 PM] jorian#4555
+he permamuted this
+
+[10-Nov-18 03:41 PM] jorian#4555
+is there another pool we can use as well?
+
+[10-Nov-18 03:41 PM] Alright#0419
+I don't understand why you gave the only pool op grief :/
+
+[10-Nov-18 03:42 PM] jorian#4555
+who me?
+
+[10-Nov-18 03:42 PM] Alright#0419
+*waits patiently for chickenpool*
+
+{Reactions}
+☝ 💯 
+
+[10-Nov-18 03:43 PM] jorian#4555
+@0x03 probably gave up on running any pool too
+
+[10-Nov-18 03:48 PM] siu - Chainmakers#3920
+he did work on it yesterday
+
+[10-Nov-18 03:48 PM] siu - Chainmakers#3920
+that one should be working if he didnt turn it off
+
+[10-Nov-18 03:52 PM] ComputerGenie 👴🏼📢#7004
+linux security is great until some idiot forgets to enable shares on a vm he can't phsyically reach atm 😣
+
+[10-Nov-18 03:57 PM] jl777c#5810
+https://kmdice.komodopool.xyz/stats
+
+[10-Nov-18 03:57 PM] jl777c#5810
+there are two KMDICE pools. not sure why this isnt know
+
+[10-Nov-18 04:06 PM] Alright#0419 (pinned)
+BitcoinTalk Forum Thread
+https://bitcointalk.org/index.php?topic=5054800 
+
+Explorer 
+http://kmdice.explorer.dexstats.info/ KMDICE 
+
+Pools: 
+https://pool.forkwitch.com/ ( @forkwitch )
+https://kmdice.komodopool.xyz/ ( @0x03 )
+
+{Embed}
+https://bitcointalk.org/index.php?topic=5054800
+[ANN] [KMDICE] [dPoW] KMDice - First minable decentralized dice game.
+[ANN] [KMDICE] [dPoW] KMDice - First minable decentralized dice game.
+
+{Embed}
+http://kmdice.explorer.dexstats.info/
+Komodo Explorer
+Komodo Insight. View detailed information on all komodo transactions and block. {{ $root.title + $root.titleDetail }}
+
+[10-Nov-18 04:06 PM] Alright#0419
+Pinned a message.
+
+[10-Nov-18 04:07 PM] Alright#0419
+who runs komodopool.xyz
+
+[10-Nov-18 04:10 PM] siu - Chainmakers#3920
+@0x03
+
+[10-Nov-18 04:29 PM] Llama#1330
+is there a way to get the fsm branch on windows so I can send some KMDICE?
+
+[10-Nov-18 04:31 PM] blackjok3r#3181
+Hyper-V in win10 isntall ubuntu 16.04
+
+[10-Nov-18 04:32 PM] jorian#4555
+@Decker might help you with a windows build
+
+[10-Nov-18 04:32 PM] Decker#3767
+will try to build latest FSM for Windows in a hour ...
+
+[10-Nov-18 04:32 PM] Llama#1330
+thank you!
+
+[10-Nov-18 04:40 PM] blackjok3r#3181
+in 15mins you can have hyper v with ubuntu 🤷
+
+[10-Nov-18 04:41 PM] Decker#3767
+yep ... wsl in win10 is easy to use ...
+
+[10-Nov-18 04:41 PM] Decker#3767
+but anyway, fsm branch for Windows compiling now.
+
+[10-Nov-18 04:42 PM] jl777c#5810
+@0x03 KMDICE is stuck... i think some error with the miner?
+
+[10-Nov-18 04:42 PM] jl777c#5810
+anything showing on console or debug log?
+
+[10-Nov-18 04:42 PM] Decker#3767
+181 tx in mempool ...
+
+{Reactions}
+👆🏽 
+
+[10-Nov-18 04:43 PM] jl777c#5810
+oh. so it is the expected issue. can we push it to 300?
+
+[10-Nov-18 04:44 PM] Decker#3767
+@jl777c done ...
+
+[10-Nov-18 04:45 PM] Llama#1330
+thank you so much @Decker
+
+[10-Nov-18 04:45 PM] blackjok3r#3181
+I can make a script to check if mempool uis under 300 txs and then send X to amke it 300 ?
+
+{Reactions}
+🤦🏽 
+
+[10-Nov-18 04:45 PM] jl777c#5810
+we really need to fix the pools...
+
+{Reactions}
+👆🏽 (3) 
+
+[10-Nov-18 04:45 PM] blackjok3r#3181
+yes that seems the best idea
+
+[10-Nov-18 04:46 PM] Decker#3767
+https://www.virustotal.com/#/file/643024fe8d0832824a4f41ae24a80cefa2befca12824de56e91f4d233844b288/detection
+
+{Attachments}
+https://cdn.discordapp.com/attachments/502423250421153802/510857680064086016/komodo_fsm_win_2018_11_10_194431.rar
+
+[10-Nov-18 04:47 PM] siu - Chainmakers#3920
+you can install ubuntu subsystem in win10
+
+[10-Nov-18 04:48 PM] siu - Chainmakers#3920
+btw, does anyone know if a build of KMD for raspberry pi exist?
+
+[10-Nov-18 04:48 PM] blackjok3r#3181
+not PI doesnt have enough ram
+
+[10-Nov-18 04:48 PM] siu - Chainmakers#3920
+ah
+
+[10-Nov-18 04:49 PM] blackjok3r#3181
+ther is a build for arm64 though @radix42  wsa working on that
+
+[10-Nov-18 04:49 PM] siu - Chainmakers#3920
+also, i was able to build mm in raspberry pi some months ago, now it doesnt build.
+
+[10-Nov-18 04:49 PM] siu - Chainmakers#3920
+i just found my pi collecting dust and im looking to use it for something, dont know what :/
+
+[10-Nov-18 04:49 PM] siu - Chainmakers#3920
+always happens lol
+
+[10-Nov-18 04:51 PM] Alright#0419
+@siu - Chainmakers offline signing?
+
+[10-Nov-18 04:52 PM] Alright#0419
+There's a project that uses 2 raspi 2s, one online for broadcasting txs, one offline for signing
+
+[10-Nov-18 04:52 PM] Alright#0419
+connected via io pins
+
+[10-Nov-18 04:52 PM] siu - Chainmakers#3920
+but if i cant get kmd to run there....
+
+[10-Nov-18 04:52 PM] Alright#0419
+you don't need daemon to sign things
+
+[10-Nov-18 04:52 PM] Alright#0419
+nor for broadcasting txs
+
+[10-Nov-18 04:54 PM] siu - Chainmakers#3920
+ok
+
+[10-Nov-18 04:54 PM] siu - Chainmakers#3920
+but anything else?
+
+[10-Nov-18 04:54 PM] siu - Chainmakers#3920
+any other idea?
+
+[10-Nov-18 04:55 PM] Alright#0419
+you can at least make it build, sign and broadcast txs
+
+[10-Nov-18 04:55 PM] Alright#0419
+don't need a daemon to do that
+
+[10-Nov-18 04:55 PM] Alright#0419
+can use insight api for necessary info to build the txs
+
+[10-Nov-18 04:55 PM] Alright#0419
+plenty of libraries for signing
+
+[10-Nov-18 04:56 PM] Alright#0419
+and insight api for broadcasting
+
+[10-Nov-18 04:56 PM] siu - Chainmakers#3920
+i was thinking on getting mm build there to use it as electrum wallet.
+
+[10-Nov-18 04:57 PM] siu - Chainmakers#3920
+but that either works now 😦
+
+[10-Nov-18 04:58 PM] siu - Chainmakers#3920
+i could do the signing thing to move chainmakers funds
+
+[10-Nov-18 05:08 PM] 0x03#8822
+ok so whats the issue with 300tx that stopped the chain before? is there anything i can update?
+
+[10-Nov-18 05:09 PM] 0x03#8822
+other than that i see my pool finding blocks and paying out to miners
+
+[10-Nov-18 05:09 PM] 0x03#8822
+although there now seems to be another working pool again by the look of things
+
+[10-Nov-18 05:09 PM] ComputerGenie 👴🏼📢#7004
+```DeckerToday at 9:30 AM
+with this:
+
+        /* https://en.bitcoin.it/wiki/Protocol_documentation#Variable_length_integer */
+        if (this.txCount < 0xfd){
+            var varInt = new Buffer(txCount, 'hex');
+        }
+        else if (this.txCount <= 0xffff){
+            var varInt = new Buffer.concat([Buffer('FD', 'hex'), util.reverseBuffer(new Buffer(txCount, 'hex'))]);
+        }
+
+i mined 180 tx in block without any issues ... and it's not rejected ...```
+
+[10-Nov-18 05:10 PM] ComputerGenie 👴🏼📢#7004
+was there a fork at `31808`? my pool node seems stuck
+
+[10-Nov-18 05:13 PM] 0x03#8822
+pool restart incoming
+
+[10-Nov-18 05:14 PM] 0x03#8822
+i had the 'original' fix, now i have the updated version in place
+

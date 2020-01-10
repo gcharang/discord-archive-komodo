@@ -1,0 +1,396 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[02-Mar-19 02:41 PM] ca333#0118
+build komodod before building cclib - or build cclib as part of komodo to reuse the libs/deps from komodo/depends
+
+[02-Mar-19 02:42 PM] ca333#0118
+for hackings and mad scientists experiments you can also just install libboost through package manager
+
+[02-Mar-19 03:08 PM] Alright#0419
+Does it build cclib.so by just running `build.sh`?
+
+[02-Mar-19 03:09 PM] Alright#0419
+I need to do some tests, but I was experiencing problems with it. On a fresh clone, just `build.sh` would work. However after this I needed to do 
+```
+cd ~/komodo/src/cc
+./makecclib
+cd ..
+make
+../zcutil/build.sh```
+
+[02-Mar-19 03:22 PM] grewalsatinder#9653
+Think I fall onto some advanced go stuff, trying to figure out websockets and go channels communication between different routes:
+https://gowebexamples.com/advanced-middleware/
+
+{Embed}
+https://gowebexamples.com/advanced-middleware/
+Go Web Examples: Middleware (Advanced)
+This example will show how to create a more advanced version of middleware in the Go programming language.
+
+[02-Mar-19 03:23 PM] grewalsatinder#9653
+this looks like what I was looking for 🤔
+
+[02-Mar-19 06:53 PM] dukeleto#7326
+@smk762 -  dracocanis ominator that URL lists all coins, for example, HUSH is there
+
+[02-Mar-19 06:54 PM] dukeleto#7326
+also CHIPS/EMC2/GIN/etc
+
+[03-Mar-19 11:07 AM] blackjok3r#3181
+@Alright  revert boost in the boost.mk file to 1.66 from 1.69 then it works without installing system boost.
+
+[03-Mar-19 11:08 AM] blackjok3r#3181
+Not sure why it keeps getting changed to 1.69 when that fails to build... I have to keep reverting LABS back to 1.66 to keep build.sh reliable.
+
+[03-Mar-19 12:22 PM] dukeleto#7326
+@blackjok3r did that come in from a vrsc merge?
+
+[03-Mar-19 12:22 PM] blackjok3r#3181
+No
+
+[03-Mar-19 12:22 PM] dukeleto#7326
+I just had a fun problem to solve with `git` and I want to share it in here
+
+{Reactions}
+👍 
+
+[03-Mar-19 12:22 PM] blackjok3r#3181
+Its a fail to build for cclib
+
+[03-Mar-19 12:23 PM] blackjok3r#3181
+ca333 upgraded all our deps, and boost 1.69 seesms to break cclib building, unles you ahve sysrtem boost installed.. Drove me metla on LABS with some users reporting build failed, and others saying ti works lol
+
+[03-Mar-19 12:24 PM] blackjok3r#3181
+in the end I did some hacky things, and reverted boost, to get a stable build... its definatly not how its meant to be fixed but it works so until its fixed upstream ... we will use hax. 😃
+
+[03-Mar-19 12:24 PM] Alright#0419
+ok, should i remove libboost-dev from the deps?
+
+[03-Mar-19 12:24 PM] dukeleto#7326
+My dpowminconfs branch is kind of old and I can't even remember if I based it off of the dev or jl777 branches. So I used `git merge-base` to find the common ancestors to each branch. Then I saw jl777 was the newer ancestor, and so I know to merge jl777 branch into my dpowminconfs branch
+
+[03-Mar-19 12:24 PM] dukeleto#7326
+```
+(loki)(~/git/komodo dpowminconfs $% )$ git merge-base dpowminconfs jl777
+76024c356eae352b03c91ec78a611a4761f8311b
+(loki)(~/git/komodo dpowminconfs $% )$ git merge-base dpowminconfs dev
+cbb4633e21554d20142bbee51e2c1a5543303f72
+```
+
+[03-Mar-19 12:24 PM] Alright#0419
+I don't understand what I'm doing wrong here
+
+[03-Mar-19 12:24 PM] dukeleto#7326
+it's not a git command i use all the time, but it's super handy, especially in scripting git
+
+[03-Mar-19 12:25 PM] blackjok3r#3181
+`ok, should i remove libboost-dev from the deps?` YES.
+
+[03-Mar-19 12:25 PM] blackjok3r#3181
+you dont need it...
+
+[03-Mar-19 12:25 PM] Alright#0419
+you can use `build.sh` one time on a fresh clone, it builds cclib.so properly
+
+[03-Mar-19 12:25 PM] Alright#0419
+after the first time, you must do some janky things
+
+[03-Mar-19 12:25 PM] blackjok3r#3181
+you jsut need boost to be the correct version... or someone needs to swork out what exact code is failing to build with 1.69 and fix that.
+
+[03-Mar-19 12:25 PM] blackjok3r#3181
+isntalling boost as a dep is a hack... its wrong
+
+[03-Mar-19 12:25 PM] Alright#0419
+it seems like it's rebuilding libcc.so, but it doesn't from what I can tell
+
+[03-Mar-19 12:27 PM] dukeleto#7326
+it sounds like libcc build system is janky
+
+[03-Mar-19 12:27 PM] blackjok3r#3181
+its broken flat out.
+
+[03-Mar-19 12:27 PM] dukeleto#7326
+i made it work on os x in a hacky way, i am partially to blame
+
+[03-Mar-19 12:27 PM] dukeleto#7326
+but i just added some shine to the top
+
+[03-Mar-19 12:28 PM] dukeleto#7326
+sounds like the build system doesn't understand that some files are generated or need to be taken into account when recompiling
+
+[03-Mar-19 12:28 PM] dukeleto#7326
+it's an age-old problem
+
+[03-Mar-19 12:28 PM] blackjok3r#3181
+not really... Everyone is using diffrent hacks to get it to work. I have what seems to be very reliable on linux atm with LABS  but I know I didnt do it properly... its using build.sh to call manual builds scripts in the correct place. and I reverted deps, so that they build on every system.
+
+[03-Mar-19 12:29 PM] blackjok3r#3181
+Its not even using a MakeFile
+
+[03-Mar-19 12:29 PM] blackjok3r#3181
+just bash scripts
+
+[03-Mar-19 12:29 PM] dukeleto#7326
+@Alright are these partial compiles or fresh compiles, after a make clean?
+
+[03-Mar-19 12:29 PM] dukeleto#7326
+those are different code paths, to the build system
+
+[03-Mar-19 12:30 PM] Alright#0419
+the error I posted above was from a fresh VPS I was trying to do ./makecclib on
+
+[03-Mar-19 12:30 PM] blackjok3r#3181
+yes its due to using boost 1.69
+
+[03-Mar-19 12:30 PM] Alright#0419
+like I said, it built libso.so once
+
+[03-Mar-19 12:30 PM] Alright#0419
+but then after I made some changes and went to rebuild it
+
+[03-Mar-19 12:30 PM] Alright#0419
+I was getting that error message
+
+[03-Mar-19 12:30 PM] blackjok3r#3181
+https://github.com/blackjok3rtt/komodo/commit/fb462bf7de0248b4c4ce6b17f7faba60891b8a14
+
+{Embed}
+https://github.com/blackjok3rtt/komodo/commit/fb462bf7de0248b4c4ce6b17f7faba60891b8a14
+update boost · blackjok3rtt/komodo@fb462bf
+https://avatars0.githubusercontent.com/u/10762374?s=200&v=4
+
+[03-Mar-19 12:31 PM] blackjok3r#3181
+revert that
+
+[03-Mar-19 12:31 PM] blackjok3r#3181
+and it will build woithout isntalling boost
+
+[03-Mar-19 12:31 PM] blackjok3r#3181
+installing boost is covering up the problem
+
+[03-Mar-19 12:31 PM] blackjok3r#3181
+not fixing it
+
+[03-Mar-19 12:32 PM] Alright#0419
+ok, for now I'll revert adding libboost-dev to deps
+
+[03-Mar-19 12:32 PM] Alright#0419
+and try to figure out what the real problem is when I have some time
+
+[03-Mar-19 12:32 PM] dukeleto#7326
+I am glad I just made some really strong Yirgacheffe medium roast ☕ ```
+$ git merge origin/jl777
+Auto-merging src/wallet/wallet.cpp
+Auto-merging src/wallet/rpcwallet.cpp
+CONFLICT (content): Merge conflict in src/wallet/rpcwallet.cpp
+Auto-merging src/komodo_utils.h
+Auto-merging src/komodo_notary.h
+Auto-merging src/komodo_defs.h
+CONFLICT (content): Merge conflict in src/komodo_defs.h
+Auto-merging src/komodo_bitcoind.h
+Auto-merging src/komodo.h
+Recorded preimage for 'src/komodo_defs.h'
+Recorded preimage for 'src/wallet/rpcwallet.cpp'
+Automatic merge failed; fix conflicts and then commit the result.
+```
+
+[03-Mar-19 12:33 PM] blackjok3r#3181
+thats nothing 😂
+
+[03-Mar-19 12:33 PM] dukeleto#7326
+I try to cultivate my problems to be as small as possible
+
+[03-Mar-19 12:33 PM] dukeleto#7326
+i am fighting linking bugs in old compilers already
+
+[03-Mar-19 12:33 PM] blackjok3r#3181
+yeah the reasoning of mine to merge LABS into main KMD was to stoip it ahving lists of 20-30 conflicts every time we try to merge down FSM
+
+[03-Mar-19 12:33 PM] dukeleto#7326
+this has been 20X harder than it should be, to finish
+
+[03-Mar-19 12:34 PM] dukeleto#7326
+@blackjok3r learn more git-fu and you can reduce that stuff, but there will always be some
+
+[03-Mar-19 12:35 PM] blackjok3r#3181
+yes for asure... atm I found using atom text editor as a GUI for GIT is a lot more powerful than my skills on cli, at least for now
+
+[03-Mar-19 12:35 PM] blackjok3r#3181
+but definatly need to work on that.
+
+[03-Mar-19 12:35 PM] dukeleto#7326
+looks like this first conflict is because we both added to the bottom of the komodo_defs.h file
+
+[03-Mar-19 12:35 PM] dukeleto#7326
+FUN GIT FACT
+
+[03-Mar-19 12:36 PM] dukeleto#7326
+Git cannot auto-resolve a conflict if you add something to the end of "hunk" of text, but if you randomly insert into the middle, it won't create these conflicts
+
+{Reactions}
+👍 
+
+[03-Mar-19 12:38 PM] dukeleto#7326
+did a bunch of stuff get added to rpcwallet.cpp?
+
+[03-Mar-19 12:39 PM] dukeleto#7326
+maybe it's just this `test_proof` function, the merge conflict markers looked weird
+
+[03-Mar-19 12:40 PM] dukeleto#7326
+` 220 files changed, 62489 insertions(+), 2895 deletions(-)`
+
+[03-Mar-19 12:40 PM] Alright#0419
+ok PR'd to remove it
+
+[03-Mar-19 12:40 PM] dukeleto#7326
+only 65K lines changed since I last merged
+
+[03-Mar-19 12:40 PM] Alright#0419
+I need to figure out what the actual cause of it was
+
+[03-Mar-19 12:41 PM] dukeleto#7326
+that version of boost could have a bug, and/or our build system could be too dumb for the use case we are providing it
+
+[03-Mar-19 12:41 PM] dukeleto#7326
+neither would surprise me
+
+[03-Mar-19 12:44 PM] blackjok3r#3181
+Alright I told you what the actaul cause of it is
+
+[03-Mar-19 12:45 PM] blackjok3r#3181
+But I wasnt able to work out what line of code exactly is failing to link to boost
+
+[03-Mar-19 12:45 PM] blackjok3r#3181
+so reverting bosot was the only option
+
+[04-Mar-19 01:57 AM] hypocalese#3688
+@ca333  Komodo build instructions on CentOS 7 as promised.  https://1drv.ms/w/s!AnGbamQxQ0aDgb9I50evBeWHmymSmA
+
+{Embed}
+https://1drv.ms/w/s!AnGbamQxQ0aDgb9I50evBeWHmymSmA
+Komodo-CentOS-Build-Instructions.docx
+Microsoft Word Document
+https://p.sfx.ms/icons/v2/Large/Doc.png
+
+{Reactions}
+🆒 👀 👏 
+
+[05-Mar-19 01:26 AM] Mylo#8306
+@smk762 -  dracocanis ominator @dukeleto this article makes tweet bot stuff quite easy - https://dev.to/danielelkington/a-bot-that-tweets-new-dev-articles-about-vue-4p5a
+
+{Embed}
+https://dev.to/danielelkington/a-bot-that-tweets-new-dev-articles-about-vue-4p5a
+A bot that tweets new DEV articles about Vue
+Using an Azure Function to create a bot that scrapes dev.to for new VueJS articles and tweets them out!
+https://res.cloudinary.com/practicaldev/image/fetch/s--SBMcl1uN--/c_imagga_scale,f_auto,fl_progressive,h_500,q_auto,w_1000/https:/thepracticaldev.s3.amazonaws.com/i/9d87yce909m2qoxekbm4.png
+
+{Reactions}
+👍 (2) 
+
+[05-Mar-19 01:27 AM] Mylo#8306
+Instead of scraping the website, query  lag api
+
+[05-Mar-19 01:30 AM] Mylo#8306
+https://github.com/ttezel/twit/blob/master/README.md#usage
+
+First 20 lines to tweet from nodejs.  With curl and jq, doing from command line should take about an hour.
+
+{Embed}
+https://github.com/ttezel/twit/blob/master/README.md
+ttezel/twit
+Twitter API Client for node (REST & Streaming API) - ttezel/twit
+https://avatars1.githubusercontent.com/u/728598?s=400&v=4
+
+[05-Mar-19 11:52 AM] ComputerGenie 👴🏼📢#7004
+anyone familiar with 'tmux-resurrect'?
+if so, any idea how to save just the layout and not the contents? I've tried the hooks they have listed in docs, but 'restore' literally gives me a duplicate window including all running processes in 'saved' window (even when nothing was running at the time saved)
+
+[06-Mar-19 07:40 AM] D.rabbani#9094
+hi i am back again
+
+[06-Mar-19 07:40 AM] D.rabbani#9094
+😃
+
+[06-Mar-19 07:40 AM] D.rabbani#9094
+hope everone is good
+
+[06-Mar-19 07:40 AM] D.rabbani#9094
+i have one question regarding about the running KIC
+
+[06-Mar-19 07:40 AM] D.rabbani#9094
+suddenly it stopped staking
+
+[06-Mar-19 07:41 AM] D.rabbani#9094
+after somanay blocks
+
+[06-Mar-19 07:41 AM] D.rabbani#9094
+and the error log is
+
+[06-Mar-19 07:41 AM] D.rabbani#9094
+ERROR: CheckBlock: failed slow_checkPOW
+
+[06-Mar-19 07:41 AM] D.rabbani#9094
+when i opened my server the chain wasnt running
+
+[06-Mar-19 07:41 AM] D.rabbani#9094
+so i started again and then set generate true 2
+
+[06-Mar-19 07:42 AM] D.rabbani#9094
+and in the error log i got this error was wroking fine til yesterday any help please ?
+
+[06-Mar-19 07:46 AM] D.rabbani#9094
+@blackjok3r  please if you can guide me to something
+
+[06-Mar-19 07:46 AM] D.rabbani#9094
+` peer=218 using obsolete version 170003; disconnecting
+2019-03-06 07:43:05 ProcessMessages(version, 104 bytes) FAILED peer=218
+2019-03-06 07:43:35 ERROR: CheckBlock: failed slow_checkPOW
+2019-03-06 07:43:35 ERROR: CheckBlock: failed slow_checkPOW
+2019-03-06 07:43:38 ERROR: CheckBlock: failed slow_checkPOW
+2019-03-06 07:43:41 ERROR: CheckBlock: failed slow_checkPOW
+2019-03-06 07:43:44 ERROR: CheckBlock: failed slow_checkPOW`
+
+[06-Mar-19 07:47 AM] D.rabbani#9094
+this is the different chain it was running since 8 months
+
+[06-Mar-19 07:47 AM] blackjok3r#3181
+branch? repo? and chain params. Im pretty busy but I can sync this chain and chek it for you later.
+
+[06-Mar-19 09:15 AM] D.rabbani#9094
+@Alright  can you hlp me for the wallet management scripts
+
+[06-Mar-19 12:59 PM] dukeleto#7326
+@jl777c https://github.com/jl777/komodo/pull/1313
+
+{Embed}
+https://github.com/jl777/komodo/pull/1313
+Add help docs for all -ac_* params of komodod by leto · Pull Requ...
+I got tired of looking up AC params on various documentation websites, so now anyone using komodod can simply do komodod --help to see asset creation options. Currently looks like:
+Komodo Asset Cha...
+https://avatars1.githubusercontent.com/u/30298?s=400&v=4
+
+{Reactions}
+shexy (2) 
+
+[06-Mar-19 01:04 PM] jorian#4555
+awesome!
+
+[06-Mar-19 01:04 PM] jorian#4555
+not that you can live without docs..
+
+[06-Mar-19 02:10 PM] dukeleto#7326
+sometimes it's nice to work on simple improvements at the end of the day, when I am tired and working on complex code ain't gonna happen. writing docs goes well with 🍻  and netflix
+
+{Reactions}
+rum 👏 👍 🔥 labs 🍻 (2) 
+
+[06-Mar-19 07:59 PM] Alright#0419
+@D.rabbani slow_checkPOW can typically be ignored unless it's happening every single time
+

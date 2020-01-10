@@ -1,0 +1,397 @@
+==============================================================
+Guild: Komodo
+Channel: ask-jl777
+Topic: Ask questions about the core tech here, but not questions about prices or personal questions or GUI and  please don't DM JL777.
+https://dexstats.info/richlistlookup.php?address=RLVzC4tr9cNKvuw2z4m8KuMfZURwCehx55
+https://medium.com/@jameslee777
+After: 08-Jan-20 12:00 AM
+Before: 09-Jan-20 12:00 AM
+==============================================================
+
+[08-Jan-20 08:56 AM] Mylo#8306
+Hey jl777 (or poly or shossain or decker or CG or alright or others)
+
+Id like to write an article for my upcoming kmd blog about the bitcore integration that is the final article in relation to btc tech.
+
+1)Bitcore enables `addressindex`?
+
+2) Does bitcore enable other features?
+
+3) Is the insight explorer the only explorer that is usable on kmd to take advantage of these features directly from blockchain? (As opposed to explorers that read a mongodb)
+
+4) When was bitcore stuff added to kmd codebase?
+
+Bitcore & explorers is one of my lesser known technologies inside kmd, plz excuse any dumb assumptions
+
+[08-Jan-20 09:02 AM] jl777c#5810
+yes, it has addressindex, spentindex and timestampindex
+
+[08-Jan-20 09:02 AM] jl777c#5810
+without addressindex, CC would not be performant, in fact many would not be feasible at all
+
+[08-Jan-20 09:03 AM] jl777c#5810
+insight is the only one i know, but with the addressindex and spentindex rpc it shouldnt be hard to create a GUI to display it. not sure if anybody has
+
+[08-Jan-20 09:03 AM] jl777c#5810
+it was added before CC, so a long time ago
+
+[08-Jan-20 09:06 AM] jl777c#5810
+@TonyL pesky bug is fixed. now it should maintain constant RAM usage (forever) with constant traffic levels and it shouldnt be crashing. however during the debugging it seemed that it is possible that not all packets for a tag would be in the list for the tag. careful submitting and counting of the DEX_list is needed to see if there is a problem. in the expected usage of just getting the latest packets, hopefully the counts will match.
+
+{Reactions}
+👍
+
+[08-Jan-20 09:08 AM] Mylo#8306
+Thanks!
+
+Ok that’s interesting about RPC possibilities. I was looking at a python explorer codebase because kmd already uses py cryptocondition test cases.  Perhaps this is a way of making a CC enabled explorer? (With python)
+
+Or is nSPV also an explorer making possibility?
+
+[08-Jan-20 09:09 AM] jl777c#5810
+nSPV would likely be too slow for an explorer, more designed for single client wallets
+
+[08-Jan-20 09:09 AM] jl777c#5810
+in any case, the nSPV talks to nodes with addressindex to get the addressindex data, so having a local node with -addressindex=1 is the way to go
+
+[08-Jan-20 09:11 AM] Mylo#8306
+Sweet. Interesting way to achieve result. That’s further great news about nspv tech.  Cheers
+
+[08-Jan-20 09:15 AM] jl777c#5810
+i try not to follow the "expected" way to achieve results, rather to use deep understanding of the problem and the possible ways to solve it. then to choose the most "efficient". though defining what "efficient" means is not easy, other than "it feels the most efficient" and it takes into account the larger picture of complexity/security
+
+[08-Jan-20 09:15 AM] jl777c#5810
+also finding the most efficient is an iterative process, as you can see if you are following how -dexp2p is evolving
+
+[08-Jan-20 09:16 AM] jl777c#5810
+somehow without any mutex locks, it is processing and freeing memory in realtime, without crashes. likely some packets end up in limbo temporarily, but it is all within the design parameters of "as lossless as practical"
+
+[08-Jan-20 09:17 AM] jl777c#5810
+i tried adding mutex locks, but it ended up deadlocking when i didnt expect it to and since it wasnt crashing without them, i pushed forward with the lossy approach
+
+[08-Jan-20 09:18 AM] jl777c#5810
+nothing prevents a lossless channel to be built on top of the existing messaging layer, so for now this seems the most efficient
+
+[08-Jan-20 09:57 AM] TonyL#3577
+That’s great! will make a test for list tonight and some stress testing
+
+[08-Jan-20 10:05 AM] jl777c#5810
+make sure to reduce the TXPOWBITS from 12 if you are doing stress test, it can be as low as 1 (or even 0 maybe) and that will save a lot of CPU cycles
+
+[08-Jan-20 10:09 AM] jl777c#5810
+to get a faster test of purging, you can reduce PURGETIME to 300 so it is a 5 min buffer, instead of one hour
+
+{Reactions}
+📝
+
+[08-Jan-20 10:12 AM] Mylo#8306
+If mutex lock is not needed by this rotating buffer, brilliant. I did something similar with DECT cordless phone display (max characters) in hospitals for nurse call messages in the early 2000s. Obv not p2p complexity, but resource mgmt. it’s an awesome skill to have as a programmer.
+
+Customizable purge time is useful for further applications.  Great!
+
+[08-Jan-20 10:13 AM] jl777c#5810
+all the main networking parameters are in #defines. with a bit of work i can make a bunch of command line switches so new networks can be spawned with different attributes, but that is low on priority list as you can just recompile
+
+[08-Jan-20 10:14 AM] jl777c#5810
+a threeway indexed rotating buffer of hashtables...
+
+[08-Jan-20 10:14 AM] jl777c#5810
+only system call is calloc/free
+
+[08-Jan-20 10:14 AM] jl777c#5810
+i guess i can speed it up a bit more with a more efficient memory allocation, but it seems plenty fast as it is
+
+[08-Jan-20 10:17 AM] jl777c#5810
+all the code is in komodo_DEX.h, about 1300 lines so far and not much more left to get it feature complete.
+
+[08-Jan-20 10:18 AM] jl777c#5810
+often i hear people complain about C saying it takes a lot of code to write stuff in, but not sure how much more compact any other language would be
+
+[08-Jan-20 10:22 AM] Mylo#8306
+Ok I’m not on the tools today, ipad, but can search mutex for info for dev update on this stuff in coming days.  Still working on the main content: bitcoin evolution (utxo, dpow, antara, nspv, bitcore*), smart chain projects* and where they innovate.  * still writing.
+
+[08-Jan-20 10:30 AM] jl777c#5810
+dont make not having mutex any feature, it can certainly be that i need to add them to fix the orphaned packets bug that tony will find
+
+[08-Jan-20 11:46 AM] Mylo#8306
+Ok
+
+[08-Jan-20 01:51 PM] CHMEX#0686
+@Mylo 
+getsnapshot  which is a unique rpc call in the kmd eco system also uses the -addressindex
+There is also the getchaintxstats rpc call which I think comes from that bitcore integration
+
+[08-Jan-20 01:54 PM] CHMEX#0686
+getutxoaddress   is also very powerfull it returns all utxos per address which makes the insight so fast without DB
+
+[08-Jan-20 02:33 PM] Mylo#8306
+Thanks @CHMEX for details, especially last sentence 👍🙏
+
+[08-Jan-20 03:09 PM] artemciy_dice#0049
+Any `Dockerfile`s at hand suitable for the DEX branch?
+
+[08-Jan-20 03:11 PM] artemciy_dice#0049
+Thinking to deploy in on one or two of our servers for easier access.
+
+[08-Jan-20 03:37 PM] Sir Seven#7158
+@artemciy_dice  https://paste.ubuntu.com/p/BPMxzVnz5q/ smth like this might do it
+
+[08-Jan-20 03:37 PM] Sir Seven#7158
+Just set CMD to what you need and KOMODO_BRANCH
+
+[08-Jan-20 03:42 PM] artemciy_dice#0049
+BTW, at this stage I don't expect the AtomicDEX caretakers to use the coin tags. It is more likely that we'll pull the entire stream in, and sort it in an extensible fashion based on the component/system tags present *inside* the datablobs. For instance, if we have a gossip about peer X, this gossip might be relevant to order matching regardless of the coin (like when a KMD/BTC order matching takes into account the presence of a failed or successful DEX/LTC swap).
+Maybe there will be uses for tags later, but having them is not our priority right now.
+We might also want to share data with the komodod/dexp2p layer by adding datablobs that komodod would recognize and unpack.
+
+[08-Jan-20 03:42 PM] artemciy_dice#0049
+Thanks, @Sir Seven
+
+[08-Jan-20 03:44 PM] TonyL#3577
+It looks like tag filtering precision losing with amount increasing, for 1000 and 10000 it's precise but for 15000 of broadcasts it's a little bit less in list:
+```  "tagA": "tag15000",
+  "tagB": "",
+  "destpub": "",
+  "n": 14756
+}```
+for 100000:
+```  "tagA": "tag100000",
+  "tagB": "",
+  "destpub": "",
+  "n": 99355
+}```
+
+[08-Jan-20 03:52 PM] jl777c#5810
+yes, i thought as much
+
+[08-Jan-20 03:53 PM] jl777c#5810
+as long as it is 1% level it seems not so bad as i think it only happens on the node that is blasting
+
+[08-Jan-20 03:53 PM] jl777c#5810
+on other nodes the effect is 10x less
+
+[08-Jan-20 03:54 PM] TonyL#3577
+collecting now data for 1 million, just interesting how it'll work
+
+[08-Jan-20 03:54 PM] jl777c#5810
+now there is a way to quantify this, i will add some code to try to prevent the loss
+
+[08-Jan-20 03:56 PM] TonyL#3577
+yep, one more idea for test is above @Sir Seven
+broadcast X times with tag_X and check if difference with `n` in `DEX_list` is not more than 1%
+
+[08-Jan-20 03:56 PM] Sir Seven#7158
+Already on it. 😀
+
+{Reactions}
+🔥
+
+[08-Jan-20 04:05 PM] artemciy_dice#0049
+Given that caretaker is pulling the data in, and that the nodes join the "broadcast" from the current moment of time (without replay), there's likely no need to keep an entire hour of the data in RAM. I guess we'll be using a much smaller time window, in order not to store the data in memory twice. I'm curious if there are any pointers of what the minimal window could be?
+
+[08-Jan-20 04:06 PM] jl777c#5810
+120 seconds should work
+
+[08-Jan-20 04:06 PM] jl777c#5810
+maybe even 60 seconds
+
+[08-Jan-20 04:06 PM] jl777c#5810
+actually it could be set to 5 seconds
+
+[08-Jan-20 04:06 PM] jl777c#5810
+but likely some bugs when it is so small
+
+[08-Jan-20 04:07 PM] jl777c#5810
+if it is important, i can get it to work at 5 seconds, but that is probably too small as in some cases there could be lag. so i wouldnt go below 120 seconds
+
+[08-Jan-20 04:08 PM] jl777c#5810
+i am testing at 300 seconds without any issues, dont see why 120 would have any problems
+
+[08-Jan-20 04:09 PM] artemciy_dice#0049
+120 sounds fine! ty. and we'll need some of it as a buffer for comfortable caretaker restarts
+
+[08-Jan-20 04:10 PM] jl777c#5810
+there is MAXLAG #define that if you make it bigger, will extend the time a node will send pings to its peers with missing hashes, though on a disconnect/reconnect it might get confused and think a node will have the older messages
+
+{Reactions}
+👍
+
+[08-Jan-20 04:11 PM] jl777c#5810
+but any sort of storage/caching/reliability layer can be added without much trouble to the current messaging layer
+
+[08-Jan-20 04:12 PM] jl777c#5810
+@TonyL can you test the missed packets again? i added a mutex in a few spots, hopefully it is a bit better. still seeing some issues on nodes at 100% CPU usage, but i think that is a different issue
+
+[08-Jan-20 04:15 PM] TonyL#3577
+Sure, let me check
+
+[08-Jan-20 04:17 PM] TonyL#3577
+`cant issue duplicate order modval.993 t.1578500193 460261e2 2768c988c714c777` what these prints means?
+
+[08-Jan-20 04:17 PM] TonyL#3577
+looks like sometimes I'm getting it and sometimes not when sending orders in while loop
+
+[08-Jan-20 04:17 PM] jl777c#5810
+node generated a packet with a collision
+
+[08-Jan-20 04:18 PM] jl777c#5810
+should be harmless, just skips sending
+
+[08-Jan-20 04:18 PM] jl777c#5810
+i use shorthashes, lowest 32bits and it is possible to get collisions
+
+[08-Jan-20 04:18 PM] jl777c#5810
+birthday paradox, with large number of shorthashes, odds go up of getting one, so when blasting a million it is a lot more common that would be expected
+
+[08-Jan-20 04:19 PM] TonyL#3577
+maybe thats why `n` is less in list
+
+[08-Jan-20 04:19 PM] jl777c#5810
+true, if you are seeing a lot of them
+
+[08-Jan-20 04:19 PM] TonyL#3577
+
+{Attachments}
+https://cdn.discordapp.com/attachments/455851625915875338/664503470220509195/unknown.png
+
+[08-Jan-20 04:19 PM] TonyL#3577
+yeah, a lot of
+
+[08-Jan-20 04:20 PM] jl777c#5810
+maybe generate unique packets instead of ffff broadcast
+
+[08-Jan-20 04:20 PM] TonyL#3577
+I'm broadcasting not ffff this time but same message yes
+
+[08-Jan-20 04:21 PM] jl777c#5810
+oh
+
+[08-Jan-20 04:21 PM] jl777c#5810
+add a random number
+
+{Reactions}
+👍
+
+[08-Jan-20 04:21 PM] jl777c#5810
+if you send the identical packet, it will have the identical hash
+
+[08-Jan-20 04:29 PM] TonyL#3577
+noticed `ping packetsize error 16 != 16, offset.12 n.1, modval.1714 purgtime.300` print on latest
+
+[08-Jan-20 04:29 PM] TonyL#3577
+not sure what it means but 16 != 16 looks not good 🙂
+
+[08-Jan-20 04:31 PM] TonyL#3577
+started to get a lot such prints
+
+{Attachments}
+https://cdn.discordapp.com/attachments/455851625915875338/664506481135321117/unknown.png
+
+[08-Jan-20 04:32 PM] TonyL#3577
+and looks like tag filtering is broken again on latest (same problem as before - all tags result displaying)
+
+[08-Jan-20 04:32 PM] TonyL#3577
+```    {
+      "timestamp": 1578500886,
+      "id": 3079067078,
+      "tagA": "tag10000",
+      "tagB": "tagsdfsf",
+      "destpub": "",
+      "payload": "4958",
+      "hex": 1,
+      "amountA": 0.1,
+      "amountB": 100,
+      "priority": 0
+    }
+  ],
+  "tagA": "tag15000",
+  "tagB": "",
+  "destpub": "",
+  "n": 25000
+}```
+
+[08-Jan-20 04:34 PM] TonyL#3577
+I've spin 10000 with `tag10000` at first then 15000 with `tag15000` on `./komodo-cli -ac_name=DEXP2P DEX_list 0 0 tag15000` now displaying all 25000 regardless of `tag15000` tag presistance
+
+[08-Jan-20 04:34 PM] TonyL#3577
+but good news that so far `n == amount of packages I've broadcasted`
+
+[08-Jan-20 04:36 PM] TonyL#3577
+```#!/bin/bash
+
+i="0"
+
+while [ $i -lt 10000 ]
+do
+./komodo-cli -ac_name=DEXP2P DEX_broadcast $(( ( RANDOM % 1000000 )  + 1 )) 0 "tag10000" "tagsdfsf" "" "0.1" "100"
+i=$[$i+1]
+done```
+
+[08-Jan-20 04:36 PM] TonyL#3577
+to reproduce ^^
+and then same with 15000 in condition and tag name, and after it `./komodo-cli -ac_name=DEXP2P DEX_list 0 0 tag15000`
+
+[08-Jan-20 04:39 PM] jl777c#5810
+what is the tagA, tagB values for the improperly linked in packets
+
+[08-Jan-20 04:39 PM] jl777c#5810
+does it show the proper tagA and tagB that was used to create the packet?
+
+[08-Jan-20 04:40 PM] jl777c#5810
+i see:
+
+[08-Jan-20 04:40 PM] jl777c#5810
+"tagA": "tag10000",
+      "tagB": "tagsdfsf",
+
+[08-Jan-20 04:40 PM] jl777c#5810
+for tag15000
+
+[08-Jan-20 04:40 PM] TonyL#3577
+yes, correct
+
+[08-Jan-20 04:40 PM] jl777c#5810
+ok, checking
+
+{Reactions}
+👍
+
+[08-Jan-20 04:40 PM] TonyL#3577
+it displaying all 10000 improperly linked 
+```"tagA": "tag10000",
+      "tagB": "tagsdfsf",```
+
+[08-Jan-20 04:41 PM] jl777c#5810
+so the problem could just be in the list function
+
+[08-Jan-20 04:41 PM] jl777c#5810
+any indication of mistakes in storing the packet?
+
+[08-Jan-20 04:42 PM] jl777c#5810
+does this happen with just a few packets?
+
+[08-Jan-20 04:42 PM] TonyL#3577
+`ping packetsize error 16 != 16, offset.12 n.1, modval.1714 purgtime.300` just these prints I'm getting on broadcast
+
+[08-Jan-20 04:43 PM] jl777c#5810
+you mixed versions. latest codebase has the "one hour" set to 5 minutes
+
+[08-Jan-20 04:43 PM] jl777c#5810
+purgetime
+
+[08-Jan-20 04:44 PM] TonyL#3577
+aha! maybe not updated second peer
+
+[08-Jan-20 04:44 PM] Sir Seven#7158
+`I've spin 10000 with tag10000 at first then 15000 with tag15000 on ./komodo-cli -ac_name=DEXP2P DEX_list 0 0 tag15000 now displaying all 25000 regardless of tag15000 tag presistance`
+Sorting works correctly for me. commit `ede12b718d`
+
+[08-Jan-20 04:45 PM] Sir Seven#7158
+Both tags and pubkey sorts, all work correctly.
+
+[08-Jan-20 04:46 PM] jl777c#5810
+maybe issue from non-updated peer.not sure how that would affect things, but then again not sure what would happen with such a peer. it isnt hardened against invalid packets yet
+
+[08-Jan-20 04:46 PM] TonyL#3577
+second peer was not updated, will re-try with good peers now
+

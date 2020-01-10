@@ -1,0 +1,307 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"455741312273219595";"jl777c#5810";"30-Jul-19 01:44 PM";"can you make a set of curl requests that reproduces the problem";"";"";
+"262577806456782848";"Sir Seven#7158";"30-Jul-19 01:54 PM";"Like this:
+```
+curl --data-binary '{""jsonrpc"": ""2.0"", ""id"":""curltest"", ""method"": ""getinfo"", ""params"": [] }' -H 'content-type: text/plain;' http://127.0.0.1:7771/
+sleep 1
+curl --data-binary '{""jsonrpc"": ""2.0"", ""id"":""curltest"", ""method"": ""mempool"", ""params"": [] }' -H 'content-type: text/plain;' http://127.0.0.1:7771/
+sleep 70
+curl --data-binary '{""jsonrpc"": ""2.0"", ""id"":""curltest"", ""method"": ""mempool"", ""params"": [] }' -H 'content-type: text/plain;' http://127.0.0.1:7771/```";"";"";
+"262577806456782848";"Sir Seven#7158";"30-Jul-19 01:55 PM";"2nd mempool tends to fail.";"";"";
+"455741312273219595";"jl777c#5810";"30-Jul-19 02:20 PM";"i will try to reproduce. how many peers do you have";"";"";
+"262577806456782848";"Sir Seven#7158";"30-Jul-19 02:27 PM";"Usually 8 to 10.";"";"";
+"455741312273219595";"jl777c#5810";"30-Jul-19 02:29 PM";"any other calls get timeout?";"";"";
+"262577806456782848";"Sir Seven#7158";"30-Jul-19 02:31 PM";"listunspent, listtransactions and spentinfo
+Didn't see timeout error with other calls.";"";"";
+"455741312273219595";"jl777c#5810";"30-Jul-19 02:33 PM";"pushed a new test version to my jl777 branch of libnspv";"";"";
+"455741312273219595";"jl777c#5810";"30-Jul-19 02:34 PM";"plz see which calls timeout, even without any sleep in script";"";"";
+"262577806456782848";"Sir Seven#7158";"30-Jul-19 02:37 PM";"Sure. Will check it soon.";"";"";
+"262577806456782848";"Sir Seven#7158";"30-Jul-19 03:01 PM";"Looks good.
+Set script to spam calls with no sleep.
+No timeouts so far. Even for 5 minutes non-stop spamming.
+
+Rpc response wait time is a bit higher, doesn't feel too slow yet.";"";"";
+"455741312273219595";"jl777c#5810";"30-Jul-19 03:21 PM";"i just increased the internal timeout, what is happening is that occasionally a single peer is just slow. every once in a while it will happen";"";"";
+"455741312273219595";"jl777c#5810";"30-Jul-19 03:21 PM";"but even with the large timeout, as soon as the response comes in, it is done so most of the time there wont be any difference";"";"";
+"455741312273219595";"jl777c#5810";"30-Jul-19 05:03 PM";"@Sir Seven can you also test the nSPV=1 mode of komodod?";"";"";
+"455741312273219595";"jl777c#5810";"30-Jul-19 05:03 PM";"from my nSPV branch of komodo";"";"";
+"455741312273219595";"jl777c#5810";"30-Jul-19 05:04 PM";"basically we have a C++ komodod based nSPV superlite client and a C based libnspv based superlite client and both should have very similar (functionality(";"";"";
+"272003866906722306";"TonyL#3577";"30-Jul-19 05:08 PM";"@Sir Seven needed calls you can get (after nSPV mode client start) from `./komodo-cli help | grep nspv_*` 
+
+Some additional materials 😃 :
+https://github.com/jl777/komodo/blob/FSM/qa/rpc-tests/src/nspv_client_test.py there you can find some tests example (would be great to update it / continue to support, and I think I've put it to `src` subfolder by mistake 😃 )
+https://github.com/tonymorony/nspv_pywallet tesing wallet which interact with nSPV mode komodod";"";"";
+"272003866906722306";"TonyL#3577";"30-Jul-19 05:09 PM";"https://github.com/tonymorony/komodo-cctools-python/tree/master/scripts
+stress test on full node example also (probably something similar you can use to stresstest master node via nspvlib): 
+```nspv_clients_spawn.py
+nspv_calls.sh
+start_spam.sh```";"";"";
+"262577806456782848";"Sir Seven#7158";"30-Jul-19 05:59 PM";"@jl777c @TonyL  Sure. Will check it tomorrow.";"";"🔥 (1)";
+"262577806456782848";"Sir Seven#7158";"31-Jul-19 09:30 AM";"Failing komodod build from nSPV branch:
+```shell
+In file included from cryptoconditions/src/asn/Condition.h:14:0,
+                 from cryptoconditions/src/cryptoconditions.c:17:
+cryptoconditions/src/asn/SimpleSha256Condition.h:14:10: fatal error: OCTET_STRING.h: No such file or directory
+ #include <OCTET_STRING.h>
+          ^~~~~~~~~~~~~~~~
+compilation terminated.
+Makefile:2468: recipe for target 'cryptoconditions/src/cryptoconditions.o' failed
+make[2]: *** [cryptoconditions/src/cryptoconditions.o] Error 1
+make[2]: *** Waiting for unfinished jobs....
+rm -f src/stamp-h1
+In file included from cryptoconditions/src/asn/Condition.h:14:0,
+                 from cryptoconditions/src/cryptoconditions.c:17:
+cryptoconditions/src/asn/SimpleSha256Condition.h:14:10: fatal error: OCTET_STRING.h: No such file or directory
+ #include <OCTET_STRING.h>
+          ^~~~~~~~~~~~~~~~
+compilation terminated.
+```
+
+Am I missing something?";"";"";
+"423176312354635779";"gcharang#6833";"31-Jul-19 09:31 AM";"@Sir Seven 
+./zcutil/build.sh
+2 - 3 times";"";"";
+"262577806456782848";"Sir Seven#7158";"31-Jul-19 09:31 AM";"Okay.";"";"";
+"272003866906722306";"TonyL#3577";"31-Jul-19 09:49 AM";"nspv client crashed on my side when I've tried to prepare rawtransaction by `spend`:
+
+```curl --data-binary '{""jsonrpc"": ""2.0"", ""id"":""curltest"", ""method"": ""spend"", ""params"": [""RXcUjam1KC8mA1hj33vXaX877jf7GgvKzt"",0.1 ] }' -H 'content-type: text/plain;' http://127.0.0.1:7771/
+```
+
+backtrace: https://paste.ubuntu.com/p/Xv4MQkbYfP/
+client prints: https://paste.ubuntu.com/p/twBmr7Rjmn/";"";"";
+"272003866906722306";"TonyL#3577";"31-Jul-19 09:50 AM";"tried twice so far and both times it crashed";"";"";
+"262577806456782848";"Sir Seven#7158";"31-Jul-19 10:03 AM";"Seems to randomly crash on spend method.
+1 of 4 transactions lead to crash for me.";"";"";
+"455741312273219595";"jl777c#5810";"31-Jul-19 10:54 AM";"likely due to #4  0x0000555555576142 in btc_tx_deserialize (tx_serialized=<optimized out>, inlen=263775, tx=0x7ffff0406920, consumed_length=0x0, allow_witness=<optimized out>)";"";"";
+"455741312273219595";"jl777c#5810";"31-Jul-19 10:54 AM";"very large tx";"";"";
+"455741312273219595";"jl777c#5810";"31-Jul-19 10:55 AM";"ADD CACHE ntzsresp req.1944794279
+ADD CACHE ntzsresp req.-1962925822";"";"";
+"455741312273219595";"jl777c#5810";"31-Jul-19 10:56 AM";"seems garbage data is coming in somehow";"";"";
+"455741312273219595";"jl777c#5810";"31-Jul-19 10:56 AM";"how exactly did you make this happen. need to duplicate it";"";"";
+"272003866906722306";"TonyL#3577";"31-Jul-19 10:56 AM";"I'll DM you my wif now, maybe it can help";"";"";
+"455741312273219595";"jl777c#5810";"31-Jul-19 10:57 AM";"yes, please the specific curl requests that cause that sequence";"";"";
+"262577806456782848";"Sir Seven#7158";"31-Jul-19 11:30 AM";"Is skipcount param implemented?
+On both libnspv/master and komodo/nSPV call listtransactions pretty much ignores it, AE: 
+
+```curl --data-binary '{""jsonrpc"": ""2.0"", ""id"":""curltest"", ""method"": ""listtransactions"", ""params"": [""RQ1mvCUcziWzRwE8Ugtex29VjoFjRzxQJT"",0 ] }' -H 'content-type: text/plain;' http://127.0.0.1:7771/```
+and
+```curl --data-binary '{""jsonrpc"": ""2.0"", ""id"":""curltest"", ""method"": ""listtransactions"", ""params"": [""RQ1mvCUcziWzRwE8Ugtex29VjoFjRzxQJT"",0 ,100] }' -H 'content-type: text/plain;' http://127.0.0.1:7771/```
+
+Have exact same output. Ideally 2nd call should response with 100 less transactions.
+
+For komodod:
+```./komodo-cli nspv_listtransactions RQ1mvCUcziWzRwE8Ugtex29VjoFjRzxQJT 0```
+and
+```./komodo-cli nspv_listtransactions RQ1mvCUcziWzRwE8Ugtex29VjoFjRzxQJT 0 100```";"";"";
+"272003866906722306";"TonyL#3577";"31-Jul-19 11:39 AM";"`skipcount - skips the specified number of transactions starting from the oldest; always returns the latest transaction`
+0 will skip 0 transactions from the end I believe (other words display all)";"";"";
+"272003866906722306";"TonyL#3577";"31-Jul-19 11:39 AM";"can you try not 0 but 1 or 10 ? (ah, first number is isCC, nvm) but anyway this address have less than 100 txs as I can see";"";"";
+"262577806456782848";"Sir Seven#7158";"31-Jul-19 11:54 AM";"Hm. nSPV lists 144+ txs for addr above. Will check with different one.";"";"";
+"262577806456782848";"Sir Seven#7158";"31-Jul-19 01:53 PM";"Checked skipcount=30 with 60+ txs address.
+Still no effect.
+
+Created a wallet with 70+ utxos.
+When trying to create transaction to spend 64+ of them in single transaction I get error:
+```json
+{""result"":""error"",""error"":""couldnt create tx"",""lastpeer"":""nodeid.1""}
+
+```
+
+Still, can't crash nspv this way.";"";"";
+"455741312273219595";"jl777c#5810";"31-Jul-19 04:13 PM";"last i checked skipcount worked, but some code changed in that function, ""filter"" was added so maybe it broke";"";"";
+"455741312273219595";"jl777c#5810";"31-Jul-19 04:13 PM";"if it is reproducible please make an issue. i wont be able to fix bugs in realtime this week";"";"";
+"455741312273219595";"jl777c#5810";"31-Jul-19 08:26 PM";"@TonyL can you test that nSPV=-1 disables a node from being a fullnode, but that it doesnt break anything obvious. no need for any extensive regression test, but just to run some nodes with that and see if you run into unexpected problems";"";"";
+"455741312273219595";"jl777c#5810";"31-Jul-19 08:26 PM";"that is for fullnodes that want to not be an nSPV fullnode";"";"👍 (1)";
+"262577806456782848";"Sir Seven#7158";"01-Aug-19 11:07 AM";"@jl777c What is expected behaviour of node with `-nSPV=-1`?
+So far i can conenct to it from node2 like `./komodod -nSPV=1 -connect=node1`, with no errors. node1 will not response to nsvp_calls tho.
+The quetion is: should node2 be able to connect at all to node1 in this case?";"";"";
+"455741312273219595";"jl777c#5810";"01-Aug-19 11:08 AM";"it should be like a pre-NSPV fullnode";"";"";
+"455741312273219595";"jl777c#5810";"01-Aug-19 11:08 AM";"so it would be a normal peer, but not serve the nSPV data. what is the nServices value for that peer?";"";"";
+"262577806456782848";"Sir Seven#7158";"01-Aug-19 11:18 AM";"`nLocalServices 40000005 0, 0`
+And same in peerinfo:
+`""services"": ""0000000040000005""`";"";"";
+"455741312273219595";"jl777c#5810";"01-Aug-19 11:52 AM";"ok, that is a bug, fixing";"";"";
+"455741312273219595";"jl777c#5810";"01-Aug-19 11:52 AM";"it should be 5";"";"";
+"262577806456782848";"Sir Seven#7158";"01-Aug-19 11:53 AM";"On node with -nSPV=-1 not nspv_ rpc seems to work fine.";"";"";
+"455741312273219595";"jl777c#5810";"01-Aug-19 12:19 PM";"what do you mean";"";"";
+"272003866906722306";"TonyL#3577";"01-Aug-19 12:30 PM";"On full node started with `-nSPV=-1` param non-nspv basic calls working fine";"";"";
+"272003866906722306";"TonyL#3577";"01-Aug-19 12:31 PM";"We also testing nSPV light-client komodod now (on ILN chain) and catching some strange states when after numerous calls client starting to permanently print `no pnodes` and not getting any info in responses";"";"";
+"272003866906722306";"TonyL#3577";"01-Aug-19 12:34 PM";"Aha, seems ILN nSPV fullnode not alive on `5.9.102.210` atm";"";"";
+"232679450301431808";"blackjok3r#3181";"01-Aug-19 12:36 PM";"yes, need to add more detection for bad nodes.";"";"";
+"272003866906722306";"TonyL#3577";"01-Aug-19 12:37 PM";"we've started daemon in tests with -connect=5.9.102.210 rather than -addnode, was a mistake, with such param  usage no any detection can help 😂";"";"";
+"455741312273219595";"jl777c#5810";"01-Aug-19 12:44 PM";"with -nSPV=-1 then all non-nspv calls should work, ok, so there is no bug";"";"";
+"455741312273219595";"jl777c#5810";"01-Aug-19 12:45 PM";"still sidetracked by adaptivepow, but that seems ready and even mostly attack proof";"";"";
+"455741312273219595";"jl777c#5810";"01-Aug-19 12:45 PM";"hope to see why it is getting that strange data for just that address";"";"";
+"423176312354635779";"gcharang#6833";"01-Aug-19 12:49 PM";"```
+curl --user $rpcuser:$rpcpassword --data-binary '{""jsonrpc"": ""2.0"", ""id"":""curltest"", ""method"": ""nspv_txproof"", ""params"": [""ae234c7f47bcb5adbe7c5c5661051865be0ce61422328de90fe5a3f8fa8b7c60"", ""4322""] }' -H 'content-type: text/plain;' http://127.0.0.1:$rpcport/
+```
+komodod with `-nSPV=1`
+it is expecting the second param `4322` to be quoted
+
+libnspv doesn't need `4322` to be quoted
+
+should I document the behaviour as is, or will this be changed?";"";"";
+"455741312273219595";"jl777c#5810";"01-Aug-19 01:10 PM";"i think there is a way to make komodo autoconvert. just get me a list of all rpc and params that need the conversion";"";"";
+"455741312273219595";"jl777c#5810";"01-Aug-19 01:11 PM";"oh, wait. i did that in the code. probably i can fix this. likely all integer parameters are affected";"";"👍 (1)";
+"232679450301431808";"blackjok3r#3181";"02-Aug-19 04:47 AM";"`https://github.com/jl777/libnspv/pull/38/files` 
+Pushed an update that removes bad peers, if they report older version, or if they are reporting a lower block height they are disconnected. Seem to only have 3 good peers right now on KMD chain.";"";"";
+"455741312273219595";"jl777c#5810";"02-Aug-19 11:57 AM";"@TonyL the latest version with blackjok3r fix, fixes the strange results with that special address";"";"👍 (1)";
+"262577806456782848";"Sir Seven#7158";"02-Aug-19 12:05 PM";"Longer internal timeout helped a lot, yet there were still timeout errors from time to time.
+Will check libnspv build with blackjok3r fix to see if it solves the problem.";"";"";
+"272003866906722306";"TonyL#3577";"02-Aug-19 12:38 PM";"```
+curl --data-binary '{""jsonrpc"": ""2.0"", ""id"":""curltest"", ""method"": ""getinfo"", ""params"": [] }' -H 'content-type: text/plain;' http://127.0.0.1:7771/
+{
+  ""result"": ""success"",
+  ""nSPV"": ""superlite"",
+  ""address"": ""RQ1mvCUcziWzRwE8Ugtex29VjoFjRzxQJT"",
+  ""pubkey"": ""03aa464529c190398d44017c3d7a71a854ad195a9d396bf84182679c242bb60085"",
+  ""wifexpires"": 434,
+  ""height"": 1469632,
+  ""chaintip"": ""0b32f48c7f8a2e6763fb7ae8fd2ce1749c066292b983ffd0cdbd443c7907f28c"",
+  ""notarization"": {
+    ""notarized_height"": 1469610,
+    ""notarized_blockhash"": ""07ebb4e2f2d273ed2f36c0fc4260cb2c1ec6e4900dc5eab83c9ff4bfe74ff625"",
+    ""notarization_txid"": ""1b96a002870cc88938c085dcfe4d343cdfc53eb51919164a1fc539a42c0a0978"",
+    ""notarization_txidheight"": 1469624,
+    ""notarization_desttxid"": ""78fe345fa79493a8a17d2c962d556ee725848df0b04311937939295e2635b060""
+  },
+  ""header"": {
+    ""height"": 1469632,
+    ""blockhash"": ""0b32f48c7f8a2e6763fb7ae8fd2ce1749c066292b983ffd0cdbd443c7907f28c"",
+    ""hashPrevBlock"": ""000000004729a2d452de417f9fb0b9c7721c408e43767e2a49270c147059f438"",
+    ""hashMerkleRoot"": ""1647190b4bad0b56fff58171f25a069f3c444a87a23d0b49041daff677ccb893"",
+    ""nTime"": 1564749483,
+    ""nBits"": 486604598
+  },
+  ""protocolversion"": 2,
+  ""lastpeer"": ""nodeid.38"",
+  ""sync_status"": ""not_synced"",
+  ""estimated_headers_left"": 0
+}```";"";"";
+"272003866906722306";"TonyL#3577";"02-Aug-19 12:39 PM";"```curl --data-binary '{""jsonrpc"": ""2.0"", ""id"":""curltest"", ""method"": ""spend"", ""params"": [""RXcUjam1KC8mA1hj33vXaX877jf7GgvKzt"",0.1 ] }' -H 'content-type: text/plain;' http://127.0.0.1:7771/
+{
+  ""result"": ""error"",
+  ""address"": """",
+  ""srcaddr"": ""RQ1mvCUcziWzRwE8Ugtex29VjoFjRzxQJT"",
+  ""nodeheight"": 0,
+  ""infoheight"": 1469632,
+  ""CCflag"": 0,
+  ""error"": ""couldnt get addressutxos""
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"02-Aug-19 12:40 PM";"In getinfo I get info that login for this address, also by some reason ```  ""sync_status"": ""not_synced"",
+  ""estimated_headers_left"": 0```";"";"";
+"272003866906722306";"TonyL#3577";"02-Aug-19 12:41 PM";"```curl --data-binary '{""jsonrpc"": ""2.0"", ""id"":""curltest"", ""method"": ""notarizations"", ""params"": [77777] }' -H 'content-type: text/plain;' http://127.0.0.1:7771/ | jq
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   775    0   693  100    82     17      2  0:00:41  0:00:40  0:00:01   161
+{
+  ""result"": ""success"",
+  ""prev"": {
+    ""notarized_height"": 0,
+    ""notarized_blockhash"": ""0000000000000000000000000000000000000000000000000000000000000000"",
+    ""notarization_txid"": ""0000000000000000000000000000000000000000000000000000000000000000"",
+    ""notarization_txidheight"": 0,
+    ""notarization_desttxid"": ""0000000000000000000000000000000000000000000000000000000000000000""
+  },
+  ""next"": {
+    ""notarized_height"": 0,
+    ""notarized_blockhash"": ""0000000000000000000000000000000000000000000000000000000000000000"",
+    ""notarization_txid"": ""0000000000000000000000000000000000000000000000000000000000000000"",
+    ""notarization_txidheight"": 0,
+    ""notarization_desttxid"": ""0000000000000000000000000000000000000000000000000000000000000000""
+  },
+  ""lastpeer"": ""nodeid.1""
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"02-Aug-19 12:42 PM";"worked 40 seconds and gave me zeroes";"";"";
+"272003866906722306";"TonyL#3577";"02-Aug-19 12:43 PM";"stdout on `notarizations` call
+```parsing.(/)
+,new argjson.({""jsonrpc"":""2.0"",""id"":""curltest"",""method"":""notarizations"",""params"":[77777],""height"":77777})
+got ntzs response 1564749753 size.221 0000000000000000000000000000000000000000000000000000000000000000 prev.0, 0000000000000000000000000000000000000000000000000000000000000000 next.0
+got ntzs response 1564749763 size.221 0000000000000000000000000000000000000000000000000000000000000000 prev.0, 0000000000000000000000000000000000000000000000000000000000000000 next.0
+got ntzs response 1564749773 size.221 0000000000000000000000000000000000000000000000000000000000000000 prev.0, 0000000000000000000000000000000000000000000000000000000000000000 next.0
+```";"";"";
+"272003866906722306";"TonyL#3577";"02-Aug-19 12:43 PM";"on my side it's kinda ""nothing works""  state atm it seems";"";"";
+"272003866906722306";"TonyL#3577";"02-Aug-19 12:46 PM";"```curl --data-binary '{""jsonrpc"": ""2.0"", ""id"":""curltest"", ""method"": ""listunspent"", ""params"": [] }' -H 'content-type: text/plain;' http://127.0.0.1:7771/ | jq
+{
+  ""result"": ""error"",
+  ""error"": ""timeout"",
+  ""lastpeer"": ""nodeid.24""
+}
+```";"";"";
+"455741312273219595";"jl777c#5810";"02-Aug-19 12:46 PM";"what about ILN";"";"";
+"272003866906722306";"TonyL#3577";"02-Aug-19 12:46 PM";"listunspent timeout in 100% cases and nodes changing in lastpeer";"";"";
+"272003866906722306";"TonyL#3577";"02-Aug-19 12:46 PM";"let me try";"";"";
+"455741312273219595";"jl777c#5810";"02-Aug-19 12:46 PM";"the KMD servers are very weak";"";"";
+"272003866906722306";"TonyL#3577";"02-Aug-19 12:52 PM";"on ILN still cant get response from listunspent
+```curl --data-binary '{""jsonrpc"": ""2.0"", ""id"":""curltest"", ""method"": ""listunspent"", ""params"": [] }' -H 'content-type: text/plain;' http://127.0.0.1:12986/ | jq
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   134    0    59  100    75     19     24  0:00:03  0:00:03 --:--:--    44
+{
+  ""result"": ""error"",
+  ""error"": ""timeout"",
+  ""lastpeer"": ""nodeid.6""
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"02-Aug-19 12:53 PM";"but in getinfo synced status now:
+```  },
+  ""protocolversion"": 2,
+  ""lastpeer"": ""nodeid.6"",
+  ""sync_status"": ""synced""
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"02-Aug-19 12:53 PM";"https://paste.ubuntu.com/p/P6W9TgWpxZ/ nodes I'm connected to";"";"";
+"272003866906722306";"TonyL#3577";"02-Aug-19 01:00 PM";"Even tried with brand new address (getnewaddres -> login -> listunspent), timeout anyway";"";"";
+"232679450301431808";"blackjok3r#3181";"02-Aug-19 01:01 PM";"synced only means the node is giving you a chaintip that can be verified to link back to the last notarization";"";"";
+"232679450301431808";"blackjok3r#3181";"02-Aug-19 01:01 PM";"I will have a look at this soon. See oif I can reproduce";"";"🔥 (1)";
+"232679450301431808";"blackjok3r#3181";"02-Aug-19 02:20 PM";"Problem is that nodes dont have correct indexes. I think i have a KMD node here with them, testing now.";"";"";
+"232679450301431808";"blackjok3r#3181";"02-Aug-19 03:26 PM";"@jl777c  https://github.com/jl777/komodo/pull/1666";"";"";
+"232679450301431808";"blackjok3r#3181";"02-Aug-19 03:31 PM";"@TonyL  If you use your own node with that commit things should be working agian. Let me know if any more problems";"";"";
+"455741312273219595";"jl777c#5810";"02-Aug-19 03:37 PM";"merged";"";"";
+"455741312273219595";"jl777c#5810";"02-Aug-19 03:37 PM";"looks like important fixes!";"";"";
+"232679450301431808";"blackjok3r#3181";"02-Aug-19 03:40 PM";"I think so, I had a node not in sync and it was returning garbage, so I figured it shouldnt respond ...";"";"";
+"232679450301431808";"blackjok3r#3181";"02-Aug-19 03:40 PM";"handling what node to try and fetch the info from is the hardest... Cant assume they are all honest.";"";"";
+"232679450301431808";"blackjok3r#3181";"02-Aug-19 04:20 PM";"seems some RPC calls still dont work. :/";"";"";
+"272003866906722306";"TonyL#3577";"03-Aug-19 08:19 AM";"`If you use your own node with that commit things should be working agian. Let me know if any more problems` is there some way to test libnspv with connection to single full node only? (report above is for libnspv)";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 08:21 AM";"would need to change the seeds in coins file to a single seed and then disable peer discovery, add a 0 && to the if statement on line 389 in netspv.c";"";"";
+"455741312273219595";"jl777c#5810";"03-Aug-19 08:21 AM";"basically have one seed and dont process ""addr"" messages";"";"";
+"272003866906722306";"TonyL#3577";"03-Aug-19 08:21 AM";"thank you! @Sir Seven ^^";"";"";
+"232679450301431808";"blackjok3r#3181";"03-Aug-19 11:00 AM";"That's how I was doing it yes, I still saw broken calls but listunspent was working again";"";"";
+"262577806456782848";"Sir Seven#7158";"03-Aug-19 11:01 AM";"So far:
+All nSPV RPC calls on komodod and libnspv work as expected when connected to a reliable full node. AE -connect=
+When we just use -addnode PRC calls tend to fail.
+And pretty much nothing works withought adding/connecting a known good node.";"";"👌 (1)";
+"262577806456782848";"Sir Seven#7158";"03-Aug-19 11:02 AM";"Testsed both nSPV client and full node with your changes. @blackjok3r";"";"";
+"232679450301431808";"blackjok3r#3181";"03-Aug-19 11:03 AM";"Great, that's helpful. I have a fair idea of what to do but need a few days to sort it out.";"";"";
+"262577806456782848";"Sir Seven#7158";"03-Aug-19 11:06 AM";"The most problematic calls are:
+listunspent, listtransasctions, notarizations.
+3rd one tends to return garbage data when connected to bad nodes.";"";"";
+"232679450301431808";"blackjok3r#3181";"03-Aug-19 11:11 AM";"It wasnt working for me at all the last one.";"";"";
+"262577806456782848";"Sir Seven#7158";"05-Aug-19 02:39 PM";"A question for listunspent call:
+
+After user is automatically log out (777s passed) or used nspv_logout call:
+nspv_litunspent withought parameters will still return unspent utxos of user's address.
+
+```json
+1. login
+
+curl --data-binary '{""jsonrpc"": ""2.0"", ""id"":""curltest"", ""method"": ""login"", ""params"": [""_wif_""] }' -H 'content-type: text/plain;' http://127.0.0.1:$rpcport/
+
+{""result"":""success"",""status"":""wif will expire in 777 seconds"",""address"":""_address_"",""pubkey"":""_pubkey_"",""wifprefix"":188,""compressed"":1}
+
+2. logout
+
+curl --data-binary '{""jsonrpc"": ""2.0"", ""id"":""curltest"", ""method"": ""logout"", ""params"": [] }' -H 'content-type: text/plain;' http://127.0.0.1:$rpcport/
+
+{""result"":""success""}
+
+3. send listunspent
+
+curl --data-binary '{""jsonrpc"": ""2.0"", ""id"":""curltest"", ""method"": ""listunspent"", ""params"": [] }' -H 'content-type: text/plain;' http://127.0.0.1:$rpcport/
+
+{""result"":""success"",""utxos"":[{""height"":2717,""txid"":""_actual_tx"",""vout"":0,""value"":1,""rewards"":0}, {""height"":4328,""txid"":""actual_tx"",""vout"":1,""value"":0.6692,""rewards"":0},],""address"":""_address_"",""isCC"":0,""height"":5624,""numutxos"":24,""balance"":_balance_,""rewards"":0,""skipcount"":0,""filter"":0,""lastpeer"":""nodeid.1""}
+```
+
+So. Is it intended?";"";"";

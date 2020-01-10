@@ -1,0 +1,331 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[22-Oct-18 10:08 AM] jl777c#5810
+dealer hashes his entropy in the entropytx
+
+[22-Oct-18 10:09 AM] forkwitch#6080
+Or is it the idea to revert a gamble?
+
+[22-Oct-18 10:09 AM] jl777c#5810
+player picks one of the entropy tx to bet against and adds his entropy
+
+[22-Oct-18 10:09 AM] forkwitch#6080
+And miner can read it out and change it with 51% ?
+
+[22-Oct-18 10:09 AM] siu - Chainmakers#3920
+To revert it and change it for a bigger bet once you know its a winner
+
+[22-Oct-18 10:09 AM] jl777c#5810
+now dealer node can determine who wins and then posts the dicewin/loss with the entropy
+
+[22-Oct-18 10:09 AM] jl777c#5810
+win or loss doesnt matter
+
+[22-Oct-18 10:09 AM] gcharang#6833
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/503872600829853697/entropy-dealer-bettor.png
+
+[22-Oct-18 10:09 AM] gcharang#6833
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/503872642319646722/Screenshot_from_2018-10-18_17-58-15.png
+
+[22-Oct-18 10:10 AM] jl777c#5810
+the key is that the entropy for the specific utxo is revealed
+
+[22-Oct-18 10:10 AM] jl777c#5810
+now it is a simple matter to grind your entropy to find a winner, few seconds computation
+
+[22-Oct-18 10:10 AM] jl777c#5810
+reorg the chain, invalidate the original dicebet to the revealed entropy tx is back to unspent
+
+[22-Oct-18 10:11 AM] jl777c#5810
+make a new dicebet selecting that entropy tx with a guaranteed win at max odds and big bet
+
+[22-Oct-18 10:11 AM] forkwitch#6080
+Understood, practically easy exploitable. Not happened now? How much is max bet in the game and can you just play double your bet or it has different odds?
+
+[22-Oct-18 10:12 AM] siu - Chainmakers#3920
+Its not that easy at current hashrate and low supply
+
+[22-Oct-18 10:12 AM] jl777c#5810
+and non-economic based on value of KMDICE vs nicehash
+
+[22-Oct-18 10:12 AM] siu - Chainmakers#3920
+And dpow
+
+[22-Oct-18 10:13 AM] forkwitch#6080
+Only non-economic this is true. Rest bypassable and exploitable.
+
+[22-Oct-18 10:13 AM] forkwitch#6080
+How much is the supply now? How much max?
+
+[22-Oct-18 10:14 AM] siu - Chainmakers#3920
+Max unlocked supply will be 10.5million
+
+[22-Oct-18 10:14 AM] jl777c#5810
+21 mil max, 200k supply, 10.5 mil locked
+
+[22-Oct-18 10:14 AM] jl777c#5810
+unlocked supply can go lower based on luck
+
+[22-Oct-18 10:14 AM] siu - Chainmakers#3920
+Max bet is 1000 at 1500:1
+
+[22-Oct-18 10:14 AM] siu - Chainmakers#3920
+Which might drain 10% of locked coins
+
+[22-Oct-18 10:15 AM] siu - Chainmakers#3920
+So to drain all the fund youll need to score this 10 times.
+
+[22-Oct-18 10:15 AM] forkwitch#6080
+10 bets in theory can drain bankrol?
+
+[22-Oct-18 10:15 AM] siu - Chainmakers#3920
+Yes
+
+[22-Oct-18 10:15 AM] siu - Chainmakers#3920
+10 very unlikely bets to happen
+
+[22-Oct-18 10:16 AM] jl777c#5810
+it can be made very likely, so we need to hardfork it to prevent
+
+[22-Oct-18 10:16 AM] forkwitch#6080
+Reorgning and cheating based on this odd 1:1500 is i believe a hard attack and difficult to hash the correct entr.
+
+[22-Oct-18 10:16 AM] jl777c#5810
+just iterate random hash and evaluate for winner, a few seconds will find a 1500:1 winner
+
+[22-Oct-18 10:16 AM] forkwitch#6080
+1:2 odd is available and how much is max bet for low odds?
+
+[22-Oct-18 10:16 AM] jl777c#5810
+1000 KMDICE
+
+[22-Oct-18 10:17 AM] jl777c#5810
+one simplistic way is to make 1500 0.001 bets to find a winner, reorg and submit same hash with 1000 KMDICE bet
+
+[22-Oct-18 10:17 AM] jl777c#5810
+but the solution could be simple!
+
+[22-Oct-18 10:18 AM] jl777c#5810
+the problem is that the secret is revealed and thus making the entropy tx basically have no entropy as it is a constant
+
+[22-Oct-18 10:18 AM] jl777c#5810
+so what we need to do is invalidate any entropy value that has been used before
+
+[22-Oct-18 10:19 AM] jl777c#5810
+if each online node could make a list of all bettxid with the matched dealer entropy and then refuse to accept any other bettxid using the same entropy, this 51% attack is thwarted
+
+[22-Oct-18 10:19 AM] jl777c#5810
+my unsolved issue is how to do this in a consensus safe way...
+
+[22-Oct-18 10:19 AM] forkwitch#6080
+We would not have to archive entropy values with this method?
+
+[22-Oct-18 10:19 AM] jl777c#5810
+chain will split if any node didnt see the entropy
+
+[22-Oct-18 10:20 AM] jl777c#5810
+yes, it would need to be archived until notarized
+
+[22-Oct-18 10:20 AM] jl777c#5810
+so not a big archive
+
+[22-Oct-18 10:20 AM] jl777c#5810
+but getting all nodes to the same archive state, is the unsolved problem now
+
+[22-Oct-18 10:21 AM] jl777c#5810
+one way is for the dealer node to just create a summary tx(s) each block with this info. since the dealer creates this, it cant be double spent by the attacker and even on reorg and mining domination, it will end up in the mempool
+
+[22-Oct-18 10:21 AM] jl777c#5810
+but mempools isnt 100% consensus safe...
+
+[22-Oct-18 10:23 AM] jl777c#5810
+any ideas? @Mihailo @forkwitch
+
+[22-Oct-18 10:24 AM] jl777c#5810
+ok, i think i see how
+
+[22-Oct-18 10:27 AM] forkwitch#6080
+But as we know it the won amount should not be paid or made spendable until we are sure a notarization happened and all node on same state. This can solve it maybe.
+
+[22-Oct-18 10:27 AM] jl777c#5810
+yes, sort of, but i think there is a realtime solution for all bets other than a double spent one!
+
+[22-Oct-18 10:28 AM] forkwitch#6080
+Observing mempool?
+
+[22-Oct-18 10:29 AM] jl777c#5810
+the sequence is:
+0) entropy tx is created with hash of entropy (hentropy)
+1) player selects it and bets against it using entropy
+2) dealer reveals entropy and completes the bet or
+2b) dealer ignores it and it eventually times out and player wins by default
+
+[22-Oct-18 10:29 AM] jl777c#5810
+so here, all we need to do is have the dealer add the following behavior:
+
+[22-Oct-18 10:29 AM] jl777c#5810
+record all rawtx, txid and entropy values used in 2)
+
+[22-Oct-18 10:30 AM] jl777c#5810
+if a duplicate entropy is seen (dealer will know this for sure) then instead of 2) he does 2c)
+
+[22-Oct-18 10:30 AM] jl777c#5810
+submits proof of the older rawtx, txid, entropy to invalidate the bet and refund, so no money changes
+
+[22-Oct-18 10:31 AM] jl777c#5810
+since the rawtx was signed by the player, the dealer couldnt have made a forgery
+
+[22-Oct-18 10:31 AM] forkwitch#6080
+Good, so no one can cheat. Why not if redundant entropy is found bet is automatic a loss?
+
+[22-Oct-18 10:31 AM] jl777c#5810
+but just in case there are edge cases, we refund all the funds, taking away the incentive to cheat
+
+[22-Oct-18 10:32 AM] forkwitch#6080
+How big are chances for this to happen coincidentially?
+
+[22-Oct-18 10:32 AM] jl777c#5810
+i am not 100% sure that the dealers proof is sufficient in all cases
+
+[22-Oct-18 10:32 AM] jl777c#5810
+i guess it can go either way, but the key is to protect the bankroll
+
+[22-Oct-18 10:32 AM] forkwitch#6080
+I understand, that is the goal, and not punishment for cheaters.
+
+[22-Oct-18 10:32 AM] jl777c#5810
+and remember there is the nicehash cost, the failed attempts, that are out of pocket costs for cheaters
+
+[22-Oct-18 10:33 AM] jl777c#5810
+after all that work they submit the 100% guaranteed win. only to have it proven a cheat and get nothing
+
+[22-Oct-18 10:33 AM] jl777c#5810
+very discouraging
+
+[22-Oct-18 10:33 AM] jl777c#5810
+for the attacker
+
+[22-Oct-18 10:36 AM] forkwitch#6080
+This is true. Maybe we add a output 'Gratulation you have tried to cheat and it was a good try' for the cheaters to get credits for the hard labour.
+
+[22-Oct-18 10:37 AM] jl777c#5810
+so this just needs a dicerefund rpc call that submits the proof of double usage, and dealer does this instead of dicefinish, it can even be determined in realtime just as quickly
+
+[22-Oct-18 10:37 AM] jl777c#5810
+just need a third case for the dealer to finish a dicebet.
+
+[22-Oct-18 10:37 AM] jl777c#5810
+wow, it seems after this KMDICE will be 100% solid from attacks
+
+[22-Oct-18 10:38 AM] jl777c#5810
+and the casino CC can implement the same fix, so however many game logic that can be done via 2 entropy hashes can be supported
+
+[22-Oct-18 10:38 AM] jl777c#5810
+casinoslots, casinoroulette, casinowheel, etc. all the equivalent of dicebet, just using a different eval function
+
+[22-Oct-18 10:45 AM] grewalsatinder#9653
+all on same blockchain is good or separate would be good ?
+
+[22-Oct-18 10:47 AM] jl777c#5810
+for now a single chain would be sufficient
+
+[22-Oct-18 10:51 AM] grewalsatinder#9653
+cool
+
+[22-Oct-18 10:52 AM] forkwitch#6080
+CASINO chain is born @grewalsatinder , all casino games lauching with it. Komodo is like Macao now.
+
+[22-Oct-18 10:53 AM] grewalsatinder#9653
+@forkwitch let me know if I could of help with funds.
+
+[22-Oct-18 10:53 AM] grewalsatinder#9653
+🙂
+
+[22-Oct-18 10:53 AM] grewalsatinder#9653
+I'll help in that part
+
+[22-Oct-18 10:53 AM] grewalsatinder#9653
+and in GUI part too if possible.
+
+[22-Oct-18 10:53 AM] grewalsatinder#9653
+@jl777c @forkwitch thank you for your quick brainstorming sessions on Komodo Games!
+
+[22-Oct-18 10:55 AM] jl777c#5810
+@forkwitch can you make the changes for the 51% fix
+
+[22-Oct-18 11:00 AM] siu - Chainmakers#3920
+What is macao?
+
+[22-Oct-18 11:00 AM] jl777c#5810
+las vegas for china
+
+[22-Oct-18 11:00 AM] TonyL#3577
+Macau was meant
+
+[22-Oct-18 11:00 AM] siu - Chainmakers#3920
+Ahh
+
+[22-Oct-18 11:00 AM] TonyL#3577
+But both possible to spell 😃
+
+[22-Oct-18 11:02 AM] TonyL#3577
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/503885949193682945/IMG_20181022_180218.jpg
+
+[22-Oct-18 11:03 AM] Mihailo#5902
+@TonyL I found a problem in multisig GW as one mechanism in oraclefeed is not fully implemented, so I need to finsih it. Basically when multiple oraclefeeds need to sign the tx they need to broadcast the partial signed tx on AC until it is complete and then broadcast it on external chain in order send funds to withdrawal address.
+
+[22-Oct-18 11:03 AM] TonyL#3577
+Have an old tattoo which suits such chain thematics well 😂
+
+[22-Oct-18 11:06 AM] TonyL#3577
+@Mihailo Ok, will wait for your fixes to re-test. I'm testing oracles now - proceed from creation to registration auto-tests - was able to pass to `oraclesregister` random stuff and broadcasted this tx then (reported above)
+
+[22-Oct-18 11:09 AM] forkwitch#6080
+@jl777c with your help i am confident to achieve it, but alone i am afraid i can not make the full casino CC, fix of the 51% in a good format and confidentially. Maybe i add new bugs then. Please check:
+
+1) dealer node create a entropyarray of mempool found entropys
+2) dealer compares each bet entropy with the entropyarray
+3) if redundancy found dealer will ignore this bet and not do anything further with it.
+
+I have one question.  When i find a duplicate entropy then i call dicerefund(bet) and bet is the one with the duplicate. 
+
+So now i 'only' add dicerefund rpc function and entropy-array and additional check for redundancy?
+
+[22-Oct-18 11:09 AM] forkwitch#6080
+If this is right i will try it.
+
+[22-Oct-18 11:15 AM] jl777c#5810
+I think dealer only needs to update the entropyarray of the dicebets he is about to finish, as that is when the entropy is revealed. so before updating the array, just check to see if the entropy was already used. if it was, then do a dicerefund with txproof and have it return funds to where they came from. so the dealer can actively and in realtime detect a reuse of a previously completed dicebet
+
+[22-Oct-18 11:16 AM] jl777c#5810
+since only the dealer can do a non-timeout finish, the dealer will always have an accurate list of entropy used
+
+[22-Oct-18 11:16 AM] jl777c#5810
+really it should be a dicerefund rpc call that requires sufficient proof for all the other nodes to validate put into opreturn
+
+[22-Oct-18 11:16 AM] jl777c#5810
+and in the dicefinish rpc to add the handling for this third case
+
+[22-Oct-18 11:31 AM] Mihailo#5902
+@TonyL I saw the register you made, noted in my to-do list 😉
+
+{Reactions}
+👌 
+
+[22-Oct-18 11:33 AM] TonyL#3577
+@Mihailo I think I can resolve it on RPC side with additional input checks to not take your time but not sure if some actions needed from SC side since this transaction wasn't just generated but also broadcasted
+

@@ -1,0 +1,133 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:13 PM";"which is why i always forget to fiddle that dumb table, and have pulled hair out for hours on that same error message";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:14 PM";"so that is why it's very familiar to me :abusedsmily:";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 04:15 PM";"can anybody get z_importkey to work when specifying what height to rescan from?";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 04:15 PM";"it works for me from curl, but I couldnt get it to work from cli";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 04:16 PM";"should add the height to importprivkey while your at it 😉 there is no technical reason it cannot be there...";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:19 PM";"@jl777c have you tested with sprout and sapling addrs? they are different codepaths, i think";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:21 PM";"i know that Zcash upstream has had problems in the past with not updating the correct number of RPC args in some *import* RPCs";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:21 PM";"perhaps the latest merge with 2.0.2 did something like that";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 04:21 PM";"it kept giving parse errors.";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 04:22 PM";"since curl worked i didnt spend too much time on it";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:22 PM";"@jl777c did you get `JSON error is not integer as expected` ?";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 04:23 PM";"error: Error JSON:yes";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 04:24 PM";"kcli -ac_name=RKT z_importkey secret-extended-key-... yes 10000";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:24 PM";"@jl777c i am looking at latest KMD FSM branch, is that correct?";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 04:25 PM";"FSM is latest";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 04:25 PM";"i changed yes to true, now it says: JSON value is not a string as expected";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 04:26 PM";"tried: ""{\""rescan\"":true}""";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 04:26 PM";"I just make all args to my rpc as strings";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:26 PM";"@jl777c what about `kcli -ac_name=RKT z_importkey secret-extended-key-... ""yes"" 10000`";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 04:26 PM";"error: Error JSON:yes";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:26 PM";"ok, same";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:27 PM";"ok, i see a bit what is going on";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 04:28 PM";"{ ""z_importkey"", 2 },
+it is trying to convert it";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:28 PM";"```    // Whether to perform rescan after import
+    bool fRescan = true;
+    bool fIgnoreExistingKey = true;
+    if (params.size() > 1) {
+        auto rescan = params[1].get_str();
+        if (rescan.compare(""whenkeyisnew"") != 0) {
+            fIgnoreExistingKey = false;
+            if (rescan.compare(""yes"") == 0) {
+                fRescan = true;
+            } else if (rescan.compare(""no"") == 0) {
+                fRescan = false;
+            } else {
+                // Handle older API
+                UniValue jVal;
+                if (!jVal.read(std::string(""["")+rescan+std::string(""]"")) ||
+                    !jVal.isArray() || jVal.size()!=1 || !jVal[0].isBool()) {
+                    throw JSONRPCError(
+                        RPC_INVALID_PARAMETER,
+                        ""rescan must be \""yes\"", \""no\"" or \""whenkeyisnew\"""");
+                }
+                fRescan = jVal[0].getBool();
+            }
+        }
+    }```";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:28 PM";"`auto rescan` is not something I see in KMD codebase a lot, i think that is the line that is failing";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 04:28 PM";"needs to be in an array";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:28 PM";"i think some kind of c++ auto-conversion is adding to the problem";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:29 PM";"older API is that JSON stuff, but newer api is what you are trying to tell it";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:29 PM";"`get_str()` is failing on params[1]";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:30 PM";"@jl777c it's arg 1, isn't it?";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:30 PM";"0 is privkey, 1 is rescan";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 04:30 PM";"the second one, yes";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:31 PM";"i see this: ```   { ""z_importkey"", 1 },
+    { ""z_importkey"", 2 },
+```";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:31 PM";"in the conversion array";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:32 PM";"so argument 1 and 2 are converted";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 04:38 PM";"it the conversion the problem?";"";"";
+"232679450301431808";"blackjok3r#3181";"05-Dec-18 04:39 PM";"was in my case .. I just added my RPC there with 1 for param 1 and now it works Thanks 😃";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:43 PM";"@jl777c look at z_importviewingkey. It does not convert the rescan argument";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:44 PM";"it only does `{ ""z_importviewingkey"", 2 },` in the conversion table";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:44 PM";"@jl777c my guess is to remove the `1` entry from the conversion table, but i haven't looked into git history to see why it's that way";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:44 PM";"perhaps it changes upstream and that didn't get pulled in";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 04:45 PM";"whenever i am in doubt, i see how a working rpc declares it's arguments and parses them";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 05:24 PM";"@jl777c i am compiling/testing a potential patch now";"";"";
+"427867553784922113";"FishyGuts#5085";"05-Dec-18 05:47 PM";"https://twitter.com/SafeCoins/status/1070321674485161984";"";"";
+"427867553784922113";"FishyGuts#5085";"05-Dec-18 05:47 PM";"Weren't these the guys who forked KMD and had no clue of how the notary nodes worked, nor did they audit the code they used?";"";"";
+"427867553784922113";"FishyGuts#5085";"05-Dec-18 05:48 PM";"Then blamed KMD for ""maliciously attacking"" the chain when really, they were dismissing the warnings from KMD and ignoring the statements, calling them attacks.
+
+That's how I saw it all go down back then.";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"05-Dec-18 05:48 PM";"yes 🙄";"";"";
+"427867553784922113";"FishyGuts#5085";"05-Dec-18 05:48 PM";"Well they're working on dPoW 😛";"";"";
+"427867553784922113";"FishyGuts#5085";"05-Dec-18 05:48 PM";"😂";"";"";
+"427867553784922113";"FishyGuts#5085";"05-Dec-18 05:49 PM";"Let's let them screw that up on their own yea?";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"05-Dec-18 05:49 PM";"they're also the guys that **still** refuse to admit that their entire chain can be stuffed up with a 30 line bash script 💤";"";"";
+"427867553784922113";"FishyGuts#5085";"05-Dec-18 05:50 PM";"A bunch of clowns was all I took them for when it all unfolded.";"";"";
+"427867553784922113";"FishyGuts#5085";"05-Dec-18 05:50 PM";"Angry and defensive over nothing";"";"";
+"427867553784922113";"FishyGuts#5085";"05-Dec-18 05:50 PM";"Bitter and retalitory";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"05-Dec-18 05:50 PM";"they blame komodo for what I did but claim what I did can't be done";"";"";
+"427867553784922113";"FishyGuts#5085";"05-Dec-18 05:51 PM";"Yes, some KMD people mined your chain with notary powers.";"";"";
+"427867553784922113";"FishyGuts#5085";"05-Dec-18 05:51 PM";"You all didn't listen and someone proved you wrong";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 05:51 PM";"and they confuse a split funds with a notarization";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 05:51 PM";"but its safe to trust them that they can do BTC notarizations for free";"";"👆🏽 (2)";
+"427867553784922113";"FishyGuts#5085";"05-Dec-18 05:51 PM";"And instead of being appreciative for the help they cry about malice.";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"05-Dec-18 05:53 PM";"I'd bet $1 that this is still true:
+https://github.com/Fair-Exchange/safecoin/issues/6";"";"";
+"242635006516658197";"jorian#4555";"05-Dec-18 05:53 PM";"haha that twitter, confusing a splitfund with a notarization";"";"";
+"242635006516658197";"jorian#4555";"05-Dec-18 05:53 PM";"it cannot get worse";"";"";
+"242635006516658197";"jorian#4555";"05-Dec-18 05:54 PM";"or maybe it will actually";"";"";
+"242635006516658197";"jorian#4555";"05-Dec-18 05:55 PM";"without any explanation or comments";"https://cdn.discordapp.com/attachments/463445317136809984/519934850447179826/unknown.png";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"05-Dec-18 05:56 PM";"because they think it's not what I actually did";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"05-Dec-18 05:56 PM";"🤦🏽";"";"";
+"412323938782150658";"SHossain#0007";"05-Dec-18 05:56 PM";"Do they actually know what is splitfund?";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"05-Dec-18 05:57 PM";"`splitfund` that's where you take 2 SAFE and turn it into 1 SAFE and 1 SAFE, right? :trollface:";"";"";
+"405011811511828481";"Alright#0419";"05-Dec-18 06:17 PM";"https://www.blockchain.com/btc/tx/1539c83531d2d3f685241da9fb1431bfa1efd73c196a71ed873b97e416b8c2cb?show_adv=true";"";"";
+"405011811511828481";"Alright#0419";"05-Dec-18 06:17 PM";"that's not a notarization";"";"";
+"405011811511828481";"Alright#0419";"05-Dec-18 06:18 PM";"no OP_RETURN";"";"";
+"405011811511828481";"Alright#0419";"05-Dec-18 06:18 PM";"🤦";"";"";
+"405011811511828481";"Alright#0419";"05-Dec-18 06:19 PM";"Go ask a technical question on their discord. Their community has been conditioned to see anyone asking technical questions as an enemy since day 1. Because of this, they can spew whatever bullshit they want to their community and not be questioned";"";"";
+"405011811511828481";"Alright#0419";"05-Dec-18 06:19 PM";"If any SAFE people are reading this, THAT IS NOT A NOTARIZATION";"";"";
+"405011811511828481";"Alright#0419";"05-Dec-18 06:19 PM";"They are lying or incompetent";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"05-Dec-18 06:20 PM";"`If any SAFE people are reading this` 
+😂 
+I see you have jokes today";"";"";
+"405011811511828481";"Alright#0419";"05-Dec-18 06:21 PM";"Whenever I think ""it can't get worse than this"", they prove me wrong";"";"";
+"405011811511828481";"Alright#0419";"05-Dec-18 06:21 PM";"every time";"";"";
+"242635006516658197";"jorian#4555";"05-Dec-18 06:21 PM";"where is their discord";"";"";
+"242635006516658197";"jorian#4555";"05-Dec-18 06:21 PM";"found it";"";"";
+"405011811511828481";"Alright#0419";"05-Dec-18 06:22 PM";"don't bother";"";"";
+"405011811511828481";"Alright#0419";"05-Dec-18 06:22 PM";"they'll just scapegoat KMD for all their problems";"";"";
+"242635006516658197";"jorian#4555";"05-Dec-18 06:26 PM";"oh okay";"";"";
+"242635006516658197";"jorian#4555";"05-Dec-18 06:26 PM";"the amount of sheeple in that discord is too damn high";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"05-Dec-18 06:28 PM";"I said that a yr ago 👆🏽";"";"";
+"242635006516658197";"jorian#4555";"05-Dec-18 06:33 PM";"my dear lord";"";"";
+"405011811511828481";"Alright#0419";"05-Dec-18 06:34 PM";"@jorian seriously don't bother";"";"";
+"405011811511828481";"Alright#0419";"05-Dec-18 06:35 PM";"they will milk you for info then turn you into the enemy shortly after";"";"";
+"242635006516658197";"jorian#4555";"05-Dec-18 06:35 PM";"";"https://cdn.discordapp.com/attachments/463445317136809984/519944921499697163/unknown.png";"";
+"242635006516658197";"jorian#4555";"05-Dec-18 06:35 PM";"lets all have a good laugh";"";"";
+"242635006516658197";"jorian#4555";"05-Dec-18 06:35 PM";"and move on";"";"";
+"242635006516658197";"jorian#4555";"05-Dec-18 06:35 PM";"i'll leave the server";"";"";
+"405011811511828481";"Alright#0419";"05-Dec-18 06:35 PM";"don't explain *anything* to them";"";"";
+"405011811511828481";"Alright#0419";"05-Dec-18 06:36 PM";"I can't tell you how many things i helped them fix. Always gave them the benefit of the doubt, was very stupid on my part";"";"";
+"405011811511828481";"Alright#0419";"05-Dec-18 06:36 PM";"lol if that tx awarded the person sending it a block............";"";"";
+"474206298427097099";"ComputerGenie 👴🏼📢#7004";"05-Dec-18 06:55 PM";"`lol if that tx awarded the person sending it a block`
+sure it did, when you mine in a network size of 1, you get whatever blocks you want to get 😛";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 07:49 PM";"@jl777c https://github.com/jl777/komodo/pull/1023";"";"";
+"365714438864633856";"dukeleto#7326";"05-Dec-18 07:50 PM";"sapling privkeys are very large in size, there is some interesting metadata going on in there";"";"";
+"455741312273219595";"jl777c#5810";"05-Dec-18 07:53 PM";"thanks! so it was over usage of the mapping!!";"";"";

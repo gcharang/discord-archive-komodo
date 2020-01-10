@@ -1,0 +1,440 @@
+==============================================================
+Guild: Komodo
+Channel: cc-faucet
+Topic: https://developers.komodoplatform.com
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[27-Jan-19 11:21 AM] blackjok3r#3181
+if -pubkey has not been set it retunrs error
+
+[27-Jan-19 11:21 AM] blackjok3r#3181
+and takes NO arguments...
+
+[27-Jan-19 11:21 AM] blackjok3r#3181
+just retunrs yours
+
+[27-Jan-19 11:22 AM] TonyL#3577
+It's debug call mostly as I understand so I guess it's useful for CC developers since there is such pubkey option
+
+{Reactions}
+👍 
+
+[27-Jan-19 11:23 AM] grewalsatinder#9653
+So is that understanding is correct that ALL CC will only work with the single `myCCaddress` which is generated using `-pubkey` param at the starting of daemon?
+
+[27-Jan-19 11:23 AM] grewalsatinder#9653
+if need using different address, has to restart with different `-pubkey` ?
+
+[27-Jan-19 11:24 AM] jl777c#5810
+yes
+
+[27-Jan-19 11:24 AM] TonyL#3577
+It should work like this since `myCCaddress` generating for `-pubkey`
+
+[27-Jan-19 11:24 AM] jl777c#5810
+each pubkey generates dozens of related addresses, becomes unmanageable to have to juggle more than one pubkey
+
+[27-Jan-19 11:26 AM] grewalsatinder#9653
+okay, so to make things not complex the session from daemon start to daemon stop only is restricted to use the address from that single `-pubkey` supplied to daemon.
+
+[27-Jan-19 11:28 AM] grewalsatinder#9653
+or is there more reason to supply `-pubkey`? I mean what is the reason it is a daemon param and not an RPC command to activate/supply the `pubkey` to activate for the daemon?
+
+[27-Jan-19 11:28 AM] grewalsatinder#9653
+I know @blackjok3r made an API, which is considered dangerous to use 😄
+
+[27-Jan-19 11:29 AM] TonyL#3577
+`-pubkey` is your identification card / passport for the CCs usage world 😃
+
+[27-Jan-19 11:29 AM] blackjok3r#3181
+It can only set it once.. I have used it for many things though. The pool software I made uses it and so does the staking script. Hasnt been any issues.
+
+[27-Jan-19 11:29 AM] TonyL#3577
+To cross the border with new passport you have to go out of country first
+
+[27-Jan-19 11:31 AM] grewalsatinder#9653
+```satinders-MacBook-Pro-2:~ satinder$ txsclcc faucetaddress 033245af84ec5fbff0562c874fe32f027d12f4f0e49f26152721fec490c2be5095
+error code: -1
+error message:
+to use CC contracts, you need to launch daemon with valid -pubkey= for an address in your wallet. ERR=-1
+
+```
+
+```satinders-MacBook-Pro-2:~ satinder$ txsclcc setpubkey 033245af84ec5fbff0562c874fe32f027d12f4f0e49f26152721fec490c2be5095
+error: couldn't connect to server: EOF reached (code 1)
+(make sure server is running and you are connecting to the correct RPC port)
+satinders-MacBook-Pro-2:~ satinder$ ```
+
+[27-Jan-19 11:31 AM] grewalsatinder#9653
+@blackjok3r
+
+[27-Jan-19 11:31 AM] grewalsatinder#9653
+I did not had the `-pubkey` set on startup of daemon
+
+[27-Jan-19 11:32 AM] grewalsatinder#9653
+is my steps not correct?
+
+[27-Jan-19 11:32 AM] blackjok3r#3181
+It wont let you set it if it is set... Need backtrace
+
+[27-Jan-19 11:32 AM] blackjok3r#3181
+yeah you just call it
+
+[27-Jan-19 11:32 AM] blackjok3r#3181
+nothing special
+
+[27-Jan-19 11:32 AM] blackjok3r#3181
+It has lots of error checks
+
+[27-Jan-19 11:32 AM] grewalsatinder#9653
+@TonyL nice analogy... 😉 👍
+
+{Reactions}
+Komodo 
+
+[27-Jan-19 11:34 AM] grewalsatinder#9653
+@blackjok3r 
+>It wont let you set it if it is set...
+where ? I did not set it at daemon start. daemon started without `-pubkey`.
+how do I debug on mac ?
+
+[27-Jan-19 11:34 AM] TonyL#3577
+```gdb -args ./komodod ...```
+
+[27-Jan-19 11:35 AM] blackjok3r#3181
+if the -pubkey is already set it *should* be returning an error. If it was not set it should retun a  address and the pubkey and isMine /true/false
+
+[27-Jan-19 11:35 AM] grewalsatinder#9653
+`gdb` okay, let me try
+
+[27-Jan-19 11:35 AM] blackjok3r#3181
+it should nto crash... seems a MAC thing maybe?
+
+[27-Jan-19 11:35 AM] grewalsatinder#9653
+possible
+
+[27-Jan-19 11:36 AM] grewalsatinder#9653
+anyway, it's not something urgent, installing gdb, if can do something about it anyway
+
+[27-Jan-19 11:36 AM] blackjok3r#3181
+if you can get a backtrrace that would be helpful, cleary soemthing there is wrong
+
+[27-Jan-19 11:36 AM] grewalsatinder#9653
+true
+
+[27-Jan-19 11:50 AM] grewalsatinder#9653
+```satinders-MacBook-Pro-2:~ satinder$ cd /Applications/Agama.app/Contents/Resources/app/assets/bin/osx/
+satinders-MacBook-Pro-2:osx satinder$ 
+satinders-MacBook-Pro-2:osx satinder$ gdb -args ./komodod -daemon -ac_name=TXSCLCC -ac_supply=0 -ac_reward=2500000000 -ac_halving=210000 -ac_cc=2 -addressindex=1 -spentindex=1 -addnode=54.36.126.42 -addnode=94.130.224.11
+GNU gdb (GDB) 8.2.1```
+
+[27-Jan-19 11:51 AM] grewalsatinder#9653
+```For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./komodod...
+warning: Could not open OSO archive file "/Users/psycrypt/Desktop/kmd_beta/depends/x86_64-apple-darwin15.6.0/lib/librustzcash.a"
+
+warning: Could not open OSO archive file "/Users/psycrypt/Desktop/kmd_beta/src/./leveldb/libleveldb.a"
+
+warning: Could not open OSO archive file "/Users/psycrypt/Desktop/kmd_beta/src/./leveldb/libmemenv.a"
+
+warning: Could not open OSO archive file "/Users/psycrypt/Desktop/kmd_beta/src/crypto/libbitcoin_crypto.a"
+
+warning: Could not open OSO archive file "/Users/psycrypt/Desktop/kmd_beta/src/crypto/libverus_crypto.a"
+
+warning: Could not open OSO archive file "/Users/psycrypt/Desktop/kmd_beta/src/crypto/libverus_portable_crypto.a"
+
+warning: `/Users/psycrypt/Desktop/kmd_beta/src/komodod-bitcoind.o': can't open to read symbols: No such file or directory.
+
+warning: Could not open OSO archive file "/Users/psycrypt/Desktop/kmd_beta/src/libbitcoin_common.a"
+
+warning: Could not open OSO archive file "/Users/psycrypt/Desktop/kmd_beta/src/libbitcoin_server.a"
+
+warning: Could not open OSO archive file "/Users/psycrypt/Desktop/kmd_beta/src/libbitcoin_util.a"
+
+warning: Could not open OSO archive file "/Users/psycrypt/Desktop/kmd_beta/src/libbitcoin_wallet.a"
+
+warning: Could not open OSO archive file "/Users/psycrypt/Desktop/kmd_beta/src/libbitcoin_zmq.a"
+
+warning: Could not open OSO archive file "/Users/psycrypt/Desktop/kmd_beta/src/libzcash.a"
+
+warning: Could not open OSO archive file "/Users/psycrypt/Desktop/kmd_beta/src/univalue/.libs/libunivalue.a"
+(no debugging symbols found)...done.```
+
+[27-Jan-19 11:51 AM] grewalsatinder#9653
+```(gdb) start
+Temporary breakpoint 1 at 0x100884610 (5 locations)
+Starting program: /Applications/Agama.app/Contents/Resources/app/assets/bin/osx/komodod -daemon -ac_name=TXSCLCC -ac_supply=0 -ac_reward=2500000000 -ac_halving=210000 -ac_cc=2 -addressindex=1 -spentindex=1 -addnode=54.36.126.42 -addnode=94.130.224.11
+Unable to find Mach task port for process-id 49902: (os/kern) failure (0x5).
+ (please check gdb is codesigned - see taskgated(8))
+(gdb) ```
+
+[27-Jan-19 11:52 AM] grewalsatinder#9653
+`/Users/psycrypt/`
+
+[27-Jan-19 11:52 AM] grewalsatinder#9653
+this user does not exists on my laptop
+
+[27-Jan-19 11:52 AM] grewalsatinder#9653
+@blackjok3r
+
+[27-Jan-19 11:53 AM] grewalsatinder#9653
+@ca333
+
+[27-Jan-19 11:53 AM] grewalsatinder#9653
+is that anything to concern about?
+
+[27-Jan-19 11:53 AM] blackjok3r#3181
+your using precomiled binaries?
+
+[27-Jan-19 11:53 AM] grewalsatinder#9653
+yes
+
+[27-Jan-19 11:53 AM] blackjok3r#3181
+in this case I dont think it will work
+
+[27-Jan-19 11:53 AM] blackjok3r#3181
+😦
+
+[27-Jan-19 11:54 AM] grewalsatinder#9653
+fair enough mate
+
+[27-Jan-19 11:54 AM] grewalsatinder#9653
+will try the compiled one
+
+[27-Jan-19 11:54 AM] grewalsatinder#9653
+so far didn't needed compiled one since was only doing base API set
+
+[27-Jan-19 11:54 AM] grewalsatinder#9653
+now that I'm on to CC, fair point to use compiled daemon
+
+[27-Jan-19 11:55 AM] grewalsatinder#9653
+@ca333  for that `/Users/psycrypt/` notifications in gdb, is that of any concern? or ignorable ?
+
+[27-Jan-19 12:14 PM] grewalsatinder#9653
+thanks for clearing things up guys, will continue on it day after tomorrow.
+have cricket match to see in Tauranga in the morning... 😎 😁
+
+[27-Jan-19 12:14 PM] grewalsatinder#9653
+_ I'm only going to cheer ppl with frns, don't understand the rules of Cricket_ 😄
+
+{Reactions}
+😂 (2) 
+
+[27-Jan-19 12:23 PM] blackjok3r#3181
+hit ball 😄
+
+[27-Jan-19 12:23 PM] blackjok3r#3181
+Not person
+
+{Reactions}
+troll_king 
+
+[27-Jan-19 12:51 PM] ca333#0118
+yeah like blackjok3r pointed out it wont work with the precompiled bins - if you have any issue building it let us know.
+
+[27-Jan-19 12:52 PM] ca333#0118
+and psycrypt is a testuser from our OSX VM - nothing to be concerned about. my bins are all clean.
+
+[27-Jan-19 01:17 PM] grewalsatinder#9653
+Cool 👍
+
+[28-Jan-19 01:45 PM] Mihailo#5902
+@jl777c @grewalsatinder I have refactored [cc]address function little bit. Hope it have more sense now:
+```
+komodo-cli -ac_name=MSIG faucetaddress
+{
+  "result": "success",
+  "FaucetCCAddress": "R9zHrofhRbub7ER77B7NrVch3A63R39GuC",
+  "FaucetNormalAddress": "RKQV4oYs4rvxAWx1J43VnT73rSTVtUeckk",
+  "FaucetCCTokensAddress": "RKaT8VfRSsu4qWL2kfW3PCzejrzJxi1TcJ",
+  "myAddress": "RYG9Re8fF79BHhnefZer8h2RKPD18y8zeu",
+  "myCCAddress(Faucet)": "R9f9y2J1Cqm6hw5e1ZJfkpPckppU1GT2Qq"
+}
+```
+
+[28-Jan-19 01:45 PM] Mihailo#5902
+Also
+```
+komodo-cli -ac_name=MSIG channelsaddress 03c6931e7d213a20d0746fd1d90e84fab1915175782691ba6a1938139513a9d844
+{
+  "result": "success",
+  "ChannelsCCAddress": "RQy3rwX8sP9oDm3c39vGKA6H315cgtPLfr",
+  "ChannelsNormalAddress": "RQUuT8zmkvDfXqECH4m3VD3SsHZAfnoh1v",
+  "ChannelsCC1of2Address": "RLept2zEWvZd61smR5ZZu3aBEY5L3AgBMF",
+  "ChannelsCC1of2TokensAddress": "RDHFvqBy5SDmVCYaXUqoMyo6etbTc6Jz2a",
+  "myAddress": "RYG9Re8fF79BHhnefZer8h2RKPD18y8zeu",
+  "myCCAddress(Channels)": "RG1U9bHLYsK2xLUKbW6MjQoGyDaDFT1FqN",
+  "PubkeyCCaddress(Channels)": "RSiZoSRa9r1uhmAh8VVp2dtGPJAfKRkWin"
+}
+```
+
+[28-Jan-19 01:46 PM] Mihailo#5902
+```
+komodo-cli -ac_name=MSIG gatewaysaddress
+{
+  "result": "success",
+  "GatewaysCCAddress": "RKWpoK6vTRtq5b9qrRBodLkCzeURHeEk33",
+  "GatewaysNormalAddress": "RGJKV97ZN1wBfunuMt1tebiiHENNEq73Yh",
+  "GatewaysPubkey": "03ea9c062b9652d8eff34879b504eda0717895d27597aaeb60347d65eed96ccb40",
+  "GatewaysCCTokensAddress": "RSDw91hbCKkkNct6XtPRbq389eu2xKgHUC",
+  "myAddress": "RYG9Re8fF79BHhnefZer8h2RKPD18y8zeu",
+  "myCCAddress(Gateways)": "RDcY4hcaYgFp76ubHvDmownY3bV3dJrJuj"
+}
+```
+
+[28-Jan-19 01:47 PM] TonyL#3577
+Tests adjustment time 😃
+
+[28-Jan-19 01:47 PM] Mihailo#5902
+Have not merge it yet 😉 Let see if there are remarks 😛
+
+{Reactions}
+👌 
+
+[28-Jan-19 01:59 PM] Mihailo#5902
+For channels and heir pubkey is required to show 1of2 addresses, for others it is optional and just shows CC address of pubkey for thet CC contract
+
+[28-Jan-19 02:03 PM] Mihailo#5902
+I also added [CC]TokensAddress to show where Tokens are stored if used in CC. Not all CCs use tokens but they could get support in the future...
+
+[28-Jan-19 05:13 PM] benohanlon#1119
+best docs or information for me to include in the channel topic for this channel? Other than https://github.com/KomodoPlatform/Mastering_CryptoConditions?
+
+{Embed}
+https://github.com/KomodoPlatform/Mastering_CryptoConditions?
+KomodoPlatform/Mastering_CryptoConditions
+How to write utxo based CryptoConditions contracts for KMD chains - by jl777 - KomodoPlatform/Mastering_CryptoConditions
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[28-Jan-19 05:17 PM] Mihailo#5902
+https://docs.komodoplatform.com/home-cc.html ?
+
+[28-Jan-19 05:23 PM] benohanlon#1119
+thanks @Mihailo 😃 you're the MVP
+
+[28-Jan-19 05:33 PM] Mihailo#5902
+Basically you can put it in every topic of cc channel. They are not all up to date and not finished but hopefuly there will be all documentation on CC!
+
+[28-Jan-19 05:39 PM] Mihailo#5902
+@benohanlon Or maybe this even better: https://developers.komodoplatform.com/basic-docs/cryptoconditions/cc-faucet.html#faucetaddress
+
+{Embed}
+https://developers.komodoplatform.com/basic-docs/cryptoconditions/cc-faucet.html
+Contract Module: Faucet | Komodo Documentation
+Documentation for developers building on Komodo
+
+[28-Jan-19 05:39 PM] Mihailo#5902
+@Bryan_Beus Where will be main documentation for CC??
+
+[28-Jan-19 05:43 PM] Bryan_Beus#6442
+@Mihailo 
+
+developers.komodoplatform.com is for newcomers to the Komodo ecosystem.
+
+For now, it has only what a newcomer needs to get started, and nothing more.
+
+docs.komodoplatform.com is where everything else goes. 
+
+There's too much documentation for me to manage it all alone. I have other tasks that I'm responsible for, and I don't have that much bandwidth. 
+
+So, docs.komodoplatform.com is just a bin for people who are accustomed to Komodo and don't need any hand holding.
+
+[28-Jan-19 05:43 PM] Bryan_Beus#6442
+@Mihailo 
+
+If you add a new CC, I will need to put docs on it in developers.kp
+
+[28-Jan-19 05:44 PM] Bryan_Beus#6442
+Those are useful for newcomers.
+
+[28-Jan-19 05:44 PM] Mihailo#5902
+Np, just wanted to know where will the main docs be for CC!
+
+[28-Jan-19 05:44 PM] Bryan_Beus#6442
+developers.kp
+
+[28-Jan-19 05:44 PM] Bryan_Beus#6442
+Please make yourself a branch in the github repo, add whatever you want, and ping me when you are ready.
+
+Or, even better, do a PR, like you suggested for FSM branch.
+
+[28-Jan-19 05:44 PM] Bryan_Beus#6442
+Those are far easier to manage.
+
+[28-Jan-19 05:45 PM] Mihailo#5902
+@Bryan_Beus I don't have any docs right now, @benohanlon asked what to put in channel topic in Discord so I gave him docs.kp but remebered there is also developers.kp 😉
+
+[28-Jan-19 05:46 PM] Bryan_Beus#6442
+gotcha
+
+[28-Jan-19 09:12 PM] TonyL#3577
+@Mihailo Changing all `a` to `A` in words `address` in `%ccname%address` output keys is a revenge for my JSONs unhappiness I guess 😂
+
+[28-Jan-19 09:13 PM] Mihailo#5902
+😂 😂 😂
+
+[28-Jan-19 09:14 PM] Mihailo#5902
+No, just I have a habbit when writting multiple words together to make uopercase of first letter
+
+[28-Jan-19 09:15 PM] TonyL#3577
+Oh yes, just kidding - enlarging letters in tests now :)
+Is `%CCNAME%marker` a `%CCNAME%NormalAddress` now?
+
+[28-Jan-19 09:15 PM] Mihailo#5902
+And you should parse text when comparing to all to lower or all to upper. That way your compare i case insesitive.
+
+[28-Jan-19 09:16 PM] Mihailo#5902
+Yes
+
+[28-Jan-19 09:16 PM] Mihailo#5902
+I changed that as it does not have to be just a marker to normal address.
+
+{Reactions}
+👌 
+
+[28-Jan-19 09:17 PM] Mihailo#5902
+Better naming is CCGlobalAddress and NormalGlobalAddress
+
+[28-Jan-19 09:26 PM] TonyL#3577
+Not sure if I get about parsing
+
+[28-Jan-19 09:29 PM] TonyL#3577
+I can pop `result` key and iterate over all others to not hardcode keys (this test checks that R addresses were generated for each field) if there is no risk to miss some 'key' and assume that only addresses will be stored in values (if keys are hardcoded test will detect it)
+
+[29-Jan-19 05:36 AM] grewalsatinder#9653
+@Mihailo That's good to show CC name in key. But I think instead of bracket an undrrscore would be much better. 🤔
+
+[29-Jan-19 07:07 AM] Mihailo#5902
+I can do underscore, but I put brackets as it is just an optional descriptor...
+
+[29-Jan-19 07:28 AM] Mihailo#5902
+@TonyL For parsing I meant whenever you are comparing some text somewhere it is good to do for example lower case for that text and then compare with lower case constant. This way you are avoiding difference in case. Unless it is case sensitive and there can be same text with different case.
+
+[29-Jan-19 10:14 AM] grewalsatinder#9653
+Yes mate, I get it's just optional descriptor. But coding Js for sometime I feel `underscore` `_` will suit better for `JSON` key.
+
+[29-Jan-19 10:23 AM] Mihailo#5902
+@grewalsatinder Np, I'll change it in some next iteration
+
+[29-Jan-19 10:23 AM] grewalsatinder#9653
+thanks @Mihailo 🙂 👍
+
+[30-Jan-19 05:05 AM] grewalsatinder#9653
+the output of `faucetinfo` gives result like this:
+```{"result":{"result":"success","name":"Faucet","funding":"0.00000000"},"error":null,"id":"curltest"}```
+
+[30-Jan-19 05:05 AM] grewalsatinder#9653
+The type of `funding` value is recognised as `string`
+
+[30-Jan-19 05:06 AM] grewalsatinder#9653
+I think it should be `float`
+
+[30-Jan-19 05:06 AM] grewalsatinder#9653
+@Mihailo
+
+[30-Jan-19 05:13 AM] grewalsatinder#9653
+Also, I see the `faucetfund` method accepts value in `string` instead of `int` or `float`
+

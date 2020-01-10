@@ -1,0 +1,435 @@
+==============================================================
+Guild: Komodo
+Channel: dex-hyperdex
+Topic: IMPORTANT: Development is paused right now. Use at your own risk.
+Discussion and questions about HyperDEX atomic swap powered decentralized exchange. The project is maintained by HyperDEX team.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[15-Oct-18 04:12 PM] Cryptoon#3362
+!kmdtip @hyperDEX 5
+
+[15-Oct-18 04:12 PM] KMD TipBot#0077
+
+{Embed}
+TipBot
+@Cryptoon (Cryptoon#3362)
+You tipped @hyperDEX **5 KMD**
+
+[15-Oct-18 04:13 PM] Cryptoon#3362
+ty for hyperdex
+
+[15-Oct-18 04:13 PM] Cryptoon#3362
+Also fix vrsc electrum would be great 😄 ❤
+
+[15-Oct-18 08:48 PM] hyperDEX#6586
+hahaha thanks. @lukechilds can you take a look?
+
+[15-Oct-18 09:12 PM] Cryptoon#3362
+@0x03 is hosting the electrum server maybe judging from the link?
+
+[15-Oct-18 09:17 PM] 0x03#8822
+i am, `el0` is resyncing with the sapling release
+
+[15-Oct-18 09:17 PM] 0x03#8822
+it's about to be done
+
+[15-Oct-18 09:20 PM] 0x03#8822
+@Cryptoon also i've posted about this in the veruscoin discord 😃
+
+[15-Oct-18 09:22 PM] Cryptoon#3362
+Aaaaah great! Will try firing up tomorrow then.
+
+[15-Oct-18 09:23 PM] Cryptoon#3362
+@lukechilds is it possible to have marketmaker launch anyway even if one of the electrum servers isnt working? Because now it just keeps loading because of the vrsc electrum. I think most people dont look at dev console, so they wont know whats causing hyperdex to load forever
+
+[15-Oct-18 09:23 PM] 0x03#8822
+yea, make sure to not test it in ~8-12hrs time, because then i'll be updating the other electrum server, and consequences will be the same 😄
+
+[15-Oct-18 09:23 PM] 0x03#8822
+i'll have to get a 3rd vrsc-electrum up as it seems
+
+[15-Oct-18 09:23 PM] Cryptoon#3362
+Any way to find out how I know we’re good?
+
+[15-Oct-18 09:23 PM] Cryptoon#3362
+Like check sync progress or something?
+
+[15-Oct-18 09:24 PM] 0x03#8822
+my console has that, yea 😄
+
+[15-Oct-18 09:24 PM] Cryptoon#3362
+Haha ok inside info only
+
+[15-Oct-18 09:24 PM] 0x03#8822
+no sadly not in an automated fashion, but i'll be posting in the veruscoin-discord 'somewhere'
+
+[15-Oct-18 09:24 PM] 0x03#8822
+probably in #private-contributors
+
+[15-Oct-18 09:24 PM] Cryptoon#3362
+Anyway 8-12h wont be a problem, time for bed and work after that
+
+[15-Oct-18 09:24 PM] Cryptoon#3362
+Roger, will be sure to check over there first, thanks!
+
+[16-Oct-18 11:44 AM] lukechilds#2707
+```
+@lukechilds#2707 is it possible to have marketmaker launch anyway even if one of the electrum servers isnt working? Because now it just keeps loading because of the vrsc electrum. I think most people dont look at dev console, so they wont know whats causing hyperdex to load forever
+```
+
+@Cryptoon it should do that already, there is something like a 5s timeout. If the electrum server doesn't respond in that time `marketmaker` should ignore it and move on. If mm is hanging on an electrum server then it sounds like there's a bug in mm. Unfortunately we can't tell it to stop from our end, we can't communicate with it until it's finished.
+
+If you can reproduce the issue are you able to report it to mm devs?
+
+[16-Oct-18 11:57 AM] Cryptoon#3362
+@lukechilds electrum servers are fixed, so now I dont have that issue anymore
+
+[16-Oct-18 11:58 AM] Cryptoon#3362
+But before I could just keep repeating the issue where I restarted hyper and it kept loading on that electrum server for vrsc that wasnt working. If I wanted to close hyper it said 'could not connect to marketmaker'
+
+[16-Oct-18 12:00 PM] lukechilds#2707
+ohhh, I see
+
+[16-Oct-18 12:00 PM] lukechilds#2707
+so most likely this is actually an issue with Electrum
+
+[16-Oct-18 12:03 PM] lukechilds#2707
+If @0x03 was resyncing then the actual coin daemon on his node would (I think?) be locked. So we probably did successfully connect to the electrum server, but there was an issue with Electrum <-> coin daemon communication on the actual server that was hanging.
+
+[16-Oct-18 12:04 PM] lukechilds#2707
+I don't think Electrum servers should be resyncing regularly, so this likely isn't a huge problem. But if people running electrum servers bring down electrum while they're resyncing coin daemons that would likely solve the issue
+
+[16-Oct-18 12:05 PM] lukechilds#2707
+// cc @0x03 @cipi 😃
+
+[16-Oct-18 12:34 PM] 0x03#8822
+oh, it is down during the resync of the chain (i.e. the outside/p2p port is not bound to by electrumx)
+
+[16-Oct-18 04:32 PM] cipi#4502
+the problem isn't there on CLI, when i enable electrums and they are unreachable, it simply takes longer, but mm is showing an error and continues with the other electrums
+
+[17-Oct-18 05:59 AM] lukechilds#2707
+that's odd
+
+[17-Oct-18 05:59 AM] lukechilds#2707
+it's possible that we have an outdated version of mm, but I don't that that's it, I'm not aware of any recent changes to the way electrum timeout is handled
+
+[17-Oct-18 06:07 AM] cipi#4502
+i also observed two different situations
+1. the method "electrum" returns with an error saying the server is unreachable, so does the console output
+2. the method "electrum" says everything is fine, but console says node is dead
+on CLI this does not seem to make any difference, but i can imagine GUIs are relying on the info that mm returns (not the output in console)
+i don't know where the difference between this 2 fails is... could be the difference is that one tcp connection returns "Connection refused" immediately and the other case is where Firewalls do their part and the connection attempt doesn't return anything, it is simply stuck... that may also cause the large delays when starting mm... it makes a difference if a connection attempt is refused immediately or if mm waits for the OS timeout... could be a good idea to try to cover this in the code by playing with the timeout-options, but i fear i don't have the knowledge to be able to tell this for sure
+
+[17-Oct-18 06:11 AM] lukechilds#2707
+The GUI works fine with either an error or success response
+
+[17-Oct-18 06:11 AM] lukechilds#2707
+if we get a success response but it actually errors that could definitely cause issues
+
+[17-Oct-18 06:11 AM] lukechilds#2707
+but it wouldn't just hang, it would move on to the next electrum server
+
+[17-Oct-18 06:12 AM] lukechilds#2707
+thanks for your help @cipi
+
+[17-Oct-18 06:16 AM] cipi#4502
+yes, you are right, it shouldn't hang forever... but i didn't experienced this with CLI, only that it takes much longer if i have bad electrums in my config
+
+[18-Oct-18 08:32 AM] gcharang#6833
+Thanks to @Jonathan the latest enhancements for hyperDEX: https://docs.komodoplatform.com/hyperDEX/enhancement-record/HyperDEX-0.1.0-alpha.14.html
+
+{Reactions}
+👍 (3) rum 
+
+[19-Oct-18 02:35 AM] vrcninja#5651
+Can anyone help with this error? Trying to withdraw BTC from Hyperdex Unhandled Promise Rejection
+ArgumentError: Expected `rawTransaction` to be of type `string` but received type `undefined`
+    at Api._broadcastTransaction (app://-/bundle.js:82055:21)
+    at Object.broadcast (app://-/bundle.js:82086:18)
+    at WithdrawModal._defineProperty (app://-/bundle.js:117546:28)
+    at Object.da (app://-/bundle.js:72554:428)
+    at ka (app://-/bundle.js:72555:118)
+    at la (app://-/bundle.js:72555:172)
+    at xa (app://-/bundle.js:72557:208)
+    at Ba (app://-/bundle.js:72558:252)
+    at Da (app://-/bundle.js:72558:413)
+    at za (app://-/bundle.js:72558:57)
+
+[19-Oct-18 02:57 AM] hyperDEX#6586
+@lukechilds
+
+[19-Oct-18 09:45 AM] lukechilds#2707
+@vrcninja What's your total balance and how much were you trying to withdraw?
+
+[19-Oct-18 09:46 AM] lukechilds#2707
+or if you don't want to say publicly; was the amount you were trying to withdraw very close to your total amount?
+
+[20-Oct-18 02:42 PM] vrcninja#5651
+@lukechilds That was the problem. I was trying to withdraw everything and when I dropped it down the transaction went through
+
+[20-Oct-18 02:42 PM] vrcninja#5651
+Thank you!
+
+[20-Oct-18 06:38 PM] cipi#4502
+@lukechilds @pbca26 found electrums for UFO: https://github.com/jl777/coins/pull/176
+and also updated electrums for CRW: https://github.com/jl777/coins/blob/master/electrums/CRW
+i would recommend you to use this repo directly, there are probably more changes then this 2 that are not HyperDEX/Agama
+
+{Embed}
+https://github.com/jl777/coins/pull/176
+add UFO electrums by cipig · Pull Request #176 · jl777/coins
+https://avatars0.githubusercontent.com/u/32116761?s=400&v=4
+
+{Embed}
+https://github.com/jl777/coins/blob/master/electrums/CRW
+jl777/coins
+coin parameters and all files needed for GUI support - jl777/coins
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[20-Oct-18 06:55 PM] pbca26#5430
+thanks @cipi i already have those 😃
+
+[21-Oct-18 08:04 PM] cipi#4502
+@sindresorhus @pbca26 the coin config for MUE changed, also added electrums for MUE and the electrums for CHAIN updated: https://github.com/jl777/coins/pull/182/files
+
+{Embed}
+https://github.com/jl777/coins/pull/182/files
+update CHAIN electrums, update MUE + electrums by cipig · Pull Re...
+https://avatars0.githubusercontent.com/u/32116761?s=400&v=4
+
+[22-Oct-18 02:51 PM] modereck#4269
+http://prntscr.com/l91pmy
+
+{Embed}
+http://prntscr.com/l91pmy
+Screenshot
+Captured with Lightshot
+https://image.prntscr.com/image/1quk5B-6R429HQyQDvKOhg.png
+
+[22-Oct-18 02:52 PM] modereck#4269
+any idea why this error appears?
+
+[22-Oct-18 02:57 PM] cipi#4502
+☝ @sindresorhus https://github.com/jl777/coins/blob/master/electrums/VTC
+
+{Embed}
+https://github.com/jl777/coins/blob/master/electrums/VTC
+jl777/coins
+coin parameters and all files needed for GUI support - jl777/coins
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[22-Oct-18 03:18 PM] modereck#4269
+and how to fix it? what  should i do with that code? @cipi
+
+[22-Oct-18 03:28 PM] cipi#4502
+this file contains the VTC servers https://github.com/atomiclabs/hyperdex/blob/master/app/marketmaker/supported-currencies.js#L2152
+it changed recently, so i simply suppose you have the old config... but without knowing the electrum server you are trying to connect to, i can't tell, you would have to check
+
+{Embed}
+https://github.com/atomiclabs/hyperdex/blob/master/app/marketmaker/supported-currencies.js
+atomiclabs/hyperdex
+Grandma-Friendly Atomic Swaps. Contribute to atomiclabs/hyperdex development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/1520924?s=400&v=4
+
+[22-Oct-18 04:43 PM] modereck#4269
+Yesterday i downloaded and installed hyperdex, this message appears when im loggin into my account  when it is loading the interface and then i cant see any order in the market
+
+[22-Oct-18 04:43 PM] modereck#4269
+@cipi
+
+[22-Oct-18 04:51 PM] cipi#4502
+i compared the release dates... the commit changing the electrums was made 12 days ago and the latest release from https://github.com/atomiclabs/hyperdex/releases is 21 days old, so the change is not in the release ... it tries to connect to VTC electrum servers that are not running
+
+{Embed}
+https://github.com/atomiclabs/hyperdex/releases
+atomiclabs/hyperdex
+Grandma-Friendly Atomic Swaps. Contribute to atomiclabs/hyperdex development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/1520924?s=400&v=4
+
+[22-Oct-18 04:53 PM] sindresorhus#8187
+@cipi Did you take down the VTC Electrum server already?
+
+[22-Oct-18 04:54 PM] cipi#4502
+yes, i am running out of RAM.. they had 0 connections by that time, so i thought they are already switched
+
+[22-Oct-18 04:54 PM] modereck#4269
+And how do i change the VTC servers?
+
+[22-Oct-18 04:55 PM] sindresorhus#8187
+In the future, a warning before taking it down would be nice.
+
+[22-Oct-18 04:55 PM] sindresorhus#8187
+You said you would take it down when there are no more connections to it, so I assumed it was no rush.
+
+[22-Oct-18 04:56 PM] cipi#4502
+there were no connections when i took them down... will write a warning next time
+
+[22-Oct-18 04:57 PM] sindresorhus#8187
+Thanks 😃
+
+[22-Oct-18 04:59 PM] sindresorhus#8187
+@modereck You can use the nightly release for now. It has the latest servers. See: https://github.com/atomiclabs/hyperdex-nightlies/releases/tag/v0.0.0-ffe8317-18.10.22.1521
+
+{Embed}
+https://github.com/atomiclabs/hyperdex-nightlies/releases/tag/v0.0.0-ffe8317-18.10.22.1521
+atomiclabs/hyperdex-nightlies
+Nightly builds of HyperDEX. Contribute to atomiclabs/hyperdex-nightlies development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/1520924?s=400&v=4
+
+[22-Oct-18 05:17 PM] modereck#4269
+@sindresorhus  thank you 😃
+
+[22-Oct-18 05:25 PM] sindresorhus#8187
+@cipi We don't have MUE, but I've updated the Electrum servers for CRW and CHAIN: https://github.com/atomiclabs/hyperdex/commit/12b61a4e97068b4af69c0e5d3541fb04bd15fa66
+
+{Embed}
+https://github.com/atomiclabs/hyperdex/commit/12b61a4e97068b4af69c0e5d3541fb04bd15fa66
+Update CRW and CHAIN Electrum servers · atomiclabs/hyperdex@12b61a4
+https://avatars1.githubusercontent.com/u/170270?s=200&v=4
+
+[22-Oct-18 05:27 PM] sindresorhus#8187
+@cipi Do you know anyone I could ping about getting the Chainmaker logo, see: https://github.com/atomiclabs/hyperdex/issues/248#issuecomment-415454433
+
+{Embed}
+https://github.com/atomiclabs/hyperdex/issues/248
+Missing cryptocurrency icons · Issue #248 · atomiclabs/hyperdex
+We need icons for these currencies: ARG: atomiclabs/cryptocurrency-icons#188 BCBC: I've emailed them. If they don't answer, we can vectorize the PNG. BTCH: atomiclabs/cryptocurrency-icons#1...
+https://avatars3.githubusercontent.com/u/170270?s=400&v=4
+
+[22-Oct-18 05:36 PM] cipi#4502
+thanks, @siu - Chainmakers is the right one to ping about CHAIN logo
+
+[22-Oct-18 05:39 PM] cipi#4502
+@sindresorhus  i recently added this coin to coins-repo: https://github.com/jl777/coins/commit/fa7787f1485f6006c9c176822b9ac456c19d3f69 and they asked about HyperDEX integration. They also sent me a SVG logo. Could you add them?
+
+{Embed}
+https://github.com/jl777/coins/commit/fa7787f1485f6006c9c176822b9ac456c19d3f69
+add Etheera (ETA) · jl777/coins@fa7787f
+https://avatars2.githubusercontent.com/u/32116761?s=200&v=4
+
+[22-Oct-18 05:40 PM] cipi#4502
+
+{Attachments}
+https://cdn.discordapp.com/attachments/449948353531478037/503985980760653824/Etheera-ETA-SVG-Logo.svg
+
+[22-Oct-18 05:41 PM] sindresorhus#8187
+@cipi Yes, I'm working on a PR adding new coins.
+
+[22-Oct-18 05:41 PM] sindresorhus#8187
+Regarding the logo, they (or you), need to open an issue on https://github.com/atomiclabs/cryptocurrency-icons, and we'll make a proper icon for it.
+
+[22-Oct-18 05:41 PM] sindresorhus#8187
+That SVG is invalid though.
+
+[22-Oct-18 05:41 PM] sindresorhus#8187
+It's just a bitmap image embedded in an SVG.
+
+[22-Oct-18 05:42 PM] cipi#4502
+lol... i waven't looked into it, just sent what they sent me... i will tell them
+
+[22-Oct-18 05:58 PM] siu - Chainmakers#3920
+sent
+
+[22-Oct-18 05:58 PM] siu - Chainmakers#3920
+https://github.com/atomiclabs/hyperdex/issues/248#issuecomment-415454433
+
+{Embed}
+https://github.com/atomiclabs/hyperdex/issues/248
+Missing cryptocurrency icons · Issue #248 · atomiclabs/hyperdex
+We need icons for these currencies: ARG: atomiclabs/cryptocurrency-icons#188 BCBC: I've emailed them. If they don't answer, we can vectorize the PNG. BTCH: atomiclabs/cryptocurrency-icons#1...
+https://avatars3.githubusercontent.com/u/170270?s=400&v=4
+
+[22-Oct-18 06:28 PM] sindresorhus#8187
+@cipi https://github.com/atomiclabs/hyperdex/commit/793fb4acf371197d3764d9f0673d5ee2fde44e03
+
+{Embed}
+https://github.com/atomiclabs/hyperdex/commit/793fb4acf371197d3764d9f0673d5ee2fde44e03
+Add Etheera (ETA) currency · atomiclabs/hyperdex@793fb4a
+https://avatars1.githubusercontent.com/u/170270?s=200&v=4
+
+[24-Oct-18 10:52 AM] sindresorhus#8187
+New HyperDEX beta version is out: https://github.com/atomiclabs/hyperdex/releases/latest
+
+{Embed}
+https://github.com/atomiclabs/hyperdex/releases/latest
+atomiclabs/hyperdex
+Grandma-Friendly Atomic Swaps. Contribute to atomiclabs/hyperdex development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/1520924?s=400&v=4
+
+{Reactions}
+👍 (2) Komodo 👌 
+
+[24-Oct-18 10:52 AM] sindresorhus#8187
+// @modereck This one fixes the VTC Electrum issue.
+
+[24-Oct-18 11:33 AM] modereck#4269
+@sindresorhus 👍 I will check when return home
+
+[24-Oct-18 11:33 AM] modereck#4269
+Thanks
+
+[25-Oct-18 06:58 PM] Lucioric2000#4698
+Hello, after entering my portfolio credentials, the hyperdex app crashes
+
+[25-Oct-18 06:58 PM] Lucioric2000#4698
+even in the latest release of the channel https://github.com/atomiclabs/hyperdex/releases
+
+{Embed}
+https://github.com/atomiclabs/hyperdex/releases
+atomiclabs/hyperdex
+Grandma-Friendly Atomic Swaps. Contribute to atomiclabs/hyperdex development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/1520924?s=400&v=4
+
+[25-Oct-18 07:30 PM] Hermes#6934
+Which OS are you using?
+
+[27-Oct-18 02:49 PM] Torankoku#4818
+is it possible to add decred to hyperdex?
+
+[27-Oct-18 07:32 PM] vogelfreund#4122
+get the error vwindow:  marketmaker crashed
+
+[27-Oct-18 07:35 PM] vogelfreund#4122
+hyperdex will now relaunch
+
+[27-Oct-18 07:41 PM] Hermes#6934
+Are you using the latest version of Hyperdex?
+
+[27-Oct-18 07:41 PM] Hermes#6934
+@vogelfreund
+
+[27-Oct-18 07:42 PM] vogelfreund#4122
+yes
+
+[27-Oct-18 07:43 PM] vogelfreund#4122
+i loaded from github latest release
+
+[27-Oct-18 07:43 PM] vogelfreund#4122
+https://github.com/atomiclabs/hyperdex/commit/12b61a4e97068b4af69c0e5d3541fb04bd15fa66#diff-7c57e72ba5171ba5d9f60d58e3206cc3
+
+{Embed}
+https://github.com/atomiclabs/hyperdex/commit/12b61a4e97068b4af69c0e5d3541fb04bd15fa66
+Update CRW and CHAIN Electrum servers · atomiclabs/hyperdex@12b61a4
+https://avatars1.githubusercontent.com/u/170270?s=200&v=4
+
+[27-Oct-18 07:43 PM] vogelfreund#4122
+use these but cant connect marketmaker
+
+[27-Oct-18 07:43 PM] vogelfreund#4122
+which can i use
+
+[27-Oct-18 07:43 PM] vogelfreund#4122
+you have an idea
+
+[27-Oct-18 07:45 PM] Hermes#6934
+version v0.2.0?
+
+[27-Oct-18 07:46 PM] Hermes#6934
+Haven't experienced this in Windows
+
+[27-Oct-18 07:46 PM] Hermes#6934
+try doing a fresh installation
+

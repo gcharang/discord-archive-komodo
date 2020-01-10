@@ -1,0 +1,446 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[30-Jun-19 01:52 PM] Alright#0419
+I use a dummy assetchain daemon to do it
+
+[30-Jun-19 01:53 PM] Alright#0419
+`./komodod -ac_name=anything -ac_supply=1` wait for it to load, import key, sign tx, stop it, delete datadir
+
+[30-Jun-19 01:53 PM] Alright#0419
+is what I normally do
+
+[30-Jun-19 01:54 PM] Alright#0419
+you need to provide script of inputs if the node is unaware of them
+
+[30-Jun-19 01:58 PM] jl777c#5810
+to sign the transaction, more data is needed after sapling
+
+[30-Jun-19 01:59 PM] jl777c#5810
+explained in https://github.com/zcash/zips/blob/master/zip-0243.rst
+
+{Embed}
+https://github.com/zcash/zips/blob/master/zip-0243.rst
+zcash/zips
+Zcash Improvement Proposals. Contribute to zcash/zips development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/16122764?s=400&v=4
+
+[30-Jun-19 01:59 PM] jl777c#5810
+if the data is available in the wallet, it seems to get it automatic. if not, it needs to be provided, because it is needed to sign the tx
+
+[30-Jun-19 04:58 PM] grewalsatinder#9653
+https://twitter.com/CodeWisdom/status/1145368651140349952
+
+{Embed}
+Programming Wisdom (@CodeWisdom)
+https://twitter.com/CodeWisdom/status/1145368651140349952
+"Always implement things when you actually need them, never when you just foresee that you need them." - Ron Jeffries
+Likes
+147
+Twitter
+
+[30-Jun-19 04:58 PM] grewalsatinder#9653
+this only reminds me of jl777's logic on how he builds and implements things 😉
+
+[01-Jul-19 03:51 AM] Mylo#8306
+@Alright & @Deleted User @gcharang   is there any documentation for a newb to understand the transaction signing.  how to do it and what it involves & why to do it?
+
+[01-Jul-19 03:53 AM] Mylo#8306
+idk what you're exactly trying to do, but can only vaguely describe it.   also i don't have the scripts to do it quickly anyway - would be cool if this could be available to all users so they can look after themselves.
+
+[01-Jul-19 11:09 AM] coinmonks || CoinCodeCap#8469
+what is transaction throughput for smart chains?
+
+[01-Jul-19 11:10 AM] CHMEX#0686
+we tested 20k - 40k TPS a year ago
+
+[01-Jul-19 11:11 AM] coinmonks || CoinCodeCap#8469
+20k?
+
+[01-Jul-19 11:11 AM] CHMEX#0686
+20'000 Transactions per Second in a Cluster
+
+[01-Jul-19 01:27 PM] jl777c#5810
+iguana signs sapling tx in C code
+
+[01-Jul-19 03:17 PM] Alright#0419
+@Mylo it's basically just `createrawtransaction` -> `signrawtransaction` -> `sendrawtransaction`
+
+[01-Jul-19 03:18 PM] Alright#0419
+it's useful for making txes exactly how you need to
+
+[01-Jul-19 06:18 PM] ewtoombs#9532
+Does the project have an faq?
+
+[01-Jul-19 08:31 PM] Alright#0419
+Am trying to convert compressed WIF to uncompressed WIF. Could someone point me to a general explanation of the math behind this? Can't find any good resources
+
+[01-Jul-19 08:32 PM] jl777c#5810
+there is some way to calculate the other half from the compressed wif, google should find it
+
+[01-Jul-19 08:33 PM] Alright#0419
+```
+“Uncompressed” WIF private key:
+
+0x80 + 32 byte raw private key + 4 byte checksum
+
+“Compressed” WIF private key:
+
+0x80 + 32 byte raw private key + 0x01 + 4 byte checksum
+```
+found this from searching, but I can't seem to get it to work as described
+
+[01-Jul-19 08:33 PM] Alright#0419
+does that seem correct?
+
+[01-Jul-19 08:34 PM] Alright#0419
+don't have a problem getting raw private key, just not sure how to proceed from there
+
+[01-Jul-19 08:34 PM] jl777c#5810
+uncompressed is 64 bytes
+
+[01-Jul-19 08:35 PM] jl777c#5810
+oh, the wif
+
+[01-Jul-19 08:35 PM] jl777c#5810
+it is the pubkey that is 32 vs 64
+
+[01-Jul-19 08:35 PM] jl777c#5810
+yes, there is a 0x01 added for compressed
+
+[01-Jul-19 08:40 PM] Alright#0419
+```
+def WIFconv(byte, WIF):
+    first_encode = base58.b58decode(private_key_WIF)
+    private_key_full = binascii.hexlify(first_encode)
+    private_key = private_key_full[2:-8]
+    raw_privkey = private_key.decode("utf-8")
+    extended_key = byte+raw_privkey
+    first_sha256 = hashlib.sha256(binascii.unhexlify(extended_key)).hexdigest()
+    second_sha256 = hashlib.sha256(binascii.unhexlify(first_sha256)).hexdigest()
+    # add checksum to end of extended key
+    final_key = extended_key+second_sha256[:8]
+    # Wallet Import Format = base 58 encoded final_key
+    WIF = base58.b58encode(binascii.unhexlify(final_key))
+    return(WIF.decode("utf-8"))
+```
+this works fine for converting between prefixes, but I'm trying to rework it to convert compressed to uncompressed. Based on what that says, I assumed this would work, but it doesn't
+```
+def WIFconv(byte, WIF):
+    first_encode = base58.b58decode(private_key_WIF)
+    private_key_full = binascii.hexlify(first_encode)
+    private_key = private_key_full[2:-8]
+    raw_privkey = private_key.decode("utf-8")
+    extended_key = byte+raw_privkey+'01'
+    first_sha256 = hashlib.sha256(binascii.unhexlify(extended_key)).hexdigest()
+    second_sha256 = hashlib.sha256(binascii.unhexlify(first_sha256)).hexdigest()
+    # add checksum to end of extended key
+    final_key = extended_key+second_sha256[:8]
+    # Wallet Import Format = base 58 encoded final_key
+    WIF = base58.b58encode(binascii.unhexlify(final_key))
+    return(WIF.decode("utf-8"))
+```
+
+[01-Jul-19 08:40 PM] Alright#0419
+`    extended_key = byte+raw_privkey` vs `    extended_key = byte+raw_privkey+'01'`
+
+[01-Jul-19 08:41 PM] Alright#0419
+I've tried it before and after sha steps, wasn't sure if it was meant to be part of the checksum or not, neither seems to work
+
+[01-Jul-19 08:41 PM] jl777c#5810
+iguana has code that generates wif from privkey
+
+[01-Jul-19 10:29 PM] Alright#0419
+```
+def WIFconv(byte, WIF):
+    first_encode = base58.b58decode(private_key_WIF)
+    private_key_full = binascii.hexlify(first_encode)
+    private_key = private_key_full[2:-8]
+    raw_privkey = private_key.decode("utf-8")
+    extended_key = byte+raw_privkey
+    first_sha256 = hashlib.sha256(binascii.unhexlify(extended_key[:66])).hexdigest()
+    second_sha256 = hashlib.sha256(binascii.unhexlify(first_sha256)).hexdigest()
+    # add checksum to end of extended key
+    final_key = extended_key[:66]+second_sha256[:8]
+    # Wallet Import Format = base 58 encoded final_key
+    WIF = base58.b58encode(binascii.unhexlify(final_key))
+    return(WIF.decode("utf-8"))
+```
+compressed to uncompressed
+
+[01-Jul-19 10:29 PM] Alright#0419
+needed to *drop* 01, not add, that's where I was caught up on
+
+[01-Jul-19 11:06 PM] KMD TipBot#0077
+
+{Embed}
+TipBot
+@Unknown (Emmanuel#5426)
+You tipped @CHMEX **3 KMD**
+
+[02-Jul-19 05:28 AM] Mylo#8306
+create, sign, send.   no probs thanks.   i already started a tutorial for that but it was too low level for the current marketing stuff, so will complete it after rebrand.  cheers
+
+[02-Jul-19 05:28 AM] Mylo#8306
+it's interesting using a dummy chain to do the signing.   i'll have to check it out.
+
+[02-Jul-19 04:14 PM] coinmonks || CoinCodeCap#8469
+anyone wanna answer it https://bitcoin.stackexchange.com/questions/88778/how-to-create-generate-addresses-for-multiple-crypto-currencies
+
+{Embed}
+https://bitcoin.stackexchange.com/questions/88778/how-to-create-generate-addresses-for-multiple-crypto-currencies
+How to create generate addresses for multiple crypto currencies
+I am trying to understand how to generate addresses from 1 mnemonic for multiple cryptocurrencies. 
+
+I needed a read-only wallet, so I guess I need to use an xpub key. But I am struggling to unders...
+https://cdn.sstatic.net/Sites/bitcoin/img/apple-touch-icon@2.png?v=462e8b9b382b
+
+[03-Jul-19 07:54 AM] ca333#0118
+very interesting: https://news.mit.edu/2019/ai-programming-gen-0626
+
+{Embed}
+https://news.mit.edu/2019/ai-programming-gen-0626
+New AI programming language goes beyond deep learning
+General-purpose language works for computer vision, robotics, statistics, and more.
+https://news.mit.edu/sites/mit.edu.newsoffice/files/styles/og/public/images/2019/MIT-General-Probablistic.jpg
+
+[04-Jul-19 02:47 PM] jon_at_work#4397
+Hello all, I received an email about updating my Komodo node and just wanted to know if anyone could tell me which version I should be running?
+
+[04-Jul-19 04:15 PM] Oszy#5734
+0.4.0a i think
+
+[05-Jul-19 12:10 AM] daemonfox#6136
+Out of curiosity is there anyone working on PHP based tools for Komodo?
+
+[05-Jul-19 12:50 AM] daemonfox#6136
+Oooooo that looks fun now i have even more to read!
+
+[05-Jul-19 06:09 AM] dukeleto#7326
+https://twitter.com/dukeleto/status/1147023985579835392
+
+{Embed}
+Duke Leto (@dukeleto)
+https://twitter.com/dukeleto/status/1147023985579835392
+$HUSH is now the most bandwidth-efficient Zcash protocol coin!
+We just removed the need to download another large Sprout-related file. Now only 50MB of setup files are needed where $ZEC + all other coins require 1.6GB to be downloaded before ever syncing!
+https://t.co/qWch...
+https://pbs.twimg.com/media/D-sJuL2XYAAPApc.jpg:large
+Twitter
+
+{Reactions}
+Hush (2) 
+
+[05-Jul-19 06:23 AM] dukeleto#7326
+the above patch could be ported to KMD as well
+
+[05-Jul-19 06:23 AM] dukeleto#7326
+since no AC's have groth16 joinsplits, but some KMD ac's do have old-style sprout joinsplits so getting rid of that file is not as easy
+
+[05-Jul-19 06:23 AM] dukeleto#7326
+still, 700MB savings is good
+
+[05-Jul-19 06:24 AM] dukeleto#7326
+I leave this as an exercise to the interested reader.
+
+[05-Jul-19 06:26 AM] jojo alajmi#4761
+Bitcoin
+
+[05-Jul-19 10:53 AM] jojo alajmi#4761
+@jojo alajmi
+
+[05-Jul-19 02:36 PM] KomodoWorld#8282
+`Utreexo is a novel hash based dynamic accumulator, which allows the millions of unspent outputs to be represented in under a kilobyte...the burden of keeping track of funds is shifted to the owner of those funds` https://dci.mit.edu/research/2019/6/6/utreexo-a-dynamic-hash-based-accumulator-optimized-for-the-bitcoin-utxo-set
+
+{Embed}
+https://dci.mit.edu/research/2019/6/6/utreexo-a-dynamic-hash-based-accumulator-optimized-for-the-bitcoin-utxo-set
+Utreexo: A dynamic hash-based accumulator optimized for the Bitcoi...
+by Thaddeus Dryja (MIT’s Digital Currency Initiative)   Abstract :  In the Bitcoin consensus network, all nodes come to agreement on the set of Unspent Transaction Outputs (The “UTXO” set). The size of this shared state is a scalability constraint for the network, as t...
+http://static1.squarespace.com/static/59aae5e9a803bb10bedeb03e/t/59aae68f3e00bebf33c06123/1504372368647/DCI+General+Presentation+by+Mark+++Google+Slides.png?format=1500w
+
+[05-Jul-19 03:20 PM] ERIC#3057
+Anyone know how to open a HTTPs RPC port on  assets chain node?
+
+[05-Jul-19 03:29 PM] gcharang#6833
+@owerache 
+```js
+const stdrpc = require('stdrpc')
+// const rpc = stdrpc("http://localhost:11607/", { // PIZZA
+const rpc = stdrpc("http://localhost:7771/", {
+    req: {
+        auth: {
+            username: "rpcuser",
+            password: "passworddrowssap"
+        }
+    }
+});
+// == FSM ==
+// FSMaddress [pubkey]
+rpc.FSMaddress().then(resp => {
+    console.log(resp)
+}).catch(error => {
+    console.log(error)
+}
+```
+
+[05-Jul-19 03:36 PM] owerache#0341
+Thank you @gcharang  I was saying that for the others: -)
+
+[05-Jul-19 03:37 PM] gcharang#6833
+these rpc wrapper examples for various langs are coming to the docs soon
+
+[05-Jul-19 03:41 PM] owerache#0341
+perfect 😃 it s awesome
+
+[05-Jul-19 05:32 PM] Alright#0419
+@dukeleto I think the Dec 15 (if I remember correctly) hard fork activated "sprout-on-groth16"
+
+[05-Jul-19 05:33 PM] Alright#0419
+so some ACs likely do need it
+
+[06-Jul-19 03:37 AM] dukeleto#7326
+@Alright nope
+
+[06-Jul-19 03:37 AM] dukeleto#7326
+show me a groth16 JoinSplit in KMD world to prove me wrong
+
+[06-Jul-19 03:38 AM] dukeleto#7326
+if any AC requires groth16, speak now, or forever hold your pieces of broken code
+
+{Reactions}
+😂 
+
+[06-Jul-19 03:39 AM] dukeleto#7326
+@Deleted User does OOT have groth16 joinsplits?
+
+[06-Jul-19 03:40 AM] dukeleto#7326
+that is the only AC I know that didn't do sapling with everybody else
+
+[06-Jul-19 03:40 AM] dukeleto#7326
+but I don't think James enabled/allowed anybody to use groth16, maybe I am wrong
+
+[06-Jul-19 03:40 AM] dukeleto#7326
+Using groth16 is really dumb
+
+[06-Jul-19 03:40 AM] blackjok3r#3181
+So the sprout params are still needed but there is a new sprout param taht was introduced with sapling that we never used, and thats the one you remved right?
+
+[06-Jul-19 03:40 AM] dukeleto#7326
+Correct
+
+[06-Jul-19 03:41 AM] blackjok3r#3181
+understood. Nice work 😃
+
+[06-Jul-19 03:41 AM] dukeleto#7326
+there is an old sprout param (900MB) and new one (groth16, 700MB)
+
+[06-Jul-19 03:41 AM] dukeleto#7326
+Pirate needs the old sprout param, but not groth16
+
+[06-Jul-19 03:41 AM] dukeleto#7326
+As far as I know, James prevented any AC from using groth16, smartly
+
+[06-Jul-19 03:42 AM] dukeleto#7326
+I have a patch for KMD ready, it needs testing
+
+[06-Jul-19 03:42 AM] dukeleto#7326
+ZEN uses groth16, i don't know of any other coin that does, other than ZEC
+
+[06-Jul-19 03:43 AM] dukeleto#7326
+supporting 2 completely different codepaths for Sprout, what a horrible plight
+
+[06-Jul-19 03:43 AM] dukeleto#7326
+ZEN also has not fully enabled sapling yet, because of groth16 shenanigans, I believe
+
+[06-Jul-19 03:43 AM] blackjok3r#3181
+yeah doesnt sound nice, keep things simple where possible is always the best rule to follow
+
+[06-Jul-19 03:55 AM] dukeleto#7326
+@blackjok3r https://github.com/jl777/komodo/pull/1584
+
+{Embed}
+https://github.com/jl777/komodo/pull/1584
+Avoid downloading 700MB groth16 params that we do not need by leto...
+NOTE: Work in progress, needs more testing before merging.
+This is a port of this from the Hush codebase. I had to make some manual changes in fetch-params, which is different since Hush does not d...
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[06-Jul-19 03:55 AM] dukeleto#7326
+give it a test if you are bored, i will be not be able to fully test it for a few days
+
+[06-Jul-19 03:55 AM] dukeleto#7326
+try to sync some weird asset chains that have joinsplits
+
+[06-Jul-19 03:56 AM] blackjok3r#3181
+Man im snowed under, not even suipposed to be working today, but I figured something out this week and cant get it out of my head so just finishing it lol
+
+[06-Jul-19 03:57 AM] dukeleto#7326
+no worries, me too 😅
+
+[06-Jul-19 03:58 AM] blackjok3r#3181
+In short, CCs just got much bette unless I totally feked it all up. But it seems to be good.
+
+[06-Jul-19 03:59 AM] blackjok3r#3181
+Worked out how to make CC contracts that dont need to lookup every tx vin from disk along with other things, this effectivly makes creating the tx about 100x more CPU/IO intesnive than validating it. Which has always bothered me, validation is very slow. Doing lots of CCtx at oncereally slows things down.
+
+[06-Jul-19 04:00 AM] blackjok3r#3181
+Hopefully we can get some tests on labs using hundreds if thousands or even millions of utxos in just 1 contract. 😅
+
+[06-Jul-19 04:18 AM] Alright#0419
+any sprout z tx between december 15 and the sapling hard fork used groth-on-sprout @dukeleto
+
+[06-Jul-19 04:18 AM] Alright#0419
+maybe there aren't any, but I doubt it
+
+[06-Jul-19 04:19 AM] Alright#0419
+Hmm, might be thinking of this wrong. Was dec 15 the sapling hard fork?
+
+[06-Jul-19 04:19 AM] Alright#0419
+I know groth-on-sprout was activated on Dec 15
+
+[06-Jul-19 04:19 AM] Alright#0419
+so any *sprout* txes after that used it
+
+[06-Jul-19 12:20 PM] SHossain#0007
+https://medium.com/@jameslee777/nspv-reference-cli-client-cf1ffdc03631
+
+{Embed}
+https://medium.com/@jameslee777/nspv-reference-cli-client-cf1ffdc03631
+nSPV reference cli client - jl777 - Medium
+Above is the first ever transaction created by nSPV! nSPV went from idea to initial implementation during this last week. With the rest of…
+
+[07-Jul-19 03:30 PM] dukeleto#7326
+@jl777c does any KMD asset chain have groth16 joinsplits ?
+
+[07-Jul-19 03:32 PM] radix42#3743
+syncing pirate without the groth16 params and it blows up on nov 15
+
+[07-Jul-19 03:37 PM] radix42#3743
+wasn't that when we cut over to the code that was sapling-ready? if so did we use groth16 sprout transactions for the month from nov 15-dec 15?
+
+[07-Jul-19 03:37 PM] jl777c#5810
+all ztx before dec 15th
+
+[07-Jul-19 03:39 PM] radix42#3743
+the nogroth16 PR duke submitted syncs fine for pirate until nov 15 and then it won't verify any txns anymore 😦 and rejects all blocks after that
+
+[07-Jul-19 03:40 PM] radix42#3743
+no wait it IS dec 15 i can't read not nov
+
+[07-Jul-19 03:41 PM] radix42#3743
+so it looks like we can't ditch the cursed groth16 file
+
+[07-Jul-19 03:42 PM] radix42#3743
+in my defense i looked at the log of the sync before I'd finished my first cup of coffee
+
+[07-Jul-19 04:04 PM] jl777c#5810
+defense approved!
+
+[07-Jul-19 04:04 PM] jl777c#5810
+☕
+

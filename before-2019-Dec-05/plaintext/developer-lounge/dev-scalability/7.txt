@@ -1,0 +1,409 @@
+==============================================================
+Guild: Komodo
+Channel: dev-scalability
+Topic: Discussion about Komodo scalability. Komodo has demonstrated 20,000 TPS.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[31-May-18 08:31 AM] blackjok3r#0000
+To change the TX size you need to start a new container. The miner node keeps all the blockchain data.
+
+[31-May-18 08:32 AM] blackjok3r#0000
+It would basically be 1 test with 1 payment. and one test with 100. They are totally seperate things.
+
+[31-May-18 08:33 AM] blackjok3r#0000
+they would actually even be totally seperate chains.
+
+[31-May-18 08:34 AM] smk762#0000
+yeah apis connected is superflous with AWS db. Can derive active chains from there which is a better metric showing pretty much the same anyways.
+
+[31-May-18 08:36 AM] blackjok3r#0000
+```{ "size": 696770, "height": 10, "time": 1527755479, "totaltx": "3084", "ac": "TXSCL220" }
+{ "size": 585609, "height": 11, "time": 1527755503, "totaltx": "2591", "ac": "TXSCL220" }
+{ "size": 508485, "height": 12, "time": 1527755519, "totaltx": "2249", "ac": "TXSCL220" }
+{ "size": 638161, "height": 13, "time": 1527755570, "totaltx": "2824", "ac": "TXSCL220" }
+{ "size": 1331994, "height": 14, "time": 1527755592, "totaltx": "5901", "ac": "TXSCL220" }
+{ "size": 279194, "height": 15, "time": 1527755606, "totaltx": "1232", "ac": "TXSCL220" }
+{ "size": 652842, "height": 16, "time": 1527755626, "totaltx": "2889", "ac": "TXSCL220" }
+{ "size": 358109, "height": 17, "time": 1527755646, "totaltx": "1582", "ac": "TXSCL220" }
+{ "size": 639287, "height": 18, "time": 1527755663, "totaltx": "2829", "ac": "TXSCL220" }
+{ "size": 347050, "height": 19, "time": 1527755688, "totaltx": "1533", "ac": "TXSCL220" }
+```
+
+[31-May-18 08:36 AM] blackjok3r#0000
+Its pretty slow inside virtualbox and docker on laptop. Pretty much ready to push this onto a server.
+
+[31-May-18 08:37 AM] blackjok3r#0000
+But I need to know what to do with that JSON. 🙂
+
+[31-May-18 08:37 AM] smk762#0000
+got a url for the json for me to tap in to?
+
+[31-May-18 08:37 AM] blackjok3r#0000
+It just pushes it to a text file on a shared volume right now.
+
+[31-May-18 08:37 AM] blackjok3r#0000
+@Mylo
+
+[31-May-18 08:38 AM] imylomylo#0000
+ok i'll modify REST - won't be long
+
+[31-May-18 08:59 AM] blackjok3r#0000
+Building the docker images on a 2 core vultr should be fast enough to saturate mempool.
+
+[31-May-18 09:00 AM] blackjok3r#0000
+single chain
+
+[31-May-18 09:19 AM] imylomylo#0000
+put this in `config.sh`
+```
+#!/bin/bash
+BLOCKNOTIFYURL="https://njeitldkqc.execute-api.ap-southeast-2.amazonaws.com/v0/blocknotify"
+```
+put your JSON as `${RESULT}` for this script
+and put this as `blocknotify` script in your AC.conf
+```
+#!/bin/bash
+source config.sh
+curl \
+--verbose \
+--request OPTIONS \
+${BLOCKNOTIFYURL} \
+--header 'Origin: http://localhost:8000' \
+--header 'Access-Control-Request-Headers: Origin, Accept, Content-Type' \
+--header 'Access-Control-Request-Method: POST'
+sleep 2
+curl \
+--verbose \
+--header "Origin: http://localhost:8000" \
+--request POST \
+--data "${RESULT}" \
+${BLOCKNOTIFYURL}
+
+```
+
+[31-May-18 09:19 AM] imylomylo#0000
+blackjok3r ☝
+
+[31-May-18 09:20 AM] blackjok3r#0000
+I am already using blocknotify so this will just have to go into that script I guess.
+
+[31-May-18 09:21 AM] blackjok3r#0000
+I got in trouble for using a heap of `source` lol.. so I will pass that URL as a docker ENV var 🙂
+
+[31-May-18 09:22 AM] blackjok3r#0000
+can I do that?
+
+[31-May-18 09:22 AM] imylomylo#0000
+yeah no probs with that.
+
+[31-May-18 09:22 AM] blackjok3r#0000
+cool. That way we can change it without rebuilding image. I put nearly everything as ENV var. Pretty pleased how it turned out. 😄
+
+[31-May-18 09:23 AM] imylomylo#0000
+because of CORS enabled (which i can disable) you have to send an OPTIONS http method first, if it causes a problem, i can disable CORS and we can just try POST.
+having CORS enabled will allow us to lockdown from which hosts can send data into the REST service, in case some dickheads want to inject stuff 🙂
+
+[31-May-18 09:30 AM] imylomylo#0000
+currently set up that URL for 1 tx / s of writes.  if you're going to fire up 60 ACs, I'll probably have to increase the DB throughput. lmk how many chains.  if you're doing 60, 10 writes/s should be fine ... _shrug_
+
+[31-May-18 09:30 AM] blackjok3r#0000
+just waiting on the image to build. Takes a little while.
+
+[31-May-18 09:30 AM] imylomylo#0000
+no probs mate
+
+[31-May-18 09:30 AM] blackjok3r#0000
+Just using 1 chain
+
+[31-May-18 09:30 AM] blackjok3r#0000
+We havent generated the docker-compose
+
+[31-May-18 09:31 AM] blackjok3r#0000
+its just 1 manul chain for now
+
+[31-May-18 09:31 AM] imylomylo#0000
+ok, what's the plan for this evening?
+
+[31-May-18 09:31 AM] blackjok3r#0000
+until we have it working 100% perfectly.
+
+[31-May-18 09:31 AM] blackjok3r#0000
+I guess run a blast and see if smk762 can get the required data?
+
+[31-May-18 09:31 AM] blackjok3r#0000
+once we have 1 chain wokring, then its just a matter of scaling up a few at a time to see how it all reacts.
+
+[31-May-18 09:32 AM] imylomylo#0000
+💦
+
+[31-May-18 09:32 AM] smk762#0000
+I'll need to mod my code a bit, and a link to the json. Will see how far I can get tonight, but woot! long weekend starts in 24hrs 🎉
+
+[31-May-18 09:34 AM] blackjok3r#0000
+Timed it well then. Its been a bit of a battle on my side with docker, but patchkez was a great help as always.
+
+[31-May-18 09:35 AM] imylomylo#0000
+`https://njeitldkqc.execute-api.ap-southeast-2.amazonaws.com/v0/blocknotify` that's your URL smk762
+
+[31-May-18 09:35 AM] smk762#0000
+thanks!
+
+[31-May-18 09:35 AM] imylomylo#0000
+that will return ALL the stuff blackjok3r sends into it.
+
+[31-May-18 09:37 AM] imylomylo#0000
+if you want specific records, needs some work 😬 
+you will receive what blackjok3r sends in with additional JSON attributes `createdAt` `updatedAt` and `id`
+
+[31-May-18 09:37 AM] pondsea#0000
+https://twitter.com/realSidhuJag/status/1002054602345168896
+
+[31-May-18 09:37 AM] blackjok3r#0000
+the blast can actually run indefinitely so if we have enough data it can just keep going until it spends all 77 million coins LOL
+
+[31-May-18 09:37 AM] blackjok3r#0000
+I am doing this test with 1payment TX
+
+[31-May-18 09:37 AM] pondsea#0000
+My understanding was that any action was a transaction? So a payment = a transaction
+
+[31-May-18 09:38 AM] blackjok3r#0000
+no
+
+[31-May-18 09:38 AM] pondsea#0000
+I guess im mistaken?
+
+[31-May-18 09:38 AM] blackjok3r#0000
+payment is payment. I knew this would be a problem, but the last test failed before the 1 payment TX test could be run.
+
+[31-May-18 09:38 AM] blackjok3r#0000
+We got avout 20,000TX/s
+
+[31-May-18 09:38 AM] blackjok3r#0000
+verified
+
+[31-May-18 09:39 AM] blackjok3r#0000
+Still have all the blockchains and there are explorers up at 88.99.57.78:7128
+
+[31-May-18 09:39 AM] blackjok3r#0000
+Increase the port number by 2, for the next chain.
+
+[31-May-18 09:45 AM] blackjok3r#0000
+@Mylo is it working?
+
+[31-May-18 09:45 AM] imylomylo#0000
+nothing there yet
+
+[31-May-18 09:45 AM] imylomylo#0000
+checking logs
+
+[31-May-18 09:47 AM] gcharang#0000
+In a single blockchain transaction, we can do a traditional payment to many people.
+
+[31-May-18 09:47 AM] blackjok3r#0000
+I have JSON being output from the stats script, I just added the code you gave me to that.
+
+[31-May-18 09:48 AM] blackjok3r#0000
+I cant really check logs as marketmaker floods thousands of lines.
+
+[31-May-18 09:48 AM] blackjok3r#0000
+and its in the same place.
+
+[31-May-18 09:48 AM] imylomylo#0000
+yeah no probs, i'm c+p your sample json
+
+[31-May-18 09:49 AM] blackjok3r#0000
+I think its safe to say we will need 2 TxBlaster containers to saturate at 1 payment TX. Its still not full even on a straight VPS.
+
+[31-May-18 09:49 AM] imylomylo#0000
+you have to escape your quote marks
+e.g.
+```
+RESULT="{ \"size\": 696770, \"height\": 10, \"time\": 1527755479, \"totaltx\": \"3084\", \"ac\": \"TXSCL220\" }"
+
+```
+
+[31-May-18 09:50 AM] blackjok3r#0000
+ahh ok.
+
+[31-May-18 09:50 AM] imylomylo#0000
+https://njeitldkqc.execute-api.ap-southeast-2.amazonaws.com/v0/blocknotify
+
+[31-May-18 09:50 AM] blackjok3r#0000
+I will stop it now and change wont be long.
+
+[31-May-18 09:50 AM] imylomylo#0000
+there's the sample ☝
+
+[31-May-18 09:58 AM] imylomylo#0000
+pondsea https://komodostats.com/scaling/?all
+
+[31-May-18 09:58 AM] blackjok3r#0000
+need to take a break for 30mins
+
+[31-May-18 09:58 AM] blackjok3r#0000
+bak soon
+
+[31-May-18 09:58 AM] pondsea#0000
+Can you point me to some doc showing why a payment isnt a tx?
+
+[31-May-18 09:59 AM] imylomylo#0000
+cos in a tx you can have multiple payments.
+
+[31-May-18 09:59 AM] pondsea#0000
+Ah and you were doing 100x right?
+
+[31-May-18 09:59 AM] imylomylo#0000
+we were doing both 1 payment per 1 tx, and another 100 payments per 1 tx.
+
+[31-May-18 09:59 AM] imylomylo#0000
+separate tests.
+
+[31-May-18 10:00 AM] pondsea#0000
+Ok i will wait till you do the 1tx test then i will shit on that sys devs face
+
+[31-May-18 10:00 AM] imylomylo#0000
+i used to call that act "dehumanizing someone" - but i'm a saint now 😇
+
+[31-May-18 10:01 AM] pondsea#0000
+800,000/100=8ktps
+
+[31-May-18 10:01 AM] pondsea#0000
+still shits on any other currency
+
+[31-May-18 10:03 AM] pondsea#0000
+"how about you give the number of signature verifications per second instead which is the real benchmark."
+
+[31-May-18 10:04 AM] smk762#0000
+only difference between a payment and a tx is the number of senders being 1:many instead of 1:1
+
+[31-May-18 10:04 AM] smk762#0000
+it's a pretty pissweak limitation that would constrain realworl use cases beyond reasonable limits
+
+[31-May-18 10:05 AM] imylomylo#0000
+two separate tests, the 100 payments were done at 2pm, the 1 payments were done at 3pm.
+we'll get better documentation of the event next time
+and keep a journal,
+Dear Diary,
+:trollface:
+
+[31-May-18 10:07 AM] jl777#0000
+we can get 10x the tx/sec using small 1 payment tx, but it loses 10x the payments
+
+[31-May-18 10:16 AM] blackjok3r#0000
+Generating enough 1 payment TX to fill mempool is proving harder than larger ones. But we can just spawn more TxBlaster nodes. Its literally no diffrence to start 2 or a million containers. Limited by the cloud power we can get only.
+
+[31-May-18 10:28 AM] manfromaus#0000
+Is there an eta at current on the next test?
+
+[31-May-18 10:28 AM] manfromaus#0000
+Or just working towards the goal for the moment with unknown timeframe
+
+[31-May-18 10:36 AM] shossain#0000
+started notary process for the first 2 txscl chains
+
+[31-May-18 10:36 AM] shossain#0000
+using the latest momo branch
+
+[31-May-18 10:37 AM] shossain#0000
+```
+matches.2 bestmatches.2 recv.3 (1 3)
+new PENDING BESTK (1 3) state.0
+bestk.1 3 KMD height.5400 mod.0 VINI.0 myind.0 MINE.({"txid":"6bbe72a4433a415c527933ab5147b442a5856e07f6be37cb30b5ad7e9af802f7","vout":253,"scriptSig":{"asm":"3044022013e8e22b1874c820fe1254bbbc14eba7107c29ecc5e9f2c915f163fed5d1c22c02202d4a0afe109a27fd3b4cff47bbe54a5379612d1608d05d6688053fb6efbf11c001","hex":"473044022013e8e22b1874c820fe1254bbbc14eba7107c29ecc5e9f2c915f163fed5d1c22c02202d4a0afe109a27fd3b4cff47bbe54a5379612d1608d05d6688053fb6efbf11c001"},"sequence":4294967295}) j.0
+>>>>>>>>>>> KMD dpow_sendrawtransaction (52bb914f0bf2cdde0f02d2a6f6d70651d966390ffb99bb911d354c752cfd8e41)
+bestk.1 3 TXSCL height.5400 mod.0 VINI.0 myind.0 MINE.({"txid":"525f0e4d779b48a416586f4eb54f2e88f4cdd7127e8b888b1de9a2b670a68dd5","vout":29,"scriptSig":{"asm":"3045022100fdde8ba807fd5ec46c425d05fbd8fbe63e53a06fa5609cd6e59bfbe4c4ff3cc602202d09112aa94a2fb8be26976a95e68f6dae21d77c515f60a1a95126e2b0865a1d01","hex":"483045022100fdde8ba807fd5ec46c425d05fbd8fbe63e53a06fa5609cd6e59bfbe4c4ff3cc602202d09112aa94a2fb8be26976a95e68f6dae21d77c515f60a1a95126e2b0865a1d01"},"sequence":4294967295}) j.0
+>>>>>>>>>>> TXSCL dpow_sendrawtransaction (96d3f37918ed444eed3cd682d3c2aa97e9ea8f5f693074e8e9e4a76db25c6116)
+```
+
+[31-May-18 10:37 AM] shossain#0000
+first notarization happened
+
+[31-May-18 10:43 AM] jl777#0000
+does getinfo show the notarization hashes/etc properly?
+
+[31-May-18 10:43 AM] blackjok3r#0000
+@Mylo I used jq to build the JSON, I cant work out how to automatically "stringify" it (is that what you call it lol?)
+
+[31-May-18 10:43 AM] jl777#0000
+if so, then it will be up to @libscott to get the MoMoM validated
+
+[31-May-18 10:44 AM] imylomylo#0000
+ummmm don't worry.  what are you asking?
+
+[31-May-18 10:44 AM] imylomylo#0000
+it's cool either way, if something needs to change, i can massage your data into DB anyways 😛
+
+[31-May-18 10:45 AM] blackjok3r#0000
+The JSON being pushed from blocknotify you said it needs the '\' added, but 'jq' built it its not made with bash so I cant just manually add all the '\'
+
+[31-May-18 10:45 AM] imylomylo#0000
+oh..... can you do a sed on it within your script to e.g. `s/\"/\\\"/` or somethign like that
+
+[31-May-18 10:45 AM] imylomylo#0000
+might need extra \\\\
+
+[31-May-18 10:45 AM] blackjok3r#0000
+{ "size": 6027, "height": 858000, "time": 1527743831, "totaltx": "5", "ac": "TXSCL220" }
+
+[31-May-18 10:46 AM] blackjok3r#0000
+thats what jq spits out, so I need to run 'sed' over it. Hitting google
+
+[31-May-18 10:46 AM] shossain#0000
+```$ ./assets-cli getinfo
+TXSCL
+{
+  "version": 1001550,
+  "protocolversion": 170003,
+  "KMDversion": "0.1.1",
+  "notarized": 5400,
+  "prevMoMheight": 5400,
+  "notarizedhash": "05615dda06d529466619e25534fde8323b81ce05558a8ddf7074064f23c08ba4",
+  "notarizedtxid": "52bb914f0bf2cdde0f02d2a6f6d70651d966390ffb99bb911d354c752cfd8e41",
+  "notarizedtxid_height": "mempool",
+  "KMDnotarized_height": 0,
+  "notarized_confirms": 0,
+  "walletversion": 60000,
+  "balance": 776922.99310000,
+  "blocks": 5408,
+  "longestchain": 5408,
+  "timeoffset": 0,
+  "tiptime": 1527763266,
+  "errors": "",
+  "CCid": 3,
+  "name": "TXSCL",
+}
+TXSCL000
+{
+  "version": 1001550,
+  "protocolversion": 170003,
+  "KMDversion": "0.1.1",
+  "notarized": 10506,
+  "prevMoMheight": 10506,
+  "notarizedhash": "023dce2c9f544e5058f3613d21c529a163615d9586e9cd34a9f0693befe1faaf",
+  "notarizedtxid": "0aa26247cf2190ce4811ceab1ec5f753d9aace6e23b9092c1a7f711132d151e6",
+  "notarizedtxid_height": "mempool",
+  "KMDnotarized_height": 0,
+  "notarized_confirms": 0,
+  "walletversion": 60000,
+  "balance": 777699.99275000,
+  "blocks": 11085,
+  "longestchain": 11085,
+  "timeoffset": 0,
+  "tiptime": 1527763443,
+  "errors": "",
+  "CCid": 3,
+  "name": "TXSCL000",
+}
+```
+
+[31-May-18 10:47 AM] imylomylo#0000
+```
+pioneermylo@pari1:~$ cat sample.txt | sed 's/\"/\\\"/g'
+{ \"size\": 6027, \"height\": 858000, \"time\": 1527743831, \"totaltx\": \"5\", \"ac\": \"TXSCL220\" }
+```
+
+[31-May-18 10:48 AM] imylomylo#0000
+and all that needs to go between "  "
+

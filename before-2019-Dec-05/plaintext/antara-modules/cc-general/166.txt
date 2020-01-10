@@ -1,0 +1,396 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[26-Oct-19 05:13 AM] polycryptoblog#1173
+This is exactly what is needed for certain interested parties.   I think this is the biggest thing to come out of the Komodo ecosystem so far.   This will allow for complex blockchains and clusters which currently don’t exist yet.
+
+[26-Oct-19 05:14 AM] polycryptoblog#1173
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/637519287753375744/image0.gif
+
+[26-Oct-19 05:33 AM] jl777c#5810
+yes FSM was scheduled as the last major CC as it needs to be able to utilize all the other core CC and with FSM CC, new logic can be deployed via rpc calls, no need for a hardfork
+
+[26-Oct-19 07:43 AM] jl777c#5810
+@dimxy if you can find a GUI that can define FSM and then make the fsmdefine rpc call use the output of that, it would be a great help for getting people up to speed with creating FSM
+
+{Reactions}
+👌 
+
+[26-Oct-19 08:31 AM] jl777c#5810
+i think for deploying a FSM instance you would make a "main" equivalent that defines all the sub-FSM that it will use, and if a sub-FSM can have sub-sub-FSM, then there is no practical limit to the complexity of the overall FSM. though i think for vast majority of usage, a single main FSM definition opreturn with its sub-FSM and events will be more than sufficient
+
+[26-Oct-19 08:32 AM] jl777c#5810
+so if it makes sense to limit nesting to one level, we can do that as no sense to make something able to handle 1000x the complexity that is actually needed. if we need some complex algo, we would implement that in code and then make an FSM variable/function that invokes it, so a very compact FSM definition can do some very powerful things
+
+[26-Oct-19 06:59 PM] dimxy#2587
+I cannot find yet any GUI examples which defines FSM but I can find many backward examples when a GUI is driven by a FSM. But I don't see any problems, with some existing FSM implementations as a base, to develop a json structure for definition of state list, event list and transition map for fsmdefine.
+What is more tricky thing is to design state actions and event conditions for flexible internal events, as this involves some kind of expressions on chain values (for example to check if some timeout passed or amount is reached). I think we could develop some simple expression language which is defined on blockchain artefacts, so we need to enumerate such artefacts and assign identifiers for them (like 'ht' as height, 't' as timeout etc). Such expressions might be associated with states and events.
+---
+Another question is do we really want external dapps for evaluation of FSMs? In this case FSMs are dependent on  that whether the dapp is running and correct. As we have all the states and events inside the chain, wouldn't it be more reliable and self-contained to have the blockchain code (executed by miners) to evaluate FSMs state transitions? (maybe dapps could evaluate some additional conditions on state transitions but this would mean the FSM is not completely defined in the chain)
+
+[26-Oct-19 11:00 PM] Alright#0419
+maybe I'm misunderstanding it, but it seems payments CC is half way there already
+
+[26-Oct-19 11:01 PM] Alright#0419
+joker added arbitrary logic to unlocks to it, just needs to be standardized?
+
+[27-Oct-19 06:13 PM] dimxy#2587
+Yes FSM CC will allow to create payments logic and many other logics with once developed FSM CC code by creating clear state transition model as the FSM CC's configuration
+
+[27-Oct-19 06:33 PM] dimxy#2587
+Modules which could be implemented with the FSM CC are those which do not require power of Turing Machine (much data to process, in particular).
+I can see that another example to be implemented with FSM is Heir CC (which allows for the Heir to spend locked funds after the funds owner inactivity)
+
+[27-Oct-19 08:00 PM] polycryptoblog#1173
+@dimxy  I’m not sure if this will help you out,  but if I understood right you are looking for a GUI that can define FSM,  it’s pretty simplistic and not as general purpose as it’s made for PLC’s  , but I know you can do such with RSLogix emulator . https://www.splatco.com/fsm_in_ladder.htm
+
+{Reactions}
+👍 
+
+[28-Oct-19 08:12 AM] jl777c#5810
+to be able to scale to arbitrary number of active FSM, i dont think it is practical to have the blockchain (everynode) scanning for all possible events. just like nspv is designed to reduce network bandwidth usage, FSM needs to reduce the workload on each node
+
+{Reactions}
+🤔 
+
+[29-Oct-19 07:44 AM] jl777c#5810
+CHIPS poker needs a cashier functionality. Initially we will use a multisig to lock and release funds, but this requires these multisig nodes to be online all the time and also to not collude, so the ideal solution is to have a cashier CC, which if run on a pegged chain backed by KMD allows betting with known amounts
+
+[29-Oct-19 07:45 AM] jl777c#5810
+the cashier CC should be abstracted from the actual gameplay so it wont need to be contaminated with poker specific knowledge. this will allow the cashier CC to be used for any multiplayer game where player balances can be known.
+
+[29-Oct-19 07:48 AM] jl777c#5810
+in order for this to be game independent, each game will need to build into its protocol signed attestation of player balances, probably after each game is completed. So we will have a list of pubkeys and balances, with signatures from either the same set of pubkeys or a slightly different set (dealer, BVV nodes, watchers)
+
+[29-Oct-19 07:48 AM] jl777c#5810
+a player can submit a withdraw only to their pubkey, so we avoid false claims using valid attestations
+
+[29-Oct-19 07:49 AM] jl777c#5810
+working backwards, it means that when depositing funds to the cashier CC, the list of valid pubkeys for the attestation needs to be given. Also, it is possible this list will change as players change, so there would need to be a way to update the list of valid attestation pubkeys
+
+[29-Oct-19 07:49 AM] jl777c#5810
+@sg777 details on cashier CC
+
+[29-Oct-19 07:50 AM] jl777c#5810
+@dimxy we should be able to make a FSM instance that implements cashier CC, states include new state, initial deposit, updating attestation pubkey, withdraw
+
+{Reactions}
+👍 (7) 
+
+[29-Oct-19 10:54 AM] jl777c#5810
+https://medium.com/@jameslee777/multichain-decentralized-cashier-for-gaming-110297ced95f
+
+{Embed}
+https://medium.com/@jameslee777/multichain-decentralized-cashier-for-gaming-110297ced95f
+Multichain decentralized cashier for gaming
+It has taken many years to finally be able to put together a fully decentralized system for one of the most demanding usecases, realtime…
+
+{Reactions}
+💯 (6) KMD (6) 
+
+[30-Oct-19 02:25 PM] dimxy#2587
+I tried to draw diagram for the Cashier FSM
+
+[30-Oct-19 02:25 PM] dimxy#2587
+Cashier FSM
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/639107737933971468/unknown.png
+
+[30-Oct-19 02:26 PM] dimxy#2587
+The point is it turns out we need a compound FSM
+
+[30-Oct-19 02:26 PM] jl777c#5810
+i think the cashier doesnt (shouldnt) need to know about other players
+
+[30-Oct-19 02:27 PM] jl777c#5810
+the cashier is on a per user basis, not linked to the gameplay directly
+
+[30-Oct-19 02:27 PM] dimxy#2587
+okay, I'll review that
+
+[30-Oct-19 02:28 PM] jl777c#5810
+it is like at a real casino. when you go to cashier, it doesnt matter about any other player
+
+[30-Oct-19 02:29 PM] jl777c#5810
+each player locks funds and gets chips. in our case, the chips are tied to a specific table and a set of pubkeys, the less knowledge of the games the cashier has, the more general it will be
+
+[30-Oct-19 02:33 PM] jl777c#5810
+and i think it is a very simple FSM. starting from the initial event, of making a deposit. this create a proof of deposit that can be used by the table as it sees fit.
+A. deposit that creates cross chain proof -> B. 
+B. submits attested pubkey change -> B.
+B. submits attested cashout -> pays to pubkey
+
+[30-Oct-19 02:33 PM] jl777c#5810
+on the cashier chain, it only sees the deposit that locks funds. this should create all the data needed for importing chips into a table, but that is all offchain as far as the cashier is concerned.
+
+[30-Oct-19 02:34 PM] jl777c#5810
+oh. i guess all funds for a specific table need to be locked into the same CC address!
+
+[30-Oct-19 02:34 PM] jl777c#5810
+i see why you had more players involved. it isnt really more players, but just a shared locked address
+
+[30-Oct-19 02:35 PM] jl777c#5810
+so the locked address needs to be based on table pubkey
+
+[30-Oct-19 02:36 PM] jl777c#5810
+then i think it can be independent of different players. the logic is that a single table cannot create coins, that it is a zero sum game. so when the cashout event is submitted, the table that isnt 51% attacked will have an amount that is less than the total funds in the tables locked funds
+
+[30-Oct-19 02:36 PM] jl777c#5810
+of course if an attested cashout arrives that is more than funds locked for a table, that means some funny business happened, but it would fail due to not enough inputs. a table that cheats will only affect players on that table
+
+[30-Oct-19 02:37 PM] jl777c#5810
+so to create a deposit, it needs table pubkey (which would likely make a 1of2 address with the global CC address) authorized pubkeys for attestation.
+
+[30-Oct-19 02:38 PM] jl777c#5810
+then the only things that i think can happen are that the set of attestation pubkeys changes or a cashout arrives
+
+[30-Oct-19 02:39 PM] jl777c#5810
+store the current state in the opreturn data, so just looking at the prior tx you can know the current state, make sure it is a valid event and go to the new state
+
+[30-Oct-19 02:41 PM] jl777c#5810
+the cashier template i think has 2 states (3 if you count the initial state of not existing), the first thing that happens is a deposit is made. now the cashier FSM has a specific txid that refers to a specific table and player. i guess we need to add another state to allow adding more funds, or i guess that is an event in state B after the initial creation
+
+[30-Oct-19 02:43 PM] jl777c#5810
+A gets table pubkey, player pubkey and authorized attestors and locks the amount in table dependent CC address. Now we have a txid for that player/table. What happens if the player makes another FSM instance? i think it is ok, there can be N instances, but when the player cashes out it would aggregate all of the remaining balance and now the user is able to do a withdraw
+
+[30-Oct-19 02:45 PM] jl777c#5810
+A. Create instance, B. event loop where it can be more deposit, change of authorized pubkeys, cashout
+cashout would make any other instance for the player/pubkey invalid. probably a good idea to make it so a specific player/pubkey can only have one active FSM instance at a time with a baton, that avoids the orphaned FSM instances
+
+[30-Oct-19 02:46 PM] jl777c#5810
+i guess it would be good to first make a cashier CC details, with rpc calls, opreturn data, etc. and then once we have that see how to do it as a FSM
+
+[30-Oct-19 02:57 PM] jl777c#5810
+if you think about it, the cashier CC/FSM can be used for any pooling of funds where it is later distributed out to different pubkeys. It could be used for fund raising, where the authorized pubkeys are escrows who would then be able to decide how to allocate the funds, ie. to release it to the project or to refund to the investors. Each reciepient would just need to do a deposit for a small amount.
+
+[30-Oct-19 02:58 PM] jl777c#5810
+it could be used to manage funds for a company, where the distributions go to the various departments on the approval of the finance pubkeys
+
+[30-Oct-19 03:00 PM] jl777c#5810
+i think the name cashier might color the thinking to just the gaming aspect, what we have is a generalized pooling and distribution based on authorized pubkeys functionality. By making the pubkeys the peers you are playing the poker with, it becomes a decentralized poker cashier, by making the pubkeys the escrows for investment funds release, it becomes a way for managing fund raising, by having the authorized pubkeys being finance and management, it can be used to allocate funds across a company
+
+[30-Oct-19 03:02 PM] jl777c#5810
+i guess we need to add another event to make it a bit more general and have a timeout event, so if X amount of time passes (a big number relative to expected timeframes), the initial contributor can withdraw the contributed amounts. therefore, each opreturn should remember the total deposited by each "player". better to have more data than actually needed
+
+[30-Oct-19 03:10 PM] jl777c#5810
+it seems "deposit to tableaddress" is an event that can be the trigger for a lot of state changes. a player/table address can have a baton, table address the locked funds. so the cashier FSM description would have blanks for these details, but they are filled in when creating an instance
+
+{Reactions}
+shexy 
+
+[30-Oct-19 06:18 PM] jl777c#5810
+@dimxy following is in no way complete or correct, but just to give you an idea of what i have in mind as far as defining the FSM:
+```[{"state":"init","events":[
+{"paid":"<table>,"baton":"<table + player>,"M":<n/2+1>,"pubkeys":["","",...],"next":"idle"]},
+ {"state":"idle","events":[{"paid":"<table>,"next":"idle"}, {"cmd":"newpubs","pubkeys":["","",...]}. {"timeout":100000,"next":"end","action":"refund"}, {"attestation":<signatures+data>,"next":"end","action":"redeem"}]}]```
+
+[30-Oct-19 06:20 PM] jl777c#5810
+the FSM is defined by an array of states, each state has an array of events. the hard part is encoding all the possible events and making sure all the required actions are supported. it seems this one needs a flag to indicate it is approved by authorized signatures. other FSM could just change states based on blockchain events, like timestamps, blockheights, equations with synthetics
+
+[30-Oct-19 06:21 PM] jl777c#5810
+so the spec you write will need to carefully list out all the possible events and actions. the state transitions can just be done via the parsed JSON that wont take much time to calculate. and making sure a new state transition transaction properly fits the required event description will likely need a lot more fields to be fully useful.
+
+[30-Oct-19 06:22 PM] jl777c#5810
+not totally happy with the above JSON, but at least it is a start and only halfway broken and incomplete
+
+[30-Oct-19 06:22 PM] jl777c#5810
+special states of "init" and "end"
+
+[30-Oct-19 06:24 PM] jl777c#5810
+the <> and ["", "", ...] values are filled in with the actual addresses/pubkeys and submitted in the opreturn of the init tx, the txid from that is then used for all the other FSM tx. with appropriate data in the opreturn (parameters, state data, return values)
+
+[30-Oct-19 06:26 PM] jl777c#5810
+notice the "events" objects are quite flexible, we can have an event that is a state transition of a specific FSM, it just needs to already exist. so on an "idle" -> "end" transition of a specific FSM txid, that can be an event in a different FSM. this allows the nesting of FSM. it can also require a specific event that causes the state transition, or it can just generate the even if the FSM is in a certain state.
+
+[30-Oct-19 06:28 PM] jl777c#5810
+i hope you are getting closer to what i have in mind with all this. in 10kb of JSON, we can specify quite a lot of complexity and with nested events, a 10kb sub-statemachines actions can feed into the next level up. i doubt we need to get anywhere near that complexity, but it all comes for free with this method
+
+[30-Oct-19 06:41 PM] dimxy#2587
+Thank you for this.
+I'm trying to create a FSM specification which key element is also a json defining states, events and transition map.
+To make it common to be able to create wide variety of applications I'm trying to define logical conditions allowing events to occur.
+Such expressions will be executed on blockchain artefacts like address, txout, height, time and it will require a basic set of functions which could be used in the expressions. Maybe studying several FSMs like cashier, payments, heir we could understand this functionality.
+(the current status is: https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC)
+
+{Embed}
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC)
+dimxy/komodo
+Komodo. Contribute to dimxy/komodo development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/21120539?s=400&v=4
+
+[30-Oct-19 06:47 PM] jl777c#5810
+yes, very good, we are thinking along the same lines
+
+[30-Oct-19 06:49 PM] jl777c#5810
+since we have a 10kb size limit, maybe we have a human readable JSON, which is then machine converted to much more compact form, there is no need to put onchain field names that are very long, but this is a size optimization to do after we get everything defined. I guess we can use the JSON encoder i made, it is quite efficient at lossless compression of JSON.
+
+[30-Oct-19 06:51 PM] jl777c#5810
+building in support for common things like batons will enable mutual exclusion of spending, which is quite important in a lot of cases, oracles, nested FSM, yes this is all coming together and will be quite powerful. using JSON you can define a new FSM that basically implements cashier, payments, heir, faucet CC. I guess we might just try to make sure the FSM can be created for most of the existing simpler CC?
+
+[30-Oct-19 06:54 PM] jl777c#5810
+https://blog.acolyer.org/2018/03/20/designing-secure-ethereum-smart-contracts-a-finite-state-machine-approach/
+
+{Embed}
+adriancolyer
+https://blog.acolyer.org/2018/03/20/designing-secure-ethereum-smart-contracts-a-finite-state-machine-approach/
+Designing secure Ethereum smart contracts: a finite state machine ...
+Designing secure Ethereum smart contracts: a finite state machine based approach Mavridou & Laszka, FC’18 You could be forgiven for thinking I’m down on smart contracts, but I actually think th…
+https://adriancolyer.files.wordpress.com/2018/03/fsolidm-access.jpeg?w=480
+
+[30-Oct-19 06:55 PM] jl777c#5810
+above seems to be thinking along the same lines, but we can make the output run at native speeds without GAS costs
+
+[30-Oct-19 06:57 PM] jl777c#5810
+unexpected source, but actuall somewhat relevant https://craigwright.net/blog/bitcoin-blockchain-tech/finite-state-machines-in-script/
+
+{Embed}
+https://craigwright.net/blog/bitcoin-blockchain-tech/finite-state-machines-in-script/
+Finite State Machines in Script
+https://craigwright.net/wp-content/uploads/2019/04/1-KrIEdYvJ-exNPAFvSB6FNw.png
+
+[30-Oct-19 06:58 PM] jl777c#5810
+https://arxiv.org/pdf/1906.02906.pdf
+
+[30-Oct-19 06:58 PM] jl777c#5810
+some FSM examples in the PDF: Smart Contract Design Meets State Machine Synthesis: Case Studies
+
+[30-Oct-19 07:23 PM] dimxy#2587
+This will allow to create many new applications based on well-defined formal models and unified and clean supporting code. I think it will be a very big advancement in blockchain technology.
+(I also thought about FSM visualization: there is UML state diagram spec and standard XML metadata interchange format, XMI, for storing models, supported by many UML editors, which could be parsed and transformed into json definition or for reverse engineering for documentation creation)
+
+[30-Oct-19 07:27 PM] jl777c#5810
+yes, it seems this is the way to fully solve the scalable smart contract problem. let us do it completely and correctly
+
+{Reactions}
+3040_kingpeepo 
+
+[31-Oct-19 12:52 PM] dimxy#2587
+At first I thought the cashier should issue chips in exchange of deposited coins. Now I see he does not (as this is done in another chain, seems, by the dealer)
+That is, the cashier just receives coins on the some cc address and allows to withdraw funds from this addreess within some balance which is attested by pubkeys.
+So I draw a new diagram
+---
+A question that might be to study yet: seems that as many users can deposit or withdraw funds concurrently this means that a new Cashier FSM instance should exist for each user. But if the task is to make FSM for actually a pooled account maybe we need it as an aggregated FSM for several depositing users. Such FSM should wait while all the participants have made deposits, then close accepting deposits and switch to a state of waiting for users cashout events).
+---
+Anyway, this is the diagram for case one fsm instance == one user pubkey
+(it additionally supports 'refund if timeout passed' event)
+
+[31-Oct-19 12:53 PM] dimxy#2587
+Cashier FSM (changed)
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/639446797827440666/unknown.png
+
+[31-Oct-19 02:02 PM] jl777c#5810
+the cashier never closes
+
+[31-Oct-19 02:02 PM] jl777c#5810
+it is open ended and each user would have a separate cashier instance per table
+
+[31-Oct-19 02:03 PM] jl777c#5810
+there is no need to wait for all users, as some users wont arrive for many hours
+
+[31-Oct-19 02:03 PM] jl777c#5810
+2 players arrive, start playing, then half an hour later another player arrives
+
+[31-Oct-19 02:04 PM] jl777c#5810
+so you see, it needs to be totally independent and the total balance of the table is the responsibility of the authorized signers to make sure it is a zero sum game. as long as that is the case, the attested withdraw totals will be correct
+
+[31-Oct-19 02:04 PM] jl777c#5810
+i will need to study your diagram a bit later
+
+{Reactions}
+👌 
+
+[31-Oct-19 02:09 PM] dimxy#2587
+I'll continue to work on the fsm spec then
+
+[31-Oct-19 02:25 PM] jl777c#5810
+your flowchart doesnt handle updating of the authorized attestors. i guess that is a bit game specific, but it is very useful to be able to change the authorized pubkeys over time. with poker it is expected to be changing as players come and go. the parameters needed would probably depend on the specific state and event combination, so we might need to define some state/event specific parameters, in addition to state specific in addition to fsm specific parameters. that way we can handle different types of parameters for the different levels
+
+[31-Oct-19 02:37 PM] dimxy#2587
+I wrote about this attestors change in the note in the upper-right corner.
+It seems this could not implemented by events and states and it is more like fsm parameters. So it might be done with some fsm-instance rpc that allows to additionally change instance parameters after the initialization
+
+[31-Oct-19 02:40 PM] jl777c#5810
+why cant the idle state get a "new pubkeys" event?
+
+[31-Oct-19 02:41 PM] jl777c#5810
+it would go back to the idle state waiting for all the different possible events: timeout, cashout, new pubkeys
+
+[31-Oct-19 02:42 PM] jl777c#5810
+so the idle/newpubkeys would have parameters that are the pubkeys vector
+
+[31-Oct-19 02:42 PM] jl777c#5810
+along with the attestation that the pubkeys are changed to the new pubkeys
+
+[31-Oct-19 02:43 PM] jl777c#5810
+the idle/cashout would get the parameters of the attestation of player balance
+
+[31-Oct-19 03:08 PM] dimxy#2587
+I think, all the states should provide some meaning for the code which queries FSM for its state. So if state is 'Deposit Done' it would mean that no more deposits are possible, and 'Cashout Allowed' state would mean that the user can now withdraw coins. 
+But what the 'Idle' state would mean if query it? 
+(Maybe we can just add such change-attestor event that would simply return back to the current state)
+
+[31-Oct-19 03:08 PM] jl777c#5810
+why do you constrain yourself so that a state is only allowed one event to happen?
+
+[31-Oct-19 03:09 PM] jl777c#5810
+if you name your states too literally, maybe it makes it hard to view it flexibly?
+
+[31-Oct-19 03:09 PM] jl777c#5810
+i had 2 states, "init" and "idle"
+
+[31-Oct-19 03:10 PM] jl777c#5810
+init state is the first tx that creates the FSM instance and it goes to the "idle" state. almost all events now just loop back to idle state. from idle state it can do anything, based on a specific event. and event can be anything. you need to think about this more generally
+
+[31-Oct-19 03:11 PM] jl777c#5810
+i guess there is the third state of "end" where the FSM instance is over
+
+[31-Oct-19 03:11 PM] jl777c#5810
+so with just three states of init, idle, end you can make quite a lot of different state machines
+
+[31-Oct-19 03:11 PM] jl777c#5810
+it then becomes all about what type of "events" are allowed.
+
+[31-Oct-19 03:13 PM] jl777c#5810
+if to view the FSM as having a specific configuration, then we can have events that modify that configuration and maybe there are a lot of these, along with the deposit, refund, cashout events where funds are transferred
+
+[31-Oct-19 03:14 PM] jl777c#5810
+it could be that we can cover majority of usecases with the init/idle/end state machine states, but no sense to limit the FSM CC to such a simplistic state machine
+
+[31-Oct-19 03:54 PM] dimxy#2587
+I did not mean that a state is limited by only one event, it could be several different events that cause transition to this event or several events that move from this state to other states.
+I just thought for each real-world state we would want its equivalent in a FSM.
+For example, for the Cashier FSM how will we differ if a pubkey is allowed to withdraw coins if we do not have a corresponding state? If we have only 'idle' state we would need to analyze the preceding events (like if the 'attested balance' event already happened) but if so why to have states?
+So the FSM processes events internally and moves from state to state accordingly. And there is code which queries the FSM state and does some actions based on this. For example, for Cashier there should be an rpc which withdraws coins from the TableAddress. This code would query the FSM state and if it is in the 'Cashout Allowed' state it withdraws coins (or not if state in another). If we do not have such 'Cashout Allowed' state and have 'Idle' state instead this rpc should check for 'attested-balance' event, but the first case seems for me more structured and dividing code responsibilities. 
+(So we will need for each application case to draw its own state machine and events, but we could do it with no coding if we have a json config and sufficient set of functions on blockchain artefacts)
+
+[31-Oct-19 03:56 PM] jl777c#5810
+i guess as long as it properly solves the problem at hand, there are many valid statemachines that will achieve this
+
+[31-Oct-19 03:57 PM] jl777c#5810
+the important thing is for FSM CC to be able to handle whichever way the fsm designer wants it done
+
+[31-Oct-19 04:01 PM] dimxy#2587
+Seems we need to move on with the FSM specification and see how it would solve our cases
+
+[31-Oct-19 04:04 PM] jl777c#5810
+yes
+
+[01-Nov-19 01:05 PM] dimxy#2587
+When Cashier is provided with attestors-pubkeys how does it validate these pubkeys?
+Or is it supposed that the pubkeys are sent from the Cashier instance's creator and Cashier trusts them because of this?
+
+[01-Nov-19 02:01 PM] jl777c#5810
+the initial set is sent with the original deposit
+

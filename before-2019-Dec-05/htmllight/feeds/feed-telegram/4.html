@@ -1,0 +1,1841 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Komodo - feed-telegram</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+
+    <style>
+        /* === GENERAL === */
+
+@font-face {
+    font-family: Whitney;
+    src: url(https://discordapp.com/assets/6c6374bad0b0b6d204d8d6dc4a18d820.woff);
+    font-weight: 300;
+}
+
+@font-face {
+    font-family: Whitney;
+    src: url(https://discordapp.com/assets/e8acd7d9bf6207f99350ca9f9e23b168.woff);
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: Whitney;
+    src: url(https://discordapp.com/assets/3bdef1251a424500c1b3a78dea9b7e57.woff);
+    font-weight: 500;
+}
+
+@font-face {
+    font-family: Whitney;
+    src: url(https://discordapp.com/assets/be0060dafb7a0e31d2a1ca17c0708636.woff);
+    font-weight: 600;
+}
+
+@font-face {
+    font-family: Whitney;
+    src: url(https://discordapp.com/assets/8e12fb4f14d9c4592eb8ec9f22337b04.woff);
+    font-weight: 700;
+}
+
+body {
+    font-family: "Whitney", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 17px;
+}
+
+a {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+img {
+    object-fit: contain;
+}
+
+.markdown {
+    white-space: pre-wrap;
+    line-height: 1.3;
+    overflow-wrap: break-word;
+}
+
+.spoiler {
+    border-radius: 3px;
+}
+
+.quote {
+    border-left: 4px solid;
+    border-radius: 3px;
+    margin: 8px 0;
+    padding-left: 10px;
+}
+
+.pre {
+    font-family: "Consolas", "Courier New", Courier, monospace;
+}
+
+.pre--multiline {
+    margin-top: 4px;
+    padding: 8px;
+    border: 2px solid;
+    border-radius: 5px;
+}
+
+.pre--inline {
+    padding: 2px;
+    border-radius: 3px;
+    font-size: 85%;
+}
+
+.mention {
+    font-weight: 500;
+}
+
+.emoji {
+    width: 1.45em;
+    height: 1.45em;
+    margin: 0 1px;
+    vertical-align: -0.4em;
+}
+
+.emoji--small {
+    width: 1rem;
+    height: 1rem;
+}
+
+.emoji--large {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* === INFO === */
+
+.info {
+    display: flex;
+    max-width: 100%;
+    margin: 0 5px 10px 5px;
+}
+
+.info__guild-icon-container {
+    flex: 0;
+}
+
+.info__guild-icon {
+    max-width: 88px;
+    max-height: 88px;
+}
+
+.info__metadata {
+    flex: 1;
+    margin-left: 10px;
+}
+
+.info__guild-name {
+    font-size: 1.4em;
+}
+
+.info__channel-name {
+    font-size: 1.2em;
+}
+
+.info__channel-topic {
+    margin-top: 2px;
+}
+
+.info__channel-message-count {
+    margin-top: 2px;
+}
+
+.info__channel-date-range {
+    margin-top: 2px;
+}
+
+/* === CHATLOG === */
+
+.chatlog {
+    max-width: 100%;
+    margin-bottom: 24px;
+}
+
+.chatlog__message-group {
+    display: flex;
+    margin: 0 10px;
+    padding: 15px 0;
+    border-top: 1px solid;
+}
+
+.chatlog__author-avatar-container {
+    flex: 0;
+    width: 40px;
+    height: 40px;
+}
+
+.chatlog__author-avatar {
+    border-radius: 50%;
+    height: 40px;
+    width: 40px;
+}
+
+.chatlog__messages {
+    flex: 1;
+    min-width: 50%;
+    margin-left: 20px;
+}
+
+.chatlog__author-name {
+    font-size: 1em;
+    font-weight: 500;
+}
+
+.chatlog__timestamp {
+    margin-left: 5px;
+    font-size: .75em;
+}
+
+.chatlog__message {
+    padding: 2px 5px;
+    margin-right: -5px;
+    margin-left: -5px;
+    background-color: transparent;
+    transition: background-color 1s ease;
+}
+
+.chatlog__content {
+    font-size: .9375em;
+    word-wrap: break-word;
+}
+
+.chatlog__edited-timestamp {
+    margin-left: 3px;
+    font-size: .8em;
+}
+
+.chatlog__attachment-thumbnail {
+    margin-top: 5px;
+    max-width: 50%;
+    max-height: 500px;
+    border-radius: 3px;
+}
+
+.chatlog__embed {
+    margin-top: 5px;
+    display: flex;
+    max-width: 520px;
+}
+
+.chatlog__embed-color-pill {
+    flex-shrink: 0;
+    width: 4px;
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+}
+
+.chatlog__embed-content-container {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 10px;
+    border: 1px solid;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+.chatlog__embed-content {
+    width: 100%;
+    display: flex;
+}
+
+.chatlog__embed-text {
+    flex: 1;
+}
+
+.chatlog__embed-author {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.chatlog__embed-author-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 9px;
+    border-radius: 50%;
+}
+
+.chatlog__embed-author-name {
+    font-size: .875em;
+    font-weight: 600;
+}
+
+.chatlog__embed-title {
+    margin-bottom: 4px;
+    font-size: .875em;
+    font-weight: 600;
+}
+
+.chatlog__embed-description {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.chatlog__embed-fields {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.chatlog__embed-field {
+    flex: 0;
+    min-width: 100%;
+    max-width: 506px;
+    padding-top: 10px;
+}
+
+.chatlog__embed-field--inline {
+    flex: 1;
+    flex-basis: auto;
+    min-width: 150px;
+}
+
+.chatlog__embed-field-name {
+    margin-bottom: 4px;
+    font-size: .875em;
+    font-weight: 600;
+}
+
+.chatlog__embed-field-value {
+    font-size: .875em;
+    font-weight: 500;
+}
+
+.chatlog__embed-thumbnail {
+    flex: 0;
+    margin-left: 20px;
+    max-width: 80px;
+    max-height: 80px;
+    border-radius: 3px;
+}
+
+.chatlog__embed-image-container {
+    margin-top: 10px;
+}
+
+.chatlog__embed-image {
+    max-width: 500px;
+    max-height: 400px;
+    border-radius: 3px;
+}
+
+.chatlog__embed-footer {
+    margin-top: 10px;
+}
+
+.chatlog__embed-footer-icon {
+    margin-right: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    vertical-align: middle;
+}
+
+.chatlog__embed-footer-text {
+    font-weight: 500;
+    font-size: .75em;
+}
+
+.chatlog__reactions {
+    display: flex;
+}
+
+.chatlog__reaction {
+    display: flex;
+    align-items: center;
+    margin: 6px 2px 2px 2px;
+    padding: 3px 6px;
+    border-radius: 3px;
+}
+
+.chatlog__reaction-count {
+    min-width: 9px;
+    margin-left: 6px;
+    font-size: .875em;
+}
+
+.chatlog__bot-tag {
+    margin-left: 0.3em;
+    background: #7289da;
+    color: #ffffff;
+    font-size: 0.625em;
+    padding: 1px 2px;
+    border-radius: 3px;
+    vertical-align: middle;
+    line-height: 1.3;
+    position: relative;
+    top: -.2em;
+}
+    </style>
+    <style>
+        /* === GENERAL === */
+
+body {
+    background-color: #ffffff;
+    color: #23262a;
+    font-weight: 500;
+}
+
+a {
+    color: #00b0f4;
+}
+
+.spoiler {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.quote {
+    border-color: #c7ccd1;
+}
+
+.pre {
+    background-color: #f9f9f9 !important;
+}
+
+.pre--multiline {
+    border-color: #f3f3f3 !important;
+    color: #657b83 !important;
+}
+
+.mention {
+    background-color: #f1f3fb;
+    color: #7289da;
+}
+
+/* === INFO === */
+
+.info__guild-name {
+    color: #2f3136;
+}
+
+.info__channel-name {
+    color: #2f3136;
+}
+
+.info__channel-topic {
+    color: #2f3136;
+}
+
+/* === CHATLOG === */
+
+.chatlog__message-group {
+    border-color: #eceeef;
+}
+
+.chatlog__author-name {
+    font-weight: 600;
+    color: #2f3136;
+}
+
+.chatlog__timestamp {
+    color: #747f8d;
+}
+
+.chatlog__message--highlighted {
+    background-color: rgba(114, 137, 218, 0.2) !important;
+}
+
+.chatlog__message--pinned {
+    background-color: rgba(249, 168, 37, 0.05);
+}
+
+.chatlog__edited-timestamp {
+    color: #747f8d;
+}
+
+.chatlog__embed-content-container {
+    background-color: rgba(249, 249, 249, 0.3);
+    border-color: rgba(204, 204, 204, 0.3);
+}
+
+.chatlog__embed-author-name {
+    color: #4f545c;
+}
+
+.chatlog__embed-author-name-link {
+    color: #4f545c;
+}
+
+.chatlog__embed-title {
+    color: #4f545c;
+}
+
+.chatlog__embed-description {
+    color: #737f8d;
+}
+
+.chatlog__embed-field-name {
+    color: #36393e;
+}
+
+.chatlog__embed-field-value {
+    color: #737f8d;
+}
+
+.chatlog__embed-footer {
+    color: rgba(79, 83, 91, 0.6);
+}
+
+.chatlog__reaction {
+    background-color: rgba(79, 84, 92, 0.06);
+}
+
+.chatlog__reaction-count {
+    color: #747f8d;
+}
+    </style>
+
+    <script>
+        function scrollToMessage(event, id) {
+            var element = document.getElementById('message-' + id);
+
+            if (element !== null && element !== undefined) {
+                event.preventDefault();
+
+                element.classList.add('chatlog__message--highlighted');
+
+                window.scrollTo({
+                    top: element.getBoundingClientRect().top - document.body.getBoundingClientRect().top - (window.innerHeight / 2),
+                    behavior: 'smooth'
+                });
+
+                window.setTimeout(function() {
+                    element.classList.remove('chatlog__message--highlighted');
+                }, 2000);
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/styles/solarized-light.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.pre--multiline').forEach((block) => {
+                hljs.highlightBlock(block);
+            });
+        });
+    </script>
+</head>
+<body>
+
+<div class="info">
+    <div class="info__guild-icon-container">
+        <img class="info__guild-icon" src="https://cdn.discordapp.com/icons/412898016371015680/a_157cb08c4198ad53b9e9b7168c930571.png" />
+    </div>
+    <div class="info__metadata">
+        <div class="info__guild-name">Komodo</div>
+        <div class="info__channel-name">feed-telegram</div>
+
+            <div class="info__channel-topic">If you love Telegram but don&#39;t want to leave Discord then you&#39;ll be pleased to find we&#39;ve built a bridge in this channel. If you&#39;d like to join the group in the Telegram app you can find it here: https://t.me/KomodoPlatform_Official.</div>
+
+        <div class="info__channel-message-count">100 messages</div>
+
+            <div class="info__channel-date-range">
+                    Before 05-Dec-19 12:00 AM
+            </div>
+    </div>
+</div>
+
+<div class="chatlog">
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/3.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Gateway#3763" data-user-id="455021680935436290">Gateway</span>
+
+                    <span class="chatlog__bot-tag">BOT</span>
+
+                <span class="chatlog__timestamp">12-Jun-18 04:04 AM</span>
+
+                    <div class="chatlog__message " data-message-id="455945510101188630" id="message-455945510101188630">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;threeridges&gt; BTC as its 1st generation federal reserve  coin, they will replace with ethereum, BTC real value is usd 1200 max, ethereum hv all chances to making it big, if they select eth</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455946749861822475" id="message-455946749861822475">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;Andreas&gt; Kmd&gt;eth</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455947037326704640" id="message-455947037326704640">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;N21_0&gt; 1 BTC = 1 BTC
+1 ETH = 1 ETH
+1 KMD = 1 KMD
+easy to understand i think</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455948286877106189" id="message-455948286877106189">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;threeridges&gt; That is good on paper, reality is that USD still a reserve currency of entire globe for most of world trade (re @N21_0: 1 BTC = 1 BTC
+1 ETH = 1 ETH
+1 KMD = 1 KMD
+easy to understand i think)</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/3.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Gateway#3763" data-user-id="455021680935436290">Gateway</span>
+
+                    <span class="chatlog__bot-tag">BOT</span>
+
+                <span class="chatlog__timestamp">12-Jun-18 04:51 AM</span>
+
+                    <div class="chatlog__message " data-message-id="455957218710388736" id="message-455957218710388736">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;DingDongSoLong&gt; Coinbase adding ETC?</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455958041821446146" id="message-455958041821446146">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;burfy174&gt; Yep</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455958231488135181" id="message-455958231488135181">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;burfy174&gt; Coinbase days are numbered anyway. Terrible fiat gateway due to restrictions and issues. I don&#39;t see this as a big deal</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455959611279671308" id="message-455959611279671308">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;DingDongSoLong&gt; Yea but you think ETH holders receive ETC when it’s added?</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455959769551732737" id="message-455959769551732737">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;burfy174&gt; No. They would have when the fork occurred in 2016</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/3.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Gateway#3763" data-user-id="455021680935436290">Gateway</span>
+
+                    <span class="chatlog__bot-tag">BOT</span>
+
+                <span class="chatlog__timestamp">12-Jun-18 05:11 AM</span>
+
+                    <div class="chatlog__message " data-message-id="455962366933204992" id="message-455962366933204992">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;DingDongSoLong&gt; But wasn’t it the same the added BTCH? Cause it wasn’t on Coinbase, then when they added it they gave all btc holder BTCH.</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455963986907758603" id="message-455963986907758603">
+                        <div class="chatlog__content">
+                            <span class="markdown">[slack] &lt;CHMEX&gt; I believe you mean BCH BitcoinCash    BTCH - Bitcoinhush on coinbase would be a big deal.</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455964265883500546" id="message-455964265883500546">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;burfy174&gt; Nope (re @DingDongSoLong: But wasn’t it the same the added BTCH? Cause it wasn’t on Coinbase, then when they added it they gave all btc holder BTCH.)</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/3.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Gateway#3763" data-user-id="455021680935436290">Gateway</span>
+
+                    <span class="chatlog__bot-tag">BOT</span>
+
+                <span class="chatlog__timestamp">12-Jun-18 05:56 AM</span>
+
+                    <div class="chatlog__message " data-message-id="455973689603915778" id="message-455973689603915778">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;DingDongSoLong&gt; Well dang</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455973827826941955" id="message-455973827826941955">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;DingDongSoLong&gt; My bad. Good looking out <img class="emoji " alt="👍" title="👍" src="https://twemoji.maxcdn.com/2/72x72/1f44d.png" /> (re @Matterbridge_kmdbot: [slack] &lt;CHMEX&gt; I believe you mean BCH BitcoinCash    BTCH - Bitcoinhush on coinbase would be a big deal.)</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/3.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Gateway#3763" data-user-id="455021680935436290">Gateway</span>
+
+                    <span class="chatlog__bot-tag">BOT</span>
+
+                <span class="chatlog__timestamp">12-Jun-18 07:24 AM</span>
+
+                    <div class="chatlog__message " data-message-id="455995784559722496" id="message-455995784559722496">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;mark&gt; Hi, thread. Two of us are trialling BarterDEX, but are finding it very hard going. Will we be able to get advice here?</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455997265975443486" id="message-455997265975443486">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;Acura360&gt; At youtube there are many tutorials videos or you can test HyperDex (re @mark: Hi, thread. Two of us are trialling BarterDEX, but are finding it very hard going. Will we be able to get advice here?)</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455997355494342656" id="message-455997355494342656">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;Acura360&gt; <a href="https://github.com/lukechilds/hyperdex/releases">https://github.com/lukechilds/hyperdex/releases</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(30,35,39,1)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+
+                                            <div class="chatlog__embed-title">
+                                                    <a class="chatlog__embed-title-link" href="https://github.com/lukechilds/hyperdex/releases"><span class="markdown">lukechilds/hyperdex</span></a>
+                                            </div>
+
+                                        <div class="chatlog__embed-description"><span class="markdown">hyperdex - Desktop App for BarterDEX</span></div>
+
+                                    </div>
+
+                                        <div class="chatlog__embed-thumbnail-container">
+                                            <a class="chatlog__embed-thumbnail-link" href="https://avatars2.githubusercontent.com/u/2123375?s=400&v=4">
+                                                <img class="chatlog__embed-thumbnail" src="https://avatars2.githubusercontent.com/u/2123375?s=400&v=4" />
+                                            </a>
+                                        </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455997449257877504" id="message-455997449257877504">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;mark&gt; Hey, Acura. Have been extensively over the Youtube material, and not found it helpful</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455997539720626188" id="message-455997539720626188">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;Acura360&gt; Oh ok (re @mark: Hey, Acura. Have been extensively over the Youtube material, and not found it helpful)</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455997671233028096" id="message-455997671233028096">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;jamescheng25&gt; join komodo on discord ttps://discord.gg/kS3vx9J</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455997747552714763" id="message-455997747552714763">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;jamescheng25&gt; and ask in support channel, you might get a better luck</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455997802582114304" id="message-455997802582114304">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;mark&gt; Thank you, James. That&#39;s a great idea</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455998122494263297" id="message-455998122494263297">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;jamescheng25&gt; actually currently slack is better, but the team is in the process of migrating to discord</span>
+
+                                <span class="chatlog__edited-timestamp" title="12-Jun-18 07:33 AM">(edited)</span>
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455998252312166400" id="message-455998252312166400">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;mark&gt; One of my communities recently did the same thing</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455998518906060801" id="message-455998518906060801">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;jamescheng25&gt; yes, discord is so much cooler</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455998609310351362" id="message-455998609310351362">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;jamescheng25&gt; btw what kind of problem do you have with barterdex?</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455998681708101642" id="message-455998681708101642">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;jamescheng25&gt; I&#39;ve used it a few times</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455999837935108098" id="message-455999837935108098">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;mark&gt; Several related problems, James. No matter how I prepare the UTXOs, I have a low success rate with trades, and I presently have several trades market &#39;Finished&#39; in purple, but they are clearly hung</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="455999979354456074" id="message-455999979354456074">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;Acura360&gt; Which Barterdex Version do you use (re @mark: Several related problems, James. No matter how I prepare the UTXOs, I have a low success rate with trades, and I presently have several trades market &#39;Finished&#39; in purple, but they are clearly hung)</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456000059071266816" id="message-456000059071266816">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;mark&gt; 1.0.6rc</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456000203384684555" id="message-456000203384684555">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;jamescheng25&gt; 1.0.7 rc is the latest one</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456000258237923330" id="message-456000258237923330">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;Acura360&gt; <img class="emoji " alt="🎉" title="🎉" src="https://twemoji.maxcdn.com/2/72x72/1f389.png" /><img class="emoji " alt="🎉" title="🎉" src="https://twemoji.maxcdn.com/2/72x72/1f389.png" /> NEW Barterdex Release 1.07. is out !! <img class="emoji " alt="🎉" title="🎉" src="https://twemoji.maxcdn.com/2/72x72/1f389.png" /><img class="emoji " alt="🎉" title="🎉" src="https://twemoji.maxcdn.com/2/72x72/1f389.png" />
+<a href="https://github.com/KomodoPlatform/BarterDEX/releases/tag/v1.0.7-rc">https://github.com/KomodoPlatform/BarterDEX/releases/tag/v1.0.7-rc</a>
+Changelog
+-New Coins: SPK, CRDS, ATB, HXX, VRSC, MLM, XSN, DCN, ELF, GPN, SRN, LRC, DROP, SANC, UCASH, RVT
+-Updated Marketmaker binaries (re @mark: 1.0.6rc)</span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(30,35,39,1)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+
+                                            <div class="chatlog__embed-title">
+                                                    <a class="chatlog__embed-title-link" href="https://github.com/KomodoPlatform/BarterDEX/releases/tag/v1.0.7-rc"><span class="markdown">KomodoPlatform/BarterDEX</span></a>
+                                            </div>
+
+                                        <div class="chatlog__embed-description"><span class="markdown"><img class="emoji " alt="📈" title="📈" src="https://twemoji.maxcdn.com/2/72x72/1f4c8.png" /> BarterDEX: Decentralised Exchange and Cryptocurrency Market</span></div>
+
+                                    </div>
+
+                                        <div class="chatlog__embed-thumbnail-container">
+                                            <a class="chatlog__embed-thumbnail-link" href="https://avatars2.githubusercontent.com/u/21276113?s=400&v=4">
+                                                <img class="chatlog__embed-thumbnail" src="https://avatars2.githubusercontent.com/u/21276113?s=400&v=4" />
+                                            </a>
+                                        </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456000358922321921" id="message-456000358922321921">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;jamescheng25&gt; so it is finished but the coin is not in your wallet?</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456000577940357120" id="message-456000577940357120">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;jamescheng25&gt; did you use the block explorer and check? sometime barterdex takes a bit to show the balance</span>
+
+                                <span class="chatlog__edited-timestamp" title="12-Jun-18 07:43 AM">(edited)</span>
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456001139247153162" id="message-456001139247153162">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;mark&gt; Acura, will try latest B-DEX right now. James, have been trying to figure out the trade status data. Been trying to reconcile balances shown on the site with the status of trades</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456001323033296896" id="message-456001323033296896">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;Acura360&gt; <img class="emoji " alt="👍" title="👍" src="https://twemoji.maxcdn.com/2/72x72/1f44d.png" /><img class="emoji " alt="🏻" title="🏻" src="https://twemoji.maxcdn.com/2/72x72/1f3fb.png" /> (re @mark: Acura, will try latest B-DEX right now. James, have been trying to figure out the trade status data. Been trying to reconcile balances shown on the site with the status of trades)</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456001658573553674" id="message-456001658573553674">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;mark&gt; Will come back tomorrow. Don&#39;t wanna seem hostile, but just exhausted with wading through Youtubes and calculating UTXOs but still not being able to reliably trade. (My favourite crypto is listed on B-DEX, so we have an interest in figuring it all out!)</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456001864882847744" id="message-456001864882847744">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;jamescheng25&gt; ok, sure take your time. It definitely takes some learning curve ;)</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456002163701841930" id="message-456002163701841930">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;jamescheng25&gt; Hyperdex is more user friendly but not supporting as many coins as B-dex yet</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456002222719762432" id="message-456002222719762432">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;mark&gt; Well, such an admission goes a long way to helping me maintain my patience — and really, my mob has a big interest in DEXes overall</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456002308116054016" id="message-456002308116054016">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;jamescheng25&gt; nice, which coin if i may?</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456002529873100800" id="message-456002529873100800">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;mark&gt; I&#39;m gonna go out on a limb here: I&#39;d like to see smaller-scale stuff that both works and has fine instructional material, than many-biggee-listings projects that are unnecessarily hard. (re @jamescheng25: Hyperdex is more user friendly but not supporting as many coins as B-dex yet)</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456002544917807106" id="message-456002544917807106">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;mark&gt; GRS</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456002655232327711" id="message-456002655232327711">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;jamescheng25&gt; the next iteration of marketmaker should make trading on barterdex and hyperdex much smoother.</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456002730801233920" id="message-456002730801233920">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;mark&gt; I really am looking forward to HyperDEX.</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456002858853203978" id="message-456002858853203978">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;jamescheng25&gt; currently both DEXes depend on marketmaker version 1 , i hopefully marketmaker 2.0 will make everything easier</span>
+
+                                <span class="chatlog__edited-timestamp" title="12-Jun-18 07:52 AM">(edited)</span>
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456002937542410241" id="message-456002937542410241">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;mark&gt; And FYI, James, my mob is actually a trust-alliance of crypto geeks rather than members of one coin&#39;s community: a number of us are working over a number of DEXes</span>
+
+                                <span class="chatlog__edited-timestamp" title="12-Jun-18 07:53 AM">(edited)</span>
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456003064181030912" id="message-456003064181030912">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;Matt&gt; Thats not real?? (re @stayfrosty1: )</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456003083487674379" id="message-456003083487674379">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;jamescheng25&gt; very cool , Mark. I am also a big believer in DEXes</span>
+
+                                <span class="chatlog__edited-timestamp" title="12-Jun-18 07:53 AM">(edited)</span>
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456003336739618828" id="message-456003336739618828">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;jamescheng25&gt; maybe once you get it working, you can learn how to be a Liquidity Provider - making money while providing liquidity for your favorite coins</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456003698410127361" id="message-456003698410127361">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;mark&gt; <a href="https://distribuyed.github.io/index/">https://distribuyed.github.io/index/</a> — although only hobbyists, James, we aren&#39;t newcomers. We do stuff with energy; but as you appreciate . . . there&#39;s so much stuff! So, we found a list of two hundred DEXes. Put on the coffee pot</span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+
+                                            <div class="chatlog__embed-title">
+                                                    <a class="chatlog__embed-title-link" href="https://distribuyed.github.io/index/"><span class="markdown">index</span></a>
+                                            </div>
+
+                                        <div class="chatlog__embed-description"><span class="markdown">A comprehensive list of decentralized exchanges (DEX) of cryptocurrencies, tokens, derivatives and futures, and their protocols.</span></div>
+
+                                    </div>
+
+                                </div>
+
+
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456003826625806346" id="message-456003826625806346">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;mark&gt; This is exactly the sort of enterprise that might attract us in the long term (re @jamescheng25: maybe once you get it working, you can learn how to be a Liquidity Provider - making money while providing liquidity for your favorite coins)</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456004061951426562" id="message-456004061951426562">
+                        <div class="chatlog__content">
+                            <span class="markdown">[matrix] &lt;ph03nix0s:matrix.org&gt; <a href="https://cryptocoremedia.com/easydex-liquidity-multiplier-introducing-quantum-trading/">https://cryptocoremedia.com/easydex-liquidity-multiplier-introducing-quantum-trading/</a></span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456004106994319361" id="message-456004106994319361">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;mark&gt; James, could I &#39;bookmark&#39; you for future questions?</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456004349651582997" id="message-456004349651582997">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;jamescheng25&gt; yes, sure , I am not the expert, but I know where to direct you to ;)</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456005007767240704" id="message-456005007767240704">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;mark&gt; Off to the garden, me. Thanks for your energy.</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="jl777c#5810" data-user-id="455741312273219595">jl777c</span>
+
+
+                <span class="chatlog__timestamp">12-Jun-18 08:01 AM</span>
+
+                    <div class="chatlog__message " data-message-id="456005168220340224" id="message-456005168220340224">
+                        <div class="chatlog__content">
+                            <span class="markdown">maybe to try the hyperdex? barterdEX is more for advanced testers to use all the features</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/3.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Gateway#3763" data-user-id="455021680935436290">Gateway</span>
+
+                    <span class="chatlog__bot-tag">BOT</span>
+
+                <span class="chatlog__timestamp">12-Jun-18 08:06 AM</span>
+
+                    <div class="chatlog__message " data-message-id="456006466495578123" id="message-456006466495578123">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;jamescheng25&gt; Will recommend it to him tomorrow if he get backed in touch</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456007113974743040" id="message-456007113974743040">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;icantgiveyou&gt; I wonder about the poker project being created on Komodo I have been playing online and live poker for 15 years + I wonder how it’s gonna look like.</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456007185357340672" id="message-456007185357340672">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;icantgiveyou&gt; We might get Doug Polk to endorse that on his channel if it becomes reality</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456007475695583252" id="message-456007475695583252">
+                        <div class="chatlog__content">
+                            <span class="markdown">[matrix] &lt;ph03nix0s:matrix.org&gt; <a href="https://discord.gg/U2Kskvc">https://discord.gg/U2Kskvc</a></span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456007558998786048" id="message-456007558998786048">
+                        <div class="chatlog__content">
+                            <span class="markdown">[matrix] &lt;ph03nix0s:matrix.org&gt; ^chips</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456007767392649236" id="message-456007767392649236">
+                        <div class="chatlog__content">
+                            <span class="markdown">[matrix] &lt;ph03nix0s:matrix.org&gt; @icantgiveyou</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456008699979366421" id="message-456008699979366421">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;icantgiveyou&gt; I joined discord although it’s not my preferred IM at all</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456008862655447052" id="message-456008862655447052">
+                        <div class="chatlog__content">
+                            <span class="markdown">[matrix] &lt;ph03nix0s:matrix.org&gt; franz</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456009410406383616" id="message-456009410406383616">
+                        <div class="chatlog__content">
+                            <span class="markdown">[matrix] &lt;ph03nix0s:matrix.org&gt; <a href="https://meetfranz.com/">https://meetfranz.com/</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+
+                                            <div class="chatlog__embed-title">
+                                                    <a class="chatlog__embed-title-link" href="https://meetfranz.com/"><span class="markdown">Franz – a free messaging app for Slack, Facebook Messenger, What...</span></a>
+                                            </div>
+
+                                        <div class="chatlog__embed-description"><span class="markdown">Franz is a free messaging app/former emperor of Austria, that combines chat &amp; messaging services into one application.</span></div>
+
+                                    </div>
+
+                                        <div class="chatlog__embed-thumbnail-container">
+                                            <a class="chatlog__embed-thumbnail-link" href="https://meetfranz.com/images/shareimage.png">
+                                                <img class="chatlog__embed-thumbnail" src="https://meetfranz.com/images/shareimage.png" />
+                                            </a>
+                                        </div>
+                                </div>
+
+
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/3.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Gateway#3763" data-user-id="455021680935436290">Gateway</span>
+
+                    <span class="chatlog__bot-tag">BOT</span>
+
+                <span class="chatlog__timestamp">12-Jun-18 08:30 AM</span>
+
+                    <div class="chatlog__message " data-message-id="456012522420699147" id="message-456012522420699147">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;bitcoinfiat&gt; No more Interests on Agama Wallet?</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456012718747680789" id="message-456012718747680789">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;Acura360&gt; It is named Rewards now (re @bitcoinfiat: No more Interests on Agama Wallet?)</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456012963019751424" id="message-456012963019751424">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;bitcoinfiat&gt; I can&#39;t find any in my agama anymore... (re @Acura360: It is named Rewards now)</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456013178145472520" id="message-456013178145472520">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;bitcoinfiat&gt; Is it on the new wallet upgrade?</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456013677758382094" id="message-456013677758382094">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;Acura360&gt; <a href="https://komodoplatform.atlassian.net/wiki/plugins/servlet/mobile?contentId=20480015#content/view/20480015">https://komodoplatform.atlassian.net/wiki/plugins/servlet/mobile?contentId=20480015#content/view/20480015</a> (re @bitcoinfiat: I can&#39;t find any in my agama anymore...)</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/3.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Gateway#3763" data-user-id="455021680935436290">Gateway</span>
+
+                    <span class="chatlog__bot-tag">BOT</span>
+
+                <span class="chatlog__timestamp">12-Jun-18 09:57 AM</span>
+
+                    <div class="chatlog__message " data-message-id="456034304905183234" id="message-456034304905183234">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;threeridges&gt; Komodo,</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456034319362949120" id="message-456034319362949120">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;threeridges&gt; Ethereum</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456034407216840706" id="message-456034407216840706">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;threeridges&gt; Bitcoin days are over, Ethreum will replace btc, who will take position of ethereum??,</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456035886933606400" id="message-456035886933606400">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;threeridges&gt; KMD or EOS</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456035948665503744" id="message-456035948665503744">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;threeridges&gt; Or ADA</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456036020715257876" id="message-456036020715257876">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;Matt&gt; Was looking at Ubiq aswell..</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456036167641595905" id="message-456036167641595905">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;Matt&gt; But devs are bit lazy there i guess <img class="emoji " alt="😂" title="😂" src="https://twemoji.maxcdn.com/2/72x72/1f602.png" /></span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/3.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Gateway#3763" data-user-id="455021680935436290">Gateway</span>
+
+                    <span class="chatlog__bot-tag">BOT</span>
+
+                <span class="chatlog__timestamp">12-Jun-18 10:13 AM</span>
+
+                    <div class="chatlog__message " data-message-id="456038247760527370" id="message-456038247760527370">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;Ole&gt; Is anyone also se wrong price in blockfolio? Dex and eql is wrong on mine.</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456038333056024587" id="message-456038333056024587">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;Ole&gt; Im talking to blockfolio admin right now</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456039598263631883" id="message-456039598263631883">
+                        <div class="chatlog__content">
+                            <span class="markdown">[slack] &lt;CHMEX&gt; ask them where they get the pricing from. Do they run their own nodes? I&#39;m happy to give them an API call</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456039932323168256" id="message-456039932323168256">
+                        <div class="chatlog__content">
+                            <span class="markdown">[slack] &lt;CHMEX&gt; Ticket Number: 52790 on their side if they want orderbooks api&#39;s</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456040178817957899" id="message-456040178817957899">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;burfy174&gt; HPB (re @threeridges: KMD or EOS)</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/3.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Gateway#3763" data-user-id="455021680935436290">Gateway</span>
+
+                    <span class="chatlog__bot-tag">BOT</span>
+
+                <span class="chatlog__timestamp">12-Jun-18 10:41 AM</span>
+
+                    <div class="chatlog__message " data-message-id="456045469286662146" id="message-456045469286662146">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;N21_0&gt;</span>
+
+                        </div>
+
+                        <div class="chatlog__attachment">
+                            <a href="https://cdn.discordapp.com/attachments/454632720212033537/456045469286662145/file_17.oga.ogg">
+                                
+                                    Attachment: file_17.oga.ogg (28.62 KB)
+                            </a>
+                        </div>
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456045583224799232" id="message-456045583224799232">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;N21_0&gt; <img class="emoji " alt="😂" title="😂" src="https://twemoji.maxcdn.com/2/72x72/1f602.png" /><img class="emoji " alt="😂" title="😂" src="https://twemoji.maxcdn.com/2/72x72/1f602.png" /></span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/3.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Gateway#3763" data-user-id="455021680935436290">Gateway</span>
+
+                    <span class="chatlog__bot-tag">BOT</span>
+
+                <span class="chatlog__timestamp">12-Jun-18 11:14 AM</span>
+
+                    <div class="chatlog__message " data-message-id="456053802844422144" id="message-456053802844422144">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;benohanlon&gt; $KMD goes live on Bitpanda right now... <a href="https://twitter.com/bitpanda/status/1006491524845195264">https://twitter.com/bitpanda/status/1006491524845195264</a></span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+                                            <div class="chatlog__embed-author">
+                                                    <img class="chatlog__embed-author-icon" src="https://pbs.twimg.com/profile_images/976767185111699456/YXCG7JTf_bigger.jpg" />
+
+                                                    <span class="chatlog__embed-author-name">
+                                                            <a class="chatlog__embed-author-name-link" href="https://twitter.com/bitpanda">Bitpanda (@bitpanda)</a>
+                                                    </span>
+                                            </div>
+
+
+                                        <div class="chatlog__embed-description"><span class="markdown">We’re happy to announce @KomodoPlatform is now available on Bitpanda! Start buying and selling $KMD by heading to <a href="https://t.co/5Z6N4AsOPK">https://t.co/5Z6N4AsOPK</a> #bitpanda #komodo <a href="https://t.co/TUdNhtIh2r">https://t.co/TUdNhtIh2r</a></span></div>
+
+                                    </div>
+
+                                        <div class="chatlog__embed-thumbnail-container">
+                                            <a class="chatlog__embed-thumbnail-link" href="https://pbs.twimg.com/ext_tw_video_thumb/1006491512069292032/pu/img/QzXwUuTWNeEC-AXJ.jpg">
+                                                <img class="chatlog__embed-thumbnail" src="https://pbs.twimg.com/ext_tw_video_thumb/1006491512069292032/pu/img/QzXwUuTWNeEC-AXJ.jpg" />
+                                            </a>
+                                        </div>
+                                </div>
+
+
+                                    <div class="chatlog__embed-footer">
+                                                <img class="chatlog__embed-footer-icon" src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" />
+
+                                        <span class="chatlog__embed-footer-text">
+                                                    Twitter
+                                                    
+
+                                        </span>
+                                    </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456054771426787340" id="message-456054771426787340">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;onurozcan&gt; CASH IN EVERYONE (re @benohanlon: $KMD goes live on Bitpanda right now... <a href="https://twitter.com/bitpanda/status/1006491524845195264)">https://twitter.com/bitpanda/status/1006491524845195264)</a></span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456054913089404928" id="message-456054913089404928">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;onurozcan&gt; wish bitpanda was available in my country</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456055800016666624" id="message-456055800016666624">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;Zossabossa&gt; Never heard of them. What is the trading volume there?</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456056251772698624" id="message-456056251772698624">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;Kassu2&gt; Is  AION competitor for kmd?</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456057274058670081" id="message-456057274058670081">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;threeridges&gt; List of private blockchain working on KMD?</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456057428971225089" id="message-456057428971225089">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;threeridges&gt; It sound Chinese exchange (re @benohanlon: $KMD goes live on Bitpanda right now... <a href="https://twitter.com/bitpanda/status/1006491524845195264)">https://twitter.com/bitpanda/status/1006491524845195264)</a></span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="jl777c#5810" data-user-id="455741312273219595">jl777c</span>
+
+
+                <span class="chatlog__timestamp">12-Jun-18 11:29 AM</span>
+
+                    <div class="chatlog__message " data-message-id="456057562740162581" id="message-456057562740162581">
+                        <div class="chatlog__content">
+                            <span class="markdown">aion seems to require that coins make significant consensus changes for it to work with aion. What are the chances BTC or even LTC will choose to include aion code?</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/3.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Gateway#3763" data-user-id="455021680935436290">Gateway</span>
+
+                    <span class="chatlog__bot-tag">BOT</span>
+
+                <span class="chatlog__timestamp">12-Jun-18 11:30 AM</span>
+
+                    <div class="chatlog__message " data-message-id="456057753673269248" id="message-456057753673269248">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;threeridges&gt; Too Good (re @N21_0: )</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456057974809559051" id="message-456057974809559051">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;threeridges&gt; List of icos on KMD?</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/3.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Gateway#3763" data-user-id="455021680935436290">Gateway</span>
+
+                    <span class="chatlog__bot-tag">BOT</span>
+
+                <span class="chatlog__timestamp">12-Jun-18 11:52 AM</span>
+
+                    <div class="chatlog__message " data-message-id="456063240246394880" id="message-456063240246394880">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;afrosatoshi&gt; hi! @benohanlon sorry to disturb you, but ive DM:ed you regarding an invitation <img class="emoji " alt="🙂" title="🙂" src="https://twemoji.maxcdn.com/2/72x72/1f642.png" /></span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456064420632592394" id="message-456064420632592394">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;benohanlon&gt; I&#39;ll check. Thank you. (re @afrosatoshi: hi! @benohanlon sorry to disturb you, but ive DM:ed you regarding an invitation <img class="emoji " alt="🙂" title="🙂" src="https://twemoji.maxcdn.com/2/72x72/1f642.png" />)</span>
+
+                        </div>
+
+
+
+                    </div>
+                    <div class="chatlog__message " data-message-id="456064731824914433" id="message-456064731824914433">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;John Mandy&gt; This channel is for sale @bitcoinalerts2017 with 4900+ crypto subscribers! 
+It can be used for CRYPTO SIGNALS and CRYPTO PUMP AND DUMPS
+Price: 500$ 
+Contact @kingofpump2017 if you&#39;re interested</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/3.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Gateway#3763" data-user-id="455021680935436290">Gateway</span>
+
+                    <span class="chatlog__bot-tag">BOT</span>
+
+                <span class="chatlog__timestamp">12-Jun-18 12:06 PM</span>
+
+                    <div class="chatlog__message " data-message-id="456066725008506880" id="message-456066725008506880">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;yorklab&gt; <a href="https://www.dexstats.info/dico.php">https://www.dexstats.info/dico.php</a> (re @threeridges: List of private blockchain working on KMD?)</span>
+
+                        </div>
+
+
+                        <div class="chatlog__embed">
+                            <div class="chatlog__embed-color-pill" style="background-color: rgba(79,84,92,255)"></div>
+                            <div class="chatlog__embed-content-container">
+                                <div class="chatlog__embed-content">
+                                    <div class="chatlog__embed-text">
+
+                                            <div class="chatlog__embed-title">
+                                                    <a class="chatlog__embed-title-link" href="https://www.dexstats.info/dico.php"><span class="markdown">Dexstats Dashboard - BarterDEX</span></a>
+                                            </div>
+
+                                        <div class="chatlog__embed-description"><span class="markdown">Calendar for barterDEX dICO&#39;s on the Komodoplatform</span></div>
+
+                                    </div>
+
+                                </div>
+
+
+                            </div>
+                        </div>
+
+                    </div>
+            </div>
+        </div>
+        <div class="chatlog__message-group">
+            <div class="chatlog__author-avatar-container">
+                <img class="chatlog__author-avatar" src="https://cdn.discordapp.com/embed/avatars/3.png" />
+            </div>
+            <div class="chatlog__messages">
+                <span class="chatlog__author-name" title="Gateway#3763" data-user-id="455021680935436290">Gateway</span>
+
+                    <span class="chatlog__bot-tag">BOT</span>
+
+                <span class="chatlog__timestamp">12-Jun-18 01:34 PM</span>
+
+                    <div class="chatlog__message " data-message-id="456088871923351552" id="message-456088871923351552">
+                        <div class="chatlog__content">
+                            <span class="markdown">[telegram] &lt;Kassu2&gt; When will we be millionaires?</span>
+
+                        </div>
+
+
+
+                    </div>
+            </div>
+        </div>
+</div>
+
+</body>
+</html>

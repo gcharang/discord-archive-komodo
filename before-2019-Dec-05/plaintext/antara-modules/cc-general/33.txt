@@ -1,0 +1,481 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[06-Aug-18 03:13 PM] dukeleto#7326
+i would like to see your full exact CLI
+
+[06-Aug-18 03:13 PM] dukeleto#7326
+because if you are testing multiple times, with the same -ac_name=FOO, the directory already exists, and weird shit might happen
+
+[06-Aug-18 03:14 PM] dukeleto#7326
+change your AC name constantly, or keep deleting the directory  it creates
+
+[06-Aug-18 03:14 PM] dukeleto#7326
+is one idea
+
+[06-Aug-18 03:14 PM] dukeleto#7326
+also, compare the komodo.conf from CC and non-CC nodes, just in case there is something different
+
+[06-Aug-18 03:15 PM] dukeleto#7326
+in the test suite, i just fixed a bug where it would not create komodo.confs correctly because it's inherited from zcash which does not require txindex=1
+
+[06-Aug-18 03:15 PM] dukeleto#7326
+https://github.com/letolabs/komodo/commit/f4cdde0e85683eada52704d0f292dad4ae90fd50
+
+{Embed}
+https://github.com/letolabs/komodo/commit/f4cdde0e85683eada52704d0f292dad4ae90fd50
+Enable txindex in regtest komodo.confs and update binary in initia...
+…e_chain
+https://avatars3.githubusercontent.com/u/30298?s=200&v=4
+
+[06-Aug-18 03:16 PM] dukeleto#7326
+that python code is the test suite infrastructure, that automates starting/stopping/managing regtest komodod's
+
+[06-Aug-18 03:18 PM] dukeleto#7326
+i can't even get CC to think i started with -pubkey
+
+[06-Aug-18 03:19 PM] dukeleto#7326
+i do a `git init` in my .komodo directories, and it lets you see config files changes/being added/deleted/etc, just an idea for you, if you occasionally commit and make checkpoints
+
+[06-Aug-18 03:20 PM] dukeleto#7326
+i usually use git to keep track of all my wallet.dat's and relevant .conf's
+
+[06-Aug-18 03:20 PM] Mylo#8306
+ok, will check, here's cli first.  git cloned to /   fs root hence command not in homedir
+
+ok cool, i'll keep an eye on qa dir in future.  might be my turn to learn python 2nd half of 2018!  incidently, explained where the term "bug" comes from to my girlfriend yesterday - she thought it was anecdotally awesome there's a story to it (yoga teacher, totally non-tech)
+
+here's CLI
+no -ac_name, so plain old KMD
+```
+ /komodo/src/komodod  -ac_cc=1 -addressindex=1 -spentindex=1 -ac_supply=100000000  -pubkey=033ace50aedf8df70035b962a805431363a61cc4e69d99d90726a2d48fb195f68c -regtest &
+```
+then
+```
+/komodo/src/komodo-cli -regtest generate 120
+```
+resulting in
+```
+(tx.0: 3.00000000  KOMODO_LASTMINED.118 -> 119
+) KMD ht.119
+(tx.0: 3.00000000  KOMODO_LASTMINED.119 -> 120
+) KMD ht.120
+[
+  "9ac0f5c558f46f763a10cc9be08f7054a6e86cb8758cb9b21d877161043b627e",
+  "be84cc3033ccd4cfbc8079ba829f00cbaa4a81147df197b64f0bdb78e7e1b53c",
+  "9aaa026719cc353faf3f6eb961fcb4409b28a7df5a08b09cc8882543a77f9553",
+  snipped
+```
+
+[06-Aug-18 03:20 PM] Mylo#8306
+getinfo
+```
+root@a93e406d300c:/# /komodo/src/komodo-cli -regtest getinfo
+{
+  "version": 1001550,
+  "protocolversion": 170003,
+  "KMDversion": "0.1.1",
+  "notarized": 0,
+  "prevMoMheight": 0,
+  "notarizedhash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "notarizedtxid": "0000000000000000000000000000000000000000000000000000000000000000",
+  "notarizedtxid_height": "mempool",
+  "notarized_confirms": 0,
+  "walletversion": 60000,
+  "balance": 0.00000000,
+  "interest": 0.00000000,
+  "blocks": 120,
+  "longestchain": 0,
+  "timeoffset": 0,
+  "tiptime": 1533568356,
+  "connections": 0,
+  "proxy": "",
+  "difficulty": 1.000007093003461,
+  "testnet": false,
+  "keypoololdest": 1533568209,
+  "keypoolsize": 101,
+  "paytxfee": 0.00000000,
+  "relayfee": 0.00000100,
+  "errors": "",
+  "CCid": 1,
+  "name": "KMD"
+}
+
+```
+and getwalletinfo
+```
+root@a93e406d300c:/# /komodo/src/komodo-cli -regtest getwalletinfo
+{
+  "walletversion": 60000,
+  "balance": 0.00000000,
+  "unconfirmed_balance": 0.00000000,
+  "immature_balance": 0.00000000,
+  "txcount": 0,
+  "keypoololdest": 1533568209,
+  "keypoolsize": 101,
+  "paytxfee": 0.00000000
+}
+```
+
+[06-Aug-18 03:21 PM] dukeleto#7326
+very useful
+
+[06-Aug-18 03:21 PM] Mylo#8306
+hmmmm... i might pass -conf in then.
+
+[06-Aug-18 03:21 PM] dukeleto#7326
+my idea is to use the txids you know, like 9ac0f5c558f46f763a10cc9be08f7054a6e86cb8758cb9b21d877161043b627e, and use RPCs to see what is up
+
+[06-Aug-18 03:22 PM] dukeleto#7326
+like `getrawtransaction 9ac0f5c558f46f763a10cc9be08f7054a6e86cb8758cb9b21d877161043b627e 1` or whatever it is
+
+[06-Aug-18 03:22 PM] dukeleto#7326
+see if something is wrong with the xtn or something
+
+[06-Aug-18 03:23 PM] dukeleto#7326
+@Mylo plz show the output of `listtransactions "*" 1000`
+
+[06-Aug-18 03:23 PM] dukeleto#7326
+in a gist or whatev if it's big 😃
+
+[06-Aug-18 03:23 PM] dukeleto#7326
+or you can sleep, that is always an option
+
+[06-Aug-18 03:23 PM] dukeleto#7326
+you seem to be mining correctly, and your logs have txids
+
+[06-Aug-18 03:24 PM] dukeleto#7326
+they don't even show up as immature
+
+[06-Aug-18 03:24 PM] dukeleto#7326
+that is weird
+
+[06-Aug-18 03:24 PM] Mylo#8306
+yeah i'll compare just -regtest because i noticed "longestchain: 0" in the getinfo, and i'll also pass conf file on command line
+
+[06-Aug-18 03:24 PM] Mylo#8306
+be about 10 mins
+
+[06-Aug-18 03:27 PM] xRobeSx#5136
+@Mylo james said longestchain will be 0 if less than 3 peers
+
+{Reactions}
+🙏 (2) 
+
+[06-Aug-18 03:27 PM] Mylo#8306
+ok thanks - handy to know.  3 is the magic number
+
+[06-Aug-18 03:28 PM] xRobeSx#5136
+No problem.  I had wondered this in the past, so I was happy to find out myself 😃
+
+{Reactions}
+😃 
+
+[06-Aug-18 03:30 PM] Mylo#8306
+anyway @dukeleto the `listtransactions "*" 1000` on 105 generated blocks is empty
+```
+root@4549c288025e:/# /komodo/src/komodo-cli -regtest listtransactions "*" 1000
+[
+]
+```
+
+[06-Aug-18 03:32 PM] Mylo#8306
+i'll put it in gist what i'm doing....at least it will be one stream of related info
+
+[06-Aug-18 03:38 PM] Mylo#8306
+https://gist.github.com/imylomylo/aa8626835718e25073f55fc9cc71b992
+
+{Embed}
+https://gist.github.com/imylomylo/aa8626835718e25073f55fc9cc71b992
+regtest generate 105 blocks, no coins
+regtest generate 105 blocks, no coins
+https://avatars3.githubusercontent.com/u/19399102?s=400&v=4
+
+[06-Aug-18 03:39 PM] Mylo#8306
+error code -5 on `gettransaction` from a `getblock` txid listing
+
+[06-Aug-18 03:58 PM] dukeleto#7326
+@Mylo try `getrawtransaction`
+
+[06-Aug-18 03:58 PM] dukeleto#7326
+and also make sure that your regtest komodo.conf has txindex=1
+
+[06-Aug-18 04:00 PM] Mylo#8306
+ok
+
+[06-Aug-18 04:07 PM] Mylo#8306
+i had to import my privkey for notary to get coins
+
+[06-Aug-18 04:09 PM] Mylo#8306
+getblock->getrawtransaction->decoderawtransaction it had my NN address.
+importprivkey and 100,000,027 + 300 immature from mining reward on 110 blocks.
+all adds up.
+
+[06-Aug-18 04:09 PM] Mylo#8306
+semi pebkac
+
+[06-Aug-18 04:13 PM] Mylo#8306
+thanks for hint @dukeleto
+
+[06-Aug-18 04:22 PM] Mylo#8306
+that's cool, regtest faucetfund, does fund it.
+
+[06-Aug-18 04:57 PM] dukeleto#7326
+@Mylo oh, you used a NN pubkey instead of a locally generated one from `getnewaddress`, that is why 😃
+
+[06-Aug-18 04:58 PM] dukeleto#7326
+@Mylo if you keep a record of your manual tests somehow, in a gist or something, that will be useful for me writing python tests
+
+[06-Aug-18 05:20 PM] dukeleto#7326
+starting it with `./komodod -ac_cc=1 -ac_name=REGTEST -addressindex=1 -spentindex=1 -ac_supply=5555555 -ac_reward=10000000 -pubkey=0381fbd9deab1e6f9b57d6a44308a339ca6f1da9ae03bf0469dca71aea43b25d -regtest`
+
+[06-Aug-18 05:20 PM] dukeleto#7326
+```$ ./komodo-cli -ac_name=REGTEST -regtest validateaddress RG1e2oUL8zmS9oXKEHMSm1K5wrp9W8KheS
+{
+  "isvalid": true,
+  "address": "RG1e2oUL8zmS9oXKEHMSm1K5wrp9W8KheS",
+  "scriptPubKey": "76a91449d7e3c63d69026af988459e1ace3801960cc8a188ac",
+  "segid": 33,
+  "ismine": true,
+  "iswatchonly": false,
+  "isscript": false,
+  "pubkey": "0381fbd9deab1e6f9b5757d6a44308a339ca6f1da9ae03bf0469dca71aea43b25d",
+  "iscompressed": true,
+  "account": ""
+}```
+
+[06-Aug-18 05:20 PM] dukeleto#7326
+BUT ```$ ./komodo-cli -ac_name=REGTEST -regtest faucetinfo
+error code: -1
+error message:
+to use CC contracts, you need to launch daemon with valid -pubkey= for an address in your wallet```
+
+[06-Aug-18 05:20 PM] dukeleto#7326
+what am I missing?
+
+[06-Aug-18 05:21 PM] dukeleto#7326
+stdout says it loaded the pubkey, i think: ```end.0 blocks, reward 0.10000000 halving.0 blocks, decay.0 perc 0.0000% ac_pub=[00...]
+call komodo_args.(./komodod) NOTARY_PUBKEY.(0381fbd9deab1e6f9b57d6a44308a339ca6f1da9ae03bf0469dca71aea43b25d)
+>>>>>>>>>> REGTEST: p2p.64367 rpc.64368 magic.340962df 873030367 5555555 coins
+initialized REGTEST at 1533576081
+finished loading blocks REGTEST```
+
+[06-Aug-18 05:22 PM] dukeleto#7326
+do we have a list of new CC RPCs somewhere? Or do I need to regex some .cpp files?
+
+[06-Aug-18 05:22 PM] Mylo#8306
+that's the thing, i thought it had to be NN pubkey.  nah i'll get you link
+
+[06-Aug-18 05:23 PM] dukeleto#7326
+maybe I am confusing myself. With verus, you can mine to an address with -pubkey
+
+[06-Aug-18 05:23 PM] Mylo#8306
+https://github.com/himu007/KMD-CC-Token-Test-Guide
+
+{Embed}
+https://github.com/himu007/KMD-CC-Token-Test-Guide
+himu007/KMD-CC-Token-Test-Guide
+KMD-CC-Token-Test-Guide - Komodo CC Token testing description, setup & how-to
+https://avatars2.githubusercontent.com/u/8881040?s=400&v=4
+
+{Reactions}
+shexy 
+
+[06-Aug-18 05:23 PM] dukeleto#7326
+but maybe with KMD -pubkey is only for valid notaries?
+
+[06-Aug-18 05:23 PM] dukeleto#7326
+if so, they we need to have a "fake regtest notary"
+
+[06-Aug-18 05:23 PM] dukeleto#7326
+because we can't put a real KMD notary privkey in the test suite or dApp builder stuff
+
+[06-Aug-18 05:25 PM] dukeleto#7326
+`to use CC contracts, you need to launch daemon with valid -pubkey= for an address in your wallet` doesn't say it must be a NN pubkey
+
+[06-Aug-18 05:25 PM] dukeleto#7326
+but maybe it does need to be
+
+[06-Aug-18 05:25 PM] Mylo#8306
+good reading. i thought it was because CC need to have NN pubkey because of the cross-chain-ness?
+
+[06-Aug-18 05:28 PM] SHossain#0007
+komodod and any AC can start with `-pubkey` option and mine and do other stuff
+
+[06-Aug-18 05:29 PM] dukeleto#7326
+ok, that is what I figured
+
+[06-Aug-18 05:29 PM] SHossain#0007
+works with VRSC as it is using komodod
+
+[06-Aug-18 05:29 PM] dukeleto#7326
+i can't figure out why CC's RPCs think that I have not enabled pubkey
+
+[06-Aug-18 05:29 PM] SHossain#0007
+we are using this `./komodod -ac_cc=1 -ac_name=AT1 -addressindex=1 -spentindex=1 -ac_supply=1000 -ac_reward=10000000000000 -pubkey=<your_pubkey> -addnode=195.201.137.5 -addnode=195.201.20.230 -addnode=78.47.205.239 -addnode=94.130.224.11 &`
+
+[06-Aug-18 05:30 PM] dukeleto#7326
+that is good to know, that is kind of our "official" test chain. I am trying to make it so that we have a test suite that "spins up" a chain like that and runs tests on it
+
+[06-Aug-18 05:32 PM] dukeleto#7326
+i am going to try to translate some of the manual tests you do to AT1 into automatic tests, and they can run in Travis on every commit, or on PRs/merges/etc
+
+[06-Aug-18 05:33 PM] dukeleto#7326
+i have a bunch of experience with Travis CI, I was the one who helped add Perl support to it in the days when dinosaurs roamed the internet, before cryptocoins
+
+{Reactions}
+😄 👌🏽 (2) 💯 
+
+[06-Aug-18 05:34 PM] dukeleto#7326
+@SHossain your faq.md in the test guide repo is super useful, reading thru it to catch up to speed
+
+{Reactions}
+👍🏽 
+
+[06-Aug-18 05:34 PM] siu - Chainmakers#3920
+https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=506594567
+
+{Embed}
+https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit
+Smart Contract Test Plan
+faucet
+
+
+ Faucet Contract
+ Availalble RPC calls, What does this Call do?, Example Test Command, What to Check, Comments, Testing Result
+ faucetaddress[ pubkey], Will display central faucet address and your faucet contract address for your pubkey.
+ pubkey starts with 02 or 03....
+https://lh4.googleusercontent.com/jG0EwoRG0GKTwPpnAwZivN2UkcMWt-qr3QUTPsmy2nz8nNGRLIBXezodcKzZoKg9bFwJDQ=w1200-h630-p
+
+[06-Aug-18 05:34 PM] dukeleto#7326
+i saw all this CC stuff being hacked on but missed some of the beginning fun
+
+[06-Aug-18 05:35 PM] siu - Chainmakers#3920
+finished adding all the rpc calls for tokens in the test plan
+
+[06-Aug-18 05:35 PM] SHossain#0007
+cool. thanks @siu - Chainmakers
+
+[06-Aug-18 05:35 PM] dukeleto#7326
+in theory, the test suite can test cross-chain stuff too
+
+[06-Aug-18 05:35 PM] SHossain#0007
+i'm adding a column for each plan to list the example outputs
+
+[06-Aug-18 05:36 PM] dukeleto#7326
+first, i will try to get it to spin up nodes of 1 kind of AC (right now it can only do KMD), and then next will be able to spin up AC's with different parameters in the test, so you can test cross-chain stuff
+
+[06-Aug-18 05:36 PM] dukeleto#7326
+all your manual testing helps me understand what kinds of tests are going to be most valuable to run all the time. Like James said, some tests are more valuable, in terms of ROI, than others
+
+[06-Aug-18 05:38 PM] SHossain#0007
+cross-chain stuff not ready yet, as i remember. jl777 wanted to make single chain stuff stable first. but, it is good to have it ready.
+
+[06-Aug-18 05:38 PM] dukeleto#7326
+sure, i am just saying that it will be possible. Testing all the RPCs on a single chain gives us the most ROI at first
+
+[06-Aug-18 05:39 PM] dukeleto#7326
+then we can try to test for bugs that happen in cross-chain scenarios after that
+
+{Reactions}
+👍🏽 
+
+[06-Aug-18 05:43 PM] jl777c#5810
+pubkey option works all the time, it just sets a change pubkey
+
+[06-Aug-18 05:43 PM] dukeleto#7326
+i am going to try this on Linux to see if this is an osx bug
+
+[06-Aug-18 05:43 PM] jl777c#5810
+but if it is a notary pubkey, it enables notary mode
+
+[06-Aug-18 05:50 PM] dukeleto#7326
+i am trying to determine if ensureCC_requirements is failing because of pubkey or addressindex check
+
+[06-Aug-18 05:55 PM] dukeleto#7326
+seeing the same thing on Linux, i must be doing something dumb
+
+[06-Aug-18 06:01 PM] Mylo#8306
+i'm copying your steps atm, generating another 50 blocks
+
+[06-Aug-18 06:04 PM] Mylo#8306
+i'm doing all my stuff on the REGTEST ac, without needing to put -ac_name=REGTEST
+
+[06-Aug-18 06:04 PM] Mylo#8306
+faucetinfo is ok
+
+[06-Aug-18 06:05 PM] Mylo#8306
+@dukeleto  https://gist.github.com/imylomylo/00f0dc2234d1a65860e0e4ccdd0298e0
+
+{Embed}
+https://gist.github.com/imylomylo/00f0dc2234d1a65860e0e4ccdd0298e0
+gist:00f0dc2234d1a65860e0e4ccdd0298e0
+https://avatars3.githubusercontent.com/u/19399102?s=400&v=4
+
+[06-Aug-18 06:07 PM] Mylo#8306
+komodod to start the chain has -ac_name=REGTEST but every komodo-cli call does not use -ac_name, and faucetinfo returns success.
+
+[06-Aug-18 06:08 PM] dukeleto#7326
+hmmm
+
+[06-Aug-18 06:08 PM] dukeleto#7326
+not so sure about that
+
+[06-Aug-18 06:09 PM] dukeleto#7326
+without -ac_name=REGTEST, you are running against your normal KMD i would think
+
+[06-Aug-18 06:09 PM] dukeleto#7326
+without it I get ```$ ./komodo-cli -regtest faucetinfo
+Error reading configuration file: Missing komodo.conf```
+
+[06-Aug-18 06:10 PM] dukeleto#7326
+because I never made a normal KMD regtest on this machine
+
+[06-Aug-18 06:10 PM] Mylo#8306
+i started komodod with -conf=/root/.komodo/komodo.conf
+
+[06-Aug-18 06:10 PM] Mylo#8306
+i've only got regtest running.  and the balance and everything are the start up params
+
+[06-Aug-18 06:12 PM] Mylo#8306
+if i add -ac_name=REGTEST, i get same as you
+```
+root@3b3f5bc8b655:/# /komodo/src/komodo-cli -regtest -ac_name=REGTEST validateaddress RWPg8B91kfK5UtUN7z6s6TeV9cHSGtVY8D
+error: couldn't connect to server: unknown (code -1)
+(make sure server is running and you are connecting to the correct RPC port)
+
+
+root@3b3f5bc8b655:/# /komodo/src/komodo-cli -regtest validateaddress RWPg8B91kfK5UtUN7z6s6TeV9cHSGtVY8D
+{
+  "isvalid": true,
+  "address": "RWPg8B91kfK5UtUN7z6s6TeV9cHSGtVY8D",
+  "scriptPubKey": "76a914e7948c7995f4347f31eb55c8ea77e8f6e97b372c88ac",
+  "segid": 32,
+  "ismine": true,
+  "iswatchonly": false,
+  "isscript": false,
+  "pubkey": "02676d00110c2cd14ae24f95969e8598f7ccfaa675498b82654a5b5bd57fc1d8cf",
+  "iscompressed": true,
+  "account": ""
+}
+```
+
+[06-Aug-18 06:13 PM] dukeleto#7326
+that is because of your `-conf=/root/.komodo/komodo.conf` trick i think
+
+[06-Aug-18 06:14 PM] Mylo#8306
+ok, but i only have rpcuser, rpcpassword and txindex in that conf file.  no rpcports or anything
+
+[06-Aug-18 06:14 PM] Mylo#8306
+it's at bottom of that last gist
+
+[06-Aug-18 06:15 PM] dukeleto#7326
+thanks
+

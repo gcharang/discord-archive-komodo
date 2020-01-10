@@ -1,0 +1,344 @@
+==============================================================
+Guild: Komodo
+Channel: dev-scalability
+Topic: Discussion about Komodo scalability. Komodo has demonstrated 20,000 TPS.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[31-May-18 12:44 PM] blackjok3r#0000
+I just started it again, takes a few mins to get going with TX's...
+
+[31-May-18 12:47 PM] imylomylo#0000
+no limit
+
+[31-May-18 12:48 PM] imylomylo#0000
+only limit atm is writes per second
+
+[31-May-18 12:48 PM] blackjok3r#0000
+not working from container?
+
+[31-May-18 12:59 PM] smk762#0000
+nothing at link
+
+[31-May-18 12:59 PM] smk762#0000
+image.png
+
+{Attachments}
+https://cdn.discordapp.com/attachments/449949868904022036/451731346121818122/image.png
+
+[31-May-18 12:59 PM] blackjok3r#0000
+I just added a pipe to my stats.txt from the curl to see if there is any error
+
+[31-May-18 12:59 PM] blackjok3r#0000
+started again
+
+[31-May-18 12:59 PM] imylomylo#0000
+no log
+
+[31-May-18 12:59 PM] blackjok3r#0000
+😕
+
+[31-May-18 12:59 PM] blackjok3r#0000
+nothing is printing from the curl lol
+
+[31-May-18 12:59 PM] blackjok3r#0000
+weird
+
+[31-May-18 01:03 PM] blackjok3r#0000
+Disabled blaster, so I can check logs. maybe curl isnt installed in the container... its there in earlier layers, but maybe not the last one.
+
+[31-May-18 01:04 PM] blackjok3r#0000
+```* Protocol ""https" not supported or disabled in libcurl
+* Closing connection -1
+curl: (1) Protocol ""https" not supported or disabled in libcurl
+Note: Unnecessary use of -X or --request, POST is already inferred.
+* Protocol ""https" not supported or disabled in libcurl
+* Closing connection -1
+curl: (1) Protocol ""https" not supported or disabled in libcurl
+```
+
+[31-May-18 01:05 PM] jl777#0000
+you need the curl with SSL
+
+[31-May-18 01:05 PM] imylomylo#0000
+k one sec.  the note about -X is ignorable
+
+[31-May-18 01:06 PM] blackjok3r#0000
+yeah wrong curl. wont take long to change it.
+
+[31-May-18 01:06 PM] imylomylo#0000
+```libcurl4-gnutls-dev```
+
+[31-May-18 01:06 PM] imylomylo#0000
+on deb/ubuntu
+
+[31-May-18 01:06 PM] imylomylo#0000
+well, ubuntu 16.04
+
+[31-May-18 01:07 PM] imylomylo#0000
+and ```curl```
+
+[31-May-18 01:07 PM] blackjok3r#0000
+😞
+
+[31-May-18 01:08 PM] imylomylo#0000
+you should subscribe to my install komodo guide, only $99 on sale now
+
+[31-May-18 01:08 PM] blackjok3r#0000
+marketmaker needs libcurl4-openssl-dev
+
+[31-May-18 01:08 PM] blackjok3r#0000
+which uninstalls libcurl4-gnutls-dev
+
+[31-May-18 01:08 PM] imylomylo#0000
+ah shit a brick.
+
+[31-May-18 01:08 PM] blackjok3r#0000
+I guess I need to compile marketmaker from source in docker build ?
+
+[31-May-18 01:09 PM] blackjok3r#0000
+where ever this executable came from its compiled with the wrong libcurl
+
+[31-May-18 01:09 PM] smk762#0000
+image.png
+
+{Attachments}
+https://cdn.discordapp.com/attachments/449949868904022036/451733938616926218/image.png
+
+[31-May-18 01:10 PM] blackjok3r#0000
+ok, I got an idea. I will compile a marketmaker on empty ubuntu 16.04 using  libcurl4-gnutls-dev
+
+[31-May-18 01:13 PM] imylomylo#0000
+use the paris box
+
+[31-May-18 01:13 PM] blackjok3r#0000
+the vultr VPS is fine,
+
+[31-May-18 01:14 PM] blackjok3r#0000
+where the docker containers are hosted. all I installed was docker
+
+[31-May-18 01:14 PM] blackjok3r#0000
+tbh not sure if marketmaker will compile with that ssl but its worth a try.
+
+[31-May-18 01:16 PM] blackjok3r#0000
+nope 😞
+
+[31-May-18 01:17 PM] blackjok3r#0000
+guess this is why I was told to use 2 containers lol
+
+[31-May-18 01:19 PM] blackjok3r#0000
+I will figure it out, at least we know its working apart from this. 🙂
+
+[31-May-18 01:19 PM] imylomylo#0000
+compile curl?
+
+[31-May-18 01:19 PM] imylomylo#0000
+https://askubuntu.com/questions/475670/how-to-build-curl-with-the-latest-openssl
+
+{Embed}
+https://askubuntu.com/questions/475670/how-to-build-curl-with-the-latest-openssl
+How to build curl with the latest openssl?
+So I build openssl
+
+./config
+make
+sudo make install
+sudo ln -sf /usr/local/ssl/bin/openssl `which openssl`
+I build curl
+
+./configure --with-ssl 
+make
+make install
+OpenSSL looks installed correctl...
+https://cdn.sstatic.net/Sites/askubuntu/img/apple-touch-icon@2.png?v=c492c9229955
+
+[31-May-18 01:19 PM] blackjok3r#0000
+thats what I am going to try
+
+[31-May-18 01:29 PM] blackjok3r#0000
+just changing the ssl in the dockerfile from earlier on. it seems curl works with that openssl on normal ubuntu
+
+[31-May-18 01:55 PM] imylomylo#0000
+worst case, can setup a reverse proxy with http ->apache-> https
+
+[31-May-18 02:08 PM] smk762#0000
+image.png
+
+{Attachments}
+https://cdn.discordapp.com/attachments/449949868904022036/451748921685835776/image.png
+
+[31-May-18 02:18 PM] imylomylo#0000
+hey blackjok3r i've gotta zzzzz soon.  wanna just write to file and i'll import it at 5am?  i've got work at 8am tomorrow.
+
+[31-May-18 02:19 PM] blackjok3r#0000
+I dont think its a curl missing https problem
+
+[31-May-18 02:19 PM] blackjok3r#0000
+go ahead and sleep I am rebuilding the whole docker image
+
+[31-May-18 02:20 PM] blackjok3r#0000
+with the openssl-dev package instead of gnutils right from the start.
+
+[31-May-18 02:20 PM] blackjok3r#0000
+Google tells me it can be possibly the URL format that can throw this error too. The only difference from the script I used locally and the docker is that dock was ENV var.
+
+[31-May-18 02:21 PM] blackjok3r#0000
+I will work it out, probably something stupid
+
+[31-May-18 02:22 PM] jl777#0000
+you need the curl lib with ssl in it
+
+[31-May-18 02:22 PM] jl777#0000
+i said this already
+
+[31-May-18 02:22 PM] jl777#0000
+libssl-dev libcurl4-gnutls-dev
+
+[31-May-18 02:23 PM] blackjok3r#0000
+you cant install `libcurl4-gnutls-dev` and libcurl4-openssl-dev` at the same time
+
+[31-May-18 02:24 PM] blackjok3r#0000
+so that can't be the problem. I used curl with no ssl installed on the same URL not inside docker and it worked fine
+
+[31-May-18 02:24 PM] jl777#0000
+libcurl4-gnutls-dev should be the one
+
+[31-May-18 02:24 PM] blackjok3r#0000
+marketmaker wont compile with that
+
+[31-May-18 02:24 PM] blackjok3r#0000
+tired it
+
+[31-May-18 02:29 PM] blackjok3r#0000
+quotes around URL
+
+[31-May-18 02:29 PM] blackjok3r#0000
+removed them and now its working :faceplm:
+
+[31-May-18 02:30 PM] blackjok3r#0000
+https://njeitldkqc.execute-api.ap-southeast-2.amazonaws.com/v0/blocknotify
+
+[31-May-18 02:30 PM] blackjok3r#0000
+😄
+
+[31-May-18 02:31 PM] smk762#0000
+image.png
+
+{Attachments}
+https://cdn.discordapp.com/attachments/449949868904022036/451754520548999169/image.png
+
+[31-May-18 02:31 PM] blackjok3r#0000
+😂
+
+[31-May-18 02:32 PM] patchkez#0000
+blackjok3r do you need help with curl/docker or it was sorted out?
+
+[31-May-18 02:33 PM] blackjok3r#0000
+no it wasnt even that lol
+
+[31-May-18 02:33 PM] blackjok3r#0000
+it gave an SSL error because there was "" around the URL
+
+[31-May-18 02:33 PM] blackjok3r#0000
+😕
+
+[31-May-18 02:33 PM] blackjok3r#0000
+wasted heaps of time
+
+[31-May-18 02:34 PM] patchkez#0000
+haha, ok
+
+[31-May-18 02:35 PM] patchkez#0000
+I will review your changes in that PR you opened. So the container works fine now, or any other issues to be solved?
+
+[31-May-18 02:35 PM] blackjok3r#0000
+We need 2 TxBlaster nodes for 1 payment TX. So I need to change some things.
+
+[31-May-18 02:35 PM] blackjok3r#0000
+1 blaster is not filling mempool for all blocks
+
+[31-May-18 02:37 PM] patchkez#0000
+I see, can you run 2 txblaster processes from one container?
+
+[31-May-18 02:37 PM] blackjok3r#0000
+🤔
+
+[31-May-18 02:37 PM] blackjok3r#0000
+maybe, it would require running 2 marketmakers, but he issues is not maxed out CPU
+
+[31-May-18 02:38 PM] blackjok3r#0000
+the problem is you also need 2x passphrase etc
+
+[31-May-18 02:38 PM] blackjok3r#0000
+the list of ENV vars on the image is already huge lol
+
+[31-May-18 02:39 PM] patchkez#0000
+high number of vars should not be a problem
+
+[31-May-18 02:39 PM] patchkez#0000
+what do you mean by _maxed out CPU_?
+
+[31-May-18 02:39 PM] blackjok3r#0000
+yeah thats ok, just hard to track. I think I can use `sendmany` to fund 2 address at the same time.
+
+[31-May-18 02:40 PM] blackjok3r#0000
+The generation of transactions does not appear to be limited by CPU power
+
+[31-May-18 02:40 PM] blackjok3r#0000
+it is bottlenecked by something else
+
+[31-May-18 02:40 PM] patchkez#0000
+did you check # of TIME_WAIT connections?
+
+[31-May-18 02:41 PM] blackjok3r#0000
+no not yet. one sec,
+
+[31-May-18 02:41 PM] blackjok3r#0000
+it was over 20,000 on local tests
+
+[31-May-18 02:42 PM] blackjok3r#0000
+netstat not found
+
+[31-May-18 02:42 PM] blackjok3r#0000
+Guess I need to isntall it and rebuild conftainer?
+
+[31-May-18 02:42 PM] patchkez#0000
+yeah, there are no tools installed 😞
+
+[31-May-18 02:43 PM] patchkez#0000
+yes, somewhere near the end of Dockerfile you can add `RUN apt-get update && apt-get install net-tools`
+
+[31-May-18 02:43 PM] patchkez#0000
+maybe `ss` tool is installed?
+
+[31-May-18 02:44 PM] blackjok3r#0000
+ss is there but ss on its own does not shot TIME_WAIT?
+
+[31-May-18 02:45 PM] patchkez#0000
+`ss -a`
+
+[31-May-18 02:46 PM] blackjok3r#0000
+16700
+
+[31-May-18 02:47 PM] patchkez#0000
+blackjok3r may I have access to that node and see what is happening there?
+
+[31-May-18 02:47 PM] blackjok3r#0000
+sure, I dont think on y local tests that it was saturating mempool with 1 blaster either.
+
+[31-May-18 02:47 PM] blackjok3r#0000
+before I used docker
+
+[31-May-18 02:47 PM] smk762#0000
+how many records per sec are we anticipating to be added to the json?
+
+[31-May-18 02:47 PM] blackjok3r#0000
+but it did actually get to 5mb in size eventually
+
+[31-May-18 02:52 PM] smk762#0000
+i heard rumours of 8192 chains?
+
+[31-May-18 02:52 PM] blackjok3r#0000
+we should be able to do unlimited once 1 is working perfectly
+

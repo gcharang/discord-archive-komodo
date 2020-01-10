@@ -1,0 +1,233 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"458262320775430155";"kolo#1111";"26-Jun-18 01:35 PM";"Notary alarm bot now have hidden message with bounty privkey which will be posted when 0 nodes will be lagging. Go grab it! Thanks to @webworker01";"";"";
+"403229823834521616";"pbca26#5430";"26-Jun-18 02:45 PM";"running low on GAME, please refill GP5s4z498js6yqZjWabqQohS6gYDpuQuS8";"";"";
+"420119978138664961";"CHMEX#0686";"26-Jun-18 02:47 PM";"20991dd0d91b202fbbb0a14d58aa1d5ccfd747b9ec6b0096d217fd1c9324eb7c";"";"👍 (1)";
+"420119978138664961";"CHMEX#0686";"26-Jun-18 02:49 PM";"@pbca26 sent you 1";"";"";
+"456013288208203777";"jeezy#3408";"26-Jun-18 03:08 PM";"@kolo never said it wasn't";"";"";
+"458262320775430155";"kolo#1111";"26-Jun-18 07:34 PM";"I need someone to help rewriting assetchains file to add RFOX parameter (ac_reward)";"";"";
+"303794669945618442";"PTYX#6840";"26-Jun-18 11:24 PM";"What is RFOX?";"";"";
+"458262320775430155";"kolo#1111";"27-Jun-18 12:34 AM";"It's a new asset. We have total of 3 new coins upcoming to add to notarization, but all 3 appear to have things needed to adjust before announcing.";"";"";
+"458262320775430155";"kolo#1111";"27-Jun-18 12:35 AM";"RFOX will be easiest, I just need to fix assetchains file.";"";"";
+"303794669945618442";"PTYX#6840";"27-Jun-18 12:48 AM";"Can we get more information on the new assets?";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 03:41 AM";"Managed to get RFOX on my node, but all I did was add the entire line to the start of my startassets file. because my `coinlist` file does not provision for more than name and supply. Need to think about this some more and have holidays for a week starting tomrrow so, for now just need to get it on node and working.";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 03:42 AM";"Also VRSC has said they released a version that can run on CPU's without special instructions, but it still crashes on my Notary Node.";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 03:43 AM";"So I simply cannot add it, unless they use deckers fix with software instruction emulation, that I cannot seem to find anywhere, I will need tp host my VRSC chain in a cloud instance at my DC and RPC to it via an SSH tunnel. Not sure If I will have time to set all this up before I leave on Friday but I can try to if no other fix is found.";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 03:50 AM";"what are RFOX params to start komodod from command ilne?";"";"";
+"405011811511828481";"Alright#0419";"27-Jun-18 04:03 AM";"./komodod -pubkey=$pubkey -ac_name=RFOX -ac_supply=1000000000 -ac_reward=100000000 -addnode=78.47.196.146";"";"";
+"405011811511828481";"Alright#0419";"27-Jun-18 04:06 AM";"I'm connected to that node";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:10 AM";"I have RFOX working, and it has funds... however with block reward I already mined a heap.";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:10 AM";"in like 1h lol";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:10 AM";"@webworker01 103.6.12.112";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:10 AM";"try that node";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 04:10 AM";"assetchains file mods?
+```
+function komodo_asset ()
+{
+    if [ $[RANDOM % 10] == 1 ]
+    then
+        gen="" -gen""
+    else
+        gen=""""
+    fi
+
+    if [ -n ""$2"" ]
+    then
+        supply="" -ac_supply=$2""
+    else
+        supply="" ""
+    fi
+
+    if [ -n ""$3"" ]
+    then
+        ac_reward="" -ac_reward=$3""
+    else
+        ac_reward="" ""
+    fi
+
+    $komodo_binary -ac_name=$1 $gen $supply $ac_reward $args -pubkey=$pubkey -addnode=$seed_ip &
+    sleep $delay
+}
+
+#set -x
+komodo_asset RFOX 1000000000 100000000
+```";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:11 AM";"lol.. we need a better way for starting al these new params...";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:11 AM";"that works mylo, but with as many params as verus... its going to be mighty messy";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 04:11 AM";"oh ok - thought it was too simple a request for this bunch of NNs to not complete lol";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:13 AM";"actually readin that again.. thats not bad...";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:13 AM";"👍";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 04:14 AM";"```
+#!/bin/bash
+curl -s -o ~/contrib/stats/summary.json https://komodostats.com/api/notary/summary.json
+for ASSET in `cat ~/komodo/src/assetchains | grep komodo_asset |grep -v ""function"" | grep -v ""PIZZA\|BEER"" | awk '{print $2}'`
+do
+TMP_STATS_BLOCK=$(cat ~/contrib/stats/summary.json | jq --arg a ""${ASSET}"" '.[] | select(.ac_name==$a)|.blocks')
+STATS_BLOCK=$((${TMP_STATS_BLOCK} + 0))
+MY_BLOCK=$(komodo-cli -ac_name=${ASSET} getinfo | jq '.blocks')
+if [ ${STATS_BLOCK} -ne ${MY_BLOCK} ]
+then
+  echo ""BLOCK DIFFERENCE FOR ${ASSET}: ${STATS_BLOCK} AND MY ${MY_BLOCK}""
+  if [ ${STATS_BLOCK} -ne $(expr ${MY_BLOCK} - 1) ]
+  then
+    echo "">>>>>>>ERROR: ${ASSET} ${STATS_BLOCK} AND ${MY_BLOCK}""
+  fi
+else
+  echo ""OK: ${ASSET}: Stats ${STATS_BLOCK} vs MY ${MY_BLOCK}""
+fi
+done
+```
+amionfork";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 04:15 AM";"you can then email yourself if you're on a fork.";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:15 AM";"its only needed for starting them, and then `coinlist` can just be the names only for all other operations.";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 04:15 AM";"@webworker01 was mucking around with your api yesterday for a bit";"";"";
+"426823107865608192";"NNoperator#3835";"27-Jun-18 04:19 AM";"Trying to update komodo and encountering errors:";"";"";
+"426823107865608192";"NNoperator#3835";"27-Jun-18 04:19 AM";"make[2]: *** [cc/libbitcoin_server_a-import.o] Error 1
+mv -f src/.deps/libsecp256k1_la-secp256k1.Tpo src/.deps/libsecp256k1_la-secp256k1.Plo
+/bin/sh ./libtool  --tag=CC   --mode=link gcc -m64  -pipe -O1  -W -std=c89 -pedantic -Wall -Wextra -Wcast-align -Wnested-externs -Wshadow -Wstrict-prototypes -Wno-unused-function -Wno-long-long -Wno-overlength-strings -fvisibility=hidden -O3  -L/home/komodo/komodo/depends/x86_64-unknown-linux-gnu/share/../lib  -o libsecp256k1.la -rpath /home/komodo/komodo/depends/x86_64-unknown-linux-gnu/lib src/libsecp256k1_la-secp256k1.lo
+libtool: link: ar cru .libs/libsecp256k1.a  src/libsecp256k1_la-secp256k1.o
+libtool: link: ranlib .libs/libsecp256k1.a
+libtool: link: ( cd "".libs"" && rm -f ""libsecp256k1.la"" && ln -s ""../libsecp256k1.la"" ""libsecp256k1.la"" )
+make[3]: Leaving directory `/home/komodo/komodo/src/secp256k1'
+In file included from cc/eval.cpp:7:0:
+./cc/eval.h: In constructor ‘NotarisationData::NotarisationData(int)’:
+./cc/eval.h:139:63: error: array used as initializer
+     NotarisationData(int IsBack=2) : IsBackNotarisation(IsBack) {}
+                                                               ^
+At global scope:
+cc1plus: error: unrecognized command line option ""-Wno-builtin-declaration-mismatch"" [-Werror]
+cc1plus: all warnings being treated as errors
+make[2]: *** [cc/libbitcoin_server_a-eval.o] Error 1
+make[2]: Leaving directory `/home/komodo/komodo/src'
+make[1]: *** [all-recursive] Error 1
+make[1]: Leaving directory `/home/komodo/komodo/src'
+make: *** [all-recursive] Error 1";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 04:20 AM";"i updated yesterday on commit `098dad7df757f9c4d31e77ed7f0a33f26ec1aae2`";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 04:21 AM";"from jl777/dev branch";"";"";
+"426823107865608192";"NNoperator#3835";"27-Jun-18 04:22 AM";"OK is there a way for me to undo what I have done?";"";"";
+"426823107865608192";"NNoperator#3835";"27-Jun-18 04:22 AM";"yes ,  I tried that";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:24 AM";"looks like your c++ compiler is too old or too new to me but idk shit";"";"";
+"426823107865608192";"NNoperator#3835";"27-Jun-18 04:24 AM";"what is the command to 'check out from scratch' ?";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 04:26 AM";"from https://docs.komodoplatform.com/en/latest/notarynode/setup-Komodo-Notary-Node.html
+
+`git clone https://github.com/jl777/komodo` from the ""Installing Komodo"" section";"";"";
+"426823107865608192";"NNoperator#3835";"27-Jun-18 04:28 AM";"I wonder if I  try to switch commits to beta if that would work ?";"";"";
+"426823107865608192";"NNoperator#3835";"27-Jun-18 04:29 AM";"have any of you updated to the latest  sucessfully?";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:29 AM";"yes.. just updated all my nodes on latest dev";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:30 AM";"cc1plus: error: unrecognized command line option ""-Wno-builtin-declaration-mismatch"" [-Werror]";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:30 AM";"try removing -werror from the last line of build.sh";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:30 AM";"then make clean and use ./zcutil/build.sh";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 04:32 AM";"yes updated 24 hours ago to the commit posted above from jl777/dev branch";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:34 AM";"just remove werror it will work fine 😃";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:34 AM";"10 block to go in f4a... hope everyone got updated while the network was down lol.";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 04:36 AM";"his AWS account is locked.  everything is dramatic :troll:";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:36 AM";"need that troll in here badly lol";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:38 AM";"I did suggest moving the credit to yours.. but I dunno f you cna launch 128 64vcpu instances lol";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:42 AM";"I used make and it was ok.";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:42 AM";"no clean not build.sh";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 04:44 AM";"yeah `make clean` is best so you don't get any crusty object code";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 04:44 AM";"gpu mining is 27% for the last 2000 blocks";"";"";
+"426823107865608192";"NNoperator#3835";"27-Jun-18 04:45 AM";"trying to reinstall komodo fresh from a clean start (from scratch)  gives the same error  array used as initializer.";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:46 AM";"gpu mining is always 25% with new algo.";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:46 AM";"if goes under than, we increase wait time to submit block,";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 04:47 AM";"was 28% yesterday";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:49 AM";"always more than 25% is what I meant";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 04:49 AM";"sorry there is a baby sleeping on me, typing is hard";"";"🍴 (1)";
+"371114647052615681";"Mylo#8306";"27-Jun-18 04:57 AM";"amionfork script above";"";"";
+"371114647052615681";"Mylo#8306";"27-Jun-18 04:59 AM";"good idea.  i'll check mine in too.  less lines.  runs faster 😛";"";"🐸 (1)";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 05:30 AM";"Would anyone be in favour of having some kind of standardised JSON file in the Komodo repo of all asset chains with args NNs should be running. Something like:
+
+```js
+[
+  {
+    ""ac_name"": ""ZILLA"",
+    ""ac_supply"": ""11000000"",
+    ""addnode"": ""54.39.23.248""
+  },
+  {
+    ""ac_name"": ""RFOX"",
+    ""ac_supply"": ""1000000000"",
+    ""ac_reward"": ""100000000"",
+    ""addnode"": ""78.47.196.146""
+  }
+  ...
+]
+```
+
+The idea being that the main repo doesn't provide an init script, but just the required meta data. All NNs are free to build their own init scripts that loop over the provided array without having to hardcode asset chain params and try and keep them in sync with the komodo repo.";"";"👌 (3)";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 05:32 AM";"I am all for this... as are a heap of other people. @patchkez  has been pretty outspoken about this in the past.  I am using my own scripts for the most part, and its getting hard to manage them now. Soe kind of standard is def the way to go.";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 05:33 AM";"It would make it so much easier going forward";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 05:33 AM";"everyone can have their own scripts, and James just needs to update a single  file and know all NNs will use that";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 05:33 AM";"I can make a PR for this";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 05:34 AM";"I think dragon riders are using python, and for the bash guys, I have no issue rewriting my scripts using jq... as I was a total noob at all this when I made my first ones I could do a much better job now.";"";"";
+"406037988850794496";"patchkez#5349";"27-Jun-18 05:42 AM";"@lukechilds yes we need something like this! One central configuration file for whole NN. Config should have also information if chain has to be notarized or just started, rpc and p2p ports. This config should be then used by all other scripts (m_notary_run, assetchains). Config file should have also addnotary IPs, The thing is that some of these data already exists in coins/ folder in Supernet repo.";"";"";
+"406037988850794496";"patchkez#5349";"27-Jun-18 05:45 AM";"then next to this central config file, operators could have another json config e.g. with just his changes e.g. pubkey, walletpassphrase, or he could overide values which are defined in central config file";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 05:48 AM";"I over ride quite a few values in the standard bash init scripts...";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 05:48 AM";"I forked supernet and use git to merge updates as a work around atm.. something liek this would be great";"";"";
+"426823107865608192";"NNoperator#3835";"27-Jun-18 05:59 AM";"if anyone else encounters this error,  please let me know if you figure out what to fix so you can  build komodo:";"";"";
+"426823107865608192";"NNoperator#3835";"27-Jun-18 05:59 AM";"error: array used as initializer
+     NotarisationData(int IsBack=2) : IsBackNotarisation(IsBack) {}
+                                                               ^
+At global scope:
+cc1plus: warning: unrecognized command line option ""-Wno-builtin-declaration-mismatch""
+make[2]: *** [cc/libbitcoin_server_a-eval.o] Error 1
+In file included from crosschain.cpp:1:0:
+cc/eval.h: In constructor ‘NotarisationData::NotarisationData(int)’:
+cc/eval.h:139:63: error: array used as initializer
+     NotarisationData(int IsBack=2) : IsBackNotarisation(IsBack) {}
+                                                               ^";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:02 AM";"JSON is parsable with `jq`, but it's quite complex";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:02 AM";"```
+$ cat assetchains.json
+[
+  {
+    ""ac_name"": ""ZILLA"",
+    ""ac_supply"": ""11000000"",
+    ""addnode"": ""54.39.23.248""
+  },
+  {
+    ""ac_name"": ""RFOX"",
+    ""ac_supply"": ""1000000000"",
+    ""ac_reward"": ""100000000"",
+    ""addnode"": ""78.47.196.146""
+  }
+]
+
+$ cat assetchains.json | jq '.[] | to_entries | map(""-\(.key)=\(.value|tostring)"") | reduce .[1:][] as $i (""\(.[0])""; . + "" \($i)"")'
+""-ac_name=ZILLA -ac_supply=11000000 -addnode=54.39.23.248""
+""-ac_name=RFOX -ac_supply=1000000000 -ac_reward=100000000 -addnode=78.47.196.146""
+```";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:03 AM";"I like the idea of having JSON as it's more powerful but maybe it's not the best format for this";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:03 AM";"it might be better to just list the args";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:04 AM";"e.g something like:
+```
+$ cat assetchainparams.txt
+-ac_name=ZILLA -ac_supply=11000000 -addnode=54.39.23.248
+-ac_name=RFOX -ac_supply=1000000000 -ac_reward=100000000 -addnode=78.47.196.146
+```";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:04 AM";"super easy to loop over in bash";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:04 AM";"and for more powerful usage you can manually parse the params";"";"";
+"406037988850794496";"patchkez#5349";"27-Jun-18 06:05 AM";"@lukechilds I like first option more. If i want to use data like ac_supply, addnode IP, ... in other script, I have to parse it again";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:05 AM";"I am happy to use python instead of bash if thats easier. Only used bash at first as everything was already in it";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:06 AM";"ok";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:06 AM";"JSON standard is better for moving foward I think";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:06 AM";"with hundreds of chains n shit bash just wot be viable";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:06 AM";"and on second thought, the args shouldn't be object properties but an array of objects";"";"";
+"455021680935436290";"Gateway#3763";"27-Jun-18 06:07 AM";"[matrix] <mylo5ha5:matrix.org> can have json and a utility script to create the assetchainsparams.txt or vice versa.";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:07 AM";"because you can't have duplicate object property names in JSON, but we might want duplicate CLI args";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:07 AM";"merging something like Lazynode by @Deleted User with a standard JSON would be the best way, only thing is manyally adding new coins then.";"";"";
+"406037988850794496";"patchkez#5349";"27-Jun-18 06:07 AM";"yeah, I think all data should be in json or yaml format. The problem is that these formats is PITA to parse in bash";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:08 AM";"Already done ☝";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:09 AM";"I'm not sure about the arguments actually, how would you add multiple nodes:
+
+`-addnode=78.47.196.146 -addnode=78.47.196.146`
+
+or
+
+`-addnode=78.47.196.146,78.47.196.146`";"";"";
+"406037988850794496";"patchkez#5349";"27-Jun-18 06:09 AM";"@lukechilds I think the first one is correct";"";"";
+"232679450301431808";"blackjok3r#3181";"27-Jun-18 06:09 AM";"first one";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:09 AM";"in that case it needs to be an array of objects";"";"";
+"360402743543988225";"lukechilds#2707";"27-Jun-18 06:09 AM";"not object properties";"";"";
+"455021680935436290";"Gateway#3763";"27-Jun-18 06:12 AM";"[matrix] <mylo5ha5:matrix.org> i think the lowest common denominator is assetchainsparams.txt example above.  and then create a utility script to make your json out of that.
+bash is always the first tool a sys admin uses";"";"";
+"455021680935436290";"Gateway#3763";"27-Jun-18 06:12 AM";"[matrix] <mylo5ha5:matrix.org> easier to read, and if there's a typo, the utility script will error on producing json/yaml";"";"";

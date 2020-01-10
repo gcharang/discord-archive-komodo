@@ -1,0 +1,467 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[05-Sep-18 06:55 PM] TonyL#3577
+Yep, sure
+
+[05-Sep-18 06:56 PM] jl777c#5810
+there are numerical sizes 1, 2, 4, 8
+
+[05-Sep-18 06:56 PM] jl777c#5810
+signed and unsigned as described in the oracles.cpp comments
+
+[05-Sep-18 06:56 PM] TonyL#3577
+```
+" The format string is a set of chars with the following meaning:
+  's' -> <256 char string
+  'S' -> <65536 char string
+  'c' -> 1 byte signed little endian number, 'C' unsigned
+  't' -> 2 byte signed little endian number, 'T' unsigned
+  'i' -> 4 byte signed little endian number, 'I' unsigned
+  'l' -> 8 byte signed little endian number, 'L' unsigned
+  uppercase is unsigned, lowercase is a signed number
+"```
+Using this table
+
+[05-Sep-18 06:58 PM] jl777c#5810
+yes
+
+[06-Sep-18 02:55 AM] grewalsatinder#9653
+Kim dot com had an idea of a file sharing site
+There ppl upload files, it gives encrypted link etc
+Downloaders have to pay btc to get the link and download files
+Uploaders earn btc through this service and kim being middle person earns percent of these earnings.
+
+[06-Sep-18 02:55 AM] grewalsatinder#9653
+I wonder how can this be done via CC
+
+[06-Sep-18 02:59 AM] grewalsatinder#9653
+Bitcache, bitcontent
+https://news.bitcoin.com/kim-dotcom-bitcache-megaupload-2-bitcontent/
+
+{Embed}
+Kevin Helms
+https://news.bitcoin.com/kim-dotcom-bitcache-megaupload-2-bitcontent/
+Kim Dotcom Previews Bitcache, Introduces Megaupload 2's Bitcontent...
+Kim Dotcom has recently tweeted a preview of the long-rumored, much anticipated Bitcache system. He also introduced Bitcontent, a sales platform based on
+https://news.bitcoin.com/wp-content/uploads/2017/04/Kim-Dotcom-Previews-Bitcache-Introduces-Megaupload-2s-Bitcontent.png
+
+[06-Sep-18 03:05 AM] grewalsatinder#9653
+Channel CC can be used for text content I think. 🤔
+
+[06-Sep-18 03:05 AM] grewalsatinder#9653
+Text content saved in the tx
+
+[06-Sep-18 03:06 AM] grewalsatinder#9653
+So, it’s a reveal a partial secret based on payment
+
+[06-Sep-18 04:53 AM] jl777c#5810
+channel CC is for the payments side, content storage requires a different CC
+
+[06-Sep-18 05:05 AM] grewalsatinder#9653
+okay
+
+[06-Sep-18 06:44 AM] jl777c#5810
+Chapter 11 - oracles example
+Oracles CC is an example where it ended up being simpler than I first expected, but at the same time a lot more powerful. It is one of the smaller CC, but it enables creation of an arbitrary number of data markets, in a performant way.
+
+In order to gain the performance, some clever usage of special addresses was needed. It was a bit tricky to generate a special address to keep track of the latest data.
+
+Let's back up to the beginning. Just what is an oracle? In this context it is something that puts data that is not on the blockchain, onto the blockchain. Since everything other than the transactions and blocks are not in the blockchain, there is a very large universe of data that can be oracle-ized. It can be literally anything, from the obvious like prices to specific results relative to an arbitrary description.
+
+The most difficult issue about oracles is that they need to be trusted to various degree to provide accurate and timely data. The danger is that if a trusted node is used to write data to the blockchain, it creates a trust point and a single point of attack. Ultimately there is nothing that can ensure only valid data is written to the blockchain, so what is done is to reinforce good behavior via pay per datapoint. However, for critical data, higher level processing is needed that combines multiple data providers into a validated signal.
+
+At the oracles CC level, it is enough that there is financial incentive to provide good data. Also it is needed to allow multiple vendors for each data that is required and to enable efficient ways to update and query the data.
+
+[06-Sep-18 06:44 AM] jl777c#5810
+The following are the rpc calls:
+oraclescreate name description format
+oracleslist
+oraclesinfo oracletxid
+oraclesregister oracletxid datafee
+oraclessubscribe oracletxid publisher amount
+oraclesdata oracletxid hexstr
+oraclessamples oracletxid batonutxo num
+
+The first step is to create a specific data description with oraclescreate, which also defines the format of the binary data. This creates an oracletxid, which is used in the other rpc calls. name and description are just arbitrary strings, with name preferably being a short name used to access the data. The format is a string comprised of a single character per data element:
+
+  's' -> <256 char string
+  'S' -> <65536 char string
+  'd' -> <256 binary data
+  'D' -> <65536 binary data
+  'c' -> 1 byte signed little endian number, 'C' unsigned
+  't' -> 2 byte signed little endian number, 'T' unsigned
+  'i' -> 4 byte signed little endian number, 'I' unsigned
+  'l' -> 8 byte signed little endian number, 'L' unsigned
+  'h' -> 32 byte hash
+
+For example, if the datapoint is comprised of a 4byte timestamp and an 8byte number the format string would be: "IL"
+
+oracleslist displays a list of all the oraclestxid and oraclesinfo displays information about the specific oracletxid. Each oracletxid deterministically generates a marker address and a small amount is sent to that address to mark a transaction's relation to the oracltxid.
+
+[06-Sep-18 06:45 AM] jl777c#5810
+{
+  "result": "success",
+  "txid": "4895f631316a649e216153aee7a574bd281686265dc4e8d37597f72353facac3",
+  "name": "BTCUSD",
+  "description": "coindeskpricedata",
+  "format": "L",
+  "marker": "RVqJCSrdBm1gYJZS1h7dgtHioA5TEYzNRk",
+  "registered": [
+    {
+      "publisher": "02ebc786cb83de8dc3922ab83c21f3f8a2f3216940c3bf9da43ce39e2a3a882c92",
+      "baton": "RKY4zmHJZ5mNtf6tfKE5VMsKoV71Euej3i",
+      "batontxid": "4de10b01242ce1a5e29d5fbb03098b4519976879e05ad0458ef7174ed9127f18",
+      "lifetime": "1.50000000",
+      "funds": "0.01000000",
+      "datafee": "0.01000000"
+    }
+  ]
+}
+
+A data publisher needs to register a datafee and their pubkey for a specific oracletxid. datafee needs to be at least as big as a txfee. Using oraclesregister the current datafee can be updated so a publisher can adapt to market conditions. Once registered, subscribers can prepay for some number of datapoints to a specific publisher using the oraclessubscribe rpc. At first, it is likely that the publisher would pay themselves to enable the posting of initial data points so the potential subscribers can evaluate the quality and consistency of the data.
+
+The one final rpc is oraclessamples, which returns the most recent samples of data from a specific publisher. In order to have a performant solution to track all the potential data streams from all the publishers for all the oracletxid, a baton utxo is used. This is an output sent to a specific address and expected to have just a single utxo at any given time to allow for direct lookup. oraclessamples requires a starting txid to use and with each datapoint having the prior batontxid, there is a reverse linked list to traverse the most recent data.
+
+[06-Sep-18 06:45 AM] jl777c#5810
+In order to implement this, the following vin/vout contraints are used:
+
+ create:
+ vins.*: normal inputs
+ vout.0: txfee tag to oracle normal address
+ vout.1: change, if any
+ vout.n-1: opreturn with name and description and format for data
+ 
+ register:
+ vins.*: normal inputs
+ vout.0: txfee tag to normal marker address
+ vout.1: baton CC utxo
+ vout.2: change, if any
+ vout.n-1: opreturn with oracletxid, pubkey and price per data point
+ 
+ subscribe:
+ vins.*: normal inputs
+ vout.0: subscription fee to publishers CC address
+ vout.1: change, if any
+ vout.n-1: opreturn with oracletxid, registered provider's pubkey, amount
+ 
+ data:
+ vin.0: normal input
+ vin.1: baton CC utxo (most of the time)
+ vin.2+: subscription or data vout.0
+ vout.0: change to publishers CC address
+ vout.1: baton CC utxo
+ vout.2: payment for dataprovider
+ vout.3: change, if any
+ vout.n-1: opreturn with oracletxid, prevbatontxid and data in proper format
+ 
+The oraclesdata transaction is the most complex as it needs to find and spend the baton utxo, use the correct datafee and spend funds from the locked subscription funds. With the above, the oracles CC is complete and allows the creations of massively parallel data streams from multiple vendors that uses free market feedback via payments, ie. poorly performing providers wont get renewals.
+
+I expect that at first, the data providers will just be dapp developers deploying a working system including the required data, but its structure allows open market competition. Of course, specific dapps could restrict themselves to using only publishers from a whitelist of pubkeys. The potential usecases for oracles CC is quite varied and limited only by the imagination.
+
+[06-Sep-18 07:14 AM] grewalsatinder#9653
+added to repo:
+https://github.com/KomodoPlatform/Mastering_CryptoConditions/blob/master/all_chapters.md#chapter-11---oracles-example
+
+{Embed}
+https://github.com/KomodoPlatform/Mastering_CryptoConditions/blob/master/all_chapters.md
+KomodoPlatform/Mastering_CryptoConditions
+How to write utxo based CryptoConditions contracts for KMD chains - by jl777 - KomodoPlatform/Mastering_CryptoConditions
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[06-Sep-18 07:23 AM] grewalsatinder#9653
+@jl777c I see you replaced chapter 11 channels with oracles 🙂
+
+[06-Sep-18 07:23 AM] jl777c#5810
+yes, oracles is much more important
+
+[06-Sep-18 07:24 AM] grewalsatinder#9653
+yep, so no channels cc example text?
+
+[06-Sep-18 07:24 AM] jl777c#5810
+no promises
+
+[06-Sep-18 07:24 AM] grewalsatinder#9653
+okay 👍
+
+[06-Sep-18 07:24 AM] grewalsatinder#9653
+thanks for the oracles text James 🙂 👍
+
+[06-Sep-18 07:24 AM] jl777c#5810
+it is mostly coded, waiting for a prospective CC coder to debug it
+
+[06-Sep-18 07:24 AM] jl777c#5810
+if not, then I will
+
+[06-Sep-18 07:24 AM] grewalsatinder#9653
+great!
+
+[06-Sep-18 07:26 AM] grewalsatinder#9653
+want to tweet the timeframe it took to write the so far oracles cc
+
+[06-Sep-18 07:26 AM] grewalsatinder#9653
+can you please give estimate time it took you?
+
+[06-Sep-18 07:27 AM] jl777c#5810
+4 days
+
+[06-Sep-18 07:27 AM] grewalsatinder#9653
+okay 👌
+
+[06-Sep-18 07:27 AM] jl777c#5810
+but I have been doing other things too
+
+[06-Sep-18 07:28 AM] jl777c#5810
+@TonyL 's' format worked for me:
+oraclescreate test testsformat s -> 17a841a919c284cea8a676f34e793da002e606f19a9258a3190bed12d5aaa3ff
+oraclesregister -> 7825ad75ba854ab12868f7d2e06b4061903687fe93f41a2a99202a6b9ca3c029
+oraclessubscribe 17a841a919c284cea8a676f34e793da002e606f19a9258a3190bed12d5aaa3ff 02ebc786cb83de8dc3922ab83c21f3f8a2f3216940c3bf9da43ce39e2a3a882c92 1.5 -> faf8a6676f6389abad9e7f397015d200395c9f8a24c4ded291d83e6265b2f4d1
+oraclesdata 17a841a919c284cea8a676f34e793da002e606f19a9258a3190bed12d5aaa3ff 03404040 -> e8a8c897e97389dcac31d81b617ab73a829110bd5c6f99f9f533b9c0e22700d0
+
+[06-Sep-18 07:28 AM] jl777c#5810
+./c oraclessamples 17a841a919c284cea8a676f34e793da002e606f19a9258a3190bed12d5aaa3ff 25060231e92388345da890cb12b2778f855ad495a5bb1623c1054e74565f814a 3
+{
+  "result": "success",
+  "samples": [
+    [
+      "@@@"
+    ]
+  ]
+}
+
+[06-Sep-18 07:28 AM] TonyL#3577
+@jl777c great!
+
+[06-Sep-18 07:29 AM] TonyL#3577
+Testing other formats atm, will share results as soon as finish
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/487162328350195712/unknown.png
+
+[06-Sep-18 07:30 AM] TonyL#3577
+And will recheck string as well. Is it worked with current codebase @jl777c ?
+
+[06-Sep-18 07:31 AM] jl777c#5810
+i did push a few bugfixes
+
+[06-Sep-18 07:31 AM] jl777c#5810
+there are a few new format types
+
+[06-Sep-18 07:44 AM] jl777c#5810
+I tested L and s format, pretty sure the other formats should work too and so far not seeing any bugs
+
+[06-Sep-18 07:44 AM] jl777c#5810
+so oracles CC is ready for testing
+
+[06-Sep-18 07:45 AM] TonyL#3577
+Am I expect wrong output for L and l in my cases? @jl777c
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/487166425434292244/unknown.png
+
+[06-Sep-18 07:46 AM] jl777c#5810
+yes, how can you be expecting the same values for 4 bytes and 8 bytes?
+
+[06-Sep-18 07:46 AM] jl777c#5810
+that is like expecting the same value for 10000 and 100000000
+
+[06-Sep-18 07:46 AM] TonyL#3577
+But there is 8 zeros
+
+[06-Sep-18 07:47 AM] jl777c#5810
+do you understand how hex numbers work?
+
+[06-Sep-18 07:47 AM] jl777c#5810
+just use a hex to decimal converter
+
+[06-Sep-18 07:47 AM] jl777c#5810
+it is little endian, maybe that is your confusion?
+
+[06-Sep-18 07:47 AM] jl777c#5810
+lowest byte is first
+
+[06-Sep-18 07:48 AM] jl777c#5810
+so 0xffffffff00000000 vs 0xffffffff
+
+[06-Sep-18 07:48 AM] jl777c#5810
+one is 0x100000000 times bigger
+
+[06-Sep-18 07:48 AM] TonyL#3577
+Yes it was a confusion
+
+[06-Sep-18 09:42 AM] TonyL#3577
+@jl777c 
+```  'd' -> <256 binary data
+  'D' -> <65536 binary data
+```
+Is length declaration on beginning needed for these types (same as for strings)?
+
+[06-Sep-18 09:45 AM] jl777c#5810
+yes
+
+[06-Sep-18 09:45 AM] jl777c#5810
+the same
+
+[06-Sep-18 09:57 AM] siu - Chainmakers#3920
+what format would plain text be?
+
+[06-Sep-18 09:58 AM] siu - Chainmakers#3920
+in the oracle format categories
+
+[06-Sep-18 09:58 AM] TonyL#3577
+You have to convert text to hex first and use 's' or 'S' oracle type with length declaration in first byte/s of data which you sending
+
+[06-Sep-18 10:01 AM] siu - Chainmakers#3920
+😬
+
+[06-Sep-18 10:01 AM] siu - Chainmakers#3920
+ok
+
+[06-Sep-18 10:01 AM] siu - Chainmakers#3920
+let me see what i can do
+
+[06-Sep-18 10:04 AM] TonyL#3577
+Finally, I'm on blockchain
+```./komodo-cli -ac_name=ORCL oraclessamples 5e2aa55209ea37de1bce2a98dc8a985a12cb8caff6cfd8780a953c884b698298 b376842afe8e8f6401f210106b92f74edf822ab679be0c78ce07b66b75ea0aa1 1
+{
+  "result": "success",
+  "samples": [
+    [
+      "Anton"
+    ]
+  ]
+}
+```
+
+[06-Sep-18 10:13 AM] siu - Chainmakers#3920
+how was the original command to get that sample?
+
+[06-Sep-18 10:14 AM] TonyL#3577
+`./komodo-cli -ac_name=ORCL oraclesdata 5e2aa55209ea37de1bce2a98dc8a985a12cb8caff6cfd8780a953c884b698298 05416e746f6e`
+
+[06-Sep-18 10:14 AM] siu - Chainmakers#3920
+can you link me the hex converter you used?
+
+[06-Sep-18 10:14 AM] TonyL#3577
+https://codebeautify.org/string-hex-converter
+
+{Embed}
+https://codebeautify.org/string-hex-converter
+Best String to Hex Converter Online to Convert Text to Hex.
+Convert String to Hex (Text to Hex) Online and Save and Share. String to Hexadecimal
+https://codebeautify.org/img/cb/string-to-hex.png
+
+[06-Sep-18 10:15 AM] siu - Chainmakers#3920
+thanks!
+
+[06-Sep-18 10:15 AM] TonyL#3577
+👍
+
+[06-Sep-18 10:17 AM] siu - Chainmakers#3920
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/487204640824229903/unknown.png
+
+[06-Sep-18 10:17 AM] siu - Chainmakers#3920
+what is that little square infront of anton?
+
+[06-Sep-18 10:17 AM] TonyL#3577
+`with length declaration in first byte/s of data which you sending`
+
+[06-Sep-18 10:17 AM] TonyL#3577
+05 is 5 actually
+
+[06-Sep-18 10:18 AM] siu - Chainmakers#3920
+ok
+
+[06-Sep-18 10:18 AM] TonyL#3577
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/487204964326965249/unknown.png
+
+[06-Sep-18 10:19 AM] actionslacks#4072
+LSB, MSB?
+
+[06-Sep-18 10:21 AM] TonyL#3577
+I put this table just to show hex numeration not binary
+
+[06-Sep-18 10:23 AM] actionslacks#4072
+So whats the incentive to prioritize the most accurate oracle?
+
+[06-Sep-18 10:23 AM] actionslacks#4072
+or am I not understanding at all wtf this means?
+
+[06-Sep-18 10:27 AM] TonyL#3577
+Not sure if I get your question. Do you mean correlation with real data by "most accurate"? 
+There is a subscription model so trustable/reputable oracle can get some revenue
+
+[06-Sep-18 10:27 AM] actionslacks#4072
+is it just a popularity contest?
+
+[06-Sep-18 10:28 AM] TonyL#3577
+But you just told about accuracy. I think they are interrelated.
+
+[06-Sep-18 10:29 AM] siu - Chainmakers#3920
+It can be a popularity contest. Yes.
+
+[06-Sep-18 10:29 AM] siu - Chainmakers#3920
+It can also be technical data from a corporation
+
+[06-Sep-18 10:29 AM] actionslacks#4072
+"in a world, where accuracy and popularity are interrelated..."
+
+[06-Sep-18 10:29 AM] actionslacks#4072
+sry I'm just shitposting now
+
+[06-Sep-18 10:30 AM] siu - Chainmakers#3920
+If you do some kind of steemit application then popularity is important
+
+[06-Sep-18 10:30 AM] TonyL#3577
+If you provide accurate data you're popular as oracle data provider for your niche. Why not?
+
+[06-Sep-18 10:30 AM] actionslacks#4072
+No I think i'm getting it. thanks for the explanation
+
+[06-Sep-18 10:30 AM] siu - Chainmakers#3920
+But if for example you are an airport publishing flight schedules. Then its not about popularity but accuracy
+
+[06-Sep-18 10:31 AM] actionslacks#4072
+So the most consistently accurate oracle will earn the most fees
+
+[06-Sep-18 10:32 AM] actionslacks#4072
+in that case most likely
+
+[06-Sep-18 10:33 AM] actionslacks#4072
+AI and blockchain, machine learning integrated with data parsing and posted to an immutable ledger
+
+[06-Sep-18 10:35 AM] actionslacks#4072
+sounds like the old NXT asset skynet
+
+[06-Sep-18 10:37 AM] TonyL#3577
+As medical company I can put data for drugs serial numbers so I can check if it's fake (not matter am I reseller, hospital or consumer), or as hardware manufacturer I can put my devices ID's and so on
+
+[06-Sep-18 10:38 AM] TonyL#3577
+But it's not a competition cases
+
+[06-Sep-18 10:38 AM] actionslacks#4072
+and as a manufacturer you can track serial numbers and cross reference BOM's with suppliers
+
+[06-Sep-18 10:39 AM] actionslacks#4072
+quality problem? check the oracle
+
+[06-Sep-18 10:39 AM] TonyL#3577
+Yeah, there is a lot of cool cases and scenarios + possible to combine/connect CCs. As I think it's a most natural way of blockchain usage - immutable distributed database to proof important things
+
+[06-Sep-18 10:40 AM] TonyL#3577
+So oracles cc looks like the key one
+
+[06-Sep-18 10:41 AM] TonyL#3577
+A lot of space for IOT stuff as well
+

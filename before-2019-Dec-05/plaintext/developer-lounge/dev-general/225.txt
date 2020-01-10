@@ -1,0 +1,425 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[24-Sep-19 03:18 AM] redp1ll#3268
+Hi guys, today I launched a chain with 2 localhost nodes and set the pubkey parameter after getnewaddress. When launching again and starting to mine, I´m not the owner of the coinbase transaction address and basically cannot access the premine coins. Does that mean that ownership of the coinbase coins is lost after setting a new pubkey when launching?
+
+[24-Sep-19 03:22 AM] ComputerGenie 👴🏼📢#7004
+if you created a private chain and mined it yourself, then one of those nodes has the funds unless you deleted the wallet.dat file
+
+[24-Sep-19 03:24 AM] redp1ll#3268
+hm that`s weird because none of them has the coins when using the getbalance command. when using getsnapshot I can see an address that has the coins which I don't own the privkeys to
+
+[24-Sep-19 03:25 AM] redp1ll#3268
+never deleted anything nor sent coins anywhere
+
+[24-Sep-19 03:26 AM] ComputerGenie 👴🏼📢#7004
+`I can see an address that has the coins`
+if you run validateaddress for that addy on the mining node "ismine" comes back as false?
+
+[24-Sep-19 03:28 AM] redp1ll#3268
+yes
+
+[24-Sep-19 03:29 AM] ComputerGenie 👴🏼📢#7004
+I'm lost for ideas
+
+[24-Sep-19 03:34 AM] redp1ll#3268
+damn I think I found the issue: my terminal for some reason is deleting or adding characters when copying commands so the pubkey I set at launch changed from the original one.. but the funds should still be here no matter if the pubkey parameter changes right?
+
+[24-Sep-19 03:36 AM] ComputerGenie 👴🏼📢#7004
+well, if you sent it to a pubkey that you don't own then you down own the address or the funds in it
+
+[24-Sep-19 03:45 AM] dukeleto#7326
+@redp1ll genesis block does not mature until block 101
+
+[24-Sep-19 03:45 AM] dukeleto#7326
+make sure to mine enough blocks such that it's matured
+
+[24-Sep-19 03:46 AM] redp1ll#3268
+Ok well I didn't send any coins but I guess by unintentionally defining a wrong public key (where I don't own the privkey) on launch it somehow prohibits me to access the coinbase coins.. does that make sense in any way?
+
+[24-Sep-19 03:46 AM] redp1ll#3268
+@dukeleto alright will try that
+
+[24-Sep-19 04:57 AM] Alright#0419
+@nothingtoseehere if you are going to fork for your own notaries, this is a good start 
+https://github.com/kmdlabs/komodo
+
+https://github.com/KMDLabs/komodo/blob/master/src/notaries_staked.h
+change keys here, and should be good. You'll need to change this as well https://github.com/KMDLabs/komodo/blob/7518764c14add3dc5d3e1a22c2fa4649369014bd/src/notaries_staked.cpp#L13
+
+{Embed}
+https://github.com/kmdlabs/komodo
+KMDLabs/komodo
+Komodo. Contribute to KMDLabs/komodo development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/42953759?s=400&v=4
+
+{Embed}
+https://github.com/KMDLabs/komodo/blob/master/src/notaries_staked.h
+KMDLabs/komodo
+Komodo. Contribute to KMDLabs/komodo development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/42953759?s=400&v=4
+
+{Embed}
+https://github.com/KMDLabs/komodo/blob/7518764c14add3dc5d3e1a22c2fa4649369014bd/src/notaries_staked.cpp
+KMDLabs/komodo
+Komodo. Contribute to KMDLabs/komodo development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/42953759?s=400&v=4
+
+[24-Sep-19 04:57 AM] Alright#0419
+and just grep for that is_staked function, probably a couple things you would want to disable
+
+[24-Sep-19 06:24 AM] ERIC#3057
+When I use the wallet API , I found one problem with sendmany command . I have set the account to a new account, it still sends money from the default account. Anyone  knows how to fix this problem ?
+
+[24-Sep-19 08:23 AM] ComputerGenie 👴🏼📢#7004
+That is by design
+Accounts are no longer used and the placeholder only exists so that it doesn't totally break backwards compatibility for older scripts
+```Arguments:
+1. "fromaccount"         (string, required) MUST be set to the empty string "" to represent the default account. Passing any other string will result in an error.
+```
+
+[24-Sep-19 10:33 AM] dukeleto#7326
+`unintentionally defining a wrong public key (where I don't own the privkey) on launch`
+
+[24-Sep-19 10:33 AM] dukeleto#7326
+@redp1ll that means you set fire to your pre-mine
+
+[24-Sep-19 10:34 AM] dukeleto#7326
+do it all again
+
+[24-Sep-19 10:34 AM] dukeleto#7326
+@ERIC do not use accounts with any cryptocoin, it was just finally fully removed in BTC core
+
+[24-Sep-19 10:36 AM] dukeleto#7326
+@Alright welcome back, we missed you
+
+[24-Sep-19 10:37 AM] ComputerGenie 👴🏼📢#7004
+"we"? :troll:
+
+{Reactions}
+abusedsmily 
+
+[24-Sep-19 02:56 PM] nothingtoseehere#2986
+@Alright thank you!
+
+[25-Sep-19 02:09 AM] redp1ll#3268
+@dukeleto Thank you!!
+
+[25-Sep-19 06:13 AM] ERIC#3057
+Thanks， but if I want to send out money from a specific address in the account other than the default one , Which command can I use ？
+
+[25-Sep-19 08:13 AM] gcharang#6833
+@ERIC there are no accounts, only addresses
+```
+to send out money from a specific address, which command can I use?
+```
+use `createrawtransaction`
+Note that it is easy to messup and lose coins when using this command. You have to consume all the balance in a utxo and after subtracting fees, send any remaining amount to yourself
+for a full walkthrough, see :
+https://stackoverflow.com/questions/38493893/heres-how-to-send-raw-transaction-btc-using-bitcoin-cli-command
+
+{Embed}
+https://stackoverflow.com/questions/38493893/heres-how-to-send-raw-transaction-btc-using-bitcoin-cli-command
+Here's how to send raw transaction BTC using Bitcoin-cli command
+Scenario:
+  Michael receives 0.05000000 BTC from Pablo and another 0.01000000 BTC
+  from Kuradang. Michael also wants to send 0.02500000 BTC to Berteng.
+  Each amount that Michael receives has the
+https://cdn.sstatic.net/Sites/stackoverflow/img/apple-touch-icon@2.png?v=73d79a89bded
+
+[25-Sep-19 08:14 AM] gcharang#6833
+@ERIC I suggest experimenting on a test chain until you are confident
+
+[25-Sep-19 08:25 AM] ERIC#3057
+@gcharang thanks, I will try on test net fist 🙂
+
+[25-Sep-19 02:57 PM] pandaanu73#7907
+Do we built smart chain on single node
+
+[25-Sep-19 03:16 PM] gcharang#6833
+@pandaanu73 
+https://github.com/gcharang/create-smartchain
+<https://developers.komodoplatform.com/basic-docs/smart-chains/smart-chain-tutorials/creating-a-smart-chain-on-a-single-node.html>
+
+{Embed}
+https://github.com/gcharang/create-smartchain
+gcharang/create-smartchain
+Simple scripts to create a Komodo Smart Chain using a single node for testing - gcharang/create-smartchain
+https://avatars1.githubusercontent.com/u/21151592?s=400&v=4
+
+[25-Sep-19 03:20 PM] pandaanu73#7907
+@gcharang do it work and can i host it like a node
+
+[25-Sep-19 03:22 PM] gcharang#6833
+yes, it works like a node
+you will host 2 nodes on the same server
+
+[26-Sep-19 03:47 AM] dukeleto#7326
+https://twitter.com/ApprovedNews6/status/1176369921241911296
+
+{Embed}
+Approved News 6 (@ApprovedNews6)
+https://twitter.com/ApprovedNews6/status/1176369921241911296
+Abandoned GitHub Repository With Last Commit in 2007 Found to Contain PHP 4 Implementation of General-Purpose Solution to Halting Problem
+Likes
+188
+Twitter
+
+[27-Sep-19 12:02 PM] pandaanu73#7907
+Any body online do anybody help me to build smartchain
+
+[27-Sep-19 12:02 PM] gcharang#6833
+@pandaanu73 ask your question
+
+[27-Sep-19 12:03 PM] pandaanu73#7907
+@gcharang did create a blockchain using komodo
+
+[27-Sep-19 12:03 PM] gcharang#6833
+yes, I did
+many times
+which part of the process are you stuck at?
+
+[27-Sep-19 12:04 PM] pandaanu73#7907
+@gcharang yes i have done all process and download the blocks also but i don't known what to do next
+
+[27-Sep-19 12:05 PM] pandaanu73#7907
+I want to make a smartchain on single node
+
+[27-Sep-19 12:05 PM] gcharang#6833
+to create your own smartchain, you don't need to download KMD blocks
+
+[27-Sep-19 12:05 PM] gcharang#6833
+<https://developers.komodoplatform.com/basic-docs/smart-chains/smart-chain-tutorials/creating-a-smart-chain-on-a-single-node.html>
+have you seen this doc?
+
+[27-Sep-19 12:07 PM] pandaanu73#7907
+@gcharang how can add some features like 90% coins premined and
+
+[27-Sep-19 12:07 PM] pandaanu73#7907
+Many more🤔
+
+[27-Sep-19 12:07 PM] gcharang#6833
+<https://developers.komodoplatform.com/basic-docs/antara/antara-setup/antara-customizations.html>
+
+[27-Sep-19 12:09 PM] pandaanu73#7907
+@gcharang after create a smart chain can i get smart contract feature also
+
+[27-Sep-19 12:09 PM] pandaanu73#7907
+Like ethereum
+
+[27-Sep-19 12:10 PM] gcharang#6833
+yes, just select the value for `-ac_cc=1` <https://developers.komodoplatform.com/basic-docs/antara/antara-setup/antara-customizations.html#ac-cc>
+
+[27-Sep-19 12:11 PM] gcharang#6833
+our smartcontracts are not like ethereum's
+we have the standard contracts like tokens developed already
+they are exposed through api calls <https://developers.komodoplatform.com/basic-docs/antara/antara-api/tokens.html>
+many more contracts are in development
+
+[27-Sep-19 12:11 PM] pandaanu73#7907
+@gcharang can i need to st block reward or it automatically set
+
+[27-Sep-19 12:13 PM] gcharang#6833
+block rewards are controlled by the parameters: `-ac_decay, -ac_reward, -ac_halving, -ac_eras, -ac_end`
+you don't need to use all of them, just select the ones and their values that you need
+all of their details are here: <https://developers.komodoplatform.com/basic-docs/antara/antara-setup/antara-customizations.html>
+
+[27-Sep-19 12:14 PM] pandaanu73#7907
+@gcharang ok
+
+[27-Sep-19 12:15 PM] gcharang#6833
+more advanced params that control block reward: `ac_founders, ac_founders_reward, ac_perc,ac_staked`
+
+[27-Sep-19 12:16 PM] pandaanu73#7907
+@gcharang how can i set txfee when a client make a transaction i get back the whole fee
+
+[27-Sep-19 12:17 PM] gcharang#6833
+the default txfee is `0.0001 coin`, whoever mines the block will receive the txfee for all txns + block reward
+
+[27-Sep-19 12:18 PM] pandaanu73#7907
+@gcharang i find that there is an options to setup owner public key what is the feature
+
+[27-Sep-19 12:22 PM] gcharang#6833
+if you mean the `ac_pubkey` param, it is used by `ac_perc, ac_founders`
+you can have a founders reward which will inflate the normal block reward by the value of ac_perc
+the pubkey set by ac_pubkey will receive all these extra rewards
+
+[27-Sep-19 12:23 PM] pandaanu73#7907
+@gcharangyes i want to known about this feature
+
+[27-Sep-19 12:24 PM] pandaanu73#7907
+@gcharangwhat are the features for using this -ac_cc=1
+
+[27-Sep-19 12:25 PM] gcharang#6833
+using ac_cc=1 enables the Antara modules(our version of smart contract functionality)
+
+[27-Sep-19 12:26 PM] pandaanu73#7907
+@gcharang if i use this do i get smart contract function
+
+[27-Sep-19 12:26 PM] pandaanu73#7907
+And how can i create .exe file
+
+[27-Sep-19 12:27 PM] gcharang#6833
+yes, using ac_cc=1 will enable smart contract function
+
+[27-Sep-19 12:28 PM] gcharang#6833
+to get windows binaries, you need to build in Linux
+<https://developers.komodoplatform.com/basic-docs/smart-chains/smart-chain-setup/installing-from-source.html#windows>
+
+[27-Sep-19 12:35 PM] pandaanu73#7907
+@gcharangyes i using Linux
+
+[27-Sep-19 12:36 PM] gcharang#6833
+follow the instructions in the above doc, you should get windows executables
+
+[27-Sep-19 12:40 PM] pandaanu73#7907
+@gcharangand for mac and linux
+
+[27-Sep-19 12:40 PM] gcharang#6833
+<https://developers.komodoplatform.com/basic-docs/smart-chains/smart-chain-setup/installing-from-source.html> has all the installation instructions
+
+[27-Sep-19 12:43 PM] pandaanu73#7907
+@gcharangdo i get explorer for my coin
+
+[27-Sep-19 12:43 PM] gcharang#6833
+<https://github.com/gcharang/komodo-install-explorer>
+
+[27-Sep-19 12:45 PM] gcharang#6833
+you have to customise the html but the functionality is there @pandaanu73
+
+[27-Sep-19 02:08 PM] pandaanu73#7907
+@gcharang from where i get pubkey
+
+[27-Sep-19 02:10 PM] gcharang#6833
+```
+getnewaddress
+validateaddress <address>
+```
+
+[27-Sep-19 02:11 PM] gcharang#6833
+save the privkey of address
+```
+dumpprivkey <address>
+``` 
+@pandaanu73
+
+[27-Sep-19 02:36 PM] pandaanu73#7907
+@gcharang ./komodod getnewaddress not working
+
+[27-Sep-19 02:41 PM] gcharang#6833
+`./komodod -ac_name=PANDAANUCOIN -ac_supply=1000` in one terminal
+`./komodo-cli -ac_name=PANDAANUCOIN getnewaddress` in another terminal
+komodod is the daemon; it is the main program that controls the blockchain
+komodo-cli is a program used to send commands to komodod
+
+[27-Sep-19 02:41 PM] gcharang#6833
+@pandaanu73 ^
+
+[27-Sep-19 02:43 PM] pandaanu73#7907
+@gcharang i didn't get it i want to add founder reward
+
+[27-Sep-19 02:44 PM] pandaanu73#7907
+Pubkey when i add after coin creation
+
+[27-Sep-19 02:46 PM] gcharang#6833
+just start a chain like this:
+```
+./komodod -ac_name=TEST -ac_supply=1000
+```
+get an address + pubkey + privkey
+using
+```
+./komodo-cli -ac_name=TEST getnewaddress
+./komodo-cli -ac_name=TEST validateaddress <address>
+./komodo-cli -ac_name=TEST dumpprivkey <address>
+```
+start your new chain using the pubkey from above
+then use importprivkey to import it in your new  chain
+@pandaanu73
+
+[27-Sep-19 02:47 PM] gcharang#6833
+```
+./komodo-cli -ac_name=TEST stop
+```
+to stop the daemon
+@pandaanu73
+
+[27-Sep-19 02:52 PM] pandaanu73#7907
+@gcharang after launch can i modify
+
+[27-Sep-19 02:53 PM] smk762 -  dracocanis ominator#7640
+cant modify launch params after launch (except -earlytxid, but thats another rabbithole)
+
+[27-Sep-19 02:53 PM] gcharang#6833
+changing any of the `-ac_` params will be a new chain
+
+[27-Sep-19 02:54 PM] smk762 -  dracocanis ominator#7640
+all smartchains haver same address/wif/pubkey tho, so you can make an address on KMD or another smartchain, import it into your smartchain, and use its pubkey
+
+[27-Sep-19 03:06 PM] pandaanu73#7907
+can i use this type, ./komodod -ac_name=rogCOIN -ac_supply=21000000 ac_cc=1 ac_reward=1000000000 -ac_founders_reward=100000000 -ac_founders=10 -ac_pubkey=034916536402c0c4cf53b05e3b5d948aacafede47df640b33cb89bd28179cd2d3f
+
+[27-Sep-19 03:08 PM] gcharang#6833
+yes
+all the params start with `-ac_`
+@pandaanu73 
+-ac_name should be ALLCAPS
+
+[27-Sep-19 03:31 PM] pandaanu73#7907
+ok
+
+[27-Sep-19 03:40 PM] pandaanu73#7907
+@gcharang I'm using it on single node can i need to use 2terminal
+
+[27-Sep-19 03:44 PM] gcharang#6833
+you need to use atleast 3 terminals
+2 for the `komodod`'s
+1 for the komodo-cli
+komodod has continous output and occupies a terminal
+once you have followed the doc and understand how to give commands to both the daemons, my recommendation is to use: <https://github.com/gcharang/create-smartchain> it makes managing two nodes on the same system easier
+
+[27-Sep-19 03:46 PM] pandaanu73#7907
+@gcharang how to use response
+
+[27-Sep-19 03:47 PM] gcharang#6833
+what do you mean?
+
+[27-Sep-19 03:51 PM] pandaanu73#7907
+@gcharang where i get my coins
+
+[27-Sep-19 03:55 PM] gcharang#6833
+the initial supply(premine coins) will be on the daemon which has mined the first block
+use `setgenerate true 1` to start mining with 1 processor
+use `getinfo` to see number of blocks in the chain
+use `getbalance` to check the balance of a daemon
+starting the daemon with `-pubkey=03xxxxx` will send the premine and every block reward for that daemon to the address of the pubkey
+notice the difference between `-ac_pubkey` and `-pubkey`
+`-ac_pubkey` is part of the chain params, changing it changes the chain
+`-pubkey` is just the daemon's owners's pubkey, can be different for every daemon
+
+[27-Sep-19 03:57 PM] pandaanu73#7907
+@gcharangok
+
+[27-Sep-19 04:17 PM] pandaanu73#7907
+@gcharang what i need to add -addnode=localhost
+
+[27-Sep-19 04:22 PM] gcharang#6833
+@pandaanu73 thats it
+
+[27-Sep-19 04:25 PM] pandaanu73#7907
+@gcharang how much time it take to mine a block
+
+[27-Sep-19 04:26 PM] gcharang#6833
+10 - 20 sec depending on your processor
+
+[27-Sep-19 04:35 PM] gcharang#6833
+@pandaanu73 10 -20 sec to mine the initial block
+after that, blocks will take 1 minute to mine on average
+or you can change it using `ac_blocktime`
+

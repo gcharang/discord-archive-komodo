@@ -1,0 +1,341 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"375074477756645386";"ca333#0118";"12-Jul-19 08:37 AM";"yes - this regex looks ""good"" - however, for your info: if i remember correctly i had cases where the regex returned true BUT a base58 validateaddress() returned false. I personally always advice against regex checks for address validations - but in our case (since its just a explorer query) we can do it to prevent you from integrating 3rd party base58 library.";"";"";
+"206445134122844170";"Slyris#2880";"12-Jul-19 08:37 AM";"Ok, for the moment i stay with the regex";"";"";
+"206445134122844170";"Slyris#2880";"12-Jul-19 08:38 AM";"once we have a proof of concept that work, we will look for the details";"";"";
+"455741312273219595";"jl777c#5810";"12-Jul-19 08:44 AM";"addresses last 4 bytes are checksum, so even if valid chars very few that pass the regex are valid addresses";"";"";
+"206445134122844170";"Slyris#2880";"12-Jul-19 08:48 AM";"Yes but in practice, I use regex only to filter the type of input, then if someone searches for an incorrect address, it will just get an error.";"";"✅ (1)";
+"206445134122844170";"Slyris#2880";"12-Jul-19 08:49 AM";"Only to know if I potentially have an address, a block, a blockhash, a transaction";"";"";
+"375074477756645386";"ca333#0118";"12-Jul-19 08:49 AM";"yes for now thats fine - once we get into details we can optimize the API query ""pre-filter""";"";"";
+"206445134122844170";"Slyris#2880";"12-Jul-19 08:50 AM";"added you to a short review @ca333";"";"✅ (1)";
+"206445134122844170";"Slyris#2880";"12-Jul-19 09:17 AM";"@ca333 Block hash and transaction are Md5 ?";"";"";
+"375074477756645386";"ca333#0118";"12-Jul-19 09:20 AM";"SHA256 @Slyris";"";"";
+"206445134122844170";"Slyris#2880";"12-Jul-19 09:20 AM";"you write 32 bytes long, it's more no ?";"";"";
+"375074477756645386";"ca333#0118";"12-Jul-19 09:21 AM";"sha256 generates a 256-bit (32-byte) hash";"";"❤ (1)";
+"206445134122844170";"Slyris#2880";"12-Jul-19 09:21 AM";"ah no because  32 separate hexadecimal numbers (or 32 bytes) each one representing 8 of the bits in the hash.";"";"";
+"206445134122844170";"Slyris#2880";"12-Jul-19 11:36 AM";"added you to review @ca333 search functionnality complete";"";"💯 (1)";
+"206445134122844170";"Slyris#2880";"12-Jul-19 11:39 AM";"So you can search a transaction, an address, a block by his hash/height actually";"";"";
+"206445134122844170";"Slyris#2880";"12-Jul-19 11:40 AM";"The post request send back a json with the url to redirect in the explorer.
+
+like:
+
+```json
+{
+    ""url_to_redirect"": ""http://kmd.explorer.dexstats.info/block/06d6747a49097830574cf8d33e399d8a8679e457493cd17390a80d0f916287bc""
+}
+```";"";"";
+"206445134122844170";"Slyris#2880";"12-Jul-19 04:32 PM";"Thank's for the review, looking federer-nadal wimbledon coming back later";"";"";
+"375074477756645386";"ca333#0118";"12-Jul-19 04:32 PM";"thanks @Slyris ttyl - good progress so far!";"";"";
+"206445134122844170";"Slyris#2880";"12-Jul-19 04:32 PM";"I try my best";"";"";
+"206445134122844170";"Slyris#2880";"12-Jul-19 04:32 PM";"If there is anything wrong let me know";"";"👍🏼 (1)";
+"206445134122844170";"Slyris#2880";"12-Jul-19 06:58 PM";"ah yes we have tickers for the price";"";"";
+"206445134122844170";"Slyris#2880";"12-Jul-19 07:00 PM";"for example:
+
+https://api.coinpaprika.com/v1/tickers/kmd-komodo
+
+so we have to specify `kmd-komodo` instead of just `kmd`";"";"";
+"206445134122844170";"Slyris#2880";"12-Jul-19 07:01 PM";"so i will probably need a registry that associate
+
+```go
+{""kmd"", ""kmd-komodo""},
+{""btc"", ""btc-bitcoin""}
+```
+
+to make it work properly";"";"";
+"206445134122844170";"Slyris#2880";"12-Jul-19 07:04 PM";"AS final structure for price i suggest:
+
+```go
+type TickerInformation struct {
+    ID                string    `json:""id""`
+    Name              string    `json:""name""`
+    Symbol            string    `json:""symbol""`
+    Rank              int       `json:""rank""`
+    CirculatingSupply int       `json:""circulating_supply""`
+    TotalSupply       int       `json:""total_supply""`
+    MaxSupply         int       `json:""max_supply""`
+    BetaValue         float64   `json:""beta_value""`
+    LastUpdated       time.Time `json:""last_updated""`
+    Quotes            struct {
+        USD struct {
+            Price               float64   `json:""price""`
+            Volume24H           float64   `json:""volume_24h""`
+            Volume24HChange24H  float64   `json:""volume_24h_change_24h""`
+            MarketCap           int64     `json:""market_cap""`
+            MarketCapChange24H  float64   `json:""market_cap_change_24h""`
+            PercentChange1H     float64   `json:""percent_change_1h""`
+            PercentChange12H    float64   `json:""percent_change_12h""`
+            PercentChange24H    float64   `json:""percent_change_24h""`
+            PercentChange7D     float64   `json:""percent_change_7d""`
+            PercentChange30D    float64   `json:""percent_change_30d""`
+            PercentChange1Y     float64   `json:""percent_change_1y""`
+            AthPrice            int       `json:""ath_price""`
+            AthDate             time.Time `json:""ath_date""`
+            PercentFromPriceAth float64   `json:""percent_from_price_ath""`
+        } `json:""USD""`
+    } `json:""quotes""`
+}
+```";"";"👍🏼 (1)";
+"206445134122844170";"Slyris#2880";"13-Jul-19 12:51 PM";"https://gist.github.com/Milerius/d692cb841cdacb09c611cf403fd37b40
+
+The first page json answer will look like this";"";"";
+"375074477756645386";"ca333#0118";"13-Jul-19 01:45 PM";"we had a call and are adding other essential blockchain status infos to the ""landing page"" - it will basically become a coinpaprika/coinmarketcap site/API for all KMD ecosys-coins with additional realtime blockchain status data.";"";"👍 (1)";
+"375074477756645386";"ca333#0118";"13-Jul-19 01:47 PM";"you can envision it as our own komodopaprika or komodomarketcap site - and its open-source and publicly available so all our ecosys projects can reuse it";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 09:30 AM";"Hello there is the json when you ask full information about all coins:
+
+An json array that contains the following elements
+
+```json
+{
+    ""ticker"": {
+      ""id"": ""kmd-komodo"",
+      ""name"": ""Komodo"",
+      ""symbol"": ""KMD"",
+      ""rank"": 51,
+      ""circulating_supply"": 114991238,
+      ""total_supply"": 114991238,
+      ""max_supply"": 0,
+      ""beta_value"": 1.00941,
+      ""last_updated"": ""2019-07-14T09:18:33Z"",
+      ""quotes"": {
+        ""USD"": {
+          ""price"": 1.36997482,
+          ""volume_24h"": 7012766.7147299,
+          ""volume_24h_change_24h"": -17.41,
+          ""market_cap"": 157535100,
+          ""market_cap_change_24h"": -11.54,
+          ""percent_change_1h"": -0.71,
+          ""percent_change_12h"": -6.87,
+          ""percent_change_24h"": -11.55,
+          ""percent_change_7d"": -24.05,
+          ""percent_change_30d"": -17.29,
+          ""percent_change_1y"": -7.29,
+          ""ath_price"": 15.4149,
+          ""ath_date"": ""2017-12-21T08:04:00Z"",
+          ""percent_from_price_ath"": -91.11
+        }
+      }
+    },
+    ""block_last_hash"": ""02f337b9c458e643be5642016ddb8bb9e3ca8443722b8811099ce3287aeecbc3"",
+    ""block_height"": 1442247
+  }
+```";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 09:34 AM";"For example we can add more information, such as the last notarized height, just let me know";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 09:36 AM";"For example:
+
+```json
+{
+    ""ticker"": {
+      ""id"": ""kmd-komodo"",
+      ""name"": ""Komodo"",
+      ""symbol"": ""KMD"",
+      ""rank"": 51,
+      ""circulating_supply"": 114991349,
+      ""total_supply"": 114991349,
+      ""max_supply"": 0,
+      ""beta_value"": 1.00941,
+      ""last_updated"": ""2019-07-14T09:35:04Z"",
+      ""quotes"": {
+        ""USD"": {
+          ""price"": 1.37717245,
+          ""volume_24h"": 7103021.6156338,
+          ""volume_24h_change_24h"": -15.75,
+          ""market_cap"": 158362917,
+          ""market_cap_change_24h"": -10.74,
+          ""percent_change_1h"": -0.05,
+          ""percent_change_12h"": -6.2,
+          ""percent_change_24h"": -10.75,
+          ""percent_change_7d"": -23.15,
+          ""percent_change_30d"": -17.31,
+          ""percent_change_1y"": -7.26,
+          ""ath_price"": 15.4149,
+          ""ath_date"": ""2017-12-21T08:04:00Z"",
+          ""percent_from_price_ath"": -91.07
+        }
+      }
+    },
+    ""block_last_hash"": ""0b11ddafaa18768c5d864420cc0842d2da736b40bffbaa6f1d4a16bb5101f819"",
+    ""status"": {
+      ""info"": {
+        ""version"": 2001526,
+        ""protocolversion"": 170007,
+        ""blocks"": 1442263,
+        ""timeoffset"": 0,
+        ""connections"": 113,
+        ""proxy"": """",
+        ""difficulty"": 234593159.2161975,
+        ""testnet"": false,
+        ""relayfee"": 0.000001,
+        ""errors"": """",
+        ""notarized"": 1442250,
+        ""network"": ""livenet""
+      }
+    }
+  }
+```";"";"";
+"375074477756645386";"ca333#0118";"14-Jul-19 11:23 AM";"In addition to the market infos and last blockhash lets also add:
+
+```
+""blocks"": 1442348,
+""notarized"": 1442330,
+""notarizedhash"": ""00000000bf1b83fd71b1dabe7d0c9e2d5401f69d9df492f42e1ab0ad52fdcbd9"",
+""notarizedtxid"": ""4f7fd6a5905a93ac443dce7f4df932ce72a638afe45db8862d6774cecff8fb11"",
+```
+
+When you pull these infos always ensure that the node we pull it from has `connections>2` (to ensure the node is ""online"" and knows about the current network stats) and `blocks==longestchain (to ensure the node is synced) - if this conditions are not met the node is likely still syncing or ""offline"" or so..";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 02:12 PM";"@ca333  is `longestchain` equivalent to  `blockChainHeight`
+
+for 
+
+```json
+{""status"":""finished"",""blockChainHeight"":1442534,""syncPercentage"":100,""height"":1442534,""error"":null,""type"":""bitcore node""}
+```";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 02:16 PM";"if sync percentage is equal to 100 we can assume that the node is synced ?";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 02:17 PM";"and if the status is finished ?";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 02:20 PM";"like `nodeIsSynced = (status == ""finished"") && (syncPercentage == ""100"")` ?";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 02:41 PM";"for the moment i handle it this way:
+
+```go
+currentCoin.NodeIsSynced = node.Status == ""finished"" && node.SyncPercentage == 100
+currentCoin.NodeIsOnline = currentCoin.BlockInfo.Info.Connections > 2
+if currentCoin.NodeIsSynced && currentCoin.NodeIsOnline {
+   currentCoin.NotarizedHash = CBlockHashFromHeightDexstats(key, fmt.Sprintf(""%d"", currentCoin.BlockInfo.Info.Notarized)).BlockHash
+}
+```";"";"";
+"375074477756645386";"ca333#0118";"14-Jul-19 02:52 PM";"i believe `currentCoin.NodeIsSynced = node.Status == ""finished"" && node.BlockChainHeight == node.Height` would be more appropriate since `node.SyncPercentage` likely is not precise enough.";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 02:55 PM";"Ok !";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 02:55 PM";"I fix that and push it 😃";"";"👍🏼 (1)";
+"206445134122844170";"Slyris#2880";"14-Jul-19 02:59 PM";"pushed @ca333 i miss only `notarizedtxid` i dont know how to retrieve it, because when i try to retrieve the information i got an array of transaction like:
+
+```json
+""tx"": [
+    ""af9be29e0d19639234e956f5717a32c0d195af0dac643701bb2c0c29f86865bc"",
+    ""7799f5b660c8ffc54879200632dd83672bfc4865cb15052e4def22eff3dc6aa9"",
+    ...
+  ]
+```";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 02:59 PM";"do you want all the transaction of the notarizedhash ?";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 02:59 PM";"as  notarizedtxid ?";"";"";
+"375074477756645386";"ca333#0118";"14-Jul-19 03:41 PM";"you can just return the array as notarizedtxid - we can then link each txid to a public bitcoin explorer (in the frontend)";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 04:06 PM";"@ca333 Ok thank's";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 04:07 PM";"i finish the final of wimbledon and then i will add the notarizedtxid";"";"👍🏼 (1)";
+"375074477756645386";"ca333#0118";"14-Jul-19 04:39 PM";"Pinned a message.";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 06:29 PM";"```json
+ {
+    ""ticker"": {
+      ""id"": ""kmd-komodo"",
+      ""name"": ""Komodo"",
+      ""symbol"": ""KMD"",
+      ""rank"": 45,
+      ""circulating_supply"": 114993790,
+      ""total_supply"": 114993790,
+      ""max_supply"": 0,
+      ""beta_value"": 1.01673,
+      ""last_updated"": ""2019-07-14T18:27:39Z"",
+      ""quotes"": {
+        ""USD"": {
+          ""price"": 1.37541481,
+          ""volume_24h"": 8735022.1446888,
+          ""volume_24h_change_24h"": 14.59,
+          ""market_cap"": 158164161,
+          ""market_cap_change_24h"": -8.63,
+          ""percent_change_1h"": 0.45,
+          ""percent_change_12h"": -1.03,
+          ""percent_change_24h"": -8.64,
+          ""percent_change_7d"": -23.73,
+          ""percent_change_30d"": -11.88,
+          ""percent_change_1y"": -10.85,
+          ""ath_price"": 15.4149,
+          ""ath_date"": ""2017-12-21T08:04:00Z"",
+          ""percent_from_price_ath"": -90.98
+        }
+      }
+    },
+    ""block_last_hash"": ""0b944f69a7c258cbbd38e632ee9eed7ed90b1fa5cadd7ab5a3b1c833c7f79756"",
+    ""status"": {
+      ""info"": {
+        ""version"": 2001526,
+        ""protocolversion"": 170007,
+        ""blocks"": 1442793,
+        ""timeoffset"": 0,
+        ""connections"": 108,
+        ""proxy"": """",
+        ""difficulty"": 253422370.6178924,
+        ""testnet"": false,
+        ""relayfee"": 0.000001,
+        ""errors"": """",
+        ""notarized"": 1442780,
+        ""network"": ""livenet""
+      }
+    },
+    ""node_is_online"": true,
+    ""node_is_synced"": true,
+    ""notarizedhash"": ""000000000c9ae8b5217e7d494f5b7145985061817c22767acafdd811efb6d40b"",
+    ""notarizedtxid"": [
+      ""5bb4e0381d1ec0a492331fb52bac0d5655c45cb5980b3ddf8bcc0c70f8187ffa"",
+      ""b17f0e970849a41396d5881c274fb344c17c60821d6f04b039b3d3ad259d1fe3"",
+      ...]
+}
+```";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 06:29 PM";"this is ok @ca333  ? 😄";"";"👍🏼 (1)";
+"206445134122844170";"Slyris#2880";"14-Jul-19 06:32 PM";"(added you to the review)";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 08:08 PM";"for example: http://kmd.explorer.dexstats.info/insight-api-komodo/block/06aacc7710c32a86530036f9d912d41278bd9a9bf88e32339b537e67f82784cf";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 08:12 PM";"For datatypes json I use a generator that translates the json into golang structure, if I made mistakes I would correct them. But where can I find the specifics of types that are ambiguous. As the integer numbers should be floats, if the json sends me ""3"" I can not guess that it's actually a float";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 08:15 PM";"Reading over the documentation, I actually saw it was a float, I was surrounded by the generator. Thank's for the spot !";"";"👍🏼 (1)";
+"206445134122844170";"Slyris#2880";"14-Jul-19 08:22 PM";"I'm merging it now @ca333";"";"✅ (1)";
+"206445134122844170";"Slyris#2880";"14-Jul-19 08:25 PM";"I am proud to announce that the call api of the homepage of our komodo ecosystem coinpaprika immitation is complete and merged. We now have all the information needed for fill the first page. The next step will be to deal with when we click on a particular currency what will be equivalent to retrieve the same information, but only for this currency.";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 08:27 PM";"Regarding the part that needs to be cached, I'm waiting to see the first performances we'll have at the query level. On my side it looks pretty fast for now.";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 08:29 PM";"We should also look in more detail golang packages that I chose to use. I am rather confident of their safety and robustness. But I would need the advice of someone probably safe.";"";"";
+"206445134122844170";"Slyris#2880";"14-Jul-19 08:32 PM";"I wish you all a good night, see you tomorrow.";"";"👍🏼 (1)";
+"206445134122844170";"Slyris#2880";"15-Jul-19 06:22 PM";"Information about a specific coin pushed and under review !";"";"";
+"206445134122844170";"Slyris#2880";"17-Jul-19 02:32 PM";"@ca333 I'm home in 30 minute, let me know for the next steps I will work this evening";"";"";
+"403137719049519106";"Audo#5667";"17-Jul-19 02:39 PM";"I would like us us to do some short of ""state of development"" page / pages where we give an outlook about current and future development (short of a roadmap). @Mylo has been looking into this already with the template that everyone seemed to like.
+
+However, that template lacks some rich text editing tools. We should have a way to post long form text (like blogs) that is nice to read.";"";"";
+"403137719049519106";"Audo#5667";"17-Jul-19 02:41 PM";"part of that would be a list of Antara modules. We would have basic info about each module (description, name of developer, development status, link to documentation)";"";"";
+"375074477756645386";"ca333#0118";"17-Jul-19 02:41 PM";"Are we providing the content/text or does this get delivered from the projects?";"";"";
+"403137719049519106";"Audo#5667";"17-Jul-19 02:42 PM";"We would of course write the final content, I haven't had time to get into that though";"";"";
+"371114647052615681";"Mylo#8306";"17-Jul-19 02:42 PM";"https://coreui.io/demo/dark/#editors/markdown-editor.html it has rich editor.  I can look if srsly considering so soon.";"";"";
+"375074477756645386";"ca333#0118";"17-Jul-19 02:42 PM";"Lets collect additional feature requests into a list so we can work on them after the base system is up and running.";"";"☝ (2)";
+"403137719049519106";"Audo#5667";"17-Jul-19 02:42 PM";"sounds good";"";"";
+"375074477756645386";"ca333#0118";"17-Jul-19 02:44 PM";"We will already start with the front-end layer today but it wont take us long to implement it. Based on that we polish the visuals and get the first version online. This actually equals a early beta. From there we can extend the backend with this ""dev status page"" data. This feature for instance seems very easy to implement (basically just text parser with some formats).";"";"";
+"403137719049519106";"Audo#5667";"17-Jul-19 02:46 PM";"ok, and could we host it in ecosystem.komodoplatform.com?
+
+another question: do you guys want design ux/ui help from IBN?";"";"";
+"403137719049519106";"Audo#5667";"17-Jul-19 02:46 PM";"Steve will negotiate with them about the future in near future";"";"";
+"371114647052615681";"Mylo#8306";"17-Jul-19 02:47 PM";"Ok cool.  I’m free of front end stuff that sounds....happy to test/bugfix cos I’d rather look at autoscaling kmd on cloud systems tbh";"";"";
+"371114647052615681";"Mylo#8306";"17-Jul-19 02:48 PM";"Chat tomorrow.";"";"";
+"206445134122844170";"Slyris#2880";"17-Jul-19 02:58 PM";"Ok so I'm focusing the end of the documentation this evening and some code improvement.";"";"👍🏼 (1)";
+"206445134122844170";"Slyris#2880";"17-Jul-19 04:23 PM";"@ca333 I pushed the last command documentation, and also fixed a bug from another call yesterday. Let me know in the review if there is anything wrong";"";"";
+"206445134122844170";"Slyris#2880";"17-Jul-19 04:23 PM";"I'm available now if you need me to do something else :p";"";"";
+"206445134122844170";"Slyris#2880";"17-Jul-19 04:25 PM";"I do not know your documentation writing process, so I just made a markdown page.";"";"👍🏼 (1)";
+"375074477756645386";"ca333#0118";"17-Jul-19 04:27 PM";"i have a call right now and will be free in ~15 - 30 minutes - lets connect then @Slyris";"";"";
+"206445134122844170";"Slyris#2880";"17-Jul-19 04:28 PM";"ok great 😃";"";"";
+"206445134122844170";"Slyris#2880";"17-Jul-19 06:31 PM";"Running instructions added.";"";"👍🏼 (1)";
+"403137719049519106";"Audo#5667";"17-Jul-19 07:38 PM";"hey guys, thanks for all the work! This project is progressing with a lightning speed it feels.
+
+I wanted to showcase more statistic on our rebranded site, but when we designed it we did not have those API endpoints ready for IBN. They are now going to make another iteration for the site and add more stuff / functionality.
+
+Can you guys give me a list of API calls / statistics that we would support in ~ 2 weeks from now? I will then scope those in to the website design/feature list";"";"👍🏼 (1)";
+"403137719049519106";"Audo#5667";"17-Jul-19 07:38 PM";"just support from backend is enough";"";"✅ (1)";
+"375074477756645386";"ca333#0118";"17-Jul-19 07:49 PM";"@Audo - this is the backend documentation with all available API calls and example responses: https://github.com/KomodoPlatform/komodo-ecosysboard/blob/master/docs/api.md
+
+It is a small and straight forward API. Let me know if there are any questions.";"";"";
+"403137719049519106";"Audo#5667";"17-Jul-19 07:49 PM";"perfect, thanks";"";"👍🏼 (1)";
+"206445134122844170";"Slyris#2880";"17-Jul-19 09:10 PM";"It's on master branch now, I deleted my feature Dev branch as usual";"";"✅ (1)";
+"206445134122844170";"Slyris#2880";"18-Jul-19 05:12 PM";"fixed a typo in the documentation";"";"👍 (1)";
+"206445134122844170";"Slyris#2880";"19-Jul-19 06:10 AM";"Available today, the whole day for any help";"";"";
+"206445134122844170";"Slyris#2880";"23-Jul-19 08:44 AM";"do we have any news about the front end @ca333  ?";"";"";
+"375074477756645386";"ca333#0118";"23-Jul-19 10:15 AM";"no - not yet @Slyris after the current optimization session we will likely do it on our own.";"";"";
+"206445134122844170";"Slyris#2880";"23-Jul-19 10:56 AM";"Yeah 😄";"";"😅 (1)";
+"375074477756645386";"ca333#0118";"24-Jul-19 12:43 PM";"Pinned a message.";"";"";
+"375074477756645386";"ca333#0118";"24-Jul-19 12:43 PM";"Pinned a message.";"";"";
+"375074477756645386";"ca333#0118";"24-Jul-19 12:45 PM";"everyone This is the ""Antara Coin Cap"" project channel - we built a prototype backend to create a ""coinmarketcap"" clone for Komodo ecosystem coins (smart chains). We are now looking for a web/frontend dev to build a realtime webapp based on a theme like https://coreui.io/demo/dark/#main.html - what we envision is a web-application similar to coinmarketcap with all relevant infos of a coin and in addition we also show a few blockchain infos (realtime stats) like current height, dPoW status, etc. ON the landing page list - and when someone clicks on a specific chain the detail-view is shown with all available infos. The API documentation and source code are pinned. If you are interested in this task or have questions please contact me or @Slyris through DM.";"";"📈 (14),💯 (14),🍾 (9),🚀 (14),👌 (13),🍆 (6),👍 (19),👀 (5),🤘 (3),🤣 (1),KMD (14)";
+"210733254595051520";"owerache#0341";"24-Jul-19 12:46 PM";"hey :- )";"";"";
+"425975157199470592";"mcastro#5586";"24-Jul-19 12:46 PM";"👌";"";"💚 (1)";
+"210733254595051520";"owerache#0341";"24-Jul-19 12:46 PM";"very good idea:- ) and good work ..";"";"💚 (1)";
+"430772336472621056";"D3b0#9761";"24-Jul-19 12:47 PM";"Nice";"";"";
+"414050590180638730";"mk#2748";"24-Jul-19 12:47 PM";"for ease of adoption, please try to make the api work similarly to either cmc api or coingecko's";"";"👍 (3)";
+"414050590180638730";"mk#2748";"24-Jul-19 12:47 PM";"this is a great idea, btw - great stuff!";"";"💚 (1)";
+"210733254595051520";"owerache#0341";"24-Jul-19 12:48 PM";"it would be really great to make a twitter bot of the same type:
+https://twitter.com/whale_alert";"";"";
+"375074477756645386";"ca333#0118";"24-Jul-19 12:49 PM";"Pinned a message.";"";"";
+"206445134122844170";"Slyris#2880";"24-Jul-19 12:55 PM";"Hello";"";"";

@@ -1,0 +1,487 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[22-Aug-18 05:08 PM] TonyL#3577
+@SHossain just tried to check your bet, but I didn't compile it from last today's source yet:
+```
+./komodo-cli -ac_name=BRK dicestatus DiceX 9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6 c707dee2e4f66bca7b8a84ff71b9704f649dc56158429639e6f0cc4acd040468
+{
+  "result": "success",
+  "status": "loss"
+}
+```
+
+[22-Aug-18 05:09 PM] SHossain#0007
+please test from today's update. Dukeleto pushed some update today
+
+[22-Aug-18 05:09 PM] TonyL#3577
+Let me try to compile latest one and check again yep
+
+{Reactions}
+👍🏽 
+
+[22-Aug-18 05:14 PM] TonyL#3577
+```./komodo-cli -ac_name=BRK dicestatus DiceX 9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6 c707dee2e4f66bca7b8a84ff71b9704f649dc56158429639e6f0cc4acd040468
+{
+  "result": "success",
+  "status": "loss"
+}
+``` 
+Work as well
+
+[22-Aug-18 05:22 PM] SHossain#0007
+strange
+
+[22-Aug-18 05:23 PM] SHossain#0007
+i stopped the daemon, restarted with `-reindex` option and now getting this
+```
+    "result": {
+        "result": "error",
+        "error": "couldnt find bettx or entropytx"
+    },
+```
+
+[22-Aug-18 05:24 PM] SHossain#0007
+placed a new bet and same with the txid i received
+
+[22-Aug-18 05:25 PM] SHossain#0007
+do you mind to try compiling again with `make clean` and data dir cleaned up?
+
+{Reactions}
+👌 
+
+[22-Aug-18 05:25 PM] SHossain#0007
+leave the wallet.dat and BRK.conf file and delete other data
+
+[22-Aug-18 05:31 PM] siu - Chainmakers#3920
+```./komodod -ac_name=COQUITEST2  -ac_supply=72000000 -ac_ccactivate=140 -addnode=24.54.206.138  &```
+
+[22-Aug-18 05:31 PM] siu - Chainmakers#3920
+hi guys
+
+[22-Aug-18 05:31 PM] siu - Chainmakers#3920
+can you take a look at this chain?
+
+[22-Aug-18 05:32 PM] siu - Chainmakers#3920
+its a test of a fork from a non-cc chain to activated cc chain.
+
+[22-Aug-18 05:32 PM] siu - Chainmakers#3920
+sync and  test
+
+[22-Aug-18 05:34 PM] jl777c#5810
+need it use FSM branch for that one
+
+[22-Aug-18 05:34 PM] siu - Chainmakers#3920
+oh right
+
+[22-Aug-18 05:34 PM] siu - Chainmakers#3920
+FSM branch
+
+[22-Aug-18 05:37 PM] TonyL#3577
+Hi @siu - Chainmakers I'll setup this build and chain after check this bet status issue
+
+[22-Aug-18 05:38 PM] siu - Chainmakers#3920
+ok
+
+[22-Aug-18 05:45 PM] TonyL#3577
+@SHossain I've totally deleted `~/.komodod`, rebuild from other directory from scratch but still able to get bet status. Let me try to place mine
+
+[22-Aug-18 05:55 PM] dukeleto#7326
+@SHossain you should see a `couldnt find bettx or entropytx` in stderr and perhaps more information to help debug
+
+[22-Aug-18 05:55 PM] TonyL#3577
+@SHossain New bet to yours contract  was placed but cannot get it's status:
+```./komodo-cli -ac_name=BRK dicestatus DiceX 9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6 9e760e4cf18b54de2084c000059cb95c941595e51e27f0ac64bacc8efe783cf9
+{
+  "result": "error",
+  "error": "cant find dice entropy inputs"
+}
+```
+
+[22-Aug-18 05:56 PM] dukeleto#7326
+both of those are new errors that are not only printed to stderr, but also returned as JSON
+
+[22-Aug-18 05:56 PM] dukeleto#7326
+look at stderr to see more details
+
+[22-Aug-18 05:56 PM] dukeleto#7326
+"new" as in they haven't been in json results before
+
+[22-Aug-18 05:57 PM] dukeleto#7326
+and you can do getrawtransaction to verify your txid's
+
+[22-Aug-18 06:00 PM] TonyL#3577
+```
+./komodo-cli -ac_name=BRK dicestatus DiceX 9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6 9e760e4cf18b54de2084c000059cb95c941595e51e27f0ac64bacc8efe783cf9
+{
+  "result": "success",
+  "status": "loss"
+}
+```
+But when I run daemon in previous build I'm able to get info about bet
+
+[22-Aug-18 06:00 PM] TonyL#3577
+So it should be a bug hmm. UPD re-switched daemon back and can get status. Maybe there is just some delay. But transaction wasnt in rawmemorypool already when I've received `can't find entropy inputs`
+
+[22-Aug-18 06:03 PM] jl777c#5810
+it only looks in confirmed tx for entropy
+
+[22-Aug-18 06:04 PM] dukeleto#7326
+the new error messages in dice results should help debug various edge cases in test plans
+
+[22-Aug-18 06:08 PM] TonyL#3577
+Now I'm receiving ```./komodo-cli -ac_name=BRK dicestatus DiceX 9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6 c707dee2e4f66bca7b8a84ff71b9704f649dc56158429639e6f0cc4acd040468
+{
+  "result": "error",
+  "error": "Diceinit error"
+}
+```
+Same as @SHossain 
+And in daemon logs
+```Dice plan (DiceX) already exists cmpflag.1
+Diceinit error
+```
+But actually I'm not trying to create a dice plan. I'm just trying to check status of my bet
+
+[22-Aug-18 06:10 PM] jl777c#5810
+so the latest version broke dicestatus?
+
+[22-Aug-18 06:11 PM] TonyL#3577
+And on same call in previous build right now I'm getting:
+```
+{
+  "result": "success",
+  "status": "loss"
+}
+```
+So yes, dicestatus looks broken @jl777c
+
+[22-Aug-18 06:18 PM] jl777c#5810
+pushed version with some debug prints. plz post console result
+
+[22-Aug-18 06:19 PM] TonyL#3577
+Ok
+
+[22-Aug-18 06:21 PM] SHossain#0007
+updating
+
+[22-Aug-18 06:21 PM] SHossain#0007
+Thanks @TonyL for confirming
+
+{Reactions}
+👍 
+
+[22-Aug-18 06:27 PM] TonyL#3577
+@jl777c 
+```
+./komodo-cli -ac_name=BRK dicestatus 9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6 4061e91d1427bb9c260b14af26d1aa2fd7d0dd98f6c1267b44591834dd8b5594
+{
+  "result": "error",
+  "error": "Diceinit error in status"
+}
+```
+```
+Dice plan (9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6) already exists cmpflag.1
+Diceinit error in status
+```
+
+[22-Aug-18 06:28 PM] jl777c#5810
+on jl777 branch?
+
+[22-Aug-18 06:28 PM] TonyL#3577
+Yes
+
+[22-Aug-18 06:29 PM] TonyL#3577
+```git pull
+
+remote: Counting objects: 15, done.
+remote: Compressing objects: 100% (7/7), done.
+remote: Total 15 (delta 12), reused 11 (delta 8), pack-reused 0
+Unpacking objects: 100% (15/15), done.
+From https://github.com/jl777/komodo
+   4a6cad3a5..6843837cd  jl777      -> origin/jl777
+   d7a84c745..90c811557  FSM        -> origin/FSM
+Updating 4a6cad3a5..6843837cd
+Fast-forward
+ src/cc/dice.cpp | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
+``` 
+With these changes
+
+[22-Aug-18 06:30 PM] jl777c#5810
+try again
+
+[22-Aug-18 06:30 PM] SHossain#0007
+it is working fine on my end now
+```
+    "result": {
+        "result": "success",
+        "status": "loss"
+    },
+```
+
+[22-Aug-18 06:31 PM] SHossain#0007
+```
+"method":"dicestatus",
+"params": ["DiceX","9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6","59d0e4616910d3578f13b75ca99ed64e8be29e35480c26081648255f143451c0"]
+```
+
+[22-Aug-18 06:31 PM] TonyL#3577
+It's working fine for me for bet when I tested before
+
+[22-Aug-18 06:31 PM] TonyL#3577
+But when I'm placing new bet and trying to check it's status getting this error
+
+[22-Aug-18 06:31 PM] SHossain#0007
+i placed a new bet and used the txid
+
+[22-Aug-18 06:33 PM] jl777c#5810
+i think (hope) latest version fixes this
+
+[22-Aug-18 06:34 PM] jl777c#5810
+it should work for new or old txid
+
+[22-Aug-18 06:34 PM] SHossain#0007
+```
+Updating 6843837..692b653
+Fast-forward
+ src/cc/dice.cpp | 6 +++---
+```
+
+[22-Aug-18 06:40 PM] jl777c#5810
+so latest works?
+
+[22-Aug-18 06:40 PM] SHossain#0007
+yes
+
+[22-Aug-18 06:40 PM] TonyL#3577
+I'm getting same but daemon error changed
+```
+error decoding opret or sbits mismatch 5865636944 vs 3230663064396239
+Dice plan (9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6) exists.0 vs cmpflag.1
+Diceinit error in status
+```
+
+[22-Aug-18 06:40 PM] SHossain#0007
+when i used dicestatus, got result `loss` and terminal output is
+```
+check fundingtxid
+```
+
+[22-Aug-18 06:41 PM] jl777c#5810
+@TonyL pull latest
+
+[22-Aug-18 06:41 PM] jl777c#5810
+you should see:         fprintf(stderr,"check fundingtxid\n");
+if not it isnt latest
+
+[22-Aug-18 06:41 PM] TonyL#3577
+I've build from this pull:
+```
+From https://github.com/jl777/komodo
+   6843837cd..692b653d7  jl777      -> origin/jl777
+Updating 6843837cd..692b653d7
+Fast-forward
+ src/cc/dice.cpp | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+```
+
+[22-Aug-18 06:42 PM] TonyL#3577
+Will try to rebuild
+
+[22-Aug-18 06:42 PM] jl777c#5810
+no
+
+[22-Aug-18 06:42 PM] jl777c#5810
+sometimes git has a minute delay
+
+[22-Aug-18 06:42 PM] jl777c#5810
+and i made 5 different changes
+
+[22-Aug-18 06:43 PM] jl777c#5810
+if the check fundingtxid print didnt show in console, it was the wrong version and a git pull; make is needed
+
+[22-Aug-18 06:47 PM] SHossain#0007
+i'm getting `check fundingtxid` output in console
+
+[22-Aug-18 06:47 PM] jl777c#5810
+and it works properly?
+
+[22-Aug-18 06:47 PM] jl777c#5810
+for both old and new bettxid?
+
+[22-Aug-18 06:53 PM] SHossain#0007
+there is a bit wired behaviour
+```
+./komodo-cli -ac_name=BRK dicestatus DiceX 9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6 d4dfce9b597b9653679b0835fe8ce01e566fc3d522fe326558a0b0b3d8818b82
+check fundingtxid
+{
+  "result": "error",
+  "error": "bettxid already spent"
+}
+```
+
+[22-Aug-18 06:53 PM] SHossain#0007
+`dicestatus` showing result of `dicefinish`
+
+[22-Aug-18 06:54 PM] SHossain#0007
+another one. this is a new bettxid
+```
+./komodo-cli -ac_name=BRK dicestatus DiceX 9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6 d0480239102c6efc546835c97123dcc21c3b3da9185f19a671aeb050275c2aef
+check fundingtxid
+{
+  "result": "error",
+  "error": "bettxid already spent"
+}
+```
+
+[22-Aug-18 06:55 PM] jl777c#5810
+it seems CCerror isnt being cleared prior to the call
+
+[22-Aug-18 06:56 PM] SHossain#0007
+i tested once `dicefinish` call in the meantime and now getting same result everytime i use `dicestatus`
+
+[22-Aug-18 06:58 PM] jl777c#5810
+pushed fix
+
+[22-Aug-18 06:58 PM] jl777c#5810
+@dukeleto I added a CCerror = ""; in ensure_CCrequirements
+
+[22-Aug-18 06:59 PM] jl777c#5810
+basically it would have gotten stuck returning same CCerror after the first error
+
+[22-Aug-18 07:02 PM] SHossain#0007
+updating
+
+[22-Aug-18 07:04 PM] TonyL#3577
+When I'm trying to place bet from 0 balance  account:
+A little bit off-topic but quite confusing as I think
+```
+  "result": "error",
+  "error": "couldnt create dice bet transaction"
+```
+```
+cant find enough inputs 1115445.59277016 note enough for 10.00000000
+cant find dice input
+```
+
+[22-Aug-18 07:06 PM] SHossain#0007
+`couldnt create dice bet transaction` is due to having 0 balance perhaps. and, the 2nd one due to minimum bet is 10
+
+[22-Aug-18 07:06 PM] jl777c#5810
+changed message to: couldnt create dice bet transaction. make sure your address has funds
+
+[22-Aug-18 07:08 PM] jl777c#5810
+@TonyL did you ever finish the tallies for the odds > 1 bets
+
+[22-Aug-18 07:08 PM] jl777c#5810
+for the latest version
+
+[22-Aug-18 07:08 PM] jl777c#5810
+after I changed the algo
+
+[22-Aug-18 07:09 PM] TonyL#3577
+@jl777c yes I did - results are in the same file https://docs.google.com/spreadsheets/d/1hkEmwtQ1Jw5UOXnVHMfo3qo9k83PF8tJls7NbbJADXA/edit?usp=sharing
+
+{Embed}
+https://docs.google.com/spreadsheets/d/1hkEmwtQ1Jw5UOXnVHMfo3qo9k83PF8tJls7NbbJADXA/edit?usp=sharing
+Bets SC testing
+Old algo
+
+ Old algo
+ Odds, Bets Placed, Bets Won, Bets won expected, Bets won delta,% Won,% Won expected,% Delta, Standart deviation( sigma), 3 sigmas
+ 1, 505, 267, 252, 5, 14, 5, 0, 5287128713, 0, 5, 0, 02871287129, 11, 23610253, 33, 70830758
+ 2, 502, 127, 167, 3333333,- 40,...
+https://lh5.googleusercontent.com/T6TVqrlvHNvyI_5CgwF6v8ph3FoR5gv7W_a6r0-H9RFvvXuawh7k_JMiD90SSkf42f4_Zw=w1200-h630-p
+
+[22-Aug-18 07:10 PM] jl777c#5810
+good results! some higher, some lower, looks random but at the right odds
+
+[22-Aug-18 07:10 PM] TonyL#3577
+Yeah results looks very fair
+
+[22-Aug-18 07:10 PM] jl777c#5810
+did latest version fix the earlier errors
+
+[22-Aug-18 07:12 PM] TonyL#3577
+I still can't understand what's going on on my side. I've rebuilded once again from scratch, deleted `~/.komodod ` folder but not able to do anything. Even create a dicefund
+
+[22-Aug-18 07:12 PM] TonyL#3577
+```./komodo-cli -ac_name=BRK dicefund TONY2 10000 1 10000 10 5
+{
+  "result": "error",
+  "error": "Diceinit error in create funding"
+}
+```
+
+[22-Aug-18 07:12 PM] TonyL#3577
+Oh was my fault. There was already fund with such name
+
+[22-Aug-18 07:13 PM] SHossain#0007
+this is latest result from my node
+```
+    "result": {
+        "result": "success",
+        "status": "win",
+        "won": 40
+    },
+```
+
+[22-Aug-18 07:13 PM] SHossain#0007
+```
+"method":"dicestatus",
+"params": ["DiceX","9b9d0f0234d945929a1f41253eeb8a6ab39a6a837dfe09859840c664a8c7ecc6","f744d93879c8ba86139ab8a62aa63fe0e995648b5701a634b64e5bb70d414141"]
+}
+```
+
+[22-Aug-18 07:13 PM] TonyL#3577
+So get correct error in daemon logs
+```
+Dice plan (TONY2) exists.1 vs cmpflag.0
+Diceinit error in create funding
+```
+
+[22-Aug-18 07:13 PM] SHossain#0007
+this was a new bet
+
+[22-Aug-18 07:14 PM] SHossain#0007
+console didn't return `check fundingtxid` while displaying the result
+
+[22-Aug-18 07:16 PM] TonyL#3577
+Yes, getting result of bet right after transaction sending as before. So fixed on my side 
+```
+{
+  "result": "success",
+  "status": "win",
+  "won": 20
+}
+```
+
+[22-Aug-18 07:18 PM] SHossain#0007
+did your console print `check fundingtxid`?
+
+[22-Aug-18 07:18 PM] SHossain#0007
+after issuing `dicestatus` call
+
+[22-Aug-18 07:18 PM] TonyL#3577
+Output above is only which I get
+
+[22-Aug-18 07:19 PM] jl777c#5810
+oh, sorry i removed that printout
+
+[22-Aug-18 07:19 PM] SHossain#0007
+ok
+
+[22-Aug-18 07:19 PM] jl777c#5810
+it seems it is working now anyway
+
+[22-Aug-18 07:19 PM] SHossain#0007
+yep. checked old and new and getting correct answer
+

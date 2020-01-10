@@ -1,0 +1,422 @@
+==============================================================
+Guild: Komodo
+Channel: cc-oracles
+Topic: This channel is for discussion and announcements surrounding the oracles crypto condition contract. Please feel free to answer any questions, technical or non-technical. The oracles contract can be used for converting off-chain data into on-chain data. It has vast set of use cases as dapps and other contracts can trigger actions based on what is written to an oracle. Please see the channel's pinned messages for examples of how it is currently being used. Alright#0419 will be happy to answer any questions you may have when they are available.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[21-Feb-19 08:53 AM] Alright#0419
+@gcharang @Bryan_Beus 
+`Data is submitted using the hexstr property. The first portion of the hexstr property must include ===; this sets the string length for the rest of the data. The second portion of the hexstr property is the data itself.`
+I'm not sure what this means by `The first portion of the hexstr property must include ===`
+
+[21-Feb-19 08:54 AM] Alright#0419
+the first or first and second bytes must be the length of the data in hex
+
+[21-Feb-19 08:56 AM] gcharang#6833
+thanks @Alright 
+can you explain step by step how the data should be submitted like an example:
+
+need to submit data of type `s -> < 256 char string` : the data is : `Hello world`
+
+[21-Feb-19 08:57 AM] Alright#0419
+Couple minutes
+
+[21-Feb-19 08:57 AM] gcharang#6833
+thanks
+
+[21-Feb-19 08:57 AM] Alright#0419
+I can give you a script that will do it for you
+
+[21-Feb-19 08:58 AM] Alright#0419
+s will be first byte only because data must be less than 256 char
+
+[21-Feb-19 09:00 AM] gcharang#6833
+this is something I don't understand, so to add an explanation and How to to the docs, I need to understand it properly, i.e., how to format the data and to include its length in the submitted data. 
+
+Give me the script and any other resources that will help me understanding this
+
+[21-Feb-19 09:00 AM] Mihailo#5902
+First byte should be length of data, and then the data should be hex representation of string
+
+[21-Feb-19 09:02 AM] Mihailo#5902
+This should be the value for `teststring` data: 0a74657374737472696e67
+
+[21-Feb-19 09:02 AM] Mihailo#5902
+0a is length
+
+[21-Feb-19 09:02 AM] gcharang#6833
+"Hello world" is 11 chars: so first byte should be `<11> in hex`?
+
+[21-Feb-19 09:02 AM] Mihailo#5902
+and folowing is teststring in hex
+
+[21-Feb-19 09:03 AM] Mihailo#5902
+first byte should be 0b 😉
+
+[21-Feb-19 09:03 AM] gcharang#6833
+ah got it.
+
+[21-Feb-19 09:04 AM] gcharang#6833
+Will there be a case where first 2 bytes denote the length?
+
+[21-Feb-19 09:04 AM] Mihailo#5902
+Yes, that is for S format
+
+[21-Feb-19 09:04 AM] Mihailo#5902
+And D format
+
+[21-Feb-19 09:04 AM] Mihailo#5902
+s and d are for one byte length, and S and D for two byte length
+
+[21-Feb-19 09:05 AM] Alright#0419
+Little endian
+
+[21-Feb-19 09:05 AM] Mihailo#5902
+Yes
+
+[21-Feb-19 09:09 AM] gcharang#6833
+I just looked up hex representations for t,e,s,t,.... and  endianness
+t=74
+e=65
+s=73 ...... and so on. So writing them in the exact order that we read is little endian, and reverse order is big endian?
+
+[21-Feb-19 09:10 AM] Mihailo#5902
+little endian is just for lenght bytes, then you add data as it is
+
+[21-Feb-19 09:10 AM] Mihailo#5902
+So only when you have two bytes for length you will put 0a0074657374737472696e67
+
+[21-Feb-19 09:13 AM] gcharang#6833
+so the order changes byte by byte? and are we using big endian ness for anyother data type in cc?
+
+[21-Feb-19 09:13 AM] gcharang#6833
+anyother data type -- where the user who is using rpc need to deal with
+
+[21-Feb-19 09:14 AM] jl777c#5810
+i dont use bigendian
+
+[21-Feb-19 09:14 AM] jl777c#5810
+almost all things are little endian
+
+[21-Feb-19 09:14 AM] Alright#0419
+```
+#!/usr/bin/env python3
+import sys
+import codecs
+import time
+import readline
+
+
+while True:
+    message = input("Type message: ")
+    #convert message to hex
+    rawhex = codecs.encode(message).hex()
+
+    #get length in bytes of hex in decimal
+    bytelen = int(len(rawhex) / int(2))
+    hexlen = format(bytelen, 'x')
+
+    #get length in big endian hex
+    if bytelen < 16:
+        bigend = "000" + str(hexlen)
+    elif bytelen < 256:
+        bigend = "00" + str(hexlen)
+    elif bytelen < 4096:
+        bigend = "0" + str(hexlen)
+    elif bytelen < 65536:
+        bigend = str(hexlen)
+    else:
+        print("message too large, must be less than 65536 characters")
+        continue
+
+    #convert big endian length to little endian, append rawhex to little endian length
+    lilend = bigend[2] + bigend[3] + bigend[0] + bigend[1]
+    fullhex = lilend + rawhex
+
+    print(fullhex)
+```
+
+{Reactions}
+👍 
+
+[21-Feb-19 09:15 AM] Alright#0419
+this is for S oracle^
+
+[21-Feb-19 09:15 AM] Mihailo#5902
+No, just the length is little endian. When you have one byte length then it is just that byte 0a (no endian ness). And when you have two byt length then it is little endian 0a00. Data is given in order it is written. There is no endian ness for data.
+
+{Reactions}
+👍 
+
+[21-Feb-19 09:15 AM] gcharang#6833
+Got it mihailo
+
+[21-Feb-19 09:15 AM] jl777c#5810
+also just because you can specific up to 65535 in 2 bytes, doesnt mean you can go past the 10000 byte limit
+
+[21-Feb-19 09:16 AM] gcharang#6833
+"10000 byte limit" -- is it for all cc txns or all transactions?
+
+[21-Feb-19 09:17 AM] Alright#0419
+10kb limit is on OP_RETURN itself I believe
+
+[21-Feb-19 09:17 AM] Alright#0419
+so actual oracle limit is a bit smaller
+
+[21-Feb-19 09:17 AM] Mihailo#5902
+I think it is good to split it in 8k chunks
+
+[21-Feb-19 09:18 AM] gcharang#6833
+noted @Mihailo .
+k is 1000 or 1024? sorry for the noob questions 😅
+
+[21-Feb-19 09:20 AM] Mihailo#5902
+K for kilobyte - t is 1024. So 8192 will fit in 10000 limit and will be good round nubmber for chunk
+
+[21-Feb-19 09:20 AM] Alright#0419
+probably worth noting in the doc that d and D are almost always better to use than s and S
+
+[21-Feb-19 09:21 AM] Alright#0419
+the only benefit of s/S is that it will show human readable text in `oraclessamples` output
+
+{Reactions}
+👌 (2) 
+
+[21-Feb-19 09:21 AM] Mihailo#5902
+Yes, it is for raw data.
+
+[21-Feb-19 09:21 AM] Alright#0419
+but it essentially uses twice as much space on the chain
+
+[21-Feb-19 09:21 AM] Mihailo#5902
+Correct
+
+[21-Feb-19 09:22 AM] gcharang#6833
+thanks guys. Will add all these to the doc and come back if I have more questions
+
+[21-Feb-19 09:22 AM] Mihailo#5902
+👍
+
+[21-Feb-19 06:23 PM] gcharang#6833
+for s/S types are the characters to be considered ASCII?
+
+[22-Feb-19 01:03 PM] Alright#0419
+@gcharang when you do `oraclessamples`, it will try to decode the hex stored as ASCII
+
+[22-Feb-19 01:05 PM] gcharang#6833
+so `oraclessamples`  treats each byte after the length bytes as a single ascii character?
+
+[22-Feb-19 01:05 PM] gcharang#6833
+@Alright
+
+[22-Feb-19 01:05 PM] Alright#0419
+yes
+
+{Reactions}
+👍 
+
+[22-Feb-19 01:06 PM] Alright#0419
+or well
+
+[22-Feb-19 01:06 PM] Alright#0419
+multi byte unicode characters should work as well
+
+[22-Feb-19 01:06 PM] Alright#0419
+so no?
+
+{Reactions}
+🤔 
+
+[22-Feb-19 01:07 PM] gcharang#6833
+how will the code know to consider between `multi byte unicode characters` and `single byte ascii`?
+
+[22-Feb-19 01:07 PM] Alright#0419
+it just does? 🤷
+
+[22-Feb-19 01:07 PM] Alright#0419
+question for jl I'd say
+
+[22-Feb-19 01:08 PM] gcharang#6833
+for s/S types are the characters to be considered ASCII? @jl777c
+
+[22-Feb-19 01:10 PM] Alright#0419
+not sure that's the best question to ask
+
+[22-Feb-19 01:10 PM] Alright#0419
+the answer to that is *yes*
+
+[22-Feb-19 01:10 PM] Alright#0419
+but it's not byte by byte because multi-byte unicode characters work
+
+[22-Feb-19 01:11 PM] jl777c#5810
+s/S is displayed as ascii
+
+[22-Feb-19 01:11 PM] jl777c#5810
+d/D is displayed as hex so it could be anything
+
+[22-Feb-19 01:11 PM] jl777c#5810
+not sure how multibyte unicode works, if it does, it is accidental
+
+[22-Feb-19 01:11 PM] gcharang#6833
+if unicode characters are submitted to s/S type oracle, the display will be gibberish?
+
+[22-Feb-19 01:11 PM] Alright#0419
+it does 🤣
+
+[22-Feb-19 01:12 PM] Alright#0419
+display works
+
+[22-Feb-19 01:12 PM] Alright#0419
+it "just works"
+
+{Reactions}
+😂 
+
+[22-Feb-19 01:12 PM] jl777c#5810
+int32_t oracle_parse_data_format(std::vector<uint8_t> data,std::string format)
+
+[22-Feb-19 01:13 PM] jl777c#5810
+for (i=0; i<slen; i++)
+                    str[i] = data[offset++];
+                str[i] = 0;
+
+[22-Feb-19 01:14 PM] jl777c#5810
+i just get a null string of specified length and null terminate it. then sprintf the resulting string
+
+[26-Feb-19 04:30 PM] dukeleto#7326
+I plan to enable oracle CC on the new HUSH AC, anything I need to know? What is the difference if the chain launches on `dev` branch vs `FSM` currently?
+
+[26-Feb-19 04:31 PM] jl777c#5810
+FSM is bleeding edge
+dev is cutting edge
+beta is usually stable
+master is updated only for critical bugs or consensus changes
+
+[26-Feb-19 07:20 PM] Alright#0419
+@dukeleto I believe the only practical difference between dev and FSM right now is all the new cclib CCs
+
+[26-Feb-19 07:21 PM] Alright#0419
+no difference for oracles
+
+[27-Feb-19 07:47 AM] dukeleto#7326
+groovy, thanks
+
+[27-Feb-19 10:37 AM] Mihailo#5902
+Oracles haven't been changed for sometime, so dve and FSM should be same.
+
+{Reactions}
+👍 
+
+[08-Mar-19 10:53 AM] jusoaresf#3291
+couldn't we do...
+```python
+#get length in big endian hex
+    if bytelen < 65536:
+        bigend = ("000"+str(hexlen))[-4:]
+    else:
+        print("message too large, must be less than 65536 characters")
+```
+instead of
+
+```python
+#get length in big endian hex
+    if bytelen < 16:
+        bigend = "000" + str(hexlen)
+    elif bytelen < 256:
+        bigend = "00" + str(hexlen)
+    elif bytelen < 4096:
+        bigend = "0" + str(hexlen)
+    elif bytelen < 65536:
+        bigend = str(hexlen)
+    else:
+        print("message too large, must be less than 65536 characters")
+``` 
+and save a few comparisons for lengthy content?
+
+[22-Mar-19 01:18 PM] grewalsatinder#9653
+grewalsatinderToday at 2:15 AM
+example scenario:
+- data of N bytes to sell.
+- the seller can't be always online/connected to transmit data over blockchain.
+- the data is once shared/put on blockchain (in OP_RETURN??) and each buyer has to pay to get the encrypted data.
+
+I'm unclear on this encryption/decryption part.
+will the data be encrypted with single decryption key to decrypt or is it possible that each buyer uses their own decryption key for this encrypted data?
+is there a solution to this already?
+
+[22-Mar-19 01:20 PM] Alright#0419
+is it possible for seller to encrypt some data knowing only the buyer's pubkey that only the buyer can decrypt?
+
+[22-Mar-19 01:20 PM] Alright#0419
+I've been thinking about this. It requires a key to be exchanged elsewhere, yes?
+
+[22-Mar-19 01:21 PM] jl777c#5810
+that is all you need
+
+[22-Mar-19 01:21 PM] grewalsatinder#9653
+I was thinking from the same point of view from a website. the kinda same experience, where seller doesn't know any buyer prior to putting the data to sell on the website.
+
+[22-Mar-19 01:21 PM] jl777c#5810
+the seller would describe the data, then register as a publisher
+
+[22-Mar-19 01:22 PM] jl777c#5810
+then people would fund the oracle for a onetime payment, the publisher would see that payment and publish encrypted data to the buyers pubkey
+
+[22-Mar-19 01:22 PM] jl777c#5810
+using curve25519 there is easy way to encrypt, pretty sure secp256k1 can do the same
+
+[22-Mar-19 01:24 PM] jl777c#5810
+https://medium.com/@dealancer/how-to-using-bitcoin-key-pairs-to-for-encrypted-messaging-a0a980e627b1
+
+{Embed}
+https://medium.com/@dealancer/how-to-using-bitcoin-key-pairs-to-for-encrypted-messaging-a0a980e627b1
+How-to: using Bitcoin key pairs to for encrypted messaging
+In my previous post, I have described an idea of building an anonymous messenger for Bitcoin users. Now it is a time to prove that it will…
+
+[22-Mar-19 01:26 PM] grewalsatinder#9653
+thanks, gonna quick read it 🙂 👍
+
+[22-Mar-19 01:29 PM] Alright#0419
+awesome, I can use this for trollbox pms
+
+[22-Mar-19 01:30 PM] jl777c#5810
+it took me one google search to find this
+
+[22-Mar-19 01:30 PM] grewalsatinder#9653
+I was thinking of a Nextflix like application using this concept 😛
+
+[22-Mar-19 01:31 PM] grewalsatinder#9653
+bloackjok3r already done the streaming, was only trying to understand partially
+
+[22-Mar-19 01:37 PM] grewalsatinder#9653
+read the link.
+So if the buyers need to decrypt the data, the seller needs their `pubkeys`.
+In an example of a movie app, It will be instead a Cinema or MutiPlex like app, where the viewers first buy the ticket, then sit through the session to watch the movie.
+
+[22-Mar-19 01:37 PM] grewalsatinder#9653
+The movie is played for the next viewer set again, for N sessions.
+
+[22-Mar-19 01:38 PM] grewalsatinder#9653
+It just doesn't stay in the Cinema forever to view unlike Netflix etc.
+
+[22-Mar-19 01:39 PM] grewalsatinder#9653
+So, that concept I understand is possible to make based on this understanding.
+```Let’s say, Alice wants to send Bob an encrypted text Greetings form Alice!. All she needs to know is Bob’s Bitcoin address and her own WIF (wallet import format) key. Bob will decrypt this text knowing Alice’s Bitcoin address and his own WIF key.
+
+They will use ECDH algorithm to obtain a shared secret, which will be used for 256-bit symmetric AES encryption. Note that ECDH(public key A, private key B) = ECDH(public key B, private key A) = shared secret.```
+
+[22-Mar-19 01:39 PM] grewalsatinder#9653
+If it's a Medium.com like blogs, that looks odd.
+It won't be a blog anymore then 🤔
+
+[22-Mar-19 01:40 PM] grewalsatinder#9653
+a blog's intro posted in publicly plain text and the rest of the blog posted in a pay to decrypt text.....
+
+[22-Mar-19 01:42 PM] grewalsatinder#9653
+hmm.... in that case it is more like a patreon.com like model 😃
+
+[22-Mar-19 01:43 PM] grewalsatinder#9653
+the subscribers subscribe to the creator and the content posted by creator is viewable only by the subscribers
+

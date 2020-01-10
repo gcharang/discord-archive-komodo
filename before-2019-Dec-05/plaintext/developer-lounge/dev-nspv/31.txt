@@ -1,0 +1,326 @@
+==============================================================
+Guild: Komodo
+Channel: dev-nspv
+Topic: ./komodod -nSPV=1 -ac_reward=100000000  -ac_name=NSPV -ac_supply=10000000000 -ac_cc=2 -addressindex=1 -spentindex=1 -connect=5.9.102.210 &
+./komodod -nSPV=1 -addnode=5.9.253.195 &
+https://drive.google.com/drive/folders/1ZvzrhNBQgroejTKPl0kCOTJ8h7XMnO2M?usp=sharing
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[27-Jul-19 05:11 PM] blackjok3r#3181
+Im pretty sure that this is so far.
+
+[27-Jul-19 05:12 PM] jl777c#5810
+see if you can take advantage of the locally validated notarization to make it even more efficient
+
+[27-Jul-19 05:12 PM] jl777c#5810
+it sounds like you are now making efficient getinfo requests
+
+[27-Jul-19 05:12 PM] blackjok3r#3181
+yes it just rotates though the headers from last notarize to tip
+
+[27-Jul-19 05:13 PM] blackjok3r#3181
+doesnt stop trying to fetch them, because it must fetch it anyway
+
+[27-Jul-19 05:13 PM] jl777c#5810
+exactly!
+
+[27-Jul-19 05:13 PM] jl777c#5810
+and it doesnt need to be any voting based system as all can be validated
+
+[27-Jul-19 05:14 PM] blackjok3r#3181
+once it has enough then it can validate the chain tip, that said, once a noa happens it must fetch a heap of them again, I will fix that though doesnt seem hard
+
+[27-Jul-19 05:15 PM] jl777c#5810
+just shifting the array should work as you should already have up to the chain tip and the new notarization is 5 to 10 blocks behind, but all those headers are alrady there
+
+[27-Jul-19 05:16 PM] jl777c#5810
+now just need to have reorg detection, which since building the data to chaintip is fast enough, can just reset the headers and start again
+
+[27-Jul-19 05:16 PM] jl777c#5810
+have a counter for how many times it had to be reset for this notarization and display in the local getinfo
+
+[27-Jul-19 05:16 PM] jl777c#5810
+when we see this as 1 or more, we know something funny is going on with the chain
+
+[27-Jul-19 05:16 PM] blackjok3r#3181
+not sure it needs that tbh, as it saves all the headers it sees, and just  loops backwards from blockhash to block hash, ignoring any that may no longer be in the main chain
+
+[27-Jul-19 05:17 PM] jl777c#5810
+i guess even over a full day, RAM usage would only be 2MB. i was thinking of using fixed size buffer to limit ram usage
+
+[27-Jul-19 05:17 PM] blackjok3r#3181
+I wish it could loop forwards form a notarizations, but you just cant 😦
+
+[27-Jul-19 05:18 PM] blackjok3r#3181
+I clears them after a notarization
+
+[27-Jul-19 05:18 PM] blackjok3r#3181
+shouldnt use much at all, one sec I'll check it
+
+[27-Jul-19 05:19 PM] jl777c#5810
+aha! yes, all the block headers between notarizations, shouldnt be much at all!
+
+[27-Jul-19 05:19 PM] jl777c#5810
+just free up all the memory and not matter how long it runs, will just be 20 to 40 headers, even if a chain split
+
+[27-Jul-19 05:19 PM] jl777c#5810
+get to where you feel it is efficient as can be and will be able to handle actively being reorged
+
+[27-Jul-19 05:20 PM] jl777c#5810
+then we can test it on ILN
+
+[27-Jul-19 05:21 PM] blackjok3r#3181
+reorg detection should be as simple as detecting that the tiptime is not advancing
+
+[27-Jul-19 05:22 PM] blackjok3r#3181
+but I may be missing something
+
+[27-Jul-19 05:24 PM] jl777c#5810
+it is a reorg if a new height comes in that doesnt link back to the old chaintip
+
+[27-Jul-19 05:24 PM] jl777c#5810
+in this case, treat it like a new notarization came in and reset to the latest notarization and build the data from scratch
+
+[27-Jul-19 05:25 PM] jl777c#5810
+that way, no matter how deep the reorg. it will get back to the chaintip
+
+[27-Jul-19 05:25 PM] jl777c#5810
+certainly if many reorgs are happening, then this will be in a volatile state, but as soon as we get the next notarization, it all stabilizes
+
+[27-Jul-19 05:42 PM] blackjok3r#3181
+the problem with that is that, we dont know if its just that we are missing a block, or if the chain doesnt actually linkj though. 
+I thaught about this for quite a long time.
+
+[27-Jul-19 05:43 PM] blackjok3r#3181
+the solution I came up with was to just flag that the chain is either in sync or is not.
+
+[27-Jul-19 05:43 PM] blackjok3r#3181
+if it wont link back, its not in sync. if it does then it is
+
+[27-Jul-19 05:50 PM] blackjok3r#3181
+unless all of your peers are on the wrong chain, it will eventually find the right one and flag its in sync
+
+[27-Jul-19 06:27 PM] blackjok3r#3181
+ok I have it working without gaps now. Once a notarization comes in,  it just stays in sync, without needing to fetch previous headers
+
+[28-Jul-19 12:17 AM] blackjok3r#3181
+https://github.com/blackjok3rtt/libnspv/tree/blackjok3r
+Seems to work perfectly so far.
+
+{Embed}
+https://github.com/blackjok3rtt/libnspv/tree/blackjok3r
+blackjok3rtt/libnspv
+Tiny Bitcoin Library written in C, with nSPV added - blackjok3rtt/libnspv
+https://avatars3.githubusercontent.com/u/30971146?s=400&v=4
+
+{Reactions}
+😍 labs1 
+
+[28-Jul-19 06:11 AM] jl777c#5810
+great job!
+
+[28-Jul-19 06:12 AM] jl777c#5810
+awaiting PR
+
+[28-Jul-19 06:14 AM] jl777c#5810
+with this, it seems the only thing left is adding CC support. starting with cross chain migrates. probably need to have a separate executable/thread and is coordinating multiple nspv instances. that gets chain cluster support to mobile
+
+[28-Jul-19 06:30 AM] blackjok3r#3181
+Still want to mess with it a bit more, Will make PR soon. Be good to test reorgs, as I cant really do that using KMD just running on tip.
+
+[28-Jul-19 07:20 AM] jl777c#5810
+use ILN
+
+[28-Jul-19 07:20 AM] jl777c#5810
+to test reorgs as it is notarized and low hashrate
+
+[28-Jul-19 07:21 AM] jl777c#5810
+no rush, this sort of thing it needs to be precise
+
+[28-Jul-19 10:42 AM] blackjok3r#3181
+Got node banning working 😃
+
+[28-Jul-19 10:42 AM] blackjok3r#3181
+Once it is synced, it checks the headers being sent are in the main chain, and if not after 10 bad headers removes the node.
+
+[28-Jul-19 10:43 AM] blackjok3r#3181
+There is one node that is sending garbage or NULL for the headers in getinfo, so it made it quite easy.
+
+[28-Jul-19 10:48 AM] blackjok3r#3181
+I think also I have the network code to remove peers who stop responding activated again.
+
+[28-Jul-19 12:52 PM] jl777c#5810
+probably some fullnode on an ancient version
+
+[28-Jul-19 12:52 PM] jl777c#5810
+there is also a version field returned with getinfo now, it is set to 1
+
+[28-Jul-19 12:52 PM] jl777c#5810
+anytime any of the strutures are changed, this will be changed and this allows to immediately detect an obsolete node
+
+[28-Jul-19 12:53 PM] jl777c#5810
+the other type would be a honest node, that is just not in sync yet. they can still provide useful info, so storing the height each node is at (many calls return that nodes height) and using that to filter height dependent requests
+
+[28-Jul-19 12:58 PM] blackjok3r#3181
+Problem is that height doesnt nessarily mean that its the same block as other peers.
+
+[28-Jul-19 01:02 PM] blackjok3r#3181
+If they dont send you a header at all, how can you validate that they are on the correct chain, you can only assume that hte blockhash they sent is correct
+
+[28-Jul-19 01:14 PM] blackjok3r#3181
+Pushed latest version, seems to be working very well for me, and should not crash  if there are no notarizations for over 100 blocks.
+
+[28-Jul-19 01:30 PM] blackjok3r#3181
+I assumed that they reson to keep track of the chain tip was to make sure you are only connected to nodes on the real chain. ?
+
+[28-Jul-19 01:30 PM] blackjok3r#3181
+@jl777c
+
+[28-Jul-19 01:34 PM] jl777c#5810
+with nSPV there really isnt that much need for it, but it is always nice to know which peers are on the chaintip and returning valid data
+
+[28-Jul-19 01:35 PM] jl777c#5810
+feel free to keep improving it, the nspv will set the standard for superlite clients, i think primarily as it is the first one that is more than a whitepaper
+
+[28-Jul-19 01:36 PM] jl777c#5810
+but might as well make it as good as we can so the best anybody else can do is be second with one that is not any better
+
+[28-Jul-19 01:39 PM] blackjok3r#3181
+https://github.com/jl777/libnspv/pull/25
+
+{Embed}
+https://github.com/jl777/libnspv/pull/25
+chain tip validation and some bug fixes by blackjok3rtt · Pull Re...
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[28-Jul-19 01:42 PM] blackjok3r#3181
+Also, could the nSPV be used to validate the notarizaittion txid on the chain being notarized to?
+
+[28-Jul-19 01:42 PM] blackjok3r#3181
+Like just connect to some peers and pull the txid and validate it?
+
+[28-Jul-19 01:56 PM] jl777c#5810
+yes!
+
+[28-Jul-19 01:56 PM] jl777c#5810
+now that the single coin nspv is basically complete (other than CC)
+
+[28-Jul-19 01:56 PM] jl777c#5810
+we can move to all the cool things having multiple nspv instances active at once
+
+[28-Jul-19 01:57 PM] jl777c#5810
+the current design is just a single coin active, but most things are setup to be able to run multiple coins from a single instance
+
+[28-Jul-19 01:57 PM] jl777c#5810
+however it might be easier to make a different layer that uses multiple other nspv instances at the api level
+
+[28-Jul-19 01:58 PM] jl777c#5810
+ALL globals would need to be put into a globalvars structure and ALL functions that access any global will need to have the globals pointer passed into it to support multicoins in a single instance
+
+[28-Jul-19 01:58 PM] blackjok3r#3181
+🤔
+
+[28-Jul-19 01:59 PM] blackjok3r#3181
+I dont think I habe anything else I need to do until the 2nd ... Maybe I will try this? Or should porting CC stuff be more important?
+
+[28-Jul-19 02:00 PM] jl777c#5810
+which way feels better?
+
+[28-Jul-19 02:00 PM] blackjok3r#3181
+Or should I go the iguana changes?
+
+[28-Jul-19 02:00 PM] blackjok3r#3181
+See if I can get delay working?
+
+[28-Jul-19 02:00 PM] jl777c#5810
+ah, just adding a big delay would solve the NN bickering
+
+[28-Jul-19 02:00 PM] jl777c#5810
+that shouldnt take long, so maybe get that out of the way
+
+[28-Jul-19 02:01 PM] jl777c#5810
+putting all globals in a globals structure and passing the globals pointer into all functions, it is just a lot of code changes, but nothing too difficult to do
+
+[28-Jul-19 02:01 PM] blackjok3r#3181
+One idea I had was to make it so that no nodes can receive any packets until the height has advanced one block past the block they agree on... That way its a fixed refernace point
+
+[28-Jul-19 02:02 PM] blackjok3r#3181
+could be avery long delay though
+
+[28-Jul-19 02:02 PM] jl777c#5810
+since we are validating notarizations for all utxo, the current chaintip is more a comfort thing
+
+[28-Jul-19 02:02 PM] jl777c#5810
+oh, for the notary side
+
+[28-Jul-19 02:02 PM] blackjok3r#3181
+yes sorry.
+
+[28-Jul-19 02:02 PM] jl777c#5810
+yes, can just delay by one block
+
+[28-Jul-19 02:02 PM] jl777c#5810
+something simple and brute force
+
+[28-Jul-19 02:03 PM] blackjok3r#3181
+Guess I'll have a look at that. I asked @Alright  to help me test reorgs on nSPV, so while waiting I will have a look at iguan see what I can work out.
+
+[28-Jul-19 02:04 PM] blackjok3r#3181
+Being able to have nSPV connect to multiple chains at once, seems a worthy thing to spend some time on though aswell.
+
+[28-Jul-19 02:06 PM] jl777c#5810
+yes
+
+[28-Jul-19 02:06 PM] jl777c#5810
+you understand the method that is needed to make nspv multicoin?
+
+[28-Jul-19 02:14 PM] blackjok3r#3181
+Kind of.
+
+[28-Jul-19 02:19 PM] jl777c#5810
+let me clarify
+
+[28-Jul-19 02:20 PM] jl777c#5810
+currently a specific coin is connected to a specific p2p network based on the chainparams
+
+[28-Jul-19 02:20 PM] jl777c#5810
+it then updates various global variables, mostly the NSPV_result structures
+
+[28-Jul-19 02:20 PM] jl777c#5810
+and now also the headers structures
+
+[28-Jul-19 02:21 PM] jl777c#5810
+so by making an all in one globals structure, like iguanas iguana_info struct
+
+[28-Jul-19 02:21 PM] jl777c#5810
+then all functions that update state of any global or even just need access to it must have a pointer to the right globals structure
+
+[28-Jul-19 02:22 PM] jl777c#5810
+the code can be transformed in place to have identical functionality, just with a globals structure allocated and passed to all functions
+
+[28-Jul-19 02:22 PM] jl777c#5810
+once that works, then a new "addcoin" api will then allow to dynamically add a new coin
+
+[28-Jul-19 02:23 PM] jl777c#5810
+once that is in place, then all the api calls would be done via each coins rpc port to determine which coin
+
+[28-Jul-19 02:23 PM] jl777c#5810
+but for things that span more than one coin, it would probably use a different port, or maybe use a "coin":"multi" parameter
+
+[28-Jul-19 02:24 PM] jl777c#5810
+iguana basically does this multicoin handling
+
+[28-Jul-19 02:25 PM] blackjok3r#3181
+Yes, I pretty much understand how iguana is doing it. Doenst seema huge diffrence here.
+
+[28-Jul-19 02:26 PM] jl777c#5810
+to get nspv working quickly, i used a lot of globals, so first step is to sweep all of them and i mean 100% all of them into a massive globals structure
+
+[28-Jul-19 02:26 PM] jl777c#5810
+and then pass the coins pointer to its globals down into each function that needs it and all global access goes through the globals pointer
+
+[28-Jul-19 02:27 PM] jl777c#5810
+seems this will be a good practice for you to transform a codebase from a single instance to multiinstance capable
+

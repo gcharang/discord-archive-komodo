@@ -1,0 +1,379 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[18-Dec-18 02:20 PM] blackjok3r#3181
+but I worked it out .
+
+[18-Dec-18 02:20 PM] blackjok3r#3181
+the only thing I can see that might affect it is that the chain tip has the be captured before the lock is applied...
+
+[18-Dec-18 02:21 PM] blackjok3r#3181
+like the line above it... there would need to be some conflit within a nano second or even less to cause an issue and so far it seems ok.
+
+[18-Dec-18 02:22 PM] jl777c#5810
+glad it was something that makes sense
+
+[18-Dec-18 02:23 PM] jl777c#5810
+if the worst that happens is an occasional bad mined block, it seems fine
+
+[18-Dec-18 02:23 PM] blackjok3r#3181
+yeah its like 100% better so far... before maybe 25-30% of blocks mined were invalid... havent seen a single one yet since change
+
+[18-Dec-18 02:24 PM] blackjok3r#3181
+few varables needed to be delcared further up so they were avalibe to all palces but that should not affect anything.
+
+[18-Dec-18 02:37 PM] jl777c#5810
+probably less than 1% of blocks will be invalid now
+
+{Reactions}
+👌 
+
+[18-Dec-18 03:45 PM] kimmel (Pungo.io)#2275
+https://www.atomicexplorer.com/#/ac-params
+
+{Embed}
+https://www.atomicexplorer.com//
+Atomic Explorer
+Atomic Explorer
+
+[18-Dec-18 03:45 PM] kimmel (Pungo.io)#2275
+updated or outdated? I would say outdated at first glance but maybe someone can check
+
+[18-Dec-18 07:35 PM] jorian#4555
+why does `getrawtransaction` give ```"vout": [
+    {
+      "value": 12.00990000,
+      "valueSat": 1200990000,
+``` and `decoderawtransaction` give ```
+  "vout": [
+    {
+      "value": 12.00990000,
+      "valueZat": 1200990000,
+```? what is the difference between Sat and Zat?
+
+[18-Dec-18 07:36 PM] jl777c#5810
+"value" vs "valueZat"
+
+[18-Dec-18 07:36 PM] jl777c#5810
+both there for backward compatibility. NEVER BREAK USERSPACE!
+
+[18-Dec-18 07:37 PM] jorian#4555
+yes, ok, as i can understand its need, i don't understand why the first one is Sat and the second is Zat
+
+[18-Dec-18 07:37 PM] jorian#4555
+what is Zat
+
+[18-Dec-18 07:37 PM] jorian#4555
+Zatoshis?
+
+[18-Dec-18 07:38 PM] jorian#4555
+maybe i should ask zcash peoples
+
+[18-Dec-18 07:45 PM] jl777c#5810
+maybe it is a typo
+
+[18-Dec-18 07:46 PM] dukeleto#7326
+@jorian @jl777c Zcash calls their "satoshis" as "zatoshis", and Hush calls ours "puposhis", after Hush Puppy
+
+[18-Dec-18 07:46 PM] jorian#4555
+zcash doesn't use them anymore in both their decoderawtransaction and getrawtransaction
+
+[18-Dec-18 07:47 PM] jorian#4555
+muh muh backwards compatibility?
+
+[18-Dec-18 07:48 PM] dukeleto#7326
+@jorian i think the fact they are using valueSat and valueZat looks like a bug on their part, unless they added that new key to one of the RPCs recently. Maybe they didn't want to break backcompat of valueSat, but called the new key valueZat
+
+[18-Dec-18 07:48 PM] jorian#4555
+zcash doesn't use them anymore in both their decoderawtransaction and getrawtransaction
+
+[18-Dec-18 07:48 PM] jorian#4555
+see also https://zcash-rpc.github.io/decoderawtransaction.html and https://zcash-rpc.github.io/getrawtransaction.html
+
+{Embed}
+https://zcash-rpc.github.io/decoderawtransaction.html
+decoderawtransaction - Zcash 2.0.2 RPC Docs
+Zcash 2.0.2 RPC Docs - decoderawtransaction
+
+{Embed}
+https://zcash-rpc.github.io/getrawtransaction.html
+getrawtransaction - Zcash 2.0.2 RPC Docs
+Zcash 2.0.2 RPC Docs - getrawtransaction
+
+[18-Dec-18 07:49 PM] jorian#4555
+not that we have to copy everything zcash does
+
+[18-Dec-18 07:49 PM] dukeleto#7326
+just because it's not in the docs, doesn't mean it's not used anymore 😃
+
+[18-Dec-18 07:49 PM] jorian#4555
+mmh, would be weird, need to check that
+
+[18-Dec-18 07:50 PM] dukeleto#7326
+there are no tests for either, i can tell you that
+
+[18-Dec-18 07:50 PM] dukeleto#7326
+valueZat is still returned by zcash api, not valueSat
+
+[18-Dec-18 07:50 PM] dukeleto#7326
+```src/rpc/rawtransaction.cpp
+182:        out.push_back(Pair("valueZat", txout.nValue));
+```
+
+[18-Dec-18 07:50 PM] dukeleto#7326
+that is the only reference to that key in the entire codebase
+
+[18-Dec-18 07:50 PM] dukeleto#7326
+zcash master codebase, that is
+
+[18-Dec-18 07:51 PM] jorian#4555
+interesting.. that letter is the only difference between get and decode
+
+[18-Dec-18 07:51 PM] jorian#4555
+at least, in KMD it is
+
+[18-Dec-18 07:51 PM] dukeleto#7326
+zatoshi does not make sense in KMD codebase
+
+[18-Dec-18 07:51 PM] dukeleto#7326
+almost everything in our codebase and everyone else's says `satoshi`, some people change user-facing docs/etc
+
+[18-Dec-18 07:52 PM] dukeleto#7326
+```commit c66c731adf766b5085eefe0008b7c83fe02f5162
+Author: Jack Grigg <jack@z.cash>
+Date:   Thu May 11 18:00:15 2017
+
+    Add a benchmark for calling ConnectBlock on a block with many inputs
+
+    Requires placing block-107134.tar.gz (containing the block, and a fake CoinsDB
+    containing its inputs) into the base directory of the repository. This can be
+    generated using qa/zcash/create_benchmark_archive.py (see the script for usage
+    details).
+
+    To facilitate generation of the fake CoinsDB, an additional field 'valueZat' has
+    been added to 'getrawtransaction' containing the integer number of zatoshis
+    instead of a decimal number of ZEC.```
+
+[18-Dec-18 07:52 PM] dukeleto#7326
+that is the backstory
+
+[18-Dec-18 07:52 PM] dukeleto#7326
+seems like valueZat was a hack for an old script with no tests that nobody uses anymore
+
+[18-Dec-18 07:52 PM] dukeleto#7326
+clean it all with 🔥
+
+[18-Dec-18 07:53 PM] jorian#4555
+aha, but KMD uses valueSat in getrawtransaction
+
+[18-Dec-18 07:53 PM] jorian#4555
+so probably someone forgot to change valueZat to valueSat in the decoderawtransaction?
+
+[18-Dec-18 07:54 PM] dukeleto#7326
+is this causing a bug of some kind?
+
+[18-Dec-18 07:55 PM] jorian#4555
+no, just wondered the difference.. i would need to account for the difference in my code though
+
+[18-Dec-18 07:55 PM] dukeleto#7326
+i don't think anything actually uses valueZat which was inherited from zcash
+
+[18-Dec-18 07:56 PM] dukeleto#7326
+```src/rpc/rawtransaction.cpp
+212:                in.push_back(Pair("valueSat", spentInfo.satoshis));
+240:        out.push_back(Pair("valueSat", txout.nValue)); // [+] Decker```
+
+[18-Dec-18 07:56 PM] dukeleto#7326
+valueSat is used various places, and @Decker put his name in a comment 🎉 about it
+
+[18-Dec-18 07:57 PM] dukeleto#7326
+i would say change valueZat to valueSat, but that is for James to decide. Seems to be of low importance
+
+[18-Dec-18 08:02 PM] jl777c#5810
+just use "value"
+
+[18-Dec-18 08:03 PM] jorian#4555
+yes, i'm ignoring Sat and Zat already
+
+[18-Dec-18 08:03 PM] jl777c#5810
+those are bad names as it is not satoshis but in floating point COINS
+
+[18-Dec-18 08:03 PM] jl777c#5810
+but there is no way to know what code is being written that uses those fields
+
+[18-Dec-18 08:03 PM] jl777c#5810
+and since it is no big deal to keep it around and not break anything that might have used it, i kept it in there
+
+[18-Dec-18 08:04 PM] jl777c#5810
+think of it as the total opposite of bitcoin core, who go out of there way to make sure they break as much as possible
+
+{Reactions}
+trollface 
+
+[18-Dec-18 08:04 PM] jl777c#5810
+we go out of our way to keep as much working as possible
+
+{Reactions}
+shexy 👆🏽 
+
+[18-Dec-18 08:04 PM] jl777c#5810
+there are enough giant changes that happen to add the burden of an ever changing JSON syntax
+
+[18-Dec-18 08:10 PM] dukeleto#7326
+agreed, only introduce backward incompatibility rarely and strategically
+
+[20-Dec-18 09:20 AM] pbca26#5430
+@Deleted User @webworker01 yesterday i found out that i forgot to push sapling changes commit to web wallet repo
+now it should work fine
+
+{Reactions}
+👍 (2) 
+
+[20-Dec-18 09:52 PM] dukeleto#7326
+@Deleted User depends 😃
+
+[20-Dec-18 10:27 PM] ComputerGenie 👴🏼📢#7004
+_wonders what virus he just gave himself with that appimage that locks up so bad that task manager will not load and `sudo pkill -f utrum*` freezes_ :trollface:
+
+[20-Dec-18 10:30 PM] ComputerGenie 👴🏼📢#7004
+_blames @blackjok3r because CFEK miner will not die either_
+
+[20-Dec-18 10:36 PM] ComputerGenie 👴🏼📢#7004
+the 1st part was a joke (can delete so no one get wrong idea)
+the 2nd part was true
+it runs fine after button forced reboot killed joker miner "fix" 😣
+
+[20-Dec-18 10:37 PM] ComputerGenie 👴🏼📢#7004
+@Deleted User is this an electrum wallet?
+
+[20-Dec-18 10:39 PM] ComputerGenie 👴🏼📢#7004
+BarterDEX = HyperDEX? did I miss a memo?
+
+{Reactions}
+👍 
+
+[20-Dec-18 10:40 PM] ComputerGenie 👴🏼📢#7004
+not sure I was suggesting anything 😕
+
+[20-Dec-18 10:41 PM] ComputerGenie 👴🏼📢#7004
+the button for "BarterDEX" links to the HyperDEX github repo
+when did HyperDEX become BarterDEX?
+
+[20-Dec-18 10:45 PM] ComputerGenie 👴🏼📢#7004
+also, if you click the "based on MNZ wallet" link in "About" it takes you to the MNZ gitLab with no way to get back to the OOT wallet without killing the app
+
+{Reactions}
+👌 
+
+[20-Dec-18 10:48 PM] ComputerGenie 👴🏼📢#7004
+nothing an "_blank" can't fix 😉
+
+[20-Dec-18 10:50 PM] ComputerGenie 👴🏼📢#7004
+my other 1st glance suggestion is a USD label on charts
+seems like it should be obvious that all 3 are in USD, but might confuse people
+
+{Reactions}
+☑ 
+
+[20-Dec-18 10:51 PM] ComputerGenie 👴🏼📢#7004
+beyond that it looks and seems to react nice
+will try with txes later, 🍽 time now
+
+{Reactions}
+👍 (2) 🍔 
+
+[20-Dec-18 10:53 PM] ComputerGenie 👴🏼📢#7004
+I really like that the "Hold" page has a link to description and info page 👍🏽
+
+[21-Dec-18 06:34 AM] D.rabbani#9094
+hi there
+
+[21-Dec-18 06:34 AM] D.rabbani#9094
+i just need to ask i did sendtoaddress from my staking node 2
+
+[21-Dec-18 06:34 AM] D.rabbani#9094
+it seems to be stuck ?
+
+[21-Dec-18 06:35 AM] D.rabbani#9094
+the blocks are building up but the cli seems to be stuck
+
+[21-Dec-18 06:35 AM] D.rabbani#9094
+its not giving me the transactionid
+
+[21-Dec-18 06:35 AM] D.rabbani#9094
+?
+
+[21-Dec-18 06:35 AM] D.rabbani#9094
+can someone help
+
+[21-Dec-18 06:38 AM] D.rabbani#9094
+@blackjok3r ?
+
+[21-Dec-18 06:38 AM] D.rabbani#9094
+😃
+
+[21-Dec-18 06:43 AM] D.rabbani#9094
+on antoher session its stuck in getinfo as well ?
+
+[21-Dec-18 06:43 AM] D.rabbani#9094
+:?
+
+[21-Dec-18 06:43 AM] D.rabbani#9094
+can someone help me out
+
+[21-Dec-18 06:55 AM] D.rabbani#9094
+even its getting stuck in get info as well ?
+
+[21-Dec-18 06:58 AM] D.rabbani#9094
+@Alright ?
+
+[21-Dec-18 06:59 AM] D.rabbani#9094
+atlast i got this error make  sure your server is running and you are connecting to the correct RPC port ?
+
+[21-Dec-18 06:59 AM] D.rabbani#9094
+got a connection timeout error
+
+[21-Dec-18 06:59 AM] D.rabbani#9094
+?
+
+[21-Dec-18 06:59 AM] D.rabbani#9094
+even though the blocks are building up ?
+
+[21-Dec-18 07:00 AM] D.rabbani#9094
+and the server is running fine its stuck in the get info as well
+
+[21-Dec-18 07:15 AM] D.rabbani#9094
+it was getting info before
+
+[21-Dec-18 07:15 AM] D.rabbani#9094
+now its seems to be stuck :/
+
+[21-Dec-18 07:15 AM] D.rabbani#9094
+is it due to my internet connection ?
+
+[21-Dec-18 07:39 AM] D.rabbani#9094
+please its urgent can someone help ?
+
+[21-Dec-18 07:40 AM] actionslacks#4072
+I think most of the discord wakes up in an hour or two @D.rabbani
+
+[21-Dec-18 07:41 AM] D.rabbani#9094
+okai ill message them in an hour or two
+
+[21-Dec-18 09:03 AM] D.rabbani#9094
+anyone ?
+
+[21-Dec-18 09:03 AM] D.rabbani#9094
+here again
+
+[21-Dec-18 09:04 AM] D.rabbani#9094
+its stuck on stopping the server as wel ?
+
+[21-Dec-18 09:04 AM] D.rabbani#9094
+i have no idea what is going on
+

@@ -1,0 +1,162 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"272003866906722306";"TonyL#3577";"07-Nov-18 12:10 PM";"Seems have to re-write tests for diceCC after latest updates";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 12:11 PM";"i disabled old odds of 1";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 12:11 PM";"So just 50/50 bets arent possible now?";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 12:13 PM";"Oh, oracles unit tests cover only creation process so far.  Have to improve this white space";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 02:34 PM";"@jl777c I'm receiving now blank JSON in case of dicebet to diceplan `name` not matching original one (noticed it in auto-tests):
+```./komodo-cli -ac_name=TONY0 dicebet test 0073aa8af8f07fc7770db37b5ebc0e36814699423ed0694b00fcdb1773eb805c 10 2
+error decoding opret or sbits mismatch 594b43554c vs 74736574
+Dice plan (test) exists.0 vs cmpflag.1
+{
+}
+```
+Is it the right place to add sbits match check: https://github.com/jl777/komodo/blob/FSM/src/cc/dice.cpp#L1064 ?";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 02:35 PM";"yes";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 02:36 PM";"Just found that it's implemented here https://github.com/jl777/komodo/blob/FSM/src/cc/dice.cpp#L886
+Trying to understand now why there is no RPC printout";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:40 PM";"@TonyL that needs some error handling";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:40 PM";"@TonyL it's just printing to stderr, when it should be assigning to `CCerror` variable";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:41 PM";"something like this: ```        CCerror = strprintf(""bet size violation %.8f"",(double)bet/COIN);
+        fprintf(stderr,""%s\n"", CCerror.c_str() );```";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:41 PM";"which is in the same file";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:41 PM";"CCerror variable is special";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:42 PM";"if CCerror != """", it is returned as the error message in RPC response";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 03:42 PM";"@dukeleto I did it other way:
+https://github.com/jl777/komodo/blob/FSM/src/cc/dice.cpp#L1078
+added `error=` here";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:42 PM";"any place that prints to stderr, should probably also set CCerror, unless it's for debugging";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 03:43 PM";"There was Diceinit check (which checking existing and name match) but no error message";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:44 PM";"@TonyL your ""other way"", does the rpc know how to set error responses that way?";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:44 PM";"i haven't looked at cc code in a while";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 03:44 PM";"Yes, RPC print these `""errors=` I've checked first for sure";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 03:44 PM";"Continuing reanimate dice tests 😃";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:45 PM";"this line is an error: https://github.com/jl777/komodo/blob/FSM/src/cc/dice.cpp#L1182";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:45 PM";"unless you always want to print out CCerror, probably want { } around line 1181 and 1182";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:46 PM";"@TonyL so what exactly is your ""new/other way"" to deal with CC errors? I am not quite understanding.";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 03:47 PM";"It's not a new way - I just added error message to check";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:47 PM";"i am not understanding";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 03:48 PM";"```    if ( (cp= Diceinit(fundingPubKey,fundingtxid,&C,planstr,txfee,mypk,dicepk,sbits,minbet,maxbet,maxodds,timeoutblocks)) == 0 )
+        error = ""Diceinit error on Dicebet (probably plan not exists or plan name not match)"";
+        return("""");```";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:48 PM";"why assign to `error` instead of CCerror ?";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:49 PM";"i don't understand this new `error` variable, why it was introduced or how it is tied to CCerror";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:49 PM";"but also, i am vastly out-of-date with CC stuff. I see Tony has been doing awesome stuff!";"";"🙌 (1)";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:50 PM";"```       error = ""Diceinit error in status"";
+        return(0.);```";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:50 PM";"from DiceStatus";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:50 PM";"that can't work correctly";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:51 PM";"CCerror must be assigned to";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 03:51 PM";"It's James code not mine 😃";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 03:52 PM";"I just saw this `error=` around, added for my case and it's seems working correct in RPC responses";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:52 PM";"don't throw the sage wizard under the bus 😹 . he must have left it there for us to find and learn 🤓";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:53 PM";"it seems many/all internals functions take a std::string error now, that is new";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:54 PM";"but not all";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:54 PM";"so the new ones that take that string, assign to it. older functions without that assign to CCerror, it seems";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 03:55 PM";"James working actively on diceCC debugging these days so a lot of stuff probably might be changed 😃";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:55 PM";"i thought `error` was a local variable, but it's passed by reference, so the function modifies the value, and then the caller probably does something special";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:56 PM";"my guess is James took my hacky CCerror solution and improved it";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 03:56 PM";"i am waiting for someone to make a pull request to make the error handling sane";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:56 PM";"oh gosh";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:56 PM";"@jl777c is every internals function taking a `std::string error` the *new* way?";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 03:57 PM";"maybe the entire std::string return value needs to be changed";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 03:57 PM";"i havent paid much attention to the error reporting";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:57 PM";"CCerror was introduced so that RPC json responses could be sane";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 03:57 PM";"```./komodo-cli -ac_name=TONY0 dicebet test 0073aa8af8f07fc7770db37b5ebc0e36814699423ed0694b00fcdb1773eb805c 10 2
+error decoding opret or sbits mismatch 594b43554c vs 74736574
+Dice plan (test) exists.0 vs cmpflag.1
+{
+  ""result"": ""error"",
+  ""error"": ""Diceinit error on Dicebet (probably plan not exists or plan name not match)""
+}
+```";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:57 PM";"instead of libraries trying to parse error strings as json";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 03:57 PM";"This `error = ` worked fine hmm";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 03:58 PM";"i think it is a global";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:58 PM";"my guess is the calling code takes the `error` response and maybe puts that in CCerror";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 03:59 PM";"i haven't looked at the fsm branch CC code lately";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 04:03 PM";"i am looking at the code now";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 04:03 PM";"dicebet does not use CCerror";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 04:05 PM";"which then calls DiceInit";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 04:06 PM";"and other internals functions, which have no way to pass errors back up via CCerror";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:07 PM";"Hmm, interesting so how RPC error printing this way 🤔";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 04:08 PM";"i am just saying that some error conditions are currently not covered, or not easy to report, because various levels of functions don't have `error` variables";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 04:09 PM";"making everything use CCerror and then doing a single check for CCerror when returning JSON response seems easiest/best to me";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 04:10 PM";"otherwise you need to pass various `error` variables to functions which call other functions, seems like a lot of work for not much gain. CCerror global is all we need, I think";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 04:25 PM";"@TonyL do you know of any cases where errors should be returned, but they are not?";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:43 PM";"@dukeleto Hmm usually I add to RPC validations in such cases";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:43 PM";"Oh";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:43 PM";"At the moment you can put to `oraclessubscribe` almost everything you want";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:44 PM";"That one I remember @dukeleto";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:44 PM";"Sorry, `oraclesregister`";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:44 PM";"```./komodo-cli -ac_name=CCNG oraclesregister imatrollputtext+randomhexhere 01000000011d2ede37ad589e5774e6dc220a925ae043325bf45d6f65c8a1afe47ac62d2d200000000049483045022100cc40b3f8aa698772dfe1486a8349d465115efbdfa38c9d15ec3b99ceb25fe0ef02206ca2599a3f848c6e8f23bdc04926bdad5f00424a61298243b3517aa5eef007a001ffffffff0410270000000000002321020000000000000000000000000000000000000000000000000000000000000000ac1027000000000000302ea22c8020a83bdefbd26a188a1bb0d74b96636c39157333ec44c8dbae934e4862e2cd39e18103120c008203000401ccd02a724e1809000023210324f94e76159d69a5163b91588c3a04dac2c80e0011f713e3bfc5a8b67ba01272ac00000000000000004f6a4c4cec520000000000000000000000000000000000000000000000000000000000000000210324f94e76159d69a5163b91588c3a04dac2c80e0011f713e3bfc5a8b67ba012720bca9a3b0000000000000000```";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:45 PM";"Posted behaviour of `oraclesregister` above in this channel";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 04:45 PM";"cool, i haven't touched oracle CC's at all yet";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:46 PM";"I've started unit-tests for oraclesCC but covered only creation process - now I remember - this oraclesregister is why I've stopped 😂";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:47 PM";"@dukeleto If you'll need to use auto-tests - it's failing now for diceCC because of last contract changes, I'll PR fix today-tomorrow so you may just comment it if needed";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:51 PM";"@jl777c dicebet seems just broken on latest FSM";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:51 PM";"```./komodo-cli -ac_name=TONY0 diceinfo 0073aa8af8f07fc7770db37b5ebc0e36814699423ed0694b00fcdb1773eb805c
+first.0 entropytxid.304283c41b1d1e14d29db2f319fe3c696906b3186e4b14858403c43ba57f984d val 10000.00000000
+numentropy tx 1: 11000.00000000
+{
+  ""result"": ""success"",
+  ""fundingtxid"": ""0073aa8af8f07fc7770db37b5ebc0e36814699423ed0694b00fcdb1773eb805c"",
+  ""name"": ""LUCKY"",
+  ""sbits"": 383514793292,
+  ""minbet"": ""1.00000000"",
+  ""maxbet"": ""800.00000000"",
+  ""maxodds"": 10,
+  ""timeoutblocks"": 5,
+  ""funding"": ""11000.00000000"",
+  ""entropytxs"": 1
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:51 PM";"./komodo-cli -ac_name=TONY0 dicebet LUCKY 0073aa8af8f07fc7770db37b5ebc0e36814699423ed0694b00fcdb1773eb805c 900 2
+{
+}";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:51 PM";"Oh, it's same sorry";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:51 PM";"Just no printout on error when bet sum is more than maxbet";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:52 PM";"```./komodo-cli -ac_name=TONY0 dicebet LUCKY 0073aa8af8f07fc7770db37b5ebc0e36814699423ed0694b00fcdb1773eb805c 100 2
+{
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:52 PM";"Hmm nope, no printouts at all";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 04:52 PM";"anything in console?";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:54 PM";"On other node with a little bit behind in commits I'm getting:
+```{
+  ""result"": ""error"",
+  ""error"": ""cant find dice entropy inputs""
+}
+```";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:54 PM";"That's because I did only one diceaddfunds so expected";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 04:56 PM";"make more";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:57 PM";"Node with empty output is on:
+```commit 8858150393daee9f0adf9d75ae8362e1785655f5 (HEAD -> FSM, upstream/FSM, origin/FSM)
+Author: jl777 <jameslee777@yahoo.com>
+Date:   Wed Nov 7 01:33:44 2018 -1100
+
+    Test
+```";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 04:57 PM";"Node which getting error print is on:
+```commit a6b21d0d44c3f9c4efb499050723618883d51534 (HEAD -> FSM, origin/FSM)
+Author: jl777 <jameslee777@yahoo.com>
+Date:   Tue Nov 6 21:58:18 2018 -1100
+
+    Guard adding to entropyused list```";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 04:59 PM";"i made many dice changes, you should be on latest";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 05:01 PM";"Oh, there were more changes while I dinner 😃  Will re-check with very latest 👍";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 05:02 PM";"On very latest get this printout, sorry for false alarm";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 06:21 PM";"Hmm I found the reason: If I'm adding `error=` printout here: https://github.com/jl777/komodo/blob/FSM/src/cc/dice.cpp#L1074
+I'm receiving RPC error when plan name not match or exists but not receive error when bet or odds is more than maximum. Will try to do with CCerror as @dukeleto advised.
+So problem was even not in JL code but in mine 😃";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 07:31 PM";"@TonyL stuff is a bit confusing";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 07:33 PM";"if you look at the code that calls DiceBet, it doesn't look at CCerror (yet)";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 09:41 PM";"@jl777c @TonyL https://github.com/jl777/komodo/pull/929";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 09:41 PM";"pretty simple/trivial, but brings some sanity to CC error checking";"";"";
+"455741312273219595";"jl777c#5810";"07-Nov-18 09:42 PM";"thanks!";"";"👍 (1)";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 09:43 PM";"i see many places to add error checking/reporting to oracle/gateway, RETURN_IF_ERROR makes it super easy";"";"";
+"272003866906722306";"TonyL#3577";"07-Nov-18 09:45 PM";"Wow it's really cool @dukeleto !";"";"";
+"365714438864633856";"dukeleto#7326";"07-Nov-18 09:57 PM";"just doing my part 😅";"";"";
+"424224648889106444";"Mihailo#5902";"08-Nov-18 11:32 AM";"Hey guys, I see you were talking about returning errors in RPC for CC. When I started with CC (my first CC was channels) I didn't know there was CCerror thing. Now I see it was used in rewards, prices, dice...
+I gave some thought on returning errors from CC in RPC, but I went different way. If we would be ok to change that the CC functions instead of returning std::string with hex, to return JSON in which we can already format the JSON with result success and hex if it was ok, or result error with specific error if something went wrong. 
+If there is some big issue with this, than I think this CCerror could be used as it was intended to...";"";"";
+"412482228359266328";"CrisF#3405";"08-Nov-18 12:06 PM";"Hi, Is `migration` not a single `cc` but a combination of contracts?";"";"";

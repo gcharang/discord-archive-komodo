@@ -1,0 +1,371 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[21-Aug-19 12:58 AM] dukeleto#7326
+`ht.7603, ShieldedPayments=0, ShieldedTx=0, FullyShieldedTx=0, ntz=2` still some work to do, it detected 2 notarizations in this block
+
+[21-Aug-19 12:58 AM] dukeleto#7326
+I need to make it smarter
+
+[21-Aug-19 12:59 AM] dukeleto#7326
+I guess it is possible for 2 valid notarization xtns to be in the same block?
+
+[21-Aug-19 12:59 AM] dukeleto#7326
+my guess is my code is just wrong, it treats all vin=13/vout=2 xtns as ntz's, when it should filter more
+
+[21-Aug-19 01:02 AM] blackjok3r#3181
+yes we do ?
+
+[21-Aug-19 01:02 AM] blackjok3r#3181
+getNotarzationsFromBlock
+
+[21-Aug-19 01:02 AM] blackjok3r#3181
+Yes.
+
+[21-Aug-19 01:02 AM] blackjok3r#3181
+you can have millions of nota in a block
+
+[21-Aug-19 01:02 AM] dukeleto#7326
+what is the purpose of more than 1 ntz in a block, other than accident?
+
+[21-Aug-19 01:02 AM] blackjok3r#3181
+but only 1 og them is valid
+
+[21-Aug-19 01:03 AM] dukeleto#7326
+And also, is it "last one in wins?"
+
+[21-Aug-19 01:03 AM] blackjok3r#3181
+Its becaus iguana is broken
+
+[21-Aug-19 01:03 AM] dukeleto#7326
+i.e. latest timestamp wins?
+
+[21-Aug-19 01:03 AM] blackjok3r#3181
+its supped to wait for confirms
+
+[21-Aug-19 01:03 AM] blackjok3r#3181
+but it does not
+
+[21-Aug-19 01:03 AM] blackjok3r#3181
+and no im not fixing that part
+
+[21-Aug-19 01:03 AM] blackjok3r#3181
+it will just make billions of egdecases
+
+[21-Aug-19 01:03 AM] dukeleto#7326
+my code wants to count "valid notarizations"
+
+[21-Aug-19 01:03 AM] dukeleto#7326
+not "things which might be notarizations but are edge cases"
+
+[21-Aug-19 01:04 AM] dukeleto#7326
+so I think I only want to count 1 per block , but whatevs. I need to check for OP_RETURN or NN pubkeys in the xtn
+
+[21-Aug-19 01:04 AM] dukeleto#7326
+i want to batch any stats that we might want into this PR, because stuff changes the disk format of CBlockIndex
+
+[21-Aug-19 01:04 AM] blackjok3r#3181
+then you need thi:
+https://github.com/blackjok3rtt/libnspv/blob/master/src/tools/nSPV_wallet.h#L240
+
+{Embed}
+https://github.com/blackjok3rtt/libnspv/blob/master/src/tools/nSPV_wallet.h
+blackjok3rtt/libnspv
+Tiny Bitcoin Library written in C, with nSPV added - blackjok3rtt/libnspv
+https://avatars3.githubusercontent.com/u/30971146?s=400&v=4
+
+[21-Aug-19 01:05 AM] blackjok3r#3181
+What yo uneed to do is decode op_return
+
+[21-Aug-19 01:05 AM] blackjok3r#3181
+then extract the notarized ht
+
+[21-Aug-19 01:05 AM] dukeleto#7326
+and so adding ntz data in the future would force all `zindex` nodes to resync from scratch, which sux
+
+[21-Aug-19 01:05 AM] blackjok3r#3181
+and only count hts that advance
+
+[21-Aug-19 01:05 AM] dukeleto#7326
+@blackjok3r i am in very hot code
+
+[21-Aug-19 01:05 AM] dukeleto#7326
+and this is stats
+
+[21-Aug-19 01:05 AM] dukeleto#7326
+so i want to do as little work as possible
+
+[21-Aug-19 01:05 AM] dukeleto#7326
+it's a heuristic, some error is OK
+
+[21-Aug-19 01:06 AM] dukeleto#7326
+my code modifies ReceiveBlock() or whatever it's called, and LoadIndex, so every block that is received or read from disk has this code run. I don't want to add lots of complex shite
+
+[21-Aug-19 01:07 AM] blackjok3r#3181
+What deermines a valid notaraisation is:
+1) height is heighter than last noatrised ht
+2) block hash matches the ht being notarized
+3) min sigs notaries
+
+[21-Aug-19 01:07 AM] dukeleto#7326
+probably looking for amount would filter out stuff
+
+[21-Aug-19 01:07 AM] blackjok3r#3181
+you can filter the NNmin sigs early on... as it adds ot the index.
+
+[21-Aug-19 01:07 AM] blackjok3r#3181
+then when fetching just flter the ht
+
+[21-Aug-19 01:07 AM] dukeleto#7326
+@blackjok3r right now, a valid ntz in my code is "vin=13, vout=2" and that works pretty damn well to detect ntz's 🙂
+
+[21-Aug-19 01:07 AM] dukeleto#7326
+i am just trying to detect, not verify
+
+[21-Aug-19 01:08 AM] dukeleto#7326
+i need to filter on amount and maybe op_return, and it would be 99.99% correct
+
+[21-Aug-19 01:08 AM] dukeleto#7326
+right now, if you happen to spend 13 utxos, and generate a change address, my code is fooled by that
+
+[21-Aug-19 01:08 AM] blackjok3r#3181
+assuming no body made false ones.. that will usually work, that is the first check the validation makes
+
+[21-Aug-19 01:09 AM] blackjok3r#3181
+include op)_return to that
+
+[21-Aug-19 01:09 AM] dukeleto#7326
+thanks for the nspv_wallet.h link, it's a good read
+
+[21-Aug-19 01:09 AM] blackjok3r#3181
+vout[1].IsOpreturn()
+
+[21-Aug-19 01:09 AM] dukeleto#7326
+i have read similar code in all the dpow header files
+
+[21-Aug-19 01:09 AM] dukeleto#7326
+@blackjok3r now that is useful!
+
+[21-Aug-19 01:09 AM] blackjok3r#3181
+nSPV stuff taugt me alot.
+
+[21-Aug-19 01:09 AM] dukeleto#7326
+.IsOpreturn() is mighty fine
+
+[21-Aug-19 01:10 AM] blackjok3r#3181
+yes that should do it man
+
+[21-Aug-19 01:10 AM] blackjok3r#3181
+🙂
+
+[21-Aug-19 01:10 AM] dukeleto#7326
+sweeeeet
+
+[21-Aug-19 01:10 AM] blackjok3r#3181
+there is a function in nspv_utils
+
+[21-Aug-19 01:10 AM] blackjok3r#3181
+that decodes the opret
+
+[21-Aug-19 01:10 AM] blackjok3r#3181
+but I doubt you need that
+
+[21-Aug-19 01:11 AM] dukeleto#7326
+this channel is consistently an awesome place to ask questions and learn, no matter what stage of the game you are at :KMD:
+
+[21-Aug-19 01:11 AM] blackjok3r#3181
+lol yes... Its a great team here
+
+[21-Aug-19 01:12 AM] dukeleto#7326
+@blackjok3r your contributions have really been kicking ass. Whatever you are doing, keep doing it yo
+
+[21-Aug-19 01:13 AM] blackjok3r#3181
+😅
+
+[21-Aug-19 07:11 AM] Alright#0419
+@dukeleto 
+https://github.com/jl777/komodo/blob/master/src/main.cpp#L5056
+
+{Embed}
+https://github.com/jl777/komodo/blob/master/src/main.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[21-Aug-19 10:45 AM] DRE#7875
+Hello 👋🏼, With which framework are the SmartContracts developed?
+
+[21-Aug-19 11:24 AM] gcharang#6833
+@DRE Antara Framework
+https://developers.komodoplatform.com/basic-docs/antara/antara-tutorials/overview-of-antara-modules-part-i.html
+
+{Embed}
+https://developers.komodoplatform.com/basic-docs/antara/antara-tutorials/overview-of-antara-modules-part-i.html
+Overview of Antara Modules - Part I | Komodo Documentation
+Documentation for developers building on Komodo
+
+[21-Aug-19 12:44 PM] dukeleto#7326
+ZEC is switching to a 75s blocktime on the Blossom NU
+
+[21-Aug-19 01:17 PM] dukeleto#7326
+@jl777c i think that my use of int64_t for some stats is wasteful (per-block stats will never need such a large datatype), so I am going to refactor those to `unsigned int`. I will leave total chain stats as int64_t, since that seems more future-proof. `-zindex` is working, with reindex detection. And I have notarization stats as well. To finally merge this stuff to KMD, it needs to know how to look at sprout joinsplits
+
+[21-Aug-19 01:18 PM] dukeleto#7326
+maybe a fellow Pirate can make that small tweak, I need to bubble back to Hush concerns
+
+[21-Aug-19 01:24 PM] dukeleto#7326
+@mrlynch gets my nomination for porting to Pirate 😉
+
+[21-Aug-19 01:25 PM] dukeleto#7326
+it's most likely <5 lines of code, I just need a pirate person to lead that charge and help me test
+
+[21-Aug-19 02:03 PM] mrlynch#5735
+i have been gladly voluntold
+
+[21-Aug-19 02:04 PM] mrlynch#5735
+more than happy to help if you give me some pointers.. spent most my day today trying to get viewkey to paper wallet, i managed so far to get the extendedfullviewkey which is invalid 😦
+
+[21-Aug-19 02:58 PM] dukeleto#7326
+@mrlynch maybe i can help you with that, it's something hush wants too
+
+[21-Aug-19 02:58 PM] dukeleto#7326
+and `voluntold` is hilarious, gotta remember that
+
+[21-Aug-19 03:02 PM] mrlynch#5735
+definition
+```"Voluntarily Told," "Voluntold"
+
+There are two different kinds of voluntold:
+A. The gunny walks into the office and says, "Man, wouldn't the floor look nice if somebody buffed it?" Which means,"Buff the floor."
+
+B. "I need two volunteers to stand out in front of Best Buy this Saturday collecting Toys for Tots."
+" ... "
+"Jones, Smith, you're collecting Toys for Tots this weekend." ```
+
+[21-Aug-19 04:15 PM] dukeleto#7326
+https://www.reddit.com/r/onions/comments/ct6zjf/moneromixer_a_simple_tool_to_help_you_anonymously/
+
+{Embed}
+https://www.reddit.com/r/onions/comments/ct6zjf/moneromixer_a_simple_tool_to_help_you_anonymously/
+r/onions - MoneroMixer: A simple tool to help you anonymously tran...
+68 votes and 6 comments so far on Reddit
+https://external-preview.redd.it/k_PJhSVvvfIjgR8Q6HO-bd4EOEvaK-WsF1N5bQ8_VSc.jpg?auto=webp&s=a190616b29cf31e67786076cd4ee494ebd0dda70
+
+[21-Aug-19 04:15 PM] dukeleto#7326
+that is intriguing, and ties into Hush+Pirate wanting TAILS integration @mrlynch
+
+[21-Aug-19 04:15 PM] dukeleto#7326
+looks like a good place to get good ideas
+
+[21-Aug-19 04:21 PM] mrlynch#5735
+bookmarked
+
+[21-Aug-19 10:35 PM] dukeleto#7326
+```
+~/git/hush3 ztxstats $%= )$ ./src/hush-cli getchaintxstats |grep notariz
+  "notarizations": 11403,
+  "window_notarizations": 2902,
+  "notarization_txrate": 0.001111602262428533,
+```
+
+[21-Aug-19 10:36 PM] dukeleto#7326
+and that txrate is "4.002 notarization transactions per hour, in the last month on HUSH mainnet"
+
+[21-Aug-19 10:36 PM] dukeleto#7326
+11403 total on mainnet, and 2902 in the "window" of 1 month
+
+[21-Aug-19 10:38 PM] dukeleto#7326
+@CHMEX we can graph the daily ntz rate of each chain versus it's monthly average, might be a good metric of ntz health of that particular chain. That will take into account on-demand chains having long ntz gaps as well
+
+[22-Aug-19 06:01 AM] nille#9011
+good morning everyone ☕
+
+{Reactions}
+👋 (2) 
+
+[22-Aug-19 07:42 AM] Alright#0419
+anyone know where I can find documentation for insight api?
+
+[22-Aug-19 07:44 AM] gcharang#6833
+@Alright `https://gist.github.com/jackzampolin/da3201b89d23dd5fa3becb0185da1fb2`
+
+[22-Aug-19 07:44 AM] Alright#0419
+ty
+
+[22-Aug-19 12:24 PM] dukeleto#7326
+@CHMEX zstats are now in Hush `dev` branch for playing, `-zindex` is your friend 🙂
+
+[22-Aug-19 12:25 PM] dukeleto#7326
+let's build a page to show off the stats for Hush, while we work on getting the code compat for other chains
+
+[22-Aug-19 12:34 PM] dukeleto#7326
+here is example output: `https://gist.github.com/leto/b2f6b4f7619e31da8de8de99c7d03282`
+
+{Reactions}
+shexy 
+
+[22-Aug-19 12:43 PM] dukeleto#7326
+@jl777c https://github.com/jl777/komodo/issues/1689
+
+{Embed}
+https://github.com/jl777/komodo/issues/1689
+Compile error on FSM + mac · Issue #1689 · jl777/komodo
+This happened when I merged ebc5339 into Hush cc/gateways.cpp: In function &#39;std::__cxx11::string GatewaysClaim(uint64_t, uint256, std::__cxx11::string, uint256, CPubKey, int64_t)&#39;: ...
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[22-Aug-19 12:45 PM] dukeleto#7326
+@CHMEX fyi I was missing a `window_shielded_txcount` stat which i just added
+
+[22-Aug-19 11:37 PM] Alright#0419
+https://nioctib.tech very awesome resource for wrapping your head around script, would recommend everyone check this out. Give it a BTC txid and click "interpret"
+
+{Embed}
+https://nioctib.tech
+"bitcoin".reverse
+Bitcoin script playground.
+
+[22-Aug-19 11:38 PM] Alright#0419
+script has always been black magic to me, visualizing it helps so much
+
+[22-Aug-19 11:56 PM] Alright#0419
+🙌 even better
+
+[22-Aug-19 11:56 PM] Alright#0419
+thank you
+
+{Reactions}
+👍 
+
+[23-Aug-19 03:57 AM] dukeleto#7326
+`..............komodod: main.cpp:4437: void PruneBlockIndexCandidates(): Assertion `!setBlockIndexCandidates.empty()' failed.`
+
+[23-Aug-19 03:57 AM] dukeleto#7326
+😿
+
+[23-Aug-19 03:58 AM] dukeleto#7326
+my new `zindex` code seems to break the block index of nodes, even when it's not enabled
+
+[23-Aug-19 03:59 AM] dukeleto#7326
+I tried switching to an older branch but the blockindex seems busted now
+
+[23-Aug-19 03:59 AM] dukeleto#7326
+so something I am doing, is only compatible with `zindex` enabled
+
+[23-Aug-19 05:06 AM] blackjok3r#3181
+The blockindex can be diffrent for diffrent AC params... example here may help?
+`https://github.com/KMDLabs/komodo/blob/master/src/chain.h#L550`
+
+[23-Aug-19 05:12 AM] blackjok3r#3181
+@dukeleto  Where is this code?
+
+[23-Aug-19 09:52 AM] dukeleto#7326
+@blackjok3r hush3.git `duke` branch, it's my zindex code that is doing this
+
+[23-Aug-19 09:52 AM] dukeleto#7326
+@blackjok3r `zindex` changes the things written out in CBlockIndex
+

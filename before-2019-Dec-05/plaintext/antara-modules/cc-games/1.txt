@@ -1,0 +1,369 @@
+==============================================================
+Guild: Komodo
+Channel: cc-games
+Topic: ./komodod -ac_name=GTEST -ac_cclib=gamescc -ac_supply=1000000 -pubkey=<pubkey> -addnode=5.9.102.210  -ac_reward=100000000 -ac_cc=2  &
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[22-Mar-19 01:01 PM] jl777c#5810
+this is made by copying customcc.* and making a BUILD_GAMESCC #ifdefs
+
+[22-Mar-19 01:01 PM] jl777c#5810
+right now there is just two rpc calls, rng and rngnext
+
+[22-Mar-19 01:04 PM] jl777c#5810
+rng is passed in a blockhash and playerid (defaults to 0, max 254) and it returns the initial rng value (and last)
+you can then call rngnext with the prior rng, up to maxrng times
+
+{Reactions}
+🔥 
+
+[22-Mar-19 01:34 PM] TwilightPunkster K64#7533
+Awesome
+
+[22-Mar-19 01:35 PM] jl777c#5810
+./c cclib rng 17 \"[%229433dc3749aece1bd568f374a45da3b0bc6856990d7da3cd175399577940a775%22,250]\"
+{
+    "playerid": 250,
+    "seed": 1398876319979341887,
+    "rng": 14565767519458298868,
+    "lastrng": 15075236803740723044,
+    "maxrngs": 10000,
+    "result": "success"
+}
+ ./c cclib rngnext 17 \"[14565767519458298868]\"
+ {
+ "seed": 14565767519458297856,
+ "rng": 4253087318999719449,
+ "result": "success"
+ }
+ 
+ The idea is for a game to start with a near future blockhash, so the lobby gets players signed up until just prior to the designated height. then that blockhash can be used to create a stream of rngs.
+ 
+ the same initial rng can be used for all players, if the identical starting condition is required. up to 255 different initial rng can be derived from a single blockhash. (Actually any number is possible, for simplicity rng rpc limits to 255).
+ 
+ you will notice maxrngs and lastrng, the lastrng is the rng value that will happen after maxrng iterations of calling rngnext with the current rng. This allows making time based multiplayer games where all the nodes can validate all the other nodes rng, even without realtime synchronization of all user input events.
+ 
+ Every time period, all players would set their rng value to the lastrng value. The only thing to be careful of is it not exceed the maxrng calls to rngnext in a single time period. otherwise the same set of rng numbers will be repeated.
+
+{Reactions}
+💪 (2) Komodo (3) 
+
+[22-Mar-19 01:53 PM] siu - Chainmakers#3920
+im confused here
+
+[22-Mar-19 01:54 PM] siu - Chainmakers#3920
+so this is like a multiplayer rogue? im not understanding this.
+
+[22-Mar-19 01:54 PM] jl777c#5810
+?
+
+[22-Mar-19 01:54 PM] jl777c#5810
+it is just generating a deterministic set of rng
+
+[22-Mar-19 01:54 PM] jl777c#5810
+no game
+
+[22-Mar-19 01:55 PM] jl777c#5810
+most all games need rng
+
+[22-Mar-19 01:55 PM] siu - Chainmakers#3920
+oh ok
+
+[22-Mar-19 01:55 PM] siu - Chainmakers#3920
+so this is like a backend for building games
+
+[22-Mar-19 01:55 PM] jl777c#5810
+unless you are a gamedev, likely this will be too complex to understand
+
+[22-Mar-19 01:55 PM] siu - Chainmakers#3920
+yeah, ok.
+
+[22-Mar-19 01:56 PM] siu - Chainmakers#3920
+but good to know this exists
+
+[22-Mar-19 01:56 PM] jl777c#5810
+yes, abstracting the rogue techniques to generalize it so other games can be plugged into the same type of blockchaining
+
+[22-Mar-19 01:56 PM] jl777c#5810
+it is just born today, not full grown by any means
+
+[22-Mar-19 01:58 PM] siu - Chainmakers#3920
+looks like james is in a long weekend coding bash
+
+[22-Mar-19 01:58 PM] siu - Chainmakers#3920
+😂
+
+{Reactions}
+😂 
+
+[22-Mar-19 09:32 PM] jl777c#5810
+@Alright i got low level messages working, so now in realtime users will be committing to keystrokes prior to the keystrokes tx and in order to complete a bailout tx would need to get both confirmation from other nodes that they did commit to the keystrokes in realtime and also if anybody catches the bogus keystrokes, they can claim the bailout amount. dont have that logic yet, but that is the concept I am working toward
+
+[22-Mar-19 09:33 PM] jl777c#5810
+so some payment for attestors who attest that the keystrokes tx were realtime broadcast ahead of time and the ability for any contradictory keystroke to allow the claimant to get the gold/playerdata
+
+[22-Mar-19 09:34 PM] jl777c#5810
+once this works, no more keystrokes reorging (or even suppressing) as it will be timestamped and only allow for some small delay
+
+[22-Mar-19 09:35 PM] Alright#0419
+What do you mean by low level messages? A separate p2p network essentially?
+
+[22-Mar-19 09:36 PM] jl777c#5810
+no, i created a new p2p message the bitcoin protocol was doing called "events"
+
+[22-Mar-19 09:36 PM] jl777c#5810
+so it sends to 4 to 8 random peers
+
+[22-Mar-19 09:36 PM] Alright#0419
+Aha that is interesting 😀
+
+[22-Mar-19 09:37 PM] Alright#0419
+blockchain is a game server
+
+[22-Mar-19 09:37 PM] jl777c#5810
+doing this inside gamescc to get it working in isolation, maybe it will create a plug-in enabled interface that rogue dapp plugs into
+
+[22-Mar-19 09:37 PM] jl777c#5810
+yes, the blockchain as game server, lag is not bad on small networks
+
+{Reactions}
+🆒 (2) 
+
+[22-Mar-19 09:38 PM] jl777c#5810
+and even if it is 10 seconds, it is plenty fast for the purposes of validating pre-keystrokes tx events and to claim false keystrokes tx
+
+[22-Mar-19 09:38 PM] Alright#0419
+I want to explore 1 time use game chains. I think this would be perfect for them
+
+[22-Mar-19 09:38 PM] Alright#0419
+the ac_import=GATEWAY chain with block reward idea
+
+[22-Mar-19 09:39 PM] Alright#0419
+as soon as you transfer coins to it, you're immediately competing against everyone else who has coins on it for the block reward
+
+[22-Mar-19 09:40 PM] jl777c#5810
+so it is a sidechain, funded with external coins and gameplay wins coins?
+
+[22-Mar-19 09:41 PM] Alright#0419
+Ah I explained it once before. It's a bit strange to explain. Basically, you'd deposit some KMD to the gateway, receive some of the temporary coin in return. The chain itself would emit additional coins. When you go to withdraw, the exchange rate to KMD would be based on how many coins were emitted while you had coins on it
+
+[22-Mar-19 09:42 PM] Alright#0419
+So like if 2 people deposit 10 KMD each and the chain is emitting 1 coin per minute, 10 minutes later there is 30 of the gateway chain, but only 20 real KMD that can be withdrawed
+
+[22-Mar-19 09:42 PM] Alright#0419
+you would be competing with the other person for these 10 coins
+
+[22-Mar-19 09:43 PM] Alright#0419
+and the exchange rate would be 2/3
+
+[22-Mar-19 09:43 PM] Alright#0419
+when you go back to KMD
+
+[22-Mar-19 09:43 PM] jl777c#5810
+automated and variable exchange rate, so it starts worth 1:1 but it gets diluated based on chain emission
+
+[22-Mar-19 09:43 PM] Alright#0419
+yes
+
+[22-Mar-19 09:43 PM] jl777c#5810
+this would be a way to denominate gameplay in external currency
+
+[22-Mar-19 09:44 PM] jl777c#5810
+post your buyins, then based on ingame performance you split up the buyins
+
+[22-Mar-19 09:44 PM] jl777c#5810
+it is a gateway
+
+[22-Mar-19 10:13 PM] Alright#0419
+The objective in that example would be to earn >5 of the coins emitted. The nodes running the gateway could be the one doing these keystrokes checks
+
+[22-Mar-19 10:14 PM] Alright#0419
+I imagine doing 10 players would be about the same amount of work as doing 2
+
+[22-Mar-19 10:14 PM] Alright#0419
+the gateway itself could run it as a business, take some %
+
+[22-Mar-19 10:15 PM] jl777c#5810
+I think for the attestation it could be a small number of special nodes, but for the disputing a keystrokes, that should be fully decentralized
+
+[22-Mar-19 10:16 PM] jl777c#5810
+we just need to know that the keystrokes were being posted in realtime from the attestors
+
+[22-Mar-19 10:16 PM] Alright#0419
+Ah lol that just clicked
+
+[22-Mar-19 10:16 PM] jl777c#5810
+but all the nodes would need to validate what the attestors attest to, and the only way to do that trustlessly is if all nodes get the events
+
+[22-Mar-19 10:18 PM] Alright#0419
+hmmm, attestors could simply attest that they were submitting any keystrokes at all maybe? If all attestors say "this node didn't play this game in realtime" is that not enough?
+
+[22-Mar-19 10:18 PM] Alright#0419
+I guess it comes down to how attestors are selected
+
+[22-Mar-19 10:19 PM] Alright#0419
+i'm confusing myself, need to sleep on it 💤
+
+[22-Mar-19 10:20 PM] jl777c#5810
+does the network trust the attestors?
+
+[22-Mar-19 10:20 PM] jl777c#5810
+really it should be something all nodes already know, just a few need to be part of the final tx to attest to it
+
+[22-Mar-19 10:57 PM] jl777c#5810
+they arent segregated
+
+[22-Mar-19 10:57 PM] jl777c#5810
+actually they will be integrated into the transactions
+
+[22-Mar-19 10:58 PM] jl777c#5810
+the issue is making sure user events are fully reported and without errors, if those two things are validated by the network, then it seems cheating is simply not possible
+
+[22-Mar-19 10:58 PM] jl777c#5810
+using the "entire user events are replayed by the game engine" to determine the results method
+
+[22-Mar-19 10:59 PM] jl777c#5810
+and once cheating is not possible, then we can have money tournaments and know the winner won it with real gameplay (human or bot)
+
+{Reactions}
+🎷 
+
+[22-Mar-19 11:00 PM] jl777c#5810
+fully decentralized and trustless and cheatproof
+
+{Reactions}
+🆒 (3) 
+
+[22-Mar-19 11:01 PM] jl777c#5810
+for any game that can be made to have a deterministic gameplay starting with a RNG seed
+
+[23-Mar-19 03:01 AM] Mylo#8306
+cool.  seended city generator http://citygen.kmdice.komodo-cakeshop.com/
+
+[23-Mar-19 05:18 PM] blubbi#0643
+@Mylo  Whaaa da fa is dhat 😲
+
+[24-Mar-19 12:28 AM] Mylo#8306
+Sample seed stuff.  It does nothing but make a city.  For sample to show on web, seed stored in oracle then work always regenerate-able for ppl to validate
+
+[24-Mar-19 11:04 AM] ronyi#5719
+https://github.com/YoctoForBeaglebone/pacman4console
+
+{Embed}
+https://github.com/YoctoForBeaglebone/pacman4console
+YoctoForBeaglebone/pacman4console
+Console based PacMan Game. Contribute to YoctoForBeaglebone/pacman4console development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/11598243?s=400&v=4
+
+{Reactions}
+😍 
+
+[26-Mar-19 02:49 PM] TonyL#3577
+@jl777c daemon crashing when I'm starting to play tetris
+Backtrace: https://paste.ubuntu.com/p/8PgrJd7qNh/
+
+[26-Mar-19 02:52 PM] jl777c#5810
+exact rpc command used
+
+[26-Mar-19 02:55 PM] TonyL#3577
+Hmm I've not used any RPC commands - just started `./tetris`
+
+[26-Mar-19 02:55 PM] TonyL#3577
+Is tetris writing some log?
+
+[26-Mar-19 02:55 PM] jl777c#5810
+if works for me
+
+[26-Mar-19 02:55 PM] jl777c#5810
+do you have GTEST chain running?
+
+[26-Mar-19 02:56 PM] jl777c#5810
+and GTEST.conf in the dir you are running tetris from?
+
+[26-Mar-19 02:57 PM] TonyL#3577
+Yes
+
+[26-Mar-19 02:57 PM] TonyL#3577
+Without config in same folder tetris not starting
+
+[26-Mar-19 02:57 PM] jl777c#5810
+pull latest
+
+[26-Mar-19 02:58 PM] TonyL#3577
+Oh I found the issue - I'm on latest FSM on this PC, not jl777. Sorry
+
+[26-Mar-19 03:06 PM] TonyL#3577
+Built from jl777 - now can't move bricks by arrows
+
+[26-Mar-19 03:06 PM] TonyL#3577
+Tetris only response on space presses (changing block)
+
+[26-Mar-19 03:06 PM] jl777c#5810
+duplicated
+
+{Reactions}
+👌 
+
+[26-Mar-19 03:38 PM] jl777c#5810
+seems to work better
+
+[26-Mar-19 03:38 PM] jl777c#5810
+newgame, register works
+
+[26-Mar-19 03:38 PM] jl777c#5810
+even got a keystrokes tx confirmed, but its format will change
+
+[26-Mar-19 06:12 PM] jl777c#5810
+@TonyL its working much better. I was able to play a game after registering and then replaying it
+
+[26-Mar-19 06:13 PM] jl777c#5810
+next step is to get a deterministic result and since there is no playerdata, maybe at that point it is close to done
+
+[26-Mar-19 06:14 PM] jl777c#5810
+it is sending out each keystroke to the network, though that data isnt being used much yet
+
+[26-Mar-19 06:15 PM] jl777c#5810
+the codebase is much simplified, so by handling game specific things like playerdata all that is needed is the changing of the rng to support a new game
+
+[26-Mar-19 06:36 PM] TonyL#3577
+Sounds great! Will test asap
+
+[26-Mar-19 06:44 PM] jl777c#5810
+most important thing at first (other than not crashing) is if the game replay cc/tetris seed is identical
+
+[26-Mar-19 07:05 PM] TonyL#3577
+`CC Eval 0x11 Invalid: mismatched -ac_cclib vs CClib_name spending tx e0eee642d75290e68869a798fd2ed7d8d802d4dc2566e060159d1adb16653766
+`
+@jl777c Hmm I stuck on 
+```  "blocks": 334,
+  "longestchain": 600,
+```
+
+[26-Mar-19 07:24 PM] jl777c#5810
+mismatched -ac_cclib vs CClib_name
+
+[26-Mar-19 07:24 PM] jl777c#5810
+what appears on startup?
+
+[26-Mar-19 07:36 PM] TonyL#3577
+Trying to rebuild now , maybe I have to ./maketetris and then make in src?
+
+[26-Mar-19 07:37 PM] jl777c#5810
+./makegames
+
+[26-Mar-19 07:37 PM] jl777c#5810
+for the libcc
+
+[26-Mar-19 07:37 PM] jl777c#5810
+maketetris for the dapp
+
+[26-Mar-19 07:37 PM] TonyL#3577
+Ohh I see, just have to change makerogue to makegames so
+
+[26-Mar-19 07:43 PM] TonyL#3577
+```  "blocks": 646,
+  "longestchain": 646,
+``` 👍
+

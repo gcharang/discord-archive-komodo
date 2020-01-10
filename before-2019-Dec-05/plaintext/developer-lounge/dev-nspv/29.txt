@@ -1,0 +1,325 @@
+==============================================================
+Guild: Komodo
+Channel: dev-nspv
+Topic: ./komodod -nSPV=1 -ac_reward=100000000  -ac_name=NSPV -ac_supply=10000000000 -ac_cc=2 -addressindex=1 -spentindex=1 -connect=5.9.102.210 &
+./komodod -nSPV=1 -addnode=5.9.253.195 &
+https://drive.google.com/drive/folders/1ZvzrhNBQgroejTKPl0kCOTJ8h7XMnO2M?usp=sharing
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[27-Jul-19 04:20 AM] blackjok3r#3181
+this allows you to know the chain tip, and the last notarization
+
+[27-Jul-19 04:20 AM] blackjok3r#3181
+but not the blocks inbetween
+
+[27-Jul-19 04:20 AM] blackjok3r#3181
+what I needed to do was take the chain tip and validate the blockhash->prevblockhash back to the last notarization
+
+[27-Jul-19 04:21 AM] Alright#0419
+I'm struggling to understand how that will work
+
+[27-Jul-19 04:21 AM] blackjok3r#3181
+I made it very badly, cant antually be used, but I needed something to experiment with to see what works and what doesnt. And basically, when you start to reqest a lot of blocks all peers get very mad at you and everything breaks
+
+[27-Jul-19 04:21 AM] Alright#0419
+normal SPV can weed out bad peers by going "oh look this peer has the most POW" by just looking at headers
+
+[27-Jul-19 04:21 AM] Alright#0419
+then assume any other peer with less POW is evil
+
+[27-Jul-19 04:22 AM] Alright#0419
+we need the full block to do that with dpow, no?
+
+[27-Jul-19 04:22 AM] Alright#0419
+or at least the notarizations
+
+[27-Jul-19 04:22 AM] blackjok3r#3181
+notarizations can be got with a very lightweight call, but it totally fails on chaintip, becaue there is no future notarization
+
+[27-Jul-19 04:23 AM] blackjok3r#3181
+Im really thinking it just cant really work on chain tip
+
+[27-Jul-19 04:23 AM] Alright#0419
+how can you trust that a peer is showing you the latest notarization?
+
+[27-Jul-19 04:23 AM] Alright#0419
+that's what I mean
+
+[27-Jul-19 04:24 AM] blackjok3r#3181
+by asking a whole bunch of them I think.... But thats really not seeming to be a working solution
+
+[27-Jul-19 04:24 AM] blackjok3r#3181
+It would require removing a whole heap of rate limiters and  weell... that is totaly stupid
+
+[27-Jul-19 04:26 AM] Alright#0419
+yea I guess what I said doesn't really make sense
+
+[27-Jul-19 04:26 AM] Alright#0419
+if you have at least 1 honest peer showing you latest, you're good?
+
+[27-Jul-19 04:26 AM] Alright#0419
+same concept as SPV really
+
+[27-Jul-19 04:26 AM] blackjok3r#3181
+yes, you have all peers sending getinfo and latest headers..
+
+[27-Jul-19 04:27 AM] blackjok3r#3181
+but I cant get it to fetch blocks in reversee... There is data missing in the getinfo+headers call
+
+[27-Jul-19 04:28 AM] blackjok3r#3181
+So I had to make structures and loops and all kinds of stupid shit, to filter results and sort them and build the correct info by iterating in reverse
+
+[27-Jul-19 04:28 AM] blackjok3r#3181
+Slow as all fuck. doesnt work.
+
+[27-Jul-19 04:28 AM] blackjok3r#3181
+Going to just change daemon
+
+[27-Jul-19 04:28 AM] blackjok3r#3181
+Cant work with these limitations
+
+[27-Jul-19 04:29 AM] blackjok3r#3181
+🤔  lol just realised something
+
+[27-Jul-19 04:30 AM] blackjok3r#3181
+You can get the block hash fromt he header itself
+
+[27-Jul-19 04:30 AM] blackjok3r#3181
+🤦
+
+[27-Jul-19 04:30 AM] blackjok3r#3181
+Its not actually there
+
+[27-Jul-19 04:30 AM] blackjok3r#3181
+but you can hash it to get it
+
+[27-Jul-19 04:30 AM] Alright#0419
+still don't understand what it is you're trying to do
+
+[27-Jul-19 04:30 AM] blackjok3r#3181
+wait i'll show you the problem
+
+[27-Jul-19 04:31 AM] blackjok3r#3181
+https://github.com/blackjok3rtt/libnspv/blob/master/src/tools/nSPV_superlite.h#L237
+
+{Embed}
+https://github.com/blackjok3rtt/libnspv/blob/master/src/tools/nSPV_superlite.h
+blackjok3rtt/libnspv
+Tiny Bitcoin Library written in C, with nSPV added - blackjok3rtt/libnspv
+https://avatars3.githubusercontent.com/u/30971146?s=400&v=4
+
+[27-Jul-19 04:31 AM] blackjok3r#3181
+here
+
+[27-Jul-19 04:31 AM] blackjok3r#3181
+it doesnt validate anything, and if a reorg happens it cannot go in reverse
+
+[27-Jul-19 04:31 AM] blackjok3r#3181
+https://github.com/blackjok3rtt/libnspv/blob/master/src/tools/nSPV_superlite.h#L246
+trying to fix what this comment says
+
+{Embed}
+https://github.com/blackjok3rtt/libnspv/blob/master/src/tools/nSPV_superlite.h
+blackjok3rtt/libnspv
+Tiny Bitcoin Library written in C, with nSPV added - blackjok3rtt/libnspv
+https://avatars3.githubusercontent.com/u/30971146?s=400&v=4
+
+[27-Jul-19 04:32 AM] blackjok3r#3181
+I think Im just going to make it so that you have to wait until enough blocks arrive.
+
+[27-Jul-19 04:32 AM] blackjok3r#3181
+Doesnt seem worth the100 hours work to reqwrite half of it to be able to request blocks from the past.
+
+[27-Jul-19 04:33 AM] blackjok3r#3181
+All the tx shit works with past blocks already, not sure what the chain tip even does
+
+[27-Jul-19 04:33 AM] Alright#0419
+need a much higher level explanation or I'll be no help 😛
+
+[27-Jul-19 04:34 AM] blackjok3r#3181
+I cant explain it any mroe than that. Basically it needs:
+` blockhash == hashprevblock`
+
+[27-Jul-19 04:34 AM] blackjok3r#3181
+but that cant work for a reorg so jl used heights only
+
+[27-Jul-19 04:35 AM] Alright#0419
+`what I needed to do was take the chain tip and validate the blockhash->prevblockhash back to the last notarization` why?
+
+[27-Jul-19 04:35 AM] blackjok3r#3181
+you tell me thats what he asked me to do
+
+[27-Jul-19 04:36 AM] Alright#0419
+getting off for the day, lmk what he says 😄
+
+[27-Jul-19 04:37 AM] Alright#0419
+not sure I understand, but it seems like you trust the notarization to tell you the chain is the correct chain, why would you need to validate blocks back to the previous notarization?
+
+[27-Jul-19 04:37 AM] Alright#0419
+how does that help?
+
+[27-Jul-19 04:37 AM] blackjok3r#3181
+this is on chain tip, there is no notarizxation, only the last one you see,
+
+[27-Jul-19 04:37 AM] blackjok3r#3181
+dont need to go back another
+
+[27-Jul-19 04:58 AM] blackjok3r#3181
+ok I think I figured out how to do it. 
+I need a hash table to stick the headers in. The block hash can be hashed from the header, there is a function already for this. Then it shuold be fast and easy to just iterate  backwards to the last notarization on each block header received.
+
+[27-Jul-19 04:58 AM] blackjok3r#3181
+This seems the onyl viable way to be able to validate the headers nodes are sending you are real, while not destroying the network
+
+[27-Jul-19 04:59 AM] blackjok3r#3181
+This definally means though that a node will not know its on the right chain until it receives a notarized header.
+
+[27-Jul-19 04:59 AM] blackjok3r#3181
+unless I make a new API call.
+
+[27-Jul-19 05:11 AM] jl777c#5810
+you are way overcomplicating this
+
+[27-Jul-19 05:12 AM] jl777c#5810
+given the chaintip height, just requests the getinfo for the 10 or so blocks to the most recent notarization
+
+[27-Jul-19 05:12 AM] jl777c#5810
+10 getinfo is not any large overhead
+
+[27-Jul-19 05:13 AM] jl777c#5810
+in fact, you are already making getinfo calls to all the peers, just with asking for the chaintip. so without any extra overhead you can get the most recent 10 headers via the getinfo calls you are doing anyway
+
+[27-Jul-19 05:13 AM] jl777c#5810
+why would this cause any performance issue? also each chain has about 10 seed nodes
+
+[27-Jul-19 05:18 AM] jl777c#5810
+so just change the hdrheight being requested on the background getinfo calls
+
+[27-Jul-19 05:18 AM] jl777c#5810
+then as they come in just calculate its blockhash and make sure its prev matches the blockhash of the prior block
+
+[27-Jul-19 05:19 AM] jl777c#5810
+i would start from the last notarization + 1, and just increment it until you reach the chain tip
+
+[27-Jul-19 05:20 AM] jl777c#5810
+then as it comes in you can validate that it connects to the notarization.
+
+[27-Jul-19 05:20 AM] jl777c#5810
+just use a rotating buffer of 100 hashes or so to track the current mainchain.
+
+[27-Jul-19 05:21 AM] jl777c#5810
+if you see a new height greater than chaintip that doesnt link back, then clear the rotating buffer and do it again, or you can be a bit more fancy and track multiple forks
+
+[27-Jul-19 05:23 AM] jl777c#5810
+when a new notarization comes in, reset the rotating buffer as we have the checkpoint
+
+[27-Jul-19 05:31 AM] blackjok3r#3181
+I did that and no nodes respond to me
+
+[27-Jul-19 05:32 AM] jl777c#5810
+this should not be a lot of code at all. just an incrementing variable for the hdrheight being requested
+
+[27-Jul-19 05:32 AM] blackjok3r#3181
+Maybe sending too many requests just breaks it I dont know
+
+[27-Jul-19 05:32 AM] jl777c#5810
+you are limited to 1 request per message per second per peer
+
+[27-Jul-19 05:32 AM] jl777c#5810
+if you have 10 peers, you can make 10 getinfo calls per second
+
+[27-Jul-19 05:33 AM] jl777c#5810
+find the place where it makes the getinfo requests already, just set the hdrheight to a useful one
+
+[27-Jul-19 05:34 AM] jl777c#5810
+on processing, just call an update header function that updates the buffer of recent blockhashes
+
+[27-Jul-19 05:34 AM] blackjok3r#3181
+The main issue is that its doing this validation inside the fuinction that processes repoonse, making new requests in there doesnt really work as it seems to spawn a new thread and everything gets messed up
+
+[27-Jul-19 05:34 AM] jl777c#5810
+it is tricky to make recursive requests
+
+[27-Jul-19 05:34 AM] jl777c#5810
+just update state when a new getinfo comes in
+
+[27-Jul-19 05:35 AM] jl777c#5810
+make it request a useful hdrheight in the getinfo calls it is already doing
+
+[27-Jul-19 05:35 AM] blackjok3r#3181
+Thats why I just wanted it to stick everything into some data stucture, I used and array and loops but its just too slow
+
+[27-Jul-19 05:35 AM] jl777c#5810
+you need to incrementally update state based on the new data that comes in
+
+[27-Jul-19 05:35 AM] jl777c#5810
+not trigger some brute force validation in the message completion function
+
+[27-Jul-19 05:36 AM] jl777c#5810
+that wont work
+
+[27-Jul-19 05:36 AM] blackjok3r#3181
+no it doesnt, but I needed to do something to understand how it all fit together. I think I get how it works now.
+
+[27-Jul-19 05:36 AM] jl777c#5810
+yes
+
+[27-Jul-19 05:36 AM] jl777c#5810
+piggy back onto the getinfo requests that are already being made
+
+[27-Jul-19 05:37 AM] jl777c#5810
+then when a new header comes in, you just update the state of the recent headers
+
+[27-Jul-19 05:37 AM] blackjok3r#3181
+I tried to do that and failed badly. I reset all my code back to jl777 and starting agin, maybe I breoke it somwher along the line
+
+[27-Jul-19 05:37 AM] jl777c#5810
+once you catch up to chaintip, when the header for the next block comes in, you just need to make sure its prevhash is the prior block
+
+[27-Jul-19 05:38 AM] jl777c#5810
+if it isnt, then just reset to the most recent notarization
+
+[27-Jul-19 05:38 AM] blackjok3r#3181
+Need to work out how to make it request a particular header without iussueing new getinfo calls, because new getinfo calls just dont woirk, it will only make the ones it is already making
+
+[27-Jul-19 05:39 AM] jl777c#5810
+NSPV_periodic
+
+[27-Jul-19 05:39 AM] blackjok3r#3181
+maybe a global vector they can be pushed to and it just takes off the top with each request?
+
+[27-Jul-19 05:39 AM] jl777c#5810
+it is making reqht == 0 for all calls
+
+[27-Jul-19 05:39 AM] blackjok3r#3181
+yes it fetches tip each time
+
+[27-Jul-19 05:40 AM] jl777c#5810
+just make it request notarization height +1, +2, +3, ...
+
+[27-Jul-19 05:40 AM] jl777c#5810
+so this way there is a stream of useful new headers to update state. ZERO extra overhead
+
+[27-Jul-19 05:40 AM] jl777c#5810
+get that working first
+
+[27-Jul-19 05:40 AM] blackjok3r#3181
+ok I think I understand, now. Man i was over thinking it.
+
+[27-Jul-19 05:40 AM] jl777c#5810
+then when you see the headers for +1, +2, +3,... chaintip then you will realize than a simple array is all that is needed in most all the cases
+
+[27-Jul-19 05:41 AM] blackjok3r#3181
+Yea that makes sense. Store last notarized height and keep requesting all blocks from that height over and over until the next notarization then start again.
+
+[27-Jul-19 05:41 AM] jl777c#5810
+yes
+
+[27-Jul-19 05:41 AM] jl777c#5810
+and if a reorg happens, just clear to the prior notarization
+
+[27-Jul-19 05:42 AM] jl777c#5810
+in the event to two competing forks, you will likely be resetting to notarization over and over. which is maybe a good signal to not do any tx as there is an active fork
+

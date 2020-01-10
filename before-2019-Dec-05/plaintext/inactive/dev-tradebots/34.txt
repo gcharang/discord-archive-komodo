@@ -1,0 +1,423 @@
+==============================================================
+Guild: Komodo
+Channel: dev-tradebots
+Topic: Linked with 'KMD-Tradebots' on Matrix
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[20-Nov-18 09:30 PM] wbradt#2043
+what is `iguana/DB/GTC/orders`?
+
+[20-Nov-18 09:32 PM] SHossain#0007
+GTC = Good Till Cancelled
+
+[20-Nov-18 09:32 PM] wbradt#2043
+Yes
+
+[20-Nov-18 09:32 PM] wbradt#2043
+When is data for an order put in the file?
+
+[20-Nov-18 09:35 PM] SHossain#0007
+when bob or alice use `gtc=1` or `fill=1` in their order, that dir gets used
+
+[20-Nov-18 09:37 PM] SHossain#0007
+but, that is not widely used param
+
+[20-Nov-18 09:41 PM] wbradt#2043
+Which method can bob use that param in?
+
+[20-Nov-18 09:46 PM] SHossain#0007
+`autoprice` or `setprice`
+
+[20-Nov-18 09:54 PM] wbradt#2043
+Yesterday you said that `autoprice` has an `amount` field. Is that true for only `autoprice` and not `setprice`?
+
+[20-Nov-18 09:54 PM] SHossain#0007
+for both
+
+[20-Nov-18 09:55 PM] wbradt#2043
+Ok, thanks
+
+[20-Nov-18 09:56 PM] wbradt#2043
+So, using `amount`, bob can place a limit order for a certain amount at a certain price?
+
+[20-Nov-18 10:05 PM] SHossain#0007
+yes
+
+[20-Nov-18 10:05 PM] wbradt#2043
+Great.
+
+[21-Nov-18 04:42 AM] ph03nix#3115
+does barterdex still get price feed from cmc?
+
+[21-Nov-18 04:43 AM] ph03nix#3115
+i guess a better question is, where does the price feed come from?
+
+[21-Nov-18 08:14 AM] jl777c#5810
+CMC changed to a paid plan, so the pricefeed shouldnt be used. you should generate your own pricefeed and set prices for bob
+
+[21-Nov-18 08:15 AM] jl777c#5810
+as far as amount goes, i dont remember adding amount restrictions explicitly for bob. the available utxo implicitly limits the amount
+
+[21-Nov-18 08:16 AM] ph03nix#3115
+`CMC changed to a paid plan`
+
+[21-Nov-18 08:16 AM] ph03nix#3115
+yes, so i was going to suggest https://api.coinpaprika.com/
+
+[21-Nov-18 08:54 AM] ph03nix#3115
+maybe there are other free ones
+
+[21-Nov-18 08:55 AM] ph03nix#3115
+this one is new to me and seems legit
+
+[21-Nov-18 09:17 AM] dukeleto#7326
+"this API is free and without warranty": https://www.coingecko.com/api/docs/v3
+
+{Reactions}
+👍 
+
+[21-Nov-18 09:21 AM] jl777c#5810
+updated FSM with a few more fixes. builds now
+
+[21-Nov-18 09:35 AM] dukeleto#7326
+@jl777c i just realized I missed an `extern CCerror`, sorry about that
+
+[21-Nov-18 04:15 PM] wbradt#2043
+@SHossain Using `"amount"` in `setprice` didn't seem to work. I also couldn't find any references to `"amount"` in the code for`setprice` 
+https://github.com/KomodoPlatform/KomodoPlatform/blob/master/iguana/exchanges/LP_prices.c#L513
+https://github.com/KomodoPlatform/KomodoPlatform/blob/master/iguana/exchanges/LP_commands.c#L105
+
+{Embed}
+https://github.com/KomodoPlatform/KomodoPlatform/blob/master/iguana/exchanges/LP_prices.c
+KomodoPlatform/KomodoPlatform
+Contribute to KomodoPlatform/KomodoPlatform development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+{Embed}
+https://github.com/KomodoPlatform/KomodoPlatform/blob/master/iguana/exchanges/LP_commands.c
+KomodoPlatform/KomodoPlatform
+Contribute to KomodoPlatform/KomodoPlatform development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[21-Nov-18 04:20 PM] SHossain#0007
+did the `amount` param worked in `autoprice` script?
+
+[21-Nov-18 04:26 PM] wbradt#2043
+I haven't tried it
+
+[21-Nov-18 04:27 PM] wbradt#2043
+How do I use `autoprice` to place an order at a price that doesn't change?
+
+[21-Nov-18 04:36 PM] SHossain#0007
+```JSON
+curl --url "http://127.0.0.1:7783" --data "{\"userpass\":\"$userpass\",\"method\":\"autoprice\",\"base\":\"KMD\",\"rel\":\"BEER\",\"fixed\":0.4}"
+curl --url "http://127.0.0.1:7783" --data "{\"userpass\":\"$userpass\",\"method\":\"autoprice\",\"base\":\"BEER\",\"rel\":\"KMD\",\"fixed\":100}"
+```
+
+[21-Nov-18 04:38 PM] SHossain#0007
+if you can't set amount, just keep the amount you want to trade in the barterDEX address and send the rest to main account. in any circumstances, using main account for barterDEX is not recommended. always better to create a separate address for trading.
+
+[21-Nov-18 05:03 PM] tolken#2655
+@SHossain I would have sworn James stated you couldn’t set a limit/amount for bobs, unfortunately. A mm2 thing.
+
+{Reactions}
+👍🏽 
+
+[21-Nov-18 05:04 PM] SHossain#0007
+in that case, that is my mistake. @wbradt ^^
+
+[21-Nov-18 05:05 PM] SHossain#0007
+thanks @tolken
+
+[21-Nov-18 05:07 PM] tolken#2655
+It would be a very powerful addition though, to have a min/max. Btc will generally require larger UTXOs, so it would be nice to just prevent 1kmd trades against btc before swap even starts, even if there is an appropriately sized btc UTXO.
+
+[26-Nov-18 02:53 PM] wbradt#2043
+I am not sure if this is the right channel to ask: is there any self-trade prevention in BarterDEX?
+
+[26-Nov-18 02:55 PM] jl777c#5810
+yes
+
+[26-Nov-18 03:02 PM] wbradt#2043
+Thanks
+
+[26-Nov-18 03:03 PM] wbradt#2043
+What is the functionality of the "duration" argument in the "orderbook" RPC method?
+
+[26-Nov-18 03:05 PM] jl777c#5810
+it isnt used anymore as i rmember
+
+[26-Nov-18 03:07 PM] wbradt#2043
+https://github.com/KomodoPlatform/KomodoPlatform/blob/master/iguana/exchanges/LP_prices.c#L818
+
+{Embed}
+https://github.com/KomodoPlatform/KomodoPlatform/blob/master/iguana/exchanges/LP_prices.c
+KomodoPlatform/KomodoPlatform
+Contribute to KomodoPlatform/KomodoPlatform development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[26-Nov-18 03:09 PM] wbradt#2043
+It seems to be used in `LP_orderbook_utxoentries` @jl777c
+
+[26-Nov-18 03:10 PM] wbradt#2043
+Which is called here: https://github.com/KomodoPlatform/KomodoPlatform/blob/master/iguana/exchanges/LP_prices.c#L880
+
+{Embed}
+https://github.com/KomodoPlatform/KomodoPlatform/blob/master/iguana/exchanges/LP_prices.c
+KomodoPlatform/KomodoPlatform
+Contribute to KomodoPlatform/KomodoPlatform development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[26-Nov-18 03:12 PM] jl777c#5810
+maybe you can follow the code to see what it does then
+
+[26-Nov-18 03:25 PM] wbradt#2043
+The only usage it has is at this line: https://github.com/KomodoPlatform/KomodoPlatform/blob/master/iguana/exchanges/LP_prices.c#L827 I believe the rest of the body of `HASH_ITER` (lines 832-851) simply adds an `LP_orderbookentry` to the asks or bids array. But I can't figure out the significance of `timestamp` of `LP_pubkey_info`
+
+{Embed}
+https://github.com/KomodoPlatform/KomodoPlatform/blob/master/iguana/exchanges/LP_prices.c
+KomodoPlatform/KomodoPlatform
+Contribute to KomodoPlatform/KomodoPlatform development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[26-Nov-18 03:34 PM] SHossain#0007
+use dev branch from this repo https://github.com/jl777/SuperNET
+the one you are using may not been updated
+
+{Embed}
+https://github.com/jl777/SuperNET
+jl777/SuperNET
+Contribute to jl777/SuperNET development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[26-Nov-18 03:43 PM] wbradt#2043
+Thanks
+
+[26-Nov-18 04:03 PM] wbradt#2043
+Is the RPC API rate limited?
+
+[26-Nov-18 04:06 PM] CHMEX#0686
+Limited by your hardware.
+Afaik there is not limiter its all local on your machine
+
+[26-Nov-18 04:14 PM] wbradt#2043
+Thanks
+
+[27-Nov-18 04:28 AM] kmdkrazy#8280
+last statement - you could insert tails on USB and have Bdex running  and all orders are on KVM - -- one  seed - all of the work - no down time
+
+[27-Nov-18 04:28 AM] kmdkrazy#8280
+good night
+
+[27-Nov-18 09:45 PM] wbradt#2043
+What is "SPV mode"?
+
+[27-Nov-18 09:46 PM] jl777c#5810
+google: https://bitcoin.stackexchange.com/questions/4649/what-is-an-spv-client
+
+{Embed}
+https://bitcoin.stackexchange.com/questions/4649/what-is-an-spv-client
+What is an SPV client?
+I've seen SPV client mentioned in several places. 
+What exactly is a SPV client? How is it different from a standard client?
+https://cdn.sstatic.net/Sites/bitcoin/img/apple-touch-icon@2.png?v=462e8b9b382b
+
+[27-Nov-18 10:10 PM] wbradt#2043
+Is the `"cancel"` RPC call for alice buy/ sell orders?  And `setprice 0` is for bob `setprice` orders?
+
+[27-Nov-18 10:13 PM] jl777c#5810
+yes, cancel for alice gtc orders
+
+[03-Dec-18 05:26 PM] Nabob#5004
+@grewalsatinder @siu - Chainmakers @artem.pikulin   I was helping on one of the support Ticket  , Coin recently integrated  to Barterdex 
+His linux and Mac version works fine. But, It fails with Windows version. Managed to add coin on barterdex,
+But, His funds are not populating on dashboard. When trying listunspent on inventory getting this exception. Can some one please help me to troubleshoot.
+
+https://www.screencast.com/t/nJxysX4Mu
+
+{Embed}
+nabobnagari
+https://www.screencast.com/t/nJxysX4Mu
+2018-12-04_0121
+Shared from Screencast.com
+https://content.screencast.com/users/nabobnagari/folders/Jing/media/161ac3ad-80b2-4bf0-bf72-de17379baa15/00000242.png
+
+[03-Dec-18 07:05 PM] wbradt#2043
+For `status` in the output of the `getcoins` method, does `active` indicate the coin is enabled and `inactive` disabled? https://github.com/KomodoPlatform/KomodoPlatform/wiki/barterDEX-API-Summary-by-Category#getcoins
+
+{Embed}
+https://github.com/KomodoPlatform/KomodoPlatform/wiki/barterDEX-API-Summary-by-Category
+KomodoPlatform/KomodoPlatform
+Contribute to KomodoPlatform/KomodoPlatform development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[03-Dec-18 07:58 PM] grewalsatinder#9653
+@Nabob please note the steps to replicate  and make a github issue 
+I will install winblows vm and try to troubleshoot it this week.
+
+[03-Dec-18 07:59 PM] grewalsatinder#9653
+Just make sure coins manager part is done properly
+
+[03-Dec-18 07:59 PM] grewalsatinder#9653
+If problems with that, reset coins and redo them and try to replicate
+
+[04-Dec-18 04:56 PM] Nabob#5004
+Sure, I ll raise one
+
+[06-Dec-18 03:00 PM] wbradt#2043
+@jl777c I have a question about the alice order types that you mention at https://discordapp.com/channels/412898016371015680/449948412960440352/460433104301981696. I was under the impression that an alice order can result in only one trade. What is the difference between `fill:0` and `fill:1`?
+
+{Embed}
+https://discordapp.com/channels/412898016371015680/449948412960440352/460433104301981696.
+Discord - Free voice and text chat for gamers
+Step up your game with a modern voice & text chat app. Crystal clear voice, multiple server and channel support, mobile apps, and more. Get your free server now!
+https://discordapp.com/assets/ee7c382d9257652a88c8f7b7f22a994d.png
+
+[06-Dec-18 03:02 PM] jl777c#5810
+fill:1 would only ordermatch if it fills the order
+
+[06-Dec-18 03:02 PM] jl777c#5810
+fill:0 will accept a partial fill
+
+{Reactions}
+Komodo 
+
+[06-Dec-18 03:02 PM] wbradt#2043
+Ohhh thank you
+
+[06-Dec-18 03:06 PM] wbradt#2043
+And, to make sure I understand, IOC orders (`fill:0 gtc:0`) are not _immediate_, but cancel after one minute, or the "typical blocktime"?
+
+[06-Dec-18 03:07 PM] wbradt#2043
+So the effect is that an IOC order can only match with orders placed before it?
+
+[06-Dec-18 03:10 PM] wbradt#2043
+And what would be the effect of `gtc` on a `dump` or `fomo` order? Would `fill` work for these?
+
+[06-Dec-18 03:12 PM] jl777c#5810
+gtc would just keep issuing it till it got some sort of fill
+
+[06-Dec-18 03:12 PM] jl777c#5810
+not sure if i tested fill on a dump or fomo, but i dont see why it would behave differently, their purpose is to autocalculate a price field
+
+[06-Dec-18 03:12 PM] jl777c#5810
+but it could be an edge case bug
+
+[06-Dec-18 03:49 PM] wbradt#2043
+So did I get "IOC" orders correct? "IOC orders (fill:0 gtc:0) are not immediate, but cancel after one minute, or the "typical blocktime"?"
+
+[06-Dec-18 03:53 PM] jl777c#5810
+yes
+
+[06-Dec-18 09:59 PM] wbradt#2043
+Was I right about "So the effect is that an IOC order can only match with orders placed before it?"
+
+[06-Dec-18 10:00 PM] wbradt#2043
+So an IOC order cannot match with another order placed 10 seconds after it?
+
+[06-Dec-18 10:09 PM] jl777c#5810
+it could, but not likely
+
+[12-Dec-18 11:18 AM] Acura#2748
+ERC20 Lightning Atomic Swap? https://www.youtube.com/watch?time_continue=1&v=OLlFegcEZ8Y
+
+{Embed}
+TenX
+https://www.youtube.com/watch?time_continue=1&v=OLlFegcEZ8Y
+World's First ERC20 to Lightning Atomic Swap done by CoBloX
+At TenX it is our mission to make virtual currencies spendable anytime anywhere. ----------------- New to cryptocurrencies? You might want to read this book ...
+https://i.ytimg.com/vi/OLlFegcEZ8Y/maxresdefault.jpg
+
+[12-Dec-18 05:34 PM] wbradt#2043
+Is there any reason intrinsic to atomic swaps for why the trader using 212% is the liquidity provider?
+
+[13-Dec-18 11:27 AM] artem.pikulin#0794
+@wbradt Hi, the swap protocol was designed at 2015-2016 when only few coins implemented BIP65 (CLTV opcode support). This approach allows 1 side of swap to send standard 2of2 multisig payment without timelock. Nowadays it's not really necessary as most coins seem to catch up and implement BIP65. According to this we will use simpler symmetric protocol version (both payments are CLTV) in MM2 so LP side won't need to have 212% balance anymore
+
+[13-Dec-18 07:31 PM] wbradt#2043
+Thanks! @artem.pikulin very informative
+
+[13-Dec-18 07:34 PM] wbradt#2043
+The docs say `recentswaps` "returns up to "limit" in reverse order the swaps on the node and the current pending swap (if any) so you can see what trade might happen." Does this mean it returns only swaps in which I have participated?
+
+[13-Dec-18 07:37 PM] ComputerGenie 👴🏼📢#7004
+yes
+
+[14-Dec-18 01:22 AM] tolken#2655
+Oh that’s huge, I didn’t know the 212% balance thing would go away. Very cool.
+
+{Reactions}
+💯 (2) 
+
+[14-Dec-18 02:58 PM] wbradt#2043
+@artem.pikulin So in MM2 would both sides of the trade need only 100%? Or does alice still pay dexfee? Or some other arrangement?
+
+[14-Dec-18 03:00 PM] artem.pikulin#0794
+@wbradt Alice will have to pay small dexfee = 1/777 of trading amount as it was previously.
+
+[14-Dec-18 03:01 PM] wbradt#2043
+Thanks--does bob then pay 100%?
+
+[14-Dec-18 03:03 PM] jl777c#5810
+i think bob might need to also pay 1/777
+
+[14-Dec-18 03:12 PM] artem.pikulin#0794
+In current implementation Bob does not pay any fee except standard transaction commission. So the protocol is (Bitcoin script example):
+1. A fee, p2pkh output: `OP_DUP OP_HASH160 FEE_RMD160 OP_EQUALVERIFY OP_CHECKSIG`
+2. B payment: 
+```
+OP_IF
+<now + LOCKTIME*2> OP_CLTV OP_DROP <bob_pubB0> OP_CHECKSIG
+ OP_ELSE
+OP_SIZE 32 OP_EQUALVERIFY OP_HASH160 <hash(bob_privN)> OP_EQUALVERIFY <alice_pubA0> OP_CHECKSIG
+OP_ENDIF
+```
+3. A payment:
+```
+OP_IF
+<now + LOCKTIME> OP_CLTV OP_DROP <alice_pubA0> OP_CHECKSIG
+OP_ELSE
+OP_SIZE 32 OP_EQUALVERIFY OP_HASH160 <hash(bob_privN)> OP_EQUALVERIFY <bob_pubB0> OP_CHECKSIG
+OP_ENDIF
+```
+It's actually not hard to add Bfee as work is in progress.
+
+[14-Dec-18 03:15 PM] ComputerGenie 👴🏼📢#7004
+`Bob does not pay any fee except standard transaction commission.`
+So, no deposit anymore? at all?
+
+[14-Dec-18 03:15 PM] jl777c#5810
+there would need to be something at stake for bob, so lets add the 1/777 fee to bobside also
+
+[14-Dec-18 03:16 PM] artem.pikulin#0794
+Is it really required? There is always a case when someone loses fee if other side does not follow the protocol. Bob side didn't require a fee and it's introduced as liquidity provider advantage
+
+[14-Dec-18 03:17 PM] jl777c#5810
+are you sure bob cant get an advantage without a dexfee?
+
+[14-Dec-18 03:18 PM] artem.pikulin#0794
+@ComputerGenie 👴🏼📢 Yes, no need for Bob deposit anymore.
+
+[14-Dec-18 03:19 PM] ComputerGenie 👴🏼📢#7004
+I'd think that the "need" would be to not be able to screw Alice out of dex fees for the cost of 0.0001 CoinX
+
+[14-Dec-18 03:20 PM] ComputerGenie 👴🏼📢#7004
+oh, you mean that whole stage is gone?
+
+[14-Dec-18 03:20 PM] ComputerGenie 👴🏼📢#7004
+sweet
+
+[14-Dec-18 03:21 PM] artem.pikulin#0794
+I mean that Bob did not have to pay fee previously, it's a bonus for being the liquidity provider. It's usual for marketmaker to pay less fees or not pay these at all.
+
+{Reactions}
+👌 
+
+[14-Dec-18 03:21 PM] jl777c#5810
+ok, but if nobody is putting up liquidity anymore, then without dexfee, it seems bad things can happen
+
+[14-Dec-18 03:22 PM] wbradt#2043
+I think bob not paying a transaction fee would be ideal, as it provides the incentive to make liquidity.
+

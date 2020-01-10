@@ -1,0 +1,396 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[26-Oct-18 09:22 AM] artemciy_dice#0049
+
+{Attachments}
+https://cdn.discordapp.com/attachments/463445317136809984/505310272739868672/unknown.png
+
+[26-Oct-18 09:25 AM] artemciy_dice#0049
+So my advice would be to go with a fresh SQLite, using a simple table as a KV store, and having the power of introducing more complex structures if and when you need it.
+
+[26-Oct-18 09:30 AM] artemciy_dice#0049
+Advantages of SQLite over LevelDB/RocksDB is that the classical B+tree algorithm, when done right, is still faster than the LevelDB layered append-only thing. And that you can connect from multiple processes, watching what's going on in the database while your app works (plus SQL makes it easier to do). And when you need indexing and stuff, you just have it and don't need to compensate with complex database-like layers in your app.
+
+[26-Oct-18 09:32 AM] artemciy_dice#0049
+On the other hand, if you need the absolute-best recoverability, or if you want to be able to backup your database always with but a simple rsync, then go with LevelDB/RocksDB. The append-only approach there makes the database pretty much unsinkable (until there's a bug in the implementation, unfortunately LevelDB isn't 100% bug free, but a chance of stumbling upon one is very small).
+
+[26-Oct-18 09:36 AM] artemciy_dice#0049
+Ping me if you need further help with [tuning] SQLite.
+
+[26-Oct-18 09:51 AM] Mylo#8306
+Absolute best recoverability is handled by the blockchain if resync required if the design/workflow of this app can be handled like this.  Portability and sql-ness of using SQLite sounds much more advantageous imo
+
+[26-Oct-18 09:52 AM] Mylo#8306
+But not sure exactly what app is doing, so maybe not a good opinion:)
+
+[26-Oct-18 09:57 AM] artemciy_dice#0049
+So, blockchain is a distributed database which is of course cool but an entirely different field. But the local database used by a blockchain isn't always reliable. When you crash or kill `komodod`, for example, you can loose the local blockchain and will need to wait for quite some time for resync. LevelDB/RocksDB approach and implementation, if we look at them in isolation from the distributed ledger/backup aspects, is the most resilient one in that local operation regard.
+SQLite is durable as well, but due to the more invasive nature of B+tree operations the durability there is more precarious and can be toppled when hardware misbehaves.
+
+[26-Oct-18 10:21 AM] artemciy_dice#0049
+Or when the user misbehaves, like when I copy a database which is being in use (my favorite thing to do with embedded database).
+
+[26-Oct-18 10:22 AM] grewalsatinder#9653
+@artemciy_dice thanks for detailed advice 😃
+
+[26-Oct-18 10:22 AM] artemciy_dice#0049
+So if you want your app on a USB stick...
+
+[26-Oct-18 10:22 AM] grewalsatinder#9653
+I'll give sqlite try with go
+
+[26-Oct-18 10:22 AM] grewalsatinder#9653
+so far I couldn't find b-tree with sqlite3 packages for golang
+
+[26-Oct-18 10:23 AM] grewalsatinder#9653
+but, after reading your details on it, looks good option.
+
+[26-Oct-18 10:23 AM] grewalsatinder#9653
+will be experimenting with first file system append only file
+
+[26-Oct-18 10:23 AM] grewalsatinder#9653
+and then sqlite
+
+[26-Oct-18 10:28 AM] artemciy_dice#0049
+Cool. On spindle disks I would usually do`PRAGMA page_size = 32768` in Sqlite in order to decrease the number of I/O seeks in B+tree, though on the SSD you should match the page_size to the SSD page size instead.
+
+[26-Oct-18 10:29 AM] grewalsatinder#9653
+@artemciy_dice do you know if there's recthinkdb portable ?
+
+[26-Oct-18 10:29 AM] grewalsatinder#9653
+means using the rethinkdb as portable database ?
+
+[26-Oct-18 10:29 AM] grewalsatinder#9653
+or what you think of rethinkdb in general?
+
+[26-Oct-18 10:30 AM] artemciy_dice#0049
+Yes, RocksDB can be embedded and used for portable (think USB stick) databases, it's a very good match.
+
+[26-Oct-18 10:32 AM] artemciy_dice#0049
+I think LevelDB is Google's abandonware and RocksDB is a version where developers cared to tune the performance more and kept adding features to it.
+
+[26-Oct-18 10:33 AM] artemciy_dice#0049
+Haven't used it recently though.
+
+[26-Oct-18 10:34 AM] grewalsatinder#9653
+https://rocksdb.org/
+
+{Embed}
+https://rocksdb.org/
+RocksDB | A persistent key-value store
+RocksDB is an embeddable persistent key-value store for fast storage.
+http://rocksdb.org/static/og_image.png
+
+[26-Oct-18 10:34 AM] grewalsatinder#9653
+https://www.rethinkdb.com/
+
+[26-Oct-18 10:34 AM] grewalsatinder#9653
+I got confused of your RocksDB reference with RethinkDb for a moment 😅
+
+[26-Oct-18 10:35 AM] artemciy_dice#0049
+Ah, sorry.
+
+[26-Oct-18 10:35 AM] grewalsatinder#9653
+I have seen golanguage packages which uses RethinkDB as portable database, but I fear to use them, considering how experimental they could be
+
+[26-Oct-18 10:35 AM] grewalsatinder#9653
+since all of them are 3rd party
+
+[26-Oct-18 10:37 AM] artemciy_dice#0049
+RethinkDB developers never went embedded AFAIK, they didn't even manage to go as far as making the core database reasonably efficient. I love the interface and the automatic High-Availability reliability aspects, but it wasn't a very practical solution last time I checked, performance-wise.
+
+[26-Oct-18 10:38 AM] artemciy_dice#0049
+What do you mean by portable?
+
+[26-Oct-18 10:41 AM] grewalsatinder#9653
+means if I have on my machine rethinkdb installed, and I run rethinkdb as a daemon, I can make the database talk to my app.
+on user end, they would not necessarily have the rethinkdb daemon installed.
+the other option is I bundle the cross-platform rethinkdb binaries with the app and run it in the backend, but then again I think if it's good to it that way
+
+[26-Oct-18 10:42 AM] grewalsatinder#9653
+I mainly like rethinkdb for it's realtime data updates
+
+[26-Oct-18 10:46 AM] artemciy_dice#0049
+Using a database you like is a long-term investment (that is, it should help you to do more stuff with the project), I'd say try bundling it and see how it goes. But maybe give this experiment a timeframe.
+
+{Reactions}
+👍 
+
+[26-Oct-18 11:15 AM] grewalsatinder#9653
+🤔 agree
+
+[26-Oct-18 11:15 AM] grewalsatinder#9653
+thanks for your advice. It's really helpful to give me a thought and decide how I want to plan my app development.
+
+[26-Oct-18 11:15 AM] grewalsatinder#9653
+🙂 👍
+
+{Reactions}
+👍 
+
+[26-Oct-18 01:15 PM] grewalsatinder#9653
+found myself a go specific key/value db 🙂
+
+[26-Oct-18 01:15 PM] grewalsatinder#9653
+BoltDB
+
+[26-Oct-18 01:15 PM] grewalsatinder#9653
+looks quite popular
+
+[26-Oct-18 01:15 PM] grewalsatinder#9653
+https://github.com/etcd-io/bbolt
+
+{Embed}
+https://github.com/etcd-io/bbolt
+etcd-io/bbolt
+An embedded key/value database for Go. Contribute to etcd-io/bbolt development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/41972792?s=400&v=4
+
+[26-Oct-18 01:16 PM] grewalsatinder#9653
+https://www.progville.com/go/bolt-embedded-db-golang/
+
+{Embed}
+Carter
+https://www.progville.com/go/bolt-embedded-db-golang
+Bolt — an embedded key/value database for Go - Progville
+BoltDB (or Bolt) is a safe and fast embedded key-value database written in Go. It is a great persistence solution for Golang projects! Learn how to use it.
+https://www.progville.com/wp-content/uploads/2015/01/boltdb.jpg
+
+[26-Oct-18 01:16 PM] grewalsatinder#9653
+has to experiment with this one first. 😁
+
+{Reactions}
+rum 
+
+[26-Oct-18 01:24 PM] dukeleto#7326
+@grewalsatinder I am partial to Redis for key-value DB, it's served me well in production
+
+{Reactions}
+👍 
+
+[26-Oct-18 03:16 PM] KomodoWorld#8282
+do you heard anyone who has been working on the CC solidity interpreter?
+
+[26-Oct-18 03:16 PM] KomodoWorld#8282
+I only rember this guy @Clément#9327 asking info here but he seems no longer reacheable
+
+[26-Oct-18 03:16 PM] KomodoWorld#8282
+thanks to @sφldat we could have soon people working on it
+
+[26-Oct-18 03:18 PM] KomodoWorld#8282
+I will close the bounty in such case
+
+[26-Oct-18 03:19 PM] sφldat#8733
+I hope so! Anyway I met the manager Epitech (https://international.epitech.eu/) and he is interested in setting up a workshop over several weeks with his students for this CC Solidity challenge.  Now I'm waiting for him to come back next week, but it's on the right track.
+
+[26-Oct-18 03:22 PM] KomodoWorld#8282
+great, if this works I see it bringing more collaborations in future
+
+[26-Oct-18 08:08 PM] dukeleto#7326
+this sounds like an interesting tool: https://twitter.com/pierre_rochard/status/1055907105767653376
+
+{Embed}
+Pierre Rochard (@pierre_rochard)
+https://twitter.com/pierre_rochard/status/1055907105767653376
+$ pip install lnet
+
+Use clightning to spin up a Lightning Network for testing purposes. Describe your desired network topology of nodes and channels, lnet sets it up. Uses bitcoind in regtest mode. Parallelizable, can have multiple networks. ⚡️🌩⛈
+https://pbs.twimg.com/media/DqdV6cLWoAEa7UZ.jpg:large
+Twitter
+
+[28-Oct-18 12:04 AM] Heisenberg#6869
+Hey guys. We’re looking to add Komodo support in our wallet. Would like to collaborate with the team or any of dev contributors.
+
+[28-Oct-18 12:13 AM] Hermes#6934
+That sound awesome  😃 let us know if you need any help on how to do this ...or if any other information is needed.
+
+[28-Oct-18 12:37 AM] Deleted User#0000
+Hoard wallet guy? 😄 Welcome
+
+[28-Oct-18 12:37 AM] Heisenberg#6869
+@Hermes thanks. We could use some extra hands in the process. Our team is flooded with work atm. It’s completely open source.
+
+[28-Oct-18 12:41 AM] Heisenberg#6869
+@Deleted User 😎
+
+[28-Oct-18 12:48 AM] Deleted User#0000
+@Heisenberg  Just checked out your website. Forgot to mention, Komodo is also open source and have a fully working DEX that uses atomic swaps (currently has over 115,000 successful swaps)
+Supports 95% of all coins in existance, may be something for you to check out 😛 
+https://komodoplatform.com/decentralized-exchange/
+
+{Embed}
+https://komodoplatform.com/decentralized-exchange
+DECENTRALIZED EXCHANGE - Komodo
+
+[28-Oct-18 12:49 AM] Deleted User#0000
+https://github.com/KomodoPlatform/BarterDEX
+
+{Embed}
+https://github.com/KomodoPlatform/BarterDEX
+KomodoPlatform/BarterDEX
+📈 BarterDEX: Decentralised Exchange and Cryptocurrency Market - KomodoPlatform/BarterDEX
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[28-Oct-18 02:12 AM] Heisenberg#6869
+We agree. KMD is dope. Looking forward to integration in the wallet.
+
+[28-Oct-18 02:13 AM] Heisenberg#6869
+Along with our network, we may actually be able to do a lot more for each other.
+
+{Reactions}
+yassinkomodo (2) 
+
+[28-Oct-18 04:57 AM] Alright#0419
+is anyone familiar with usenet? I was thinking a usenet indexer chain would be relatively straight forward to create
+
+[28-Oct-18 04:57 AM] Alright#0419
+store nzbs via oracles
+
+[28-Oct-18 04:58 AM] Alright#0419
+could have a business based on it. "Please find me this nzb" then an oracle post said nzb for the data fee
+
+[28-Oct-18 11:11 AM] dukeleto#7326
+@Alright i was a sysadmin for some usenet servers in the 90's at an ISP, does that count? Your idea sounds interesting
+
+{Reactions}
+😎 
+
+[28-Oct-18 01:05 PM] grewalsatinder#9653
+@Alright @dukeleto do it! 😃
+
+[28-Oct-18 01:45 PM] dukeleto#7326
+@Alright how about a peer-reviewed article chain, where you ask for a publication by DOI or other unique identifier, pay a fee, and then it gets injected by some oracle into a chain ?
+
+[28-Oct-18 01:46 PM] dukeleto#7326
+@Alright backend could use https://sci-hub.tw/
+
+{Embed}
+https://sci-hub.tw/
+Sci-Hub: устраняя преграды на пути расп...
+Первый в мире пиратский ресурс, который открыл массовый доступ к десяткам миллионов научных статей
+https://sci-hub.tw/misc/img/logo_1.png
+
+[28-Oct-18 01:47 PM] dukeleto#7326
+That service is not legal in some jurisdictions, because it ends the horrible monopoly of a few companies owning and charging for academic research
+
+[28-Oct-18 01:47 PM] Alright#0419
+same thing for indexers
+
+[28-Oct-18 01:47 PM] dukeleto#7326
+which is often funded by taxpayers and should be open source/public anyway
+
+[28-Oct-18 01:47 PM] dukeleto#7326
+put it on the blockchain, let the lawyers figure it out, they said....
+
+[28-Oct-18 01:48 PM] dukeleto#7326
+``` 
+Sci-Hub
+the first pirate website in the world to provide mass and public access to tens of millions of research papers```
+
+[28-Oct-18 01:48 PM] dukeleto#7326
+@FishyGuts sounds like a marketing opportunity for you...
+
+[28-Oct-18 01:49 PM] dukeleto#7326
+pirates love academic papers! :pirate:
+
+[28-Oct-18 01:49 PM] dukeleto#7326
+man, i haven't heard a good alt.sex.computers joke in a while
+
+[28-Oct-18 01:50 PM] dukeleto#7326
+so many memes that are lost on this generation
+
+[28-Oct-18 01:51 PM] dukeleto#7326
+@Alright it would be interesting to create a bridge, where something send to alt.data.komodo gets injected into a KV chain or something, so people without any kind of access to blockchains can post to usenet and embed data in a DPoW blockchain
+
+[28-Oct-18 01:52 PM] dukeleto#7326
+"easy onramps" to store data, protected by DPoW
+
+[28-Oct-18 01:53 PM] jl777c#5810
+use oracles CC , not KV
+
+[28-Oct-18 03:06 PM] blackjok3r#3181
+@dukeleto  Any idea how i can change this loop to a while loop?
+
+[28-Oct-18 03:06 PM] blackjok3r#3181
+https://github.com/jl777/komodo/blob/FSM/src/cc/dice.cpp#L625
+
+{Embed}
+https://github.com/jl777/komodo/blob/FSM/src/cc/dice.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[28-Oct-18 03:09 PM] blackjok3r#3181
+so I can make it like this:
+https://github.com/StakedChain/SuperNET/blob/blackjok3r/iguana/dpow/dpow_rpc.c#L957
+
+{Embed}
+https://github.com/StakedChain/SuperNET/blob/blackjok3r/iguana/dpow/dpow_rpc.c
+StakedChain/SuperNET
+Contribute to StakedChain/SuperNET development by creating an account on GitHub.
+https://avatars0.githubusercontent.com/u/42953759?s=400&v=4
+
+[28-Oct-18 03:18 PM] dukeleto#7326
+@blackjok3r taking a look now
+
+[28-Oct-18 03:18 PM] blackjok3r#3181
+thank you!
+
+[28-Oct-18 03:18 PM] dukeleto#7326
+@blackjok3r `while( it!=unspentOutputs.end() )`
+
+[28-Oct-18 03:19 PM] dukeleto#7326
+and migrate the code in the `for` loop to either before the loop, or inside the loop, depending on where it's needed
+
+[28-Oct-18 03:19 PM] dukeleto#7326
+`for` and `while` are isomorphic, whatever you can do with one, you can do with another. But often there is one way that is more "elegant"
+
+[28-Oct-18 03:19 PM] blackjok3r#3181
+hmmm maybe thats not going to even work..
+
+[28-Oct-18 03:19 PM] blackjok3r#3181
+the idea is to randomly choose it
+
+[28-Oct-18 03:19 PM] jl777c#5810
+what is wrong as it is?
+
+[28-Oct-18 03:20 PM] dukeleto#7326
+@blackjok3r back up a sec and tell me the goal
+
+[28-Oct-18 03:20 PM] dukeleto#7326
+what are we trying to solve?
+
+[28-Oct-18 03:20 PM] jl777c#5810
+just have an if ( (rand() % 100) < 50 ) continue;
+
+[28-Oct-18 03:20 PM] blackjok3r#3181
+in the igauan code, it randomly chooses a utxo and stops once it has 1
+
+[28-Oct-18 03:20 PM] blackjok3r#3181
+this fucntion on for loop
+
+[28-Oct-18 03:20 PM] blackjok3r#3181
+gets the first one it finds
+
+[28-Oct-18 03:20 PM] jl777c#5810
+we dont want to be using 100% of utxo anyway
+
+[28-Oct-18 03:20 PM] blackjok3r#3181
+so all nodes are using the same ones
+
+[28-Oct-18 03:21 PM] blackjok3r#3181
+increase number of entropy and make then choose randomly
+
+[28-Oct-18 03:21 PM] jl777c#5810
+if ( (rand() % 100) < 50 )
+ continue;
+
+{Reactions}
+👌 
+

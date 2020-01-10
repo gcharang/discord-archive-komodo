@@ -1,0 +1,362 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[28-Aug-18 12:17 PM] CrisF#3405
+Bet 5
+`getbalance` down 10
+5 later returned.
+
+[28-Aug-18 12:17 PM] CrisF#3405
+Is that always the case?
+
+[28-Aug-18 12:18 PM] CrisF#3405
+(STAKED3)
+
+[28-Aug-18 12:21 PM] SHossain#0007
+that can mean, you had 1 utxo of 10. When you sent 5 out of the wallet, that used the utxo and showed 10 gone, until the next block where it was confirmed. so, you could see 5 came back.
+
+[28-Aug-18 12:22 PM] CrisF#3405
+Great, thanks!
+
+[28-Aug-18 02:11 PM] dukeleto#7326
+@TonyL you need to send a hash of arguments to `getspentinfo` and it looks like you are sending an array of arguments
+
+[28-Aug-18 02:12 PM] dukeleto#7326
+`rpc.getspentinfo( { ... } )` instead of `rpc.getspentinfo( ... )`
+
+[28-Aug-18 02:13 PM] dukeleto#7326
+you are sending a hash on the CLI, with key/value pairs, but looks like trying to use an array of values via your paste above
+
+[28-Aug-18 03:27 PM] siu - Chainmakers#3920
+why im getting ```{
+    "result": {
+        "result": "error",
+        "error": "Diceinit error in status"
+    },
+    "error": null,
+    "id": null
+}```
+
+[28-Aug-18 03:27 PM] siu - Chainmakers#3920
+in dic status?
+
+[28-Aug-18 04:01 PM] dukeleto#7326
+because DiceInit() function failed
+
+[28-Aug-18 04:01 PM] dukeleto#7326
+and it's a bug the way it returns that JSON
+
+[28-Aug-18 04:01 PM] dukeleto#7326
+i've noticed it but not fixed it yet
+
+[28-Aug-18 04:02 PM] dukeleto#7326
+@siu - Chainmakers exactly how do you trigger that issue?
+
+[28-Aug-18 04:03 PM] dukeleto#7326
+maybe @TonyL can write a test 😃
+
+[28-Aug-18 04:03 PM] siu - Chainmakers#3920
+do dicebet
+
+[28-Aug-18 04:03 PM] siu - Chainmakers#3920
+sendrawtransaction
+
+[28-Aug-18 04:03 PM] dukeleto#7326
+it is a sign of an actual problem
+
+[28-Aug-18 04:03 PM] siu - Chainmakers#3920
+and when i check dicestatus that is the response
+
+[28-Aug-18 04:03 PM] dukeleto#7326
+previoiusly, you would get a null json response or some crazy c++ error
+
+[28-Aug-18 04:03 PM] dukeleto#7326
+now it tells you vaguely why
+
+[28-Aug-18 04:03 PM] dukeleto#7326
+so something is not quite right
+
+[28-Aug-18 04:03 PM] siu - Chainmakers#3920
+ok
+
+[28-Aug-18 04:03 PM] siu - Chainmakers#3920
+im rebuilding and will try again
+
+[28-Aug-18 04:04 PM] dukeleto#7326
+if you can create a gist of the exact full commands + responses to generate that error, that helps James to debug and me + Tony to write automated tests
+
+[28-Aug-18 04:04 PM] dukeleto#7326
+and specify which chain you are running it against, because we have a lot of chains going around
+
+[28-Aug-18 04:13 PM] blackjok3r#3181
+DICE is playing up on STAKED3 aswell.
+
+[28-Aug-18 04:13 PM] blackjok3r#3181
+Found a few issues aleady.
+
+[28-Aug-18 04:13 PM] blackjok3r#3181
+99% of the issue seems to be back logged mempool
+
+[28-Aug-18 04:15 PM] siu - Chainmakers#3920
+ok
+
+[28-Aug-18 04:16 PM] blackjok3r#3181
+``` ./pos-cli getrawmempool | jq length
+132
+```
+
+[28-Aug-18 04:16 PM] blackjok3r#3181
+lol
+
+[28-Aug-18 04:16 PM] blackjok3r#3181
+blocks are not even full 😕
+
+[28-Aug-18 04:58 PM] dukeleto#7326
+some cc rpc's must have confirmed xtns to work, if a funding xtn is in the mempool still for whatever reason, things will fail
+
+[28-Aug-18 05:05 PM] jl777c#5810
+only rewards spending is able to spend from mempool
+
+[28-Aug-18 06:19 PM] siu - Chainmakers#3920
+ohh... it was a typo i had.
+
+[28-Aug-18 06:19 PM] siu - Chainmakers#3920
+dicestatus is working as expected
+
+[28-Aug-18 10:44 PM] siu - Chainmakers#3920
+how long can the description of a token can be?
+
+[28-Aug-18 11:10 PM] TonyL#3577
+@dukeleto `getspentinfo` not parsing hash of arguments at the moment
+
+[29-Aug-18 12:34 AM] blackjok3r#3181
+Its not funding txs, its dice bet txs... Trying to send 10 per block and my mempool was just piling up to over 100 transactions, only on the node dice bet is called BTW, my other nodes don't have such a huge mempool. Will look further into this today it was super late so just left it spamming while I slept.
+
+[29-Aug-18 01:01 AM] Alright#0419
+@blackjok3r are the ones not being accepted to the other nodes being spent from the mempool?
+
+[29-Aug-18 01:05 AM] blackjok3r#3181
+I need to check this properly, all I know is that the mempool was longer on one node thatn on my others. Then I went to sleep
+
+[29-Aug-18 01:06 AM] blackjok3r#3181
+I have wuite a few thigns to get through today, but will do this first.
+
+[29-Aug-18 01:10 AM] Alright#0419
+Have a feeling that's what is happening
+
+[29-Aug-18 01:10 AM] Alright#0419
+had the same experience on POSTEST a couple weeks ago when I was trying to fill blocks
+
+[29-Aug-18 01:51 AM] dukeleto#7326
+@TonyL show me a failing test for `getspentinfo`, of how you expect it to work
+
+[29-Aug-18 01:54 AM] TonyL#3577
+@dukeleto 
+I've tried:
+rpc.getspentinfo(betid, 0)
+rpc.getspentinfo(betid,"0")
+
+```
+DEBUG:BitcoinRPC:-96-> getspentinfo ["e0a6afd8cc5b28579a84ef3f07af875f75c59f06671294f93d5bea6230ef6c61", "0"]
+JSONRPC error: getspentinfo
+```
+```
+DEBUG:BitcoinRPC:-96-> getspentinfo ["a0f7c105a7ab869720880922b5e021285ba0867bae29ad765dd1d5dae74850a8", 0]
+JSONRPC error: getspentinfo
+```
+
+[29-Aug-18 01:55 AM] TonyL#3577
+In cli such command not work as well because of JSON parcing: `komodo-cli getspentinfo e0a6afd8cc5b28579a84ef3f07af875f75c59f06671294f93d5bea6230ef6c61 0`
+error: Error JSON:e0a6afd8cc5b28579a84ef3f07af875f75c59f06671294f93d5bea6230ef6c61
+
+[29-Aug-18 01:56 AM] TonyL#3577
+So just to get this printout when troubleshooted I used it like a:
+```
+    json = {'txid' : "", 'index' : 0}
+    json['txid'] = betid
+    spentinfo = rpc.getspentinfo(json)
+```
+
+[29-Aug-18 09:23 AM] grewalsatinder#9653
+@jl777c can `tokenlist` api reflect name of the token too?
+
+[29-Aug-18 09:25 AM] grewalsatinder#9653
+I'm going to show tokenlist output on default page in the GUI
+
+[29-Aug-18 09:25 AM] grewalsatinder#9653
+I think of displaying the name just like we see our usernames here on discord
+
+[29-Aug-18 09:26 AM] grewalsatinder#9653
+like:
+name: TESTTOKEN
+tokenid: 012d1e11dd98e5963c49895640d6cc6ed5d24a30cbe07fa4aeaf45618cbaa9c9
+
+will display it like:
+TESTTOKEN:a9c9
+
+[29-Aug-18 09:27 AM] grewalsatinder#9653
+with different color
+
+[29-Aug-18 09:27 AM] grewalsatinder#9653
+just a quick thought on how to differentiate a duplicate named token
+
+[29-Aug-18 09:27 AM] grewalsatinder#9653
+we had such issues on NXT
+
+[29-Aug-18 09:32 AM] jl777c#5810
+tokenlist would need to do an extra call for each, the idea is that the GUI will issue a tokeninfo call for new tokenids it sees
+
+[29-Aug-18 09:32 AM] TonyL#3577
+@grewalsatinder I've initialised such list of tokens with names this way:
+```
+    tokens_ids = json.loads(check_output(
+    ["komodo-cli","-ac_name="+ac_name,"tokenlist"]))
+    tokens_list = {}
+
+    for token_id in tokens_ids:
+        tokens_info = json.loads(check_output(
+        ["komodo-cli","-ac_name="+ac_name,"tokeninfo",token_id]))
+        tokens_list[tokens_info["name"]] = tokens_info["tokenid"]
+    return tokens_list
+```
+Worked pretty fast. I guess it's possible to implement something similar to sync only server each X seconds and clients will get output from this static list
+
+[29-Aug-18 09:32 AM] grewalsatinder#9653
+hmm... in that case it'll be multiple API calls case to single refresh button or refresh call.
+
+[29-Aug-18 09:33 AM] grewalsatinder#9653
+if 1000 tokens then 1000 API calls
+
+[29-Aug-18 09:33 AM] grewalsatinder#9653
+1 tokenlist call + 1000 tokeninfo calls
+
+[29-Aug-18 09:33 AM] grewalsatinder#9653
+1001
+
+[29-Aug-18 09:34 AM] jl777c#5810
+why?
+
+[29-Aug-18 09:34 AM] jl777c#5810
+you cant remember which tokenid you already have?
+
+[29-Aug-18 09:34 AM] jl777c#5810
+and then it would just be a call for any new ones
+
+[29-Aug-18 09:34 AM] grewalsatinder#9653
+coz I'm displaying the list of tokens with names or other info in table view on default load.
+
+[29-Aug-18 09:35 AM] jl777c#5810
+you cant remember which tokenid you already have? along with its info
+and then it would just be a call for any new ones
+
+[29-Aug-18 09:35 AM] TonyL#3577
+You can keep the list of existing tokens and call token info only for new ones which appeared in tokenlist I guess
+
+[29-Aug-18 09:35 AM] jl777c#5810
+this is what I keep saying
+
+[29-Aug-18 09:35 AM] jl777c#5810
+is that a problem to do for the GUI?
+
+[29-Aug-18 09:36 AM] jl777c#5810
+we need to burden the api to do extra calls for every tokenlist call made?
+
+[29-Aug-18 09:36 AM] grewalsatinder#9653
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/484295207974600705/Screen_Shot_2018-08-29_at_9.35.58_PM.png
+
+[29-Aug-18 09:36 AM] grewalsatinder#9653
+@jl777c it not the matter of I can remember or not.
+it's how a user know which token the user wants to go with
+
+[29-Aug-18 09:36 AM] jl777c#5810
+cant you create a map of txid to display data
+
+[29-Aug-18 09:36 AM] grewalsatinder#9653
+I'm thinking of user's ui flow
+
+[29-Aug-18 09:37 AM] jl777c#5810
+then given a txid, you look up the tokeninfo data from cache, if not there, then issue call and add to cache
+
+[29-Aug-18 09:37 AM] jl777c#5810
+but tokeninfo call is very fast anyway
+
+[29-Aug-18 09:37 AM] jl777c#5810
+not sure how this impacts ui flow in any way at all
+
+[29-Aug-18 09:38 AM] jl777c#5810
+making the tokenlist rpc call issue N txid lookups for every time it is called, forever, to make it more convenient for gui is not a good tradeoff
+
+[29-Aug-18 09:38 AM] jl777c#5810
+this is something the GUI side needs to deal with
+
+[29-Aug-18 09:38 AM] TonyL#3577
+What if GUI app server side call tokenlist -> tokeinfo for new tokens each few minutes, save this data, and user on refresh just getting this saved data without any additional calls to API
+
+[29-Aug-18 09:38 AM] jl777c#5810
+store the tokeninfo associated with the tokenid
+
+[29-Aug-18 09:38 AM] jl777c#5810
+and just use the stored data
+
+[29-Aug-18 09:39 AM] jl777c#5810
+if the user refreshes, then it takes 2 seconds and does all the rpc calls again
+
+[29-Aug-18 09:39 AM] jl777c#5810
+what is the problem?
+
+[29-Aug-18 09:41 AM] grewalsatinder#9653
+okay, will do it that way then.
+will think of using the custom UI side cache
+
+[29-Aug-18 09:42 AM] grewalsatinder#9653
+on refresh user won't get any api calls triggered. API calls will triggered on blocknotify call in backend.
+
+[29-Aug-18 09:42 AM] grewalsatinder#9653
+thanks for both of your replies 👍
+
+[29-Aug-18 09:43 AM] TonyL#3577
+Hmm, guess there might be a problem in case of millions tokens existing, maybe will be good to separate stored data by alphabet letters or something like that for faster backends calls.
+Like a if token name start from A he go straight to search in a smaller file which contains only A tokens
+
+[29-Aug-18 09:43 AM] grewalsatinder#9653
+sorting can be taken care by JS, that shouldn't be issue.
+
+[29-Aug-18 09:44 AM] grewalsatinder#9653
+but on startup loading time the app will call all the tokenlist and tokeninfo calls. no matter if 4 or 1000 or mil. will save those in UI's cache system
+
+[29-Aug-18 09:45 AM] grewalsatinder#9653
+will use blocknotify feature to trigger update to the API call to only get update of new tokenid and add it to existing
+
+[29-Aug-18 09:46 AM] grewalsatinder#9653
+either I have to keep this info also saved on local storage for next quick start or may be the next restart will also fetch the same data again to get updates
+
+[29-Aug-18 09:47 AM] jl777c#5810
+reprocessing every block seems like overkill
+
+[29-Aug-18 09:48 AM] jl777c#5810
+maybe just once per hour is enough, so 59 of 60 blocknotifies can be skipped
+
+[29-Aug-18 09:48 AM] jl777c#5810
+as long as there is a button for the user to trigger a new processing that should keep the load to a minimum
+
+[29-Aug-18 09:48 AM] grewalsatinder#9653
+okay, can do. 🙂 👍
+
+[29-Aug-18 12:34 PM] siu - Chainmakers#3920
+@grewalsatinder if you need some testing , let me know
+
+[29-Aug-18 12:36 PM] grewalsatinder#9653
+will do mate.... 🙂
+
+[29-Aug-18 12:37 PM] grewalsatinder#9653
+consider my work a student level work this time. It's not gonna be end user anyway. all a testers area... so will let you guys know soon
+

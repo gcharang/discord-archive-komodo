@@ -1,0 +1,109 @@
+==============================================================
+Guild: Komodo
+Channel: cc-pegs
+Topic: The Pegs Antara modules is a mechanism for creating a decentralized stable coin, pegged to any asset like fiat currency, stock, crypto that has a reliable price source 
+Intro + RPC: https://docs.komodoplatform.com/basic-docs/antara/antara-api/pegs.html
+User tutorial: https://docs.komodoplatform.com/basic-docs/antara/antara-tutorials/pegs-module-user-tutorial.html
+Peg Creator tutorial: https://docs.komodoplatform.com/basic-docs/antara/antara-tutorials/pegs-module-creator-tutorial.html
+After: 13-Dec-19 12:00 AM
+Before: 14-Dec-19 12:00 AM
+==============================================================
+
+[13-Dec-19 03:42 PM] Mihailo#5902
+@jl777c It seems that combination of aPoW and prices creates some difficulties in mining and node sync. Currently I have 3 nodes i network, only one mining but other 2 nodes won't sync to current chain tip. Also, new blocks need too much time sometimes...
+
+[13-Dec-19 03:43 PM] jl777c#5810
+why wont it sync? that seems a bug
+
+[13-Dec-19 03:43 PM] jl777c#5810
+what blocktime are you using?
+
+[13-Dec-19 03:44 PM] jl777c#5810
+maybe use a 5 minute blocktime?
+
+[13-Dec-19 03:55 PM] Mihailo#5902
+I'm using regular blocktime - 1 min
+
+[13-Dec-19 03:55 PM] Mihailo#5902
+Now they are synced. I'll monitor it for a while. But definetely when I start daemons they need more time to synce than regular
+
+[13-Dec-19 03:57 PM] Mihailo#5902
+And I also have strange node blocking. On one node where I don't mine, I do gatewayswithdraw and then sendrawtransaction and it hangs on send rpc
+
+[13-Dec-19 04:23 PM] Mihailo#5902
+Found the blocking reason, my bad didn't do unlock of critical section in gatewayswithdraw
+
+[13-Dec-19 04:46 PM] Mihailo#5902
+@jl777c I think the problem with combination of aPoW and pricesCC is that prices reject block if it can't find some correct calc and then aPoW starts again...
+```ERROR: CheckTransaction(): invalid script data for coinbase time lock
+ContextualCheckBlock failed ht.242```
+
+[13-Dec-19 04:46 PM] Mihailo#5902
+I had period with 10 minutes no block
+
+[13-Dec-19 04:47 PM] Mihailo#5902
+But also, aPoW seems to run long until it even find block (without prices rejecting it).
+
+[13-Dec-19 04:49 PM] Mihailo#5902
+Who made aPoW? Can he checks out what is going on on EURKTEST as I don't have experience with aPoW.
+
+[13-Dec-19 04:51 PM] jl777c#5810
+any chain with DTO shouldnt have a blocktime faster than 5 minutes
+
+[13-Dec-19 04:51 PM] jl777c#5810
+can you see if the problem goes away with 5 minute blocks?
+
+[13-Dec-19 04:53 PM] Mihailo#5902
+Ok, how do I set block time to 5 minutes? But block time of 5 minutes will be bad UX with gateways (deposit, claim, withdraw, signing will all last 5 times longer).
+
+[13-Dec-19 04:54 PM] Mihailo#5902
+Saw -ac_blocktime, but this will change magic calc?
+
+[13-Dec-19 04:54 PM] Mihailo#5902
+I can run another chain without creating oracle, tokens, gateways. Just mine blocks to see how it behaves
+
+[13-Dec-19 04:59 PM] jl777c#5810
+yes ac_blocktime=300
+
+[13-Dec-19 04:59 PM] jl777c#5810
+will change magic
+
+[13-Dec-19 05:00 PM] Mihailo#5902
+OK, I'll run another chain
+
+[13-Dec-19 05:00 PM] jl777c#5810
+i thought you did parallel withdraws
+
+[13-Dec-19 05:00 PM] jl777c#5810
+so from mempool it does it
+
+[13-Dec-19 05:00 PM] Mihailo#5902
+Yes, sorry. It won't affect signing as it happens in mempool.
+
+[13-Dec-19 05:01 PM] Mihailo#5902
+Let me check if it solves anything, then we'll think how to optimize it.
+
+[13-Dec-19 05:01 PM] jl777c#5810
+ok
+
+[13-Dec-19 05:10 PM] Mihailo#5902
+Another bad thing with 5 minute block would be that for example if external chain is 1 minute block, a lot blocks can accumulate to be submitted in oracle before new block on AC so we'll have to make 10-15 subscribes per publisher in order to be able to submit all blocks and not be to behind external chain.
+
+[13-Dec-19 06:06 PM] Mihailo#5902
+@jl777c Still same problem even with blocktime 300 (but it may be because chain didn't stabilize yet - blocks were pretty fast), no block for 24 minutes now.
+
+[13-Dec-19 06:07 PM] Mihailo#5902
+It seems it was working ok until aPoW kicked in...
+
+[13-Dec-19 06:10 PM] jl777c#5810
+so apow is not compatible for some reason with a prices chain? this will take a bit to fix. i guess for now skip the adaptivepow, good thing we found this issue
+
+[13-Dec-19 06:11 PM] jl777c#5810
+keep that chain alive if you can. i will try to debug it next week
+
+[13-Dec-19 06:11 PM] jl777c#5810
+but not sure if i will have the time, so best to skip it for this iteration
+
+[13-Dec-19 06:16 PM] Mihailo#5902
+Left it running, if you can just take a look what happens it would be good. I'll also check out when it stabilizes
+

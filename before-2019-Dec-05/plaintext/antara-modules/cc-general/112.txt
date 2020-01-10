@@ -1,0 +1,438 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[08-Oct-18 02:32 PM] Bryan_Beus#6442
+I've tried using `decoderawtransaction` and `decodescript` on all the hexes I can see in here, but haven't found it yet.
+
+[08-Oct-18 02:44 PM] Bryan_Beus#6442
+Also, to make sure I understand, the `value` property is describing the fee in the relevant COIN?
+
+[08-Oct-18 02:48 PM] jl777c#5810
+yes value is in COIN
+
+[08-Oct-18 02:48 PM] jl777c#5810
+tokens usually displayed at the satoshi level
+
+[08-Oct-18 02:48 PM] jl777c#5810
+RUYde1UFGHp3frwAYNLordwGq5WZyeVWpc is a normal address, get the pubkey for that
+
+[08-Oct-18 02:48 PM] jl777c#5810
+then do tokenaddress <pubkey>
+
+[08-Oct-18 02:48 PM] jl777c#5810
+that will show you what address tokens ended up at
+
+[08-Oct-18 02:49 PM] jl777c#5810
+then you can also do a tokenbalance <tokenid> <pubkey?
+
+[08-Oct-18 03:01 PM] Bryan_Beus#6442
+The `RUYde1UFGHp3frwAYNLordwGq5WZyeVWpc` address is the one that I'm sending from, I believe? It's in this wallet.dat file when I run `validateadress`
+
+```
+{
+  "isvalid": true,
+  "address": "RUYde1UFGHp3frwAYNLordwGq5WZyeVWpc",
+  "scriptPubKey": "76a914d355f746581082323a248603701a2255648f2b6988ac",
+  "segid": 52,
+  "ismine": true,
+  "iswatchonly": false,
+  "isscript": false,
+  "pubkey": "02bb263ecaf443560787e9cc8bfaa0ebdfdfd87057f2e1f44b649ba8b9c6aa970d",
+  "iscompressed": true,
+  "account": ""
+}
+```
+
+[08-Oct-18 03:05 PM] jl777c#5810
+not sure what the question is
+
+[08-Oct-18 03:08 PM] Bryan_Beus#6442
+"RUYde1UFGHp3frwAYNLordwGq5WZyeVWpc is a normal address, get the pubkey for that
+then do tokenaddress <pubkey>
+that will show you what address tokens ended up at
+then you can also do a tokenbalance <tokenid> <pubkey?"
+
+I'm misunderstanding something, or not communicating correctly.
+
+I want to find out the address that received the tokens that I sent. 
+
+The address above is the one that I sent the tokens from, not the one that I sent the tokens to.
+
+Does that make sense?
+
+i.e. How would a developer help a user track down what they've done, assuming the goal is to keep it all on the blockchain and not in a private/local file on the user's node?
+
+[08-Oct-18 03:14 PM] jl777c#5810
+if you forgot who you sent to then you would need to do getaddresstxids or something like that and see where they all were sent to
+
+[08-Oct-18 03:14 PM] jl777c#5810
+not sure what the mystery is here
+
+[08-Oct-18 03:14 PM] jl777c#5810
+the rpc calls do what they do
+
+[08-Oct-18 03:15 PM] jl777c#5810
+once you understand what they do, then you can understand what you can do given any particular situation
+
+[08-Oct-18 03:15 PM] jl777c#5810
+if you lose a privkey, sorry
+
+[08-Oct-18 03:15 PM] jl777c#5810
+if you forget all tx, then it can be retrieved what txids your wallet did
+
+[08-Oct-18 03:15 PM] jl777c#5810
+from that can find whatever you need to knw
+
+[08-Oct-18 03:15 PM] jl777c#5810
+know
+
+[08-Oct-18 04:22 PM] Bryan_Beus#6442
+I did  a new asset chain from scratch, didn't take long at all. (Very cool how fast this is, btw. Good work.)
+
+And I think I found a good enough answer for half of the question. It seems that for the amount sent, we look at the `fee` property in the txid. It has something to do with the total number of tokens and the amount sent. That should be good enough for the amount of tokens sent.
+
+Finding the address, however, is still confusing to me. I think what might be confusing is in this unexpected address that's showing up. I don't yet understand where it came from.
+
+If I do a `tokenbalance` request (on the sending node), I get this result:
+
+```
+{
+  "result": "success",
+  "CCaddress": "RDqhjUdWcqFLsqDxw748AdjvLz9f5MeUTn",
+  "tokenid": "b0a7af14f373fd38d229538f7e1e41ded3baf33ac3194dc5c8a6028972649b08",
+  "balance": 10000000000
+}
+```
+
+Now, that address `RDqhjUdWcqFLsqDxw748AdjvLz9f5MeUTn` is different from the one that I used for my pubkey. The address I used for my pubkey is:  `RSE9SUWrNPB72YDEArMk1XLxWbdaz71oyz`.
+
+The `RDqhjUdWcqFLsqDxw748AdjvLz9f5MeUTn` shows up as one of the details in the `gettransaction` output for the relevant txid (which I can find via `getaddresstxids`, if I ever need to).
+
+```
+"details": [
+    {
+      "account": "",
+      "address": "RKKstLc6Zod3Vu1aeDe6grs8rB1QfzFWtv",
+      "category": "send",
+      "amount": -0.00001000,
+      "vout": 0,
+      "fee": 99.99990000,
+      "size": 446
+    },
+    {
+      "account": "",
+      "address": "RDqhjUdWcqFLsqDxw748AdjvLz9f5MeUTn",
+      "category": "send",
+      "amount": -99.99999000,
+      "vout": 1,
+      "fee": 99.99990000,
+      "size": 446
+    },
+    {
+      "account": "",
+      "category": "send",
+      "amount": 0.00000000,
+      "vout": 2,
+      "fee": 99.99990000,
+      "size": 446
+    }
+  ]
+```
+
+The other address in there, `RKKstLc6Zod3Vu1aeDe6grs8rB1QfzFWtv`, is a similar address, on my other node.
+
+How do these unexpected addresses link to the pubkeys that we keep in our launch params?
+
+[08-Oct-18 04:37 PM] jl777c#5810
+are they cryptoconditions addresses?
+
+[08-Oct-18 04:37 PM] Bryan_Beus#6442
+I'm not familiar with what cryptoconditions addresses are.
+
+I'll be you explained them in your documentation, and it was way over my head... 😃
+
+[08-Oct-18 04:38 PM] Bryan_Beus#6442
+looking
+
+[08-Oct-18 04:43 PM] Bryan_Beus#6442
+At a glance, it seems that CC requires new sets of addresses that are somehow linked to a user's main pubkey, but separate.
+
+When I do a `validateaddress` on these CC addresses, I don't see a pubkey.
+
+Is there a way on the sending node that I can view the balance of the CC address on the receiving node?
+
+[08-Oct-18 04:44 PM] Bryan_Beus#6442
+On a separate note, I'm testing the CC order book.
+
+I'm getting an error about not having enough utxos. What are the general guidelines to overcome this issue?
+
+[08-Oct-18 04:44 PM] Bryan_Beus#6442
+```
+siddhartha@zuko:~/komodo/src$ ./komodo-cli -ac_name=AAD tokenfillask "b0a7af14f373fd38d229538f7e1e41ded3baf33ac3194dc5c8a6028972649b08" "c6a8378c112ffc21bab92f375acabb5932d912ff25668174a42fabebb861f837" 5
+{
+  "result": "error",
+  "error": "filltx not enough utxos"
+}
+```
+
+[08-Oct-18 04:53 PM] jl777c#5810
+make utxos
+
+[08-Oct-18 04:53 PM] Bryan_Beus#6442
+How many, and does the size matter?
+
+[08-Oct-18 04:54 PM] jl777c#5810
+size always matters, but only if it is below dust levels
+
+{Reactions}
+😋 
+
+[09-Oct-18 04:36 AM] dukeleto#7326
+@Bryan_Beus most likely you don't have enough funds to do the operation you are trying to do. Watch out, some RPCs take COIN units while others take satoshis
+
+[09-Oct-18 04:37 AM] dukeleto#7326
+@Bryan_Beus that error happens, when there are no valid utxos at all associated with the asktxid
+
+[09-Oct-18 05:18 AM] Bryan_Beus#6442
+@dukeleto 
+
+Thank you.
+
+[09-Oct-18 06:36 AM] Bryan_Beus#6442
+I just went through `rewards`. Very simple and nice.
+
+Question: I notice that on `rewardsunlock`, anyone is able to unlock anyone's funds.
+
+Just out of curiosity, what was our logic for when/why it would be necessary or useful for someone to be able to unlock someone else's funds? For the developer or rewards offerer to end the program, for instance?
+
+[09-Oct-18 06:38 AM] TonyL#3577
+@Bryan_Beus  https://github.com/KomodoPlatform/Mastering_CryptoConditions/blob/master/all_chapters.md#chapter-7---rewards-example
+```One twist that makes it a bit unexpected is that anybody should be able to unlock the funds that were locked, as long as it ends up in the locking address. The reason for this is that SPV servers want to be supported and while locking can be done via normal sendrawtransaction, it requires a native node to do the unlocking. By allowing anybody to be able to unlock, then there can be a special node that unlocks all locked funds when they are ready. This way, from the user's point of view, they lock the funds and after it is matured, it reappears in their wallet.```
+
+{Embed}
+https://github.com/KomodoPlatform/Mastering_CryptoConditions/blob/master/all_chapters.md
+KomodoPlatform/Mastering_CryptoConditions
+How to write utxo based CryptoConditions contracts for KMD chains - by jl777 - KomodoPlatform/Mastering_CryptoConditions
+https://avatars2.githubusercontent.com/u/21276113?s=400&v=4
+
+[09-Oct-18 06:44 AM] Bryan_Beus#6442
+Gotcha. Thanks.
+
+[09-Oct-18 07:42 AM] jl777c#5810
+please read the comments at the top of each CC.cpp file
+
+[09-Oct-18 07:42 AM] jl777c#5810
+i tried to explain in detail
+
+[09-Oct-18 08:06 AM] Bryan_Beus#6442
+Ok.
+
+[09-Oct-18 10:10 AM] Mihailo#5902
+@jl777c  and other devs, I'm looking through channels CC code and I noticed I haven`t used the PreventCC function in validation. If I understand it correctly, it only checks if vins/vouts from some index until the end are not CC. Should I use it or it is ok to check individually?
+
+[09-Oct-18 10:13 AM] jl777c#5810
+it is a utility function to use if you can indeed know there wont be any other CC vins/vouts. there are a pair of variables that sets the first vin/vout to start at
+
+[09-Oct-18 10:13 AM] jl777c#5810
+some calls will have other CC vouts possible
+
+[09-Oct-18 10:14 AM] jl777c#5810
+or other CC vins, so it is there if it is useful and handy
+
+[09-Oct-18 10:23 AM] Mihailo#5902
+Ok, one more thing. I`m trying to setup komodo on RaspberryPi for mining node but I'm unable to build it. Is there any info on RPi build, some other dependencies?
+
+[09-Oct-18 10:25 AM] TonyL#3577
+Are you using Raspberian @Mihailo ?
+
+[09-Oct-18 10:26 AM] Mihailo#5902
+I was unabel to install g++-multilib on Raspbian as that package does not exists in their repository.
+
+[09-Oct-18 10:26 AM] Mihailo#5902
+Yep
+
+[09-Oct-18 10:26 AM] TonyL#3577
+I've tried a little bit but found very big problems in dependencies. Thinking to try on PIdora
+
+[09-Oct-18 10:27 AM] Mihailo#5902
+Ok, so I won`t spend more time on it now. Thanks.
+
+[09-Oct-18 10:50 AM] grewalsatinder#9653
+for raspberry/arm build of Komodo @radix42 can help
+
+[09-Oct-18 10:50 AM] Mylo#8306
+or use docker?
+
+[09-Oct-18 10:51 AM] grewalsatinder#9653
+I'm sure arm build scripts might be needing update for Komodo if it's not already building
+
+[09-Oct-18 10:52 AM] Mylo#8306
+https://www.raspberrypi.org/blog/docker-comes-to-raspberry-pi/
+and if docker installs, try `sudo docker pull imylomylo/jl777-komodo-dev` and then there are more instructions in #cc-gui
+
+{Embed}
+https://www.raspberrypi.org/blog/docker-comes-to-raspberry-pi
+Docker comes to Raspberry Pi - Raspberry Pi
+If you’re not already familiar with Docker , it’s a method of packaging software to include not only your code, but also other components...
+https://www.raspberrypi.org/app/uploads/2016/08/14907285349_a2a6c87a83_o-500x249.jpg
+
+[09-Oct-18 02:50 PM] Mihailo#5902
+Cool, I might use docker for it 😉
+
+[09-Oct-18 03:45 PM] Mylo#8306
+hopefully it works on a pi.  let me know (lmk) how it goes.  you gave me an idea to see if docker is available for arm cpu anyway.
+
+[09-Oct-18 03:48 PM] blackjok3r#3181
+need 64 bit I am quite sure
+
+[09-Oct-18 03:48 PM] blackjok3r#3181
+and the CC enabled komodo uses like 3.5GB of ram
+
+[09-Oct-18 03:50 PM] Mylo#8306
+pi 3 is 64 bit, just ships with 32 bit OS looking at webpages
+
+[09-Oct-18 03:52 PM] TonyL#3577
+Raspberri 3 B+ which I have have only 1 Gig of RAM and Cortex-A53 is 64 bit yep
+
+[09-Oct-18 03:56 PM] TonyL#3577
+I've tried to run komodod on instances with similar to pi specs (like a t.micro on AWS) and it crashed by cd because of lack of memory
+
+[09-Oct-18 04:12 PM] radix42#3743
+Pi 3 is 64 bit but doesn’t have all the instruction subsets needed
+
+[09-Oct-18 04:12 PM] grewalsatinder#9653
+@radix42 please let me know if you can make it possible to cross-compile on linux for arm64 🙂
+
+[09-Oct-18 04:13 PM] radix42#3743
+Shouldn’t be too hard to update my branch from January to current
+
+[09-Oct-18 04:14 PM] grewalsatinder#9653
+so I have 3 wish lists to use the daemons on arm64:
+- Komodo
+- Zcash
+- Versus `komodod` too
+
+[09-Oct-18 04:14 PM] grewalsatinder#9653
+I have Odroid XU4, Rock64 boards
+
+[09-Oct-18 04:14 PM] grewalsatinder#9653
+if you can help make them compile, I can setup a build server
+
+[09-Oct-18 04:14 PM] radix42#3743
+Those should work with enough swap
+
+[09-Oct-18 04:14 PM] radix42#3743
+I have a build machine
+
+[09-Oct-18 04:14 PM] grewalsatinder#9653
+super!
+
+[09-Oct-18 04:16 PM] radix42#3743
+Sorry I kinda fell off the map for a while, been overwhelmed with a bunch of personal stuff a lot
+
+[09-Oct-18 04:16 PM] grewalsatinder#9653
+😅
+
+[09-Oct-18 04:16 PM] radix42#3743
+You’ve seen the evolution of my twitter profile!
+
+[09-Oct-18 04:18 PM] grewalsatinder#9653
+haven't been keeping eye, but yes your tweets pop up time and then 😉
+
+[09-Oct-18 04:19 PM] radix42#3743
+Anyway, I’ll pull from jl777’s dev branch into my arm64 one and give it a whirl today
+
+[09-Oct-18 04:20 PM] grewalsatinder#9653
+perfect! thanks mate! 🙂 👍
+
+[09-Oct-18 04:21 PM] radix42#3743
+Oh hey what’s up with that ewasm bounty, anyone working it you know of?
+
+[09-Oct-18 04:22 PM] radix42#3743
+Also I closed that tab and gotta find the post again 😂
+
+[09-Oct-18 04:25 PM] xRobeSx#5136
+this one radix:  https://forum.komodoplatform.com/t/25000-kmd-bounty-for-cc-wasm-interpreter/176 ?
+
+{Embed}
+https://forum.komodoplatform.com/t/25000-kmd-bounty-for-cc-wasm-interpreter/176
+25000 KMD bounty for CC Wasm interpreter
+I offer a bounty of 25000 Komodo for a Crypto-Conditions based WebAssembly intepreter, in order to ease the move of dapps from Eos to Komodo (and a lot of other stuff)   jl777: wasm support would be cool, but the key aspect is that it can access useful primitives   My bounty ...
+https://forum.komodoplatform.com/uploads/db3473/original/1X/1af3759a49bc1dcf17a8b0a305d5ccbee17d0944.png
+
+[09-Oct-18 04:44 PM] radix42#3743
+Thanks, yes!
+
+[09-Oct-18 04:45 PM] radix42#3743
+@grewalsatinder I am running an arm64 build of current dev right now
+
+[09-Oct-18 04:46 PM] radix42#3743
+Gonna take a WHILE (if it works! 🤞😜😛)
+
+[09-Oct-18 04:52 PM] grewalsatinder#9653
+😃 👍
+
+[09-Oct-18 05:18 PM] radix42#3743
+It is building the cc files as I type!
+
+[09-Oct-18 05:18 PM] radix42#3743
+Doing Faucet rn
+
+[09-Oct-18 05:19 PM] jl777c#5810
+great!
+
+[09-Oct-18 05:20 PM] jl777c#5810
+the idea for supporting an interpreted language is to create functions in opreturn
+
+[09-Oct-18 05:20 PM] jl777c#5810
+then a function call would be able to be done via txid
+
+[09-Oct-18 05:20 PM] jl777c#5810
+so a library of functions can be made out of code in opreturns
+
+[09-Oct-18 05:21 PM] jl777c#5810
+the challenge would be to connect it to blockchain useful things, but an interface to the CCutils.cpp functions and similar ones might do the trick
+
+[09-Oct-18 05:21 PM] jl777c#5810
+so a emscripten can convert C code to wasm -> OPRETURN
+
+[09-Oct-18 05:21 PM] radix42#3743
+I have been subbed to the ewasm repo forevar
+
+[09-Oct-18 05:22 PM] jl777c#5810
+so now I am envisioning a bunch of txid based functions and then a lot of higher level functions can fit into the 8kb opreturn size limit
+
+[09-Oct-18 05:22 PM] radix42#3743
+Yer sticking a js interpreter in there somewhere
+
+[09-Oct-18 05:23 PM] jl777c#5810
+yes whatever external compilers -> wasm bytecodes -> opreturn
+
+[09-Oct-18 05:23 PM] radix42#3743
+I mean for runtime
+
+[09-Oct-18 05:24 PM] jl777c#5810
+not sure it would work for runtime using the opreturn model
+
+[09-Oct-18 05:24 PM] jl777c#5810
+write a function, put it into opreturn form, test it via txid calling, check it in when it is working
+
+[09-Oct-18 05:25 PM] jl777c#5810
+the latest revision would have a baton utxo, so you can trace back the chain of changes, like the oracles CC does
+
+[09-Oct-18 05:25 PM] radix42#3743
+Well, when the contract executes on full nodes they have to run the wasm, no?
+
+[09-Oct-18 05:25 PM] jl777c#5810
+actually the oracles CC can be used for tracking the data
+
+[09-Oct-18 05:25 PM] jl777c#5810
+yes, the wasm must be run
+

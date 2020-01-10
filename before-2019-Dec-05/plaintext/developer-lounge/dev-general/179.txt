@@ -1,0 +1,450 @@
+==============================================================
+Guild: Komodo
+Channel: dev-general
+Topic: A place for general developer talk – for everyone! | Documentation https://developers.komodoplatform.com | MoreDev Docs - https://docs.komodoplatform.com | Mastering CryptoConditions - https://github.com/KomodoPlatform/Mastering_CryptoConditions
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[29-May-19 01:13 PM] dukeleto#7326
+build-mac.sh changed a lot recently
+
+[29-May-19 01:13 PM] TonyL#3577
+Yeah, I think it's fair that some solution is needed to not allow users to get this state:
+```configure: error: C compiler cannot create executables
+ Error 77```
+
+[29-May-19 01:13 PM] dukeleto#7326
+and yeah, it sets CC and CXX and various things, i see why it was breaking so hard
+
+[29-May-19 01:13 PM] dukeleto#7326
+i set CC but not CXX, gosh
+
+[29-May-19 01:13 PM] dukeleto#7326
+that is a recipe for madness
+
+[29-May-19 01:15 PM] dukeleto#7326
+@TonyL i am trying with gcc-9 set with CC/CXX in build-mac.sh, mostly because i am a masochist
+
+[29-May-19 01:16 PM] dukeleto#7326
+aaaand same error 77
+
+[29-May-19 01:16 PM] dukeleto#7326
+i done messed my compilers up good
+
+[29-May-19 01:17 PM] dukeleto#7326
+i see now that build-mac.sh is not doing the same things as build.sh, it has it's own build infra
+
+[29-May-19 01:17 PM] dukeleto#7326
+similar to how radix42 got things to build on freebsd
+
+[29-May-19 01:23 PM] TonyL#3577
+g++-8 seems to compile fine on my side atm, I'm not sure if it supposed to work with gcc-9 tbh 😃
+
+[29-May-19 01:26 PM] TonyL#3577
+I have build-mac.sh without any modifications with gcc-6 in exports but it using gcc-8 during compilation (only one / default installed by brew on this macbook)
+
+[29-May-19 01:30 PM] TonyL#3577
+``` brew list
+autoconf    binutils    gcc@8        guile        libmpc        openssl        wget
+autogen        coreutils    gdb        isl        libtool        pkg-config
+automake    flock        gettext        libffi        libunistring    protobuf
+bdw-gc        gcc@6        gmp        libidn2        mpfr        readline
+```
+
+[29-May-19 01:30 PM] TonyL#3577
+Nope, actually I have both gcc@6 and gcc@8 hmm
+
+[29-May-19 01:32 PM] TonyL#3577
+But build using g++-8 / gcc8
+```libtool: compile:  g++-8 -DHAVE_CONFIG_H -I. -D__GMP_WITHIN_GMP -I/Users/antonlysakov/latest_FSM/komodo/depends/x86_64-apple-darwin18.6.0/include -pipe -O1 -c cxx/dummy.cc -o dummy.o```
+and I didn't do any additional manipulations
+
+[29-May-19 01:58 PM] TonyL#3577
+@dukeleto
+It looks like clue in something different, I have same error as you on latest FSM
+ ``` -f 'txdb.cpp' || echo './'`txdb.cpp
+In file included from komodo.h:59,
+                 from main.cpp:625:
+komodo_gateway.h: In function 'int64_t sort64(int64_t*, int32_t)':
+komodo_gateway.h:2603:1: error: no return statement in function returning non-void [-Werror=return-type]
+ }
+ ^
+komodo_gateway.h: In function 'int64_t revsort64(int64_t*, int32_t)':
+komodo_gateway.h:2617:1: error: no return statement in function returning non-void [-Werror=return-type]
+ }
+ ^
+In file included from main.cpp:625:
+komodo.h: In function 'int32_t komodo_connectblock(bool, CBlockIndex*, CBlock&)':
+komodo.h:811:26: error: control reaches end of non-void function [-Werror=return-type]
+     std::vector<int32_t> notarisations;
+                          ^~~~~~~~~~~~~
+cc1plus: all warnings being treated as errors
+make[2]: *** [libbitcoin_server_a-main.o] Error 1
+make[2]: *** Waiting for unfinished jobs....
+mv -f .deps/libbitcoin_server_a-rest.Tpo .deps/libbitcoin_server_a-rest.Po
+mv -f .deps/libbitcoin_server_a-torcontrol.Tpo .deps/libbitcoin_server_a-torcontrol.Po
+mv -f .deps/libbitcoin_server_a-txdb.Tpo .deps/libbitcoin_server_a-txdb.Po
+make[1]: *** [all-recursive] Error 1
+make: *** [all-recursive] Error 1
+```
+
+[29-May-19 01:59 PM] TonyL#3577
+gcc@8 is anyway needed for current compilation but I'm very sorry if confusion from my side ate your time
+
+[29-May-19 02:02 PM] TonyL#3577
+It should be very recent change so :/
+
+[29-May-19 02:05 PM] jl777c#5810
+jl777 works?
+
+[29-May-19 02:05 PM] jl777c#5810
+i thought they were in sync
+
+[29-May-19 02:05 PM] TonyL#3577
+Trying
+
+[29-May-19 02:07 PM] TonyL#3577
+I'm thinking now maybe Decker changed something else after I last time tried compilation (or it because of some fresh code which didn't persist in repo from which changes were merged into FSM/jl777), investigating
+
+[29-May-19 02:48 PM] dukeleto#7326
+the above error is not a linking error
+
+[29-May-19 02:48 PM] dukeleto#7326
+non-void functions lack a `return`, that should be fixed
+
+[29-May-19 02:48 PM] dukeleto#7326
+I tried, but that last error about the declaration of `notarisations` is really weird @TonyL . that is the error i pointed out to you originally, @jl777c
+
+[29-May-19 02:50 PM] dukeleto#7326
+i think the error line is wrong
+
+[29-May-19 02:50 PM] dukeleto#7326
+it's highlighting the wrong line
+
+[29-May-19 02:50 PM] dukeleto#7326
+because it can't figure out where to show you komodo_connectblock() lacks a return
+
+[29-May-19 02:50 PM] dukeleto#7326
+it's so freaking complex, it took me a while to look at it, and i wasn't sure either
+
+[29-May-19 02:51 PM] dukeleto#7326
+it's probably in the last few commits to that function, tho. I was dealing with other compiler issues and never fully debugged the issue
+
+[29-May-19 02:51 PM] jl777c#5810
+@Decker plz help
+
+[29-May-19 02:56 PM] TonyL#3577
+jl777 branch build failing with: `ld: library not found for -lidn2` errors so don't think it in sync with FSM (jl777 branch build using gcc6 it seems) https://paste.ubuntu.com/p/gqM4sv6VT5/
+
+[29-May-19 03:06 PM] jl777c#5810
+jl777 and FSM are in sync
+
+[29-May-19 03:14 PM] TonyL#3577
+I was on not correct upstream when tried to build jl777 branch, sorry.. Still wondering what is the secret power to be productive like you 16+ hours per day - just 10+ hours and I'm starting to operate my computer like a dummy 😔
+
+{Reactions}
+🔥 
+
+[29-May-19 03:15 PM] TonyL#3577
+So jl777 and FSM will generate same errors now (started jl777 branch build to ensure)
+
+[29-May-19 03:17 PM] jl777c#5810
+we need @Decker to fix these build things
+
+{Reactions}
+🙏 
+
+[31-May-19 11:26 AM] dukeleto#7326
+@Decker thanks for fixing the mac build! Things seem happy again 😍
+
+[31-May-19 11:31 AM] jl777c#5810
+ca333 did PR to fix
+
+{Reactions}
+👌 
+
+[31-May-19 11:34 AM] TonyL#3577
+latest FSM building fine on High Sierra and Mojave on my side atm, hope it will be not broken for a long time 🤞
+
+[01-Jun-19 03:12 AM] dukeleto#7326
+https://www.lenovo.com/us/en/deals/doorbusters?IPromoID=LEN951359
+
+{Embed}
+https://www.lenovo.com/us/en/deals/doorbusters?IPromoID=LEN951359
+Doorbuster Deals | Memorial Day Sale 2019 | Lenovo US
+Shop doorbuster deals on laptops, computers & accessories during our biggest Memorial Day Sale! Save on the latest tech, plus free shipping only at Lenovo.com.
+
+[01-Jun-19 03:13 AM] dukeleto#7326
+Lenovo has 25-50% off various laptops (including carbon X1's) right now, if anybody is looking for something
+
+[01-Jun-19 06:44 AM] NutellaLicka#4241
+Are you a React JS dev, or do you know a React JS Dev?
+
+CHIPS is looking for a React Developer who can assist with GUI configuration for the newly create CHIPS Poker GUI. 
+Below is a sample of what is to come! @hyperDEX is busy working with a developer to create a fresh new look for CHIPS. 
+https://d2rsw2kbemic8w.cloudfront.net/items/3e3e1j0h1U0X1M1a0w2W/flop-turn-river.mp4?X-CloudApp-Visitor-Id=041b612b3b65910dae5cf694e50ce665
+
+If you're interested in helping out this KMD Ecosystem project, or would like to know more about it, head over to the discord https://discord.gg/SQCSa2X
+
+{Embed}
+https://d2rsw2kbemic8w.cloudfront.net/items/3e3e1j0h1U0X1M1a0w2W/flop-turn-river.mp4?X-CloudApp-Visitor-Id=041b612b3b65910dae5cf694e50ce665
+
+[01-Jun-19 12:50 PM] dukeleto#7326
+that looks pretty sexy
+
+[01-Jun-19 01:00 PM] jorian#4555
+@grewalsatinder was it you who did order the librem purism laptops?
+
+[01-Jun-19 01:08 PM] grewalsatinder#9653
+yep
+
+[01-Jun-19 01:08 PM] grewalsatinder#9653
+still has it
+
+[01-Jun-19 01:08 PM] grewalsatinder#9653
+not happy with it touchpad, since I came from Mac laptops
+
+[01-Jun-19 01:09 PM] grewalsatinder#9653
+and it's wifi chip supports 5GHz, but just don't trust it. Only consider it more compatible with 2GHz
+
+[01-Jun-19 01:09 PM] grewalsatinder#9653
+other than that it's good machine
+
+[01-Jun-19 01:11 PM] jorian#4555
+hehe, the touchpad was one of the questions i have indeed. Apple makes the perfect touchpad
+
+[01-Jun-19 01:11 PM] jorian#4555
+multigesture stuff doesn't work so well then?
+
+[01-Jun-19 01:11 PM] jorian#4555
+do you use it daily?
+
+[01-Jun-19 01:14 PM] grewalsatinder#9653
+nope, it's sitting in storage space
+
+[01-Jun-19 01:14 PM] grewalsatinder#9653
+😄
+
+[01-Jun-19 01:15 PM] grewalsatinder#9653
+I'm back on Macs
+
+[01-Jun-19 01:15 PM] jorian#4555
+blasphemy! :abusedsmily:
+
+[01-Jun-19 01:15 PM] grewalsatinder#9653
+Instead I fixed my old MacBook Pro from 2012, it can nicely replace Mac with Ubuntu 100% supporting it
+
+[01-Jun-19 01:15 PM] grewalsatinder#9653
+I won't recommend you buying libreme
+
+[01-Jun-19 01:15 PM] grewalsatinder#9653
+Go with those Thinkpad may be
+
+[01-Jun-19 01:18 PM] grewalsatinder#9653
+physically remove the mic and put a tape on the camera
+
+[01-Jun-19 01:18 PM] grewalsatinder#9653
+save money
+
+[01-Jun-19 01:18 PM] grewalsatinder#9653
+😅
+
+[01-Jun-19 01:19 PM] grewalsatinder#9653
+instead I liked HP Envy laptop 🤔
+
+[01-Jun-19 01:19 PM] grewalsatinder#9653
+Bought 1 for my wife
+
+[01-Jun-19 01:19 PM] grewalsatinder#9653
+I couldn't get to experiment on it of course
+
+[01-Jun-19 01:19 PM] grewalsatinder#9653
+😄
+
+[01-Jun-19 01:19 PM] jorian#4555
+you envy an Envy 😄
+
+[01-Jun-19 01:19 PM] grewalsatinder#9653
+or I'd have tried installing Linux on it
+
+[01-Jun-19 01:19 PM] grewalsatinder#9653
+hehe 😄
+
+[01-Jun-19 01:20 PM] grewalsatinder#9653
+I offered my linux laptop to my wife, as well as that old MacBook Pro with Windows. She gave some face expression I couldn't pursue her further. 😄
+
+[01-Jun-19 01:21 PM] jorian#4555
+lol
+
+[01-Jun-19 01:21 PM] jorian#4555
+windows on a macbook pro is also questionable
+
+[01-Jun-19 01:22 PM] grewalsatinder#9653
+hehe.... was perfect solution for her dev needs 😄
+
+[01-Jun-19 03:36 PM] dukeleto#7326
+@NutellaLicka does chips have an official twitter account?
+
+[01-Jun-19 03:42 PM] dukeleto#7326
+found it https://twitter.com/pangeachips
+
+{Embed}
+https://twitter.com/pangeachips
+CHIPS (@pangeachips)
+PangeaChips official Twitter page. Decentralized Poker using blockchain technology. Join our Discord https://discord.gg/XdMA49s
+Tweets
+10
+Followers
+96
+https://pbs.twimg.com/profile_images/1080645907312390144/uNI_VauC_normal.jpg
+Twitter
+
+[01-Jun-19 03:51 PM] dukeleto#7326
+@NutellaLicka https://twitter.com/dukeleto/status/1134848620770074626
+
+{Embed}
+Duke Leto (@dukeleto)
+https://twitter.com/dukeleto/status/1134848620770074626
+Our $KMD sister chain @pangeachips, a Lightning network, is looking for React JS developers to complete their new decentralized poker GUI! 
+Video: https://t.co/sUWIztQoFT
+If you are interested to work on $CHIPS or know a dev that would be, join Discord https://t.co/f69MA45...
+https://pbs.twimg.com/media/D7_KudmXkAExr70.jpg:large
+Twitter
+
+[01-Jun-19 03:52 PM] dukeleto#7326
+there you go. That video was so sexy, I wanted to make sure more people saw it
+
+[01-Jun-19 11:30 PM] hyperDEX#6586
+Thanks @dukeleto
+
+[01-Jun-19 11:43 PM] NutellaLicka#4241
+Thats awesome dukeleto! Thanks :)
+
+[03-Jun-19 06:24 AM] Mylo#8306
+@blackjok3r is this of interest to you?
+
+[03-Jun-19 06:24 AM] Mylo#8306
+```
+2019-06-03 06:20:57 HTTP: creating work queue of depth 256
+2019-06-03 06:20:57 HTTP: starting 4 worker threads
+2019-06-03 06:20:57 Using wallet wallet.dat
+2019-06-03 06:20:57 init message: Verifying wallet...
+2019-06-03 06:20:57 CDBEnv::Open: LogDir=/home/mylo/.komodo/MORTY/database ErrorFile=/home/mylo/.komodo/MORTY/db.log pathIn.(/home/mylo/.komodo/MORTY)
+2019-06-03 06:20:58 Bound to [::]:63811
+2019-06-03 06:20:58 Bound to 0.0.0.0:63811
+2019-06-03 06:20:58 Block index database configuration:
+2019-06-03 06:20:58 * Using 1000 max open files
+2019-06-03 06:20:58 * Compression is enabled
+2019-06-03 06:20:58 Cache configuration:
+2019-06-03 06:20:58 * Max cache setting possible 16384MiB
+2019-06-03 06:20:58 * Using 337.5MiB for block index database
+2019-06-03 06:20:58 * Using 36.1MiB for chain state database
+2019-06-03 06:20:58 * Using 76.4MiB for in-memory UTXO set
+2019-06-03 06:20:58 Opening LevelDB in /home/mylo/.komodo/MORTY/blocks/index
+2019-06-03 06:20:58 Corruption: checksum mismatch
+2019-06-03 06:20:58 
+
+************************
+EXCEPTION: 15dbwrapper_error       
+Database corrupted       
+Komodo in AppInit()   
+```
+
+[03-Jun-19 06:25 AM] Mylo#8306
+my device ran out of HDD space.
+
+[03-Jun-19 06:27 AM] Mylo#8306
+and for the first time ever i'm seeing `errors` in my getinfo which is cool i guess, for `RICK`
+```
+ "errors": "EXCEPTION: 15dbwrapper_error       \nDatabase I/O error       \nKomodo in ProcessMessages()       \n",
+  "pubkey": "038574de2d887586ccb8562cc9909cd93253caaa3db6198b8be0b2cc97a46fd4ce",
+  "CCid": 3,
+  "name": "RICK",
+```
+
+[03-Jun-19 12:17 PM] dukeleto#7326
+@Mylo nuke it from orbit
+
+{Reactions}
+👍 
+
+[03-Jun-19 12:17 PM] dukeleto#7326
+@ComputerGenie 👴🏼📢 https://twitter.com/wtogami/status/1135326422916952064
+
+{Embed}
+Warren Togami (@wtogami)
+https://twitter.com/wtogami/status/1135326422916952064
+Anyone know what is the impact of tariffs on imports of mining hardware from China? I don't buy myself, just curious.
+Twitter
+
+[03-Jun-19 12:17 PM] dukeleto#7326
+I almost responded to that, but figured CG would have more enlightenment to share
+
+[03-Jun-19 12:18 PM] dukeleto#7326
+@ComputerGenie 👴🏼📢 make me proud
+
+[03-Jun-19 12:39 PM] ComputerGenie 👴🏼📢#7004
+https://twitter.com/RealCompGenie/status/1135526374519820288
+
+{Embed}
+TheComputerGenie (@RealCompGenie)
+https://twitter.com/RealCompGenie/status/1135526374519820288
+@wtogami If you listen to the Orange in Chief, it's nothing and China pays it.
+If you listen to USCBP, then it's a total of 27.6% (retroactive).
+Twitter
+
+[03-Jun-19 01:16 PM] dukeleto#7326
+https://twitter.com/OneDevloperArmy/status/1135532608312549377
+
+{Embed}
+One Devloper Army (@OneDevloperArmy)
+https://twitter.com/OneDevloperArmy/status/1135532608312549377
+Does anyone else write 1 line of code, get overwhelmed by the thought of having to maintain it for the rest of your life, proceed to delete it, throw your computer into the trash and then jump into a large body of water
+Twitter
+
+{Reactions}
+☝ 🙌 😂 
+
+[03-Jun-19 02:12 PM] dukeleto#7326
+@jl777c there are some interesting things going on here, which could help speed up the sync of KMD and all asset chains. I somewhat doubt Zcash will merge it in, but we may want to grab it when it's working a bit better: https://github.com/zcash/zcash/pull/4037
+
+{Embed}
+https://github.com/zcash/zcash/pull/4037
+PoW-only verification mode for Initial block sync by adityapk00 ·...
+For new users that don&#39;t have a wallet, a pow-only sync mode that skips verifying every transaction signature to speed up initial block sync. Since the new user doesn&#39;t have any add...
+https://avatars0.githubusercontent.com/u/16122764?s=400&v=4
+
+[03-Jun-19 02:12 PM] dukeleto#7326
+TLDR: `syncing mainnet is about ~25% - 33% faster with this flag`
+
+[03-Jun-19 02:17 PM] ComputerGenie 👴🏼📢#7004
+_has mixed feelings about nodes that don't do independent verification 🤔_
+
+[03-Jun-19 02:18 PM] jl777c#5810
+pre-checkpoint is the key aspect
+
+[03-Jun-19 02:18 PM] jl777c#5810
+if we want faster sync speed, iguana would be 10x faster
+
+[03-Jun-19 02:18 PM] jl777c#5810
+but really, just dont use a nintendo on a 9600 baud modem and it will sync overnight
+
+{Reactions}
+😄 
+
+[03-Jun-19 02:21 PM] dukeleto#7326
+@ComputerGenie 👴🏼📢 if a node has 0 addresses, some optimizations can be done without sacrificing security, is how I read it
+
+[03-Jun-19 02:22 PM] dukeleto#7326
+and yes, the comments about checkpoints are very important
+
+[03-Jun-19 02:22 PM] dukeleto#7326
+also, ZEC does not have DPoW
+
+[03-Jun-19 02:22 PM] dukeleto#7326
+KMD does
+
+[03-Jun-19 02:23 PM] ComputerGenie 👴🏼📢#7004
+@dukeleto I don't entirely disagree with that, but like I said I have mixed emotions (mostly due to the concept of trust vs trustless)
+

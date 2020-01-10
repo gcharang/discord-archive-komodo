@@ -1,0 +1,100 @@
+AuthorID,Author,Date,Content,Attachments,Reactions
+"597557300663812126","Goku#9007","19-Dec-19 01:14 AM","Short question to how atomic swap work:
+Step 3 - Taker Successfully Sends <takerpayment>
+Takerpayment get locked for the taker and maker can spend it.
+Why only the maker can spend this locked fund?","",""
+"448777271701143562","smk762#7640","19-Dec-19 02:20 AM","here's a good visual representation - https://www.youtube.com/watch?v=PeavTHz8LSA","",""
+"597557300663812126","Goku#9007","19-Dec-19 03:24 AM","Thats different from this explanation:
+https://developers.komodoplatform.com/basic-docs/start-here/core-technology-discussions/atomicdex.html#the-decentralized-orderbook","",""
+"597557300663812126","Goku#9007","19-Dec-19 03:35 AM","""Maker generates a ""secret"", creates a hash of the secret, and shares this hash with Taker""
+If the maker creates the secret to unlock the makerpayment, then the maker can always access his makerpayment or not?","",""
+"403137719049519106","Audo#5667","19-Dec-19 05:33 AM","The youtube video linked above is outdated. We upgraded the atomic swap process so few of the steps shown on the video are no longer there.
+
+The 5 steps on our documentaiton page are correct & up-to-date","",""
+"403137719049519106","Audo#5667","19-Dec-19 05:39 AM","_ _
+
+2. Maker sends <makerpayment>
+3. Taker now sends <takerpayment>
+
+After this step both of the payments are in a temporary holding address.
+
+There's a shared secret between the two payments, neither party has the full secret. At this stage only the maker can spend the <takerpayment>, and by doing that he reveals his part of the secret to the taker. With that information the taker can claim the <makerpayment>
+
+4. Maker now spends the <takerpayment> (to spend it he has to reveal the secret to taker)
+5. Taker now ""spends"" the <makerpayment>","",""
+"457121878465708043","artem.pikulin#0794","19-Dec-19 09:23 AM","@Goku Hi, maker knows the secret, but he can only refund the maker's payment since there're following constraints (I will define a couple of terms first for more clarity):
+0. `Swap secret` - the secret which hash is used to lock the swap payments. `Maker's and Taker's persistent secret keys` - main secret keys derived from seed phrase to which all maker's or taker's coins belong too.
+1. Spending maker's payment with Swap secret also requires taker's persistent secret signature so maker just can't spend it.
+1. Refunding maker's payment requires not only the timelock to pass, but also maker's persistent key signature.","",""
+"457121878465708043","artem.pikulin#0794","19-Dec-19 09:23 AM","@Audo 
+`There's a shared secret between the two payments, neither party has the full secret.` - there's no shared secret, the maker generates `Swap secret` randomly when swap starts so maker's knows the full secret. If there're any mentions of `shared secret` in such sence in our docs these mentions should be  deleted or changed accordingly.","","🙏 (1)"
+"457121878465708043","artem.pikulin#0794","19-Dec-19 09:32 AM","E.g. from UTXO coins AtomicDEX-API code: https://github.com/KomodoPlatform/atomicDEX-API/blob/mm2/mm2src/coins/utxo.rs#L302
+There're 2 public keys, `pub_0` signature is required to refund the payment. `pub_1` is required to spend the payment using `Swap secret`.  These pubkeys are Maker's and Taker's persistent pubs (corresponding to their persistent secrets).","",""
+"352577127494713345","phm87#7395","19-Dec-19 09:34 AM","Thank you for the explanations!","","🤝 (1)"
+"597557300663812126","Goku#9007","19-Dec-19 12:33 PM","@artem.pikulin   @Audo
+I think I understand now better.
+If the Maker spends the <takerpayment>, Maker will reveal his persistent secret key in this tx and the Taker can extract this second key to spend the <makerpayment>.
+Thanks for explaining","",""
+"423176312354635779","gcharang#6833","19-Dec-19 12:38 PM","@Goku one small correction, the Maker reveals the ""Swap secret"" when he spends the takerpayment","",""
+"423176312354635779","gcharang#6833","19-Dec-19 12:39 PM","this is the whole process for swaps between utxo coins:
+```
+----------
+A has BTC, B has KMD. They agreed on swap price `1 BTC = 100 KMD`
+A is the maker, B is the taker.
+
+1) Taker Sends <dexfee>
+
+B pays the dex fee so that A will start the process by locking his coins.
+
+2) Maker Successfully Sends <makerpayment>
+
+A picks randomNumber: `secret_A`
+
+A creates a utxo on the Bitcoin blockchain with 
+value: 1 BTC 
+encumbrance: the value can be claimed by A after 20 hours or by B if he knows the secret `secret_A`
+
+3)  Taker Successfully Sends <takerpayment>
+
+After seeing the above utxo, B creates the following utxo on the KMD blockchain:
+value: 100 KMD
+encumbrance: the value can be claimed by B after 10 hours or by A if he knows the secret `secret_A`
+
+4) Maker Spends <takerpayment>
+
+ A uses the `secret_A`  and claims the KMD revealing the secret 
+
+5) Taker Spends <makerpayment>
+
+B now uses the public `secret_A` to claim the BTC
+
+---
+The times can be adjusted based on requirements of security and ""ease of use""
+Normally, A should have a longer locktime so that B can have sufficient time to get his coins back if A doesn't reveal the secret `secret_A`
+
+-------------------
+```","",""
+"423176312354635779","gcharang#6833","19-Dec-19 12:39 PM","Pinned a message.","",""
+"597557300663812126","Goku#9007","19-Dec-19 12:52 PM","@gcharang
+Understand thanks  so far.
+
+Just one thing, how can B create the <takerpayment> so that it can be spend with ""secret_A"" without knowing the ""secret_A""?","",""
+"423176312354635779","gcharang#6833","19-Dec-19 12:56 PM","both B and A are locking their payments to the other party on condition that the other party knows secret_A
+the ""knows secret_A"" is implemented through a hash lock
+A hashes `secret_A` and adds it to the lock
+B can see the hash of `secret_A` on the block chain and adds the same hash to lock his payment too
+
+hope I made sense","",""
+"597557300663812126","Goku#9007","19-Dec-19 01:01 PM","Ah ok, B will reuse the hash of the <makerpayment> lock, that used the hash of ""secret_A"". I think I understand now the whole process, thankful for the explanation!","","👍 (1)"
+"423176312354635779","gcharang#6833","19-Dec-19 01:02 PM","there are also the timelocks for return of the coins to their respective owners if the swap fails midway for any reason","","👌 (1)"
+"372309172559151104","general_grievous#6992","19-Dec-19 01:08 PM","Hi, I am unable to get the app to open on my android phone. All I get is a blank screen. Currently using a galaxy S10+","",""
+"423176312354635779","gcharang#6833","19-Dec-19 01:12 PM","@general_grievous if you have the seed phrase backed up, reinstall the app","",""
+"372309172559151104","general_grievous#6992","19-Dec-19 01:13 PM","I'll reinstall the app.. I just have Rick and Morty tokens so happy to make a new seed.","","👌 (1)"
+"372309172559151104","general_grievous#6992","19-Dec-19 01:15 PM","I have reinstalled it and now the app is launching","",""
+"361480872291074068","ronyi#5719","19-Dec-19 02:00 PM","VRSC doesn't work. ""Activating VRSC...""","","👍 (2)"
+"398864863067373568","CoinKing88#1540","19-Dec-19 03:50 PM","AtomicDex is a mobile wallet right? Why is it not mentioned in the rich lists?","",""
+"423176312354635779","gcharang#6833","19-Dec-19 04:02 PM","which rich list? @CoinKing88","",""
+"398864863067373568","CoinKing88#1540","19-Dec-19 05:49 PM","For example this one: https://dexstats.info/richlist.php?asset=DEX","",""
+"398864863067373568","CoinKing88#1540","19-Dec-19 05:49 PM","I got some DEX in the Atomic DEX, i used to be on there when i held them in my AGAMA wallet","",""
+"455741312273219595","jl777c#5810","19-Dec-19 05:56 PM","i dont think those richlists are updated very frequently","",""
+"455741312273219595","jl777c#5810","19-Dec-19 05:57 PM","the blockchain has no idea what wallet an address is using","",""

@@ -1,0 +1,470 @@
+==============================================================
+Guild: Komodo
+Channel: cc-tetris
+Topic: Check pinned messages for instructions
+Messages: 99
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[29-Mar-19 03:00 PM] TonyL#3577
+Oh on left side it hangs yes, in midle not - very edge case hmm 😃
+
+[29-Mar-19 03:00 PM] SHossain#0007
+yes
+
+[29-Mar-19 03:00 PM] SHossain#0007
+middle is fine
+
+[29-Mar-19 03:01 PM] TonyL#3577
+And it ate my CPU so it's in infin loop I wonder
+
+{Attachments}
+https://cdn.discordapp.com/attachments/553499558420676609/561203273374236673/unknown.png
+
+[29-Mar-19 03:03 PM] TonyL#3577
+On right side it hangs too
+
+[29-Mar-19 03:04 PM] SHossain#0007
+so, only on the edges
+
+[29-Mar-19 03:04 PM] SHossain#0007
+space issue?
+
+[29-Mar-19 03:06 PM] TonyL#3577
+I think I understood what issue is
+
+[29-Mar-19 03:06 PM] TonyL#3577
+It's the cases when brick to which you want to swap not fit game field if to put it to position on brick which swapping
+
+{Attachments}
+https://cdn.discordapp.com/attachments/553499558420676609/561204546186248192/unknown.png
+
+[29-Mar-19 03:07 PM] TonyL#3577
+Like a it's beyond of edges if to put on same poisiton
+
+[29-Mar-19 03:08 PM] TonyL#3577
+So game engine don't have space to draw it and hangs
+
+[29-Mar-19 03:08 PM] SHossain#0007
+yeah, i was thinking the same. not enough space to change on the edges
+
+[29-Mar-19 03:10 PM] TonyL#3577
+I wonder solution is just to not execute swap if such case detected, will try to code it 😃
+
+{Reactions}
+👌🏽 
+
+[29-Mar-19 03:30 PM] SHossain#0007
+edge case happens exactly at the edges 😛
+
+{Reactions}
+😃 
+
+[29-Mar-19 03:46 PM] TonyL#3577
+Madskills lol - made funny game modification suddenly
+
+{Attachments}
+https://cdn.discordapp.com/attachments/553499558420676609/561214728538685441/unknown.png
+
+[29-Mar-19 03:47 PM] TonyL#3577
+It's not hanging tetris but breaking not fitting block over the wall 😂
+
+[29-Mar-19 03:47 PM] SHossain#0007
+haha
+
+[29-Mar-19 03:55 PM] TonyL#3577
+Hmm I think I fixed 😃
+
+[29-Mar-19 03:55 PM] TonyL#3577
+@SHossain Could you please add in `cc/games/tetris.c` :
+```         obj->stored.ori = ori;
+         while (!tg_fits(obj, obj->falling)) {
+             obj->falling.loc.row--;
+             obj->falling.loc.col--;
+         }
+     }
+     tg_put(obj, obj->falling);
+```
+
+[29-Mar-19 03:56 PM] TonyL#3577
+`obj->falling.loc.col--;` this line should be added, then `./maketetris` and play
+
+[29-Mar-19 03:56 PM] SHossain#0007
+trying
+
+[29-Mar-19 03:58 PM] TonyL#3577
+There is a edge case with "stick" in horizontal orientation lol
+
+[29-Mar-19 04:15 PM] SHossain#0007
+you fixed it @TonyL
+
+[29-Mar-19 04:15 PM] TonyL#3577
+Cool 😃 Opened PR: https://github.com/jl777/komodo/pull/1365
+
+{Embed}
+https://github.com/jl777/komodo/pull/1365
+moving block from buffer horizontally if it not fit game field on ...
+There was an edge case with tetris game hang (when trying to swap block close to the game field edge and block not fits game field horizontally)
+https://avatars1.githubusercontent.com/u/24797699?s=400&v=4
+
+[29-Mar-19 04:19 PM] SHossain#0007
+but, sometimes, it feels like it hanged on the edge when i try to switch. that happens for few seconds and next move can be displaced due to this lag
+
+[29-Mar-19 04:20 PM] TonyL#3577
+Oh, I see
+
+[29-Mar-19 04:21 PM] TonyL#3577
+I tested on right edge
+
+[29-Mar-19 04:21 PM] TonyL#3577
+On right edge it super smooth
+
+[29-Mar-19 04:21 PM] TonyL#3577
+But from left edge it's moving block to the right side - need fix for fix 😃
+
+[29-Mar-19 04:23 PM] SHossain#0007
+yep. you described it better 😃
+
+[29-Mar-19 04:24 PM] TonyL#3577
+Ah, I see what happening - it's moving blocks horizontaly until it fits only left direction at the moment
+
+[29-Mar-19 04:25 PM] TonyL#3577
+So from left edge it moving to left to right edge 😃 Have to detect on which edge case happening and if it on left side have to move right instead of left
+
+[29-Mar-19 04:26 PM] TonyL#3577
+So edge case is propertly fixed on right edge only 😂
+
+[29-Mar-19 04:27 PM] SHossain#0007
+i was typing and game finished 😄 `You finished with 50540 points on level 12.`
+
+[29-Mar-19 04:27 PM] TonyL#3577
+Wow
+
+[29-Mar-19 04:27 PM] TonyL#3577
+You're really good in tetris, my highscore is only 10k so far 😃
+
+[29-Mar-19 04:27 PM] SHossain#0007
+i used to play tetris over 20 years ago :abusedsmily:
+
+[29-Mar-19 05:17 PM] TonyL#3577
+@SHossain https://github.com/tonymorony/komodo/commit/c09c253b49a812f8c9de5bd0dc37f3f5afce0705 I think I fixed fit from both ends
+
+{Embed}
+https://github.com/tonymorony/komodo/commit/c09c253b49a812f8c9de5bd0dc37f3f5afce0705
+fixing fit from both ends · tonymorony/komodo@c09c253
+https://avatars3.githubusercontent.com/u/24797699?s=200&v=4
+
+[29-Mar-19 05:18 PM] TonyL#3577
+And before it did non necessary horizontal movement even if it fit by vertical movement 😃
+
+[29-Mar-19 05:21 PM] TonyL#3577
+If you have time could you please change code of tetris.c to this commit changes, rebuild and play a little bit?
+
+[29-Mar-19 05:22 PM] SHossain#0007
+sure. please give me some time.
+
+[29-Mar-19 05:25 PM] TonyL#3577
+Sure 😃 This time I understood what I'm doing so should work fine
+
+{Reactions}
+shexy 
+
+[29-Mar-19 05:51 PM] SHossain#0007
+@TonyL seems this is now fixed completely
+
+[29-Mar-19 05:52 PM] TonyL#3577
+Great, thanks! 😃 https://github.com/jl777/komodo/pull/1366  PRed
+
+{Embed}
+https://github.com/jl777/komodo/pull/1366
+fixing block fit on blocks swap from both ends now and not making ...
+https://avatars1.githubusercontent.com/u/24797699?s=400&v=4
+
+{Reactions}
+👍🏽 
+
+[29-Mar-19 06:37 PM] TonyL#3577
+There is a small path issue in tui after moving to komodo repo which not allowing to issue bailout at all - testing fix
+
+{Reactions}
+👍🏽 
+
+[29-Mar-19 07:51 PM] TonyL#3577
+Fix was merged into jl777 branch
+
+{Reactions}
+3040_kingpeepo 👍🏽 
+
+[30-Mar-19 09:34 AM] SHossain#0007
+TUI ccan't find the keystrokes.log file.
+```
+5687
+Waiting for next block before bailout
+cat: ../keystrokes.log: No such file or directory
+No keystrokes broadcasted yet. Let's wait 5 seconds
+cat: ../keystrokes.log: No such file or directory
+No keystrokes broadcasted yet. Let's wait 5 seconds
+```
+
+[30-Mar-19 09:35 AM] SHossain#0007
+it goes on continuously with  last 2 lines
+
+[30-Mar-19 10:01 AM] smk762 -  dracocanis ominator#7640
+just got it loaded, had to install some deps tho. Played a game manually, a bit of flicker. Also pressing space seems to do some wierdness 🤷
+
+[30-Mar-19 10:01 AM] smk762 -  dracocanis ominator#7640
+`You finished with 17600 points on level 6.`
+
+[30-Mar-19 10:01 AM] smk762 -  dracocanis ominator#7640
+who's got the record?
+
+[30-Mar-19 10:11 AM] SHossain#0007
+it used to flicker for me before. no flickering now.
+i did `50540` 😃
+
+[30-Mar-19 10:15 AM] smk762 -  dracocanis ominator#7640
+madman! :3040_kingpeepo:
+
+[30-Mar-19 11:38 AM] SHossain#0007
+
+{Attachments}
+https://cdn.discordapp.com/attachments/553499558420676609/561514679785226270/Screenshot_from_2019-03-30_10-50-20.png
+
+{Reactions}
+🔭 😱 
+
+[30-Mar-19 11:39 AM] SHossain#0007
+new score 😂
+
+[30-Mar-19 05:37 PM] SHossain#0007
+@jl777c currently `gameinfo` call for tetris shows the run command like rogue 
+`"run": "cc/tetris 4188380234505307764 d6d25859e26299611b2940f8abf1568e6bf8d33b899b49496c63b57fb83b6c60",`
+would it be possible to change this to ?
+```
+"run": "cc/games/tetris 4188380234505307764 d6d25859e26299611b2940f8abf1568e6bf8d33b899b49496c63b57fb83b6c60",
+```
+since the `tetris` daemon is in the `games` subdir.
+
+[30-Mar-19 05:40 PM] jl777c#5810
+sure, it is an easy pull request to make
+
+[30-Mar-19 05:41 PM] SHossain#0007
+thanks. 😃
+
+[30-Mar-19 05:51 PM] TonyL#3577
+```TUI ccan't find the keystrokes.log file.
+5687
+Waiting for next block before bailout
+cat: ../keystrokes.log: No such file or directory
+No keystrokes broadcasted yet. Let's wait 5 seconds
+cat: ../keystrokes.log: No such file or directory
+No keystrokes broadcasted yet. Let's wait 5 seconds```
+
+Hmm, do you have ../keystrokes.log file (if check from src/tui) ?  I had the same problem when started daemon from one folder and used TUI from another daemon folder
+
+[30-Mar-19 05:53 PM] SHossain#0007
+yes, i have keystrokes.log file inside `tui` dir
+
+[30-Mar-19 05:57 PM] TonyL#3577
+Hmm it should be in src
+
+[30-Mar-19 05:57 PM] TonyL#3577
+It looking in `../keystrokes.log`
+
+[30-Mar-19 05:58 PM] TonyL#3577
+`keystrokes.log` creating in same folder with komodod
+
+[30-Mar-19 05:58 PM] SHossain#0007
+there is also one in src dir as i played manual too
+
+[30-Mar-19 06:00 PM] TonyL#3577
+Hmm I see. Really confused now where rogue creating keystrokes.log. It seems that it's not same folder with daemon but folder from which I'm executing `rogue`
+
+[30-Mar-19 06:01 PM] TonyL#3577
+https://github.com/jl777/komodo/blob/jl777/src/tui/lib/tuilib.py#L1955 here path can be changed
+and line 1958 also
+
+{Embed}
+https://github.com/jl777/komodo/blob/jl777/src/tui/lib/tuilib.py
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[30-Mar-19 10:42 PM] TonyL#3577
+Yep, `keystrokes.log` creating in folder from which game was called 
+So changed before path from correct to not correct :/ 
+https://github.com/jl777/komodo/pull/1368 🤦
+
+{Embed}
+https://github.com/jl777/komodo/pull/1368
+Revert by tonymorony · Pull Request #1368 · jl777/komodo
+Discovered that keystrokes.log creating in folder from which game calling, not especially daemon folder.
+So before changed from correct to not correct :/
+https://avatars1.githubusercontent.com/u/24797699?s=400&v=4
+
+[31-Mar-19 09:04 AM] SHossain#0007
+cool. will test this 😃
+
+[31-Mar-19 09:05 AM] SHossain#0007
+broken this gave me the time to test the RPC calls directly 😛
+
+[31-Mar-19 10:31 AM] SHossain#0007
+@TonyL TUI now bailout without issue
+
+{Reactions}
+🔥 
+
+[28-Apr-19 05:47 PM] Markus#5464
+does keystrokes log know difference between human clicks and keystrokes sent by a keystroke sender bot?
+
+[28-Apr-19 05:58 PM] jl777c#5810
+no
+
+[28-Apr-19 05:59 PM] jl777c#5810
+https://medium.com/@jameslee777/cc-design-proof-of-gameplay-6a63b86da5e5
+
+{Embed}
+https://medium.com/@jameslee777/cc-design-proof-of-gameplay-6a63b86da5e5
+CC design: Proof of Gameplay
+As you know by now, using CC you can create your own custom consensus logic. Instead of having to recreate the entire blockchain codebase…
+
+[28-Apr-19 05:59 PM] jl777c#5810
+https://medium.com/@jameslee777/cc-design-proof-of-gameplay-attack-vector-and-mitigation-aa8580364c
+
+{Embed}
+https://medium.com/@jameslee777/cc-design-proof-of-gameplay-attack-vector-and-mitigation-aa8580364c
+CC design: Proof of Gameplay attack vector and mitigation
+In the first post about Proof of Gameplay, I described how you can blockchain enforce user events by logging all user keystrokes and then…
+
+[29-Apr-19 05:00 AM] kmdkrazy#8280
+I will use these posts to recruit - mostly my son - but these medium posts are very usefull tools - should make a Medium channel for the noobs....
+KMD 4 Noobs
+
+[29-Apr-19 05:18 AM] kmdkrazy#8280
+Or just a channel with a link to jl777s medium profile.....it definately needs advertized...
+
+[05-May-19 04:48 PM] BlockTech#6895
+I would like to try it, is it available ? (I'm a noob). When i try the command in the pinned message, i get errors.
+
+[05-May-19 04:55 PM] BlockTech#6895
+when making "./maketetris" i get "../serialize.h:41:10: fatal error: boost/optional.hpp: No such file or directory #include <boost/optional.hpp> compilation terminated." 
+And later on "../games/tetris.c:48:10: fatal error: curses.h: No such file or directory #include <curses.h> compilation terminated"
+
+[05-May-19 05:00 PM] SHossain#0007
+@BlockTech did you use the pinned guide? https://discordapp.com/channels/412898016371015680/553499558420676609/561147990610411531
+
+[05-May-19 05:02 PM] BlockTech#6895
+Yes and in the first part (clone & Compile) i get thos error why i type : "./maketetris"
+
+[05-May-19 05:03 PM] SHossain#0007
+let me try on a fresh Ubuntu 18.04
+
+[05-May-19 05:04 PM] BlockTech#6895
+I'm using 19.04. Whith ubuntu 18.04 (my brother tried) he can't get past the "./zcutil/build.sh -j$ 2"
+
+[05-May-19 05:05 PM] SHossain#0007
+`./zcutil/build.sh -j$ 2` is wrong command
+
+[05-May-19 05:05 PM] SHossain#0007
+if he wants to use 2 threads, it should be `./zcutil/build.sh -j2`
+
+[05-May-19 05:06 PM] BlockTech#6895
+alright. Then on 19.04 i get an other error. i will try on the 18.04 version
+
+[05-May-19 05:06 PM] BlockTech#6895
+18.04 is working, he had dependancies to install.
+
+[05-May-19 05:07 PM] BlockTech#6895
+Don't bother, i'm gonna try on my own, don't want to make you loose your precious time ^^.
+
+{Reactions}
+😃 
+
+[05-May-19 05:09 PM] SHossain#0007
+added the deps in the guide as well now as step 0
+
+[05-May-19 05:41 PM] SHossain#0007
+@BlockTech just following the guide, i could compile everything successfully. no issue at all
+```
+make[2]: Leaving directory '/home/dev/komodo/src'
+make[1]: Leaving directory '/home/dev/komodo/src'
+Making all in doc/man
+make[1]: Entering directory '/home/dev/komodo/doc/man'
+make[1]: Nothing to be done for 'all'.
+make[1]: Leaving directory '/home/dev/komodo/doc/man'
+make[1]: Entering directory '/home/dev/komodo'
+make[1]: Nothing to be done for 'all-am'.
+make[1]: Leaving directory '/home/dev/komodo'
+dev@kmd:~/komodo$ cd src/cc
+dev@kmd:~/komodo/src/cc$ ./makegames
+make[1]: Entering directory '/home/dev/komodo/src'
+  CXXLD    komodod
+  CXXLD    komodo-test
+make[1]: Leaving directory '/home/dev/komodo/src'
+dev@kmd:~/komodo/src/cc$ ./maketetris
+gamescc.so with tetris
+tetris dapp
+```
+
+[20-May-19 05:36 PM] Artimunor#9812
+hi guys
+
+[20-May-19 05:43 PM] TonyL#3577
+Hi 😃
+
+[08-Jun-19 04:17 PM] dukeleto#7326
+Blast from the past, y'all
+
+[08-Jun-19 04:17 PM] dukeleto#7326
+https://twitter.com/retronauts/status/1136620617912860672
+
+{Embed}
+Retronauts (@retronauts)
+https://twitter.com/retronauts/status/1136620617912860672
+on this day in 1984, deep inside the Soviet Academy of Sciences,  Alexey Pajitnov put his Electronika 60 to the test with a puzzle program made of ASCII characters. He had no idea he was inventing the most popular video game of all time.
+Happy Birthday TETRIS! https://t.co...
+Retweets
+563
+Likes
+1155
+https://pbs.twimg.com/tweet_video_thumb/D8YV3yTUYAEP18z.jpg
+Twitter
+
+{Reactions}
+❤ (3) 
+
+[08-Jun-19 04:42 PM] dukeleto#7326
+I still remember the first time I played Tetris, I think it was 1989 on the NES
+
+{Reactions}
+6849_pepeold (2) 
+
+[08-Jun-19 05:47 PM] jorian#4555
+i wasn't even born back then
+
+{Reactions}
+➕ 👶 (2) 
+
+[09-Jun-19 06:48 AM] smk762 -  dracocanis ominator#7640
+I played it enough on original gameboy to see the blocks fallng in my sleep
+
+{Reactions}
+👍 
+
+[09-Jun-19 08:12 AM] zatJUM#9924
+I did too 😂
+
+[09-Jul-19 12:21 PM] polycryptoblog#1173
+
+{Attachments}
+https://cdn.discordapp.com/attachments/553499558420676609/598126577124900892/image0.jpg
+
+{Reactions}
+😲 (9) 
+
+[03-Nov-19 10:35 PM] Regnar#6164
+```- Tetris
+  - Tetris CC TUI in Python - [https://github.com/tonymorony/komodo-cctools-python/blob/master/tetris_tui.py](https://github.com/tonymorony/komodo-cctools-python/blob/master/tetris_tui.py)```
+
+Hey all, if you have any proof of concepts, or built something cool for Tetris CC, please let me know. The goal is to build out a list of concepts using CCs to help show other developers what is possible and add this to the Komodo docs page. TUIs are good!
+

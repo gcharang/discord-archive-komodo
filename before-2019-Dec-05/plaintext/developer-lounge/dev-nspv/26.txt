@@ -1,0 +1,414 @@
+==============================================================
+Guild: Komodo
+Channel: dev-nspv
+Topic: ./komodod -nSPV=1 -ac_reward=100000000  -ac_name=NSPV -ac_supply=10000000000 -ac_cc=2 -addressindex=1 -spentindex=1 -connect=5.9.102.210 &
+./komodod -nSPV=1 -addnode=5.9.253.195 &
+https://drive.google.com/drive/folders/1ZvzrhNBQgroejTKPl0kCOTJ8h7XMnO2M?usp=sharing
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[25-Jul-19 02:53 PM] dukeleto#7326
+because BSV attacks/etc
+
+[25-Jul-19 02:54 PM] blackjok3r#3181
+hmm not sure who told me that now, im confused lol
+
+[25-Jul-19 02:59 PM] jl777c#5810
+saying that a fullnode wont reorg more than 10 blocks is not a checkpoint
+
+[25-Jul-19 03:00 PM] jl777c#5810
+it also is subject to a chain split attack if a 10 block reorg is broadcast to half the network at just the right time
+
+[25-Jul-19 03:00 PM] jl777c#5810
+a superlite client relies on fullnode to tell it what the current chain is. so which node will it trust?
+
+[25-Jul-19 03:00 PM] jl777c#5810
+it has no way to know which fullnode is on the mainchain or the attacker chain
+
+[25-Jul-19 03:01 PM] jl777c#5810
+with nSPV, all the signatures are validated (using a purely local bruteforce validation of the notarization tx)
+
+[25-Jul-19 03:01 PM] blackjok3r#3181
+yes, understood.
+
+[25-Jul-19 03:01 PM] dukeleto#7326
+superlite clients follow the chain that their server follows, just like Electrum
+
+[25-Jul-19 03:01 PM] blackjok3r#3181
+I spent about 3H last night getting that notarization validation working
+
+[25-Jul-19 03:01 PM] blackjok3r#3181
+clever stuff
+
+[25-Jul-19 03:02 PM] dukeleto#7326
+@jl777c does nSPV randomly choose to connect to different servers or is it possible to get "stuck" on one "malicious" node?
+
+[25-Jul-19 03:02 PM] blackjok3r#3181
+it randomy chooses most of the time, We need more nodes though.
+
+[25-Jul-19 03:02 PM] dukeleto#7326
+Electrum has such problems with evil servers
+
+[25-Jul-19 03:03 PM] blackjok3r#3181
+I would say all notaries at least  right?
+
+[25-Jul-19 03:03 PM] blackjok3r#3181
+Or does that allow people to dos them 🤔
+
+[25-Jul-19 03:05 PM] dukeleto#7326
+we can use Cloudflare
+
+[25-Jul-19 03:05 PM] dukeleto#7326
+use DNS and have that DNS record point to various NN ip's
+
+[25-Jul-19 03:06 PM] dukeleto#7326
+spiritually similar to a DNS seed
+
+[25-Jul-19 03:06 PM] blackjok3r#3181
+the client finds peers just like a normal, node does. Then connects to up to 1000 of them I think.
+
+[25-Jul-19 03:06 PM] blackjok3r#3181
+I got that working last night aswell
+
+[25-Jul-19 03:06 PM] dukeleto#7326
+@jl777c that ZIP requires changing the tx header format, ugh
+
+[25-Jul-19 03:08 PM] smk762 -  dracocanis ominator#7640
+got some basic functionality up at http://oracle.earth/nspv_login/
+totally unsecure tho :D
+needs a bit more error handling too, crashed out a couple of times when method times out
+
+[25-Jul-19 03:10 PM] jl777c#5810
+currently, it updates the current height based on getinfo height being higher than the last
+
+[25-Jul-19 03:11 PM] jl777c#5810
+we do need to add validation that the new height prevBlockhash -> prev -> ... latest notarization
+
+[25-Jul-19 03:11 PM] TonyL#3577
+yay! let's test :)
+```ls | grep .exe
+nspv.exe```
+
+{Reactions}
+🙏 yassinheart 
+
+[25-Jul-19 03:11 PM] jl777c#5810
+if it is the max height and traces back to the most recent notarization, it seems it is the right chain and right height
+
+[25-Jul-19 03:11 PM] jl777c#5810
+as the latest notarization is updated, that also needs to be validated
+
+[25-Jul-19 03:12 PM] jl777c#5810
+with those two validations, you just need to have one honest peer to get onto the mainchain
+
+[25-Jul-19 03:12 PM] jl777c#5810
+this is similar to the PoW risk profile. a 100% eclipsed node, well not much can be done if all your peers are evil, but a single honest peer against 1000 evil nodes, that single honest peer is enough to get onto the main chain. this is the power of PoW
+
+[25-Jul-19 03:13 PM] jl777c#5810
+@blackjok3r does this make sense? it is fundamental to the PoW concept
+
+[25-Jul-19 03:13 PM] blackjok3r#3181
+yes I get it.
+
+[25-Jul-19 03:13 PM] jl777c#5810
+single honest node overpowering all the evil nodes, just due to the PoW work. in our case, due to knowing about the latest notarization
+
+[25-Jul-19 03:13 PM] jl777c#5810
+maybe you want to take a stab at updating the getinfo logic?
+
+[25-Jul-19 03:14 PM] jl777c#5810
+in superlite.h, where it gets the getinfo message, right now it just checks the height
+
+[25-Jul-19 03:14 PM] jl777c#5810
+that needs to be changed to tracing back the headers and also updating the latest notarization
+
+[25-Jul-19 03:14 PM] blackjok3r#3181
+yes. That seems to be giving me some problems elswhere aswell.
+
+[25-Jul-19 03:14 PM] jl777c#5810
+sort of fits into the gettransaction logic
+
+[25-Jul-19 03:14 PM] jl777c#5810
+and this will filter out bad nodes that are bad just because they are not in sync
+
+[25-Jul-19 03:14 PM] blackjok3r#3181
+for gettransaction if you dont  enter a height I made it use the tip. Which means the tx wont validate. because it canot scan forwards.
+
+[25-Jul-19 03:15 PM] TonyL#3577
+```.\nspv.exe
+027e3758c3a65b12aa1046462b486d0a63bfa1beae327897f56c5cfb7daaae71 genesisblockhash KMD
+Start NSPV_rpcloop.7771
+getaddrinfo(0.0.0.0) returned error
+[warn] evsig_init_: socketpair: ╚ыш яЁшыюцхэшх эх т√чтрыю WSAStartup, шыш яЁюшчю°ыр ю°шсър т WSAStartup.
+Discover KMD peers...setnode.(5.9.253.195) -> 5.9.253.195:7770
+setnode.(5.9.253.196) -> 5.9.253.196:7770
+setnode.(5.9.253.197) -> 5.9.253.197:7770
+setnode.(5.9.253.198) -> 5.9.253.198:7770
+setnode.(5.9.253.199) -> 5.9.253.199:7770
+setnode.(5.9.253.200) -> 5.9.253.200:7770
+setnode.(5.9.253.201) -> 5.9.253.201:7770
+setnode.(5.9.253.202) -> 5.9.253.202:7770
+setnode.(5.9.253.203) -> 5.9.253.203:7770
+end of client runloop
+[err] bufferevent.c:692: Assertion bufev_private->refcnt > 0 failed in bufferevent_decref_and_unlock_
+getaddrinfo(0.0.0.0) returned error
+getaddrinfo(0.0.0.0) returned error
+getaddrinfo(0.0.0.0) returned error``` 
+
+seems close but crash :/ not sure why it speak with me on broken russian
+
+[25-Jul-19 03:15 PM] jl777c#5810
+if you dont know the height at least it can get the height from the first call and then call it again
+
+[25-Jul-19 03:16 PM] jl777c#5810
+@TonyL does libbtc work for windows
+
+[25-Jul-19 03:16 PM] jl777c#5810
+with the BTC chain
+
+[25-Jul-19 03:16 PM] TonyL#3577
+Let me try
+
+[25-Jul-19 03:16 PM] jl777c#5810
+getaddrinfo(0.0.0.0) returned error <- that seems suspicious
+
+[25-Jul-19 03:17 PM] blackjok3r#3181
+Windsocks fault
+
+[25-Jul-19 03:19 PM] TonyL#3577
+https://github.com/tonymorony/libnspv/commit/26fabd508d7db7b95d419af84d6c06c17b74aad4 maybe it was too dirty
+
+{Embed}
+https://github.com/tonymorony/libnspv/commit/26fabd508d7db7b95d419af84d6c06c17b74aad4
+rm dead depend · tonymorony/libnspv@26fabd5
+https://avatars3.githubusercontent.com/u/24797699?s=200&v=4
+
+[25-Jul-19 03:19 PM] jl777c#5810
+we need decker for this
+
+[25-Jul-19 03:19 PM] blackjok3r#3181
+`EVUTIL_ASSERT(bufev_private->refcnt > 0);` Failed here in libevent
+
+[25-Jul-19 03:20 PM] jl777c#5810
+maybe libbtc doenst work in windows and we need to fix it, or i broke it adding nspv
+
+[25-Jul-19 03:20 PM] TonyL#3577
+I dont see any binaries/manuals and etc for windows in libbtc repo
+
+[25-Jul-19 03:21 PM] blackjok3r#3181
+I dont think so, because its failing in the DNS seeder part on startup, pretty sure I didnt change that at all either.
+
+[25-Jul-19 03:21 PM] jl777c#5810
+same autogen configure process
+
+[25-Jul-19 03:21 PM] jl777c#5810
+for windows. i didnt do anything to make it windows compatible
+
+[25-Jul-19 03:22 PM] TonyL#3577
+there was a typo https://github.com/tonymorony/libnspv/commit/217ca6f663f222e688c6e8ea26a9fddf1e74bf06 which failed crosscompilation
+
+{Embed}
+https://github.com/tonymorony/libnspv/commit/217ca6f663f222e688c6e8ea26a9fddf1e74bf06
+fix typo · tonymorony/libnspv@217ca6f
+https://avatars3.githubusercontent.com/u/24797699?s=200&v=4
+
+[25-Jul-19 03:22 PM] TonyL#3577
+if it original libbtc code - dont think someone tried to build it on win recently 😃
+
+[25-Jul-19 03:23 PM] TonyL#3577
+or it's not typo 🤔
+
+[25-Jul-19 03:23 PM] jl777c#5810
+that is my file
+
+[25-Jul-19 03:23 PM] jl777c#5810
+are you sure it should reverse the ifdef to ifndef
+
+[25-Jul-19 03:25 PM] TonyL#3577
+```In file included from src/tools/nspv.c:114:0:
+src/tools/nSPV_rpc.h:41:0: warning: "EADDRINUSE" redefined
+ #define EADDRINUSE WSAEADDRINUSE
+ 
+In file included from /usr/share/mingw-w64/include/pthread.h:63:0,
+                 from ./include/nSPV_defs.h:29,
+                 from src/tools/nspv.c:50:
+/usr/share/mingw-w64/include/errno.h:86:0: note: this is the location of the previous definition
+ #define EADDRINUSE 100
+ 
+In file included from src/tools/nspv.c:114:0:
+src/tools/nSPV_rpc.h:95:0: warning: "EAFNOSUPPORT" redefined
+ #define EAFNOSUPPORT WSAEAFNOSUPPORT
+ 
+In file included from /usr/share/mingw-w64/include/pthread.h:63:0,
+                 from ./include/nSPV_defs.h:29,
+                 from src/tools/nspv.c:50:
+/usr/share/mingw-w64/include/errno.h:82:0: note: this is the location of the previous definition
+ #define EAFNOSUPPORT 102
+ 
+In file included from src/tools/nspv.c:114:0:
+src/tools/nSPV_rpc.h:98:8: error: redefinition of ‘struct sockaddr_in6’
+ struct sockaddr_in6 {
+        ^~~~~~~~~~~~
+In file included from /usr/share/mingw-w64/include/ws2tcpip.h:18:0,
+                 from ./include/btc/protocol.h:40,
+                 from ./include/btc/net.h:34,
+                 from src/tools/nspv.c:31:
+/usr/share/mingw-w64/include/ws2ipdef.h:41:8: note: originally defined here
+ struct sockaddr_in6 {
+        ^~~~~~~~~~~~
+```
+
+[25-Jul-19 03:25 PM] TonyL#3577
+build throwing this with ifdef
+
+[25-Jul-19 03:25 PM] TonyL#3577
+and passing fine with ifndef, so decided it's a typo
+
+[25-Jul-19 03:32 PM] jl777c#5810
+lets assume its not a typo and comment out the include file that it complains about
+
+[25-Jul-19 03:32 PM] jl777c#5810
+comment out line 114
+
+[25-Jul-19 03:35 PM] jl777c#5810
+@gcharang added a protocolversion field to getinfo return
+
+{Reactions}
+👍 
+
+[25-Jul-19 03:35 PM] TonyL#3577
+if comment out `#include <nSPV_defs.h>` it doesnt know about functions from it
+```In file included from src/tools/nspv.c:111:0:
+src/tools/nspv.c: At top level:
+src/tools/nSPV_superlite.h:41:22: error: storage size of ‘NSPV_inforesult’ isn’t known
+ struct NSPV_inforesp NSPV_inforesult;
+``` and etc
+
+[25-Jul-19 03:35 PM] jl777c#5810
+this allows clients to just not query out of date fullnodes for new messages
+
+[25-Jul-19 03:36 PM] jl777c#5810
+@TonyL the problem is inside that filke
+
+[25-Jul-19 03:36 PM] jl777c#5810
+from ./include/nSPV_defs.h:29,
+
+[25-Jul-19 03:36 PM] jl777c#5810
+line 29
+
+[25-Jul-19 03:36 PM] jl777c#5810
+maybe #ifndef _WINDOWS around that?
+
+[25-Jul-19 03:37 PM] TonyL#3577
+will play with it
+
+[25-Jul-19 03:37 PM] jl777c#5810
+it is the pthread.h that is being included so guard that to make sure windows doesnt include it
+
+[25-Jul-19 03:38 PM] jl777c#5810
+i guess it is              #ifndef __MINGW
+
+[25-Jul-19 03:39 PM] jl777c#5810
+#include <pthread.h>
+
+[25-Jul-19 03:39 PM] jl777c#5810
+#endif
+
+[25-Jul-19 03:39 PM] TonyL#3577
+https://github.com/tonymorony/libnspv/commit/634afe0d784dae013dc384c299269963dfb51237 I have such change on my side
+
+{Embed}
+https://github.com/tonymorony/libnspv/commit/634afe0d784dae013dc384c299269963dfb51237
+this dependencie conflict with determenistic build one · tonymoro...
+https://avatars3.githubusercontent.com/u/24797699?s=200&v=4
+
+[25-Jul-19 03:40 PM] TonyL#3577
+before it thrown an error so compiler definetly trying to include it
+
+[25-Jul-19 03:40 PM] jl777c#5810
+ok, whatever gets past the double inclusion of pthread.h
+
+[25-Jul-19 03:41 PM] gcharang#6833
+@jl777c not sure if this is useful
+```
+In file included from src/tools/nspv.c:110:0:
+src/tools/nSPV_structs.h: In function ‘NSPV_getinfo_json’:
+src/tools/nSPV_structs.h:572:38: warning: passing argument 3 of ‘jaddstr’ makes pointer from integer without a cast [-Wint-conversion]
+     jaddstr(result,"protocolversion",ptr->version);
+                                      ^~~
+In file included from ./include/nSPV_defs.h:56:0,
+                 from src/tools/nspv.c:50:
+./include/komodo_cJSON.h:88:10: note: expected ‘char *’ but argument is of type ‘uint32_t {aka unsigned int}’
+     void jaddstr(cJSON *json,char *field,char *str);
+```
+
+[25-Jul-19 03:41 PM] jl777c#5810
+fixing
+
+{Reactions}
+👍 
+
+[25-Jul-19 03:42 PM] jl777c#5810
+fixed
+
+{Reactions}
+👍 
+
+[25-Jul-19 04:00 PM] dukeleto#7326
+TDD = Tony-Driven Development
+
+{Reactions}
+😆 (2) 
+
+[25-Jul-19 04:02 PM] jl777c#5810
+getinfo now returns protocolversion. oldernodes are backward compatible and will just return 0
+
+[25-Jul-19 04:09 PM] jl777c#5810
+@blackjok3r we did some saturation load tests and with 850+ peers doing full saturation requests, the fullnode did go up to 150% CPU load, but that is a crazy level of peers as normal superlites would be doing 1% that level, so that is estimated 100,000 normal superlite clients per fullnode. my 10 nodes i have setup could well support 1 million superlite clients
+
+[25-Jul-19 04:10 PM] jl777c#5810
+i will call the superlite that does crosschain between any two chains in a cluster the "superwallet" as it is a superset of the existing wallet
+
+{Reactions}
+👌 👍 💯 😎 (2) KMD (3) 
+
+[25-Jul-19 04:10 PM] blackjok3r#3181
+nice. I have pulled down those changes I think. just reading some code for this headers thing, gettransaction works, but its not very user friendly atm, returns some unexpected things.
+
+[25-Jul-19 04:11 PM] blackjok3r#3181
+it will fetch the tx, but using a tip height isnt any good without the check forwards from the last notarization.
+
+[25-Jul-19 04:11 PM] jl777c#5810
+yes, that is why i suggest the height /hdrs validation
+
+[25-Jul-19 04:12 PM] blackjok3r#3181
+just trying to find what to use, still have a more to get up to speed on
+
+[25-Jul-19 04:13 PM] jl777c#5810
+once you understand hdrsproof (which is a subset of gettransaction), then the hdrs validation wont be so bad, it is just the same logic to do for the prevblockhash checking
+
+[25-Jul-19 04:14 PM] blackjok3r#3181
+yes.
+
+[25-Jul-19 04:14 PM] jl777c#5810
+probably would be good to share code for doing the backwards headers thing
+
+[25-Jul-19 04:14 PM] blackjok3r#3181
+Yes I thaught something liek that already may exist. But it doesnt so thats what im trying to work out
+
+[25-Jul-19 04:14 PM] jl777c#5810
+maybe we need a special mode on the fullnode side to just return a specific set of headers, like if the nextheight is 0, that would tell the fullnode to return all the headers until the latest notarization
+
+[25-Jul-19 04:16 PM] jl777c#5810
+aha! currently fullnode getntzsproofresp returns error if there is no nextht
+
+[25-Jul-19 04:16 PM] jl777c#5810
+so you just need to add code there to special case it and have it return all the most recent headers. the superlite side should be able to gracefully handle missing ntz tx data
+
+[25-Jul-19 04:17 PM] jl777c#5810
+komodo_nSPV_fullnode.h (you do need to become familiar with the fullnode handling of the superlite client requests to do such changes) line 463 is a good place for this
+
+[25-Jul-19 04:18 PM] jl777c#5810
+internally it is a hash that is sent to the getntzsproofresp function, not a height, this avoids the confusion about what height the notarization is at vs what it notarized
+

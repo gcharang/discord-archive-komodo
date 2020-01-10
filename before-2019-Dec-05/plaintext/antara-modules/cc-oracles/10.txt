@@ -1,0 +1,402 @@
+==============================================================
+Guild: Komodo
+Channel: cc-oracles
+Topic: This channel is for discussion and announcements surrounding the oracles crypto condition contract. Please feel free to answer any questions, technical or non-technical. The oracles contract can be used for converting off-chain data into on-chain data. It has vast set of use cases as dapps and other contracts can trigger actions based on what is written to an oracle. Please see the channel's pinned messages for examples of how it is currently being used. Alright#0419 will be happy to answer any questions you may have when they are available.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[28-May-19 12:45 PM] smk762 -  dracocanis ominator#7640
+yeah, I was testing earlier to get http://oracle.earth/oracles_data/ converter working with those formats, so far so good
+
+[28-May-19 12:45 PM] Mihailo#5902
+Basically all four formats will be printed in string like this: `sprintf(str,"%lld",(long long)val);`
+
+[28-May-19 12:46 PM] smk762 -  dracocanis ominator#7640
+didnt try float tho, glad I asked first
+
+[28-May-19 12:46 PM] Mihailo#5902
+Or `sprintf(str,"%llu",(long long)uval);` for unsigned....
+
+[28-May-19 12:46 PM] Mihailo#5902
+So it will be integer representation
+
+[28-May-19 12:46 PM] smk762 -  dracocanis ominator#7640
+havnet tested signed yet, about to try that
+
+[28-May-19 12:47 PM] smk762 -  dracocanis ominator#7640
+autotests have it working tho
+
+[28-May-19 12:47 PM] smk762 -  dracocanis ominator#7640
+just need to make sure my conversion script is sane
+
+[28-May-19 01:45 PM] Mihailo#5902
+@jl777c @TonyL @Alright @smk762 -  dracocanis ominator 
+I've made a PR of oracles changes. Please make complete test to check if it does not break anything. First test with current timestamp does oracles works as they did up to now. Nothing should change (except oraclesamples that were changed to take baton address instead of txid). Then change PUBKEY_SPOOFING_FIX_ACTIVATION to timestamp before now (for example 1558359845) to see how it will work after July 15th, and check existing oracle with fix activated if nothing breaks (data, subscribe, new registers....)
+https://github.com/jl777/komodo/pull/1507
+
+{Embed}
+https://github.com/jl777/komodo/pull/1507
+Oracles pubkey spoofing in register tx fix by Mixa84 · Pull Reque...
+Fix activation on July 15th 2019 00:00
+Added oraclesfund tx to fund Oracles CC address of pubkey that will register, and spend it in register tx
+oraclessamples gets baton address as input instead o...
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+{Reactions}
+👍 (2) 📝 🙏 
+
+[29-May-19 08:43 AM] smk762 -  dracocanis ominator#7640
+https://github.com/jl777/komodo/pull/1509
+Tests updated and succesful (if PUBKEY_SPOOFING_FIX_ACTIVATION value in oracles.cpp is set to before now)
+
+{Embed}
+https://github.com/jl777/komodo/pull/1509
+Update cryptoconditions_oracles.py by smk762 · Pull Request #1509...
+-change tests to use baton address instead of baton utxo
+-update samples results reference index
+-add test for oraclesfund
+-modify test loop flow to avoid spent utxo errors.
+Note: Successful test r...
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+{Reactions}
+🔥 👍 
+
+[29-May-19 08:49 AM] Mihailo#5902
+👏 👏 👏
+
+[29-May-19 09:00 AM] TonyL#3577
+@smk762 -  dracocanis ominator could you please also do some basic manual tests?
+
+[29-May-19 09:01 AM] TonyL#3577
+Just to be sure that it working fine on non-regtest stuff too
+
+[29-May-19 09:01 AM] smk762 -  dracocanis ominator#7640
+done a few, but not the whole suite. yet to do a multiformat, will do now
+
+[29-May-19 09:02 AM] TonyL#3577
+great, cool 🚀
+
+[29-May-19 09:03 AM] Mihailo#5902
+It would be very good to test existing oracle when fix activates if nothing breaks at that moment...
+
+{Reactions}
+💯 👍 
+
+[29-May-19 01:34 PM] smk762 -  dracocanis ominator#7640
+tested multiformat pre and post activation, samples returned after activation fine, no `oracelsfund` required on the pre-activation oracle after activation. ran a few other maual tests, no issues found. Only thing worth mention but not at all a problem was that `oraclesfund` could be repeated after already being done.
+
+[29-May-19 01:35 PM] smk762 -  dracocanis ominator#7640
+so activation appears to have no ill effect on pre activation oracles or the data they hold within
+
+{Reactions}
+🔥 
+
+[07-Jun-19 12:26 AM] Mylo#8306
+Which branch has the new stuff?
+
+[07-Jun-19 02:50 AM] smk762 -  dracocanis ominator#7640
+FSM, but using timestamp for activation. Need to edit ~/komodo/src/cc.oracles.cpp
+
+[07-Jun-19 02:50 AM] smk762 -  dracocanis ominator#7640
+change `#define PUBKEY_SPOOFING_FIX_ACTIVATION 1558455503
+` to a timestamp in past, then rebuild
+
+[07-Jun-19 06:08 AM] Mylo#8306
+is "using timestamps" necessary?
+
+[07-Jun-19 06:09 AM] Mylo#8306
+if i'm launching a new smart chain, do i care about this?   or is this for backwards compat with existing launched FSM branches?
+
+[07-Jun-19 06:51 AM] smk762 -  dracocanis ominator#7640
+The changes will be applied at the July 15th hardfork timestamp. 
+There is a new RPC `oraclesfund` after the hardfork which needs to be run before you can subscribe/register
+
+[07-Jun-19 06:52 AM] smk762 -  dracocanis ominator#7640
+The other change is that `oraclesdata` will use `baton`, which is a registered publisher's R-address, instead of the `batonutxo` which is currently used
+
+[07-Jun-19 06:52 AM] smk762 -  dracocanis ominator#7640
+so if you want to test the changes, you need to build with a modified timestamp so it is activated.
+
+[07-Jun-19 06:53 AM] Mylo#8306
+understood.  thanks.
+
+{Reactions}
+👍 
+
+[07-Jun-19 08:52 PM] B. Gültekin Çetiner#0626
+Is there a full list of functions to be used for oracles?
+
+[07-Jun-19 08:53 PM] jl777c#5810
+kmd.io
+
+{Reactions}
+👍 
+
+[18-Jun-19 03:27 AM] smk762 -  dracocanis ominator#7640
+what would be the best way to retrieve historical samples in oracles after `oraclesamples` uses `baton` instead of `batonutxo`?
+with `batonutxo`, you can find the latest using `oraclesinfo`, and get x number of datapoints back. You can also use an old `batonutxo` to find samples from a specific batonutxo back. 
+it seems that `baton` defaults to the latest entry. If I want samples for a time period, is there a recommended way to retrieve just that, without also filtering out everything that happened since then?
+
+[18-Jun-19 06:34 AM] jl777c#5810
+record the latest baton at specific time periods, encode the sample number in the data also
+
+[18-Jun-19 07:19 AM] Mihailo#5902
+@smk762 -  dracocanis ominator I noticed similar problem few days ago, that you cannot fetch specific data tx as with oraclesamples you would need to get all data and then iterate through it. So we added oraclesample RPC that returns data from single data tx. When I made it I was thinking do we need also to fetch number of txs but decided to implement single tx. If it is very convenient to have fetching x txs from specific tx we can add it easily...
+
+[18-Jun-19 07:22 AM] smk762 -  dracocanis ominator#7640
+great, I'll test that out. I can see lookback from tx being handy, but I can work with single sample at the moment. I assume getting a list of tx related to the oracle baton address shouldnt be too difficult? from there can just loop over a subset of the list
+
+[18-Jun-19 07:22 AM] smk762 -  dracocanis ominator#7640
+pls let me know when ready to test out which branch / repo etc and I can add that RPC to our autotests & docs
+
+[22-Jun-19 08:28 AM] smk762 -  dracocanis ominator#7640
+Would it be difficult to add a "utxo count" output to `oraclesinfo`
+to send multiple `oraclesdata` in same block, oracle needs more than one utxo (e.g. 10utxo by running `oraclessubscribe` 10 times).
+utxo count output can show what its rate capacity per block is.
+
+Also wondering if/how oracle response may be affected by the cumulative transactions it has been involved in. With addresses in wallet.dat, we can use `cleanwallettransactions` to speed up RPCs that communicate with wallet. 
+Are oracle baton addresses similarly affected or able to be cleaned?
+
+[22-Jun-19 07:12 PM] TonyL#3577
+Such data points amount indication sounds like an useful addition
+
+[25-Jun-19 09:38 AM] Mihailo#5902
+I think we can show utxo count easily, let me just check are there any difficulties...
+
+{Reactions}
+yassinkomodo 
+
+[11-Jul-19 05:40 PM] FishyGuts#5085
+`An oracle is to blame
+Essentially, oracles are used in blockchains to verify real word information and then report back the finding to the blockchain, triggering an implementation of smart contracts. In this case, a Synthetix oracle, responsible for providing external data to Synthetix’s smart contracts, transmitted false data on June 25, which a bot took advantage of.`
+
+[11-Jul-19 05:41 PM] FishyGuts#5085
+https://cointelegraph.com/news/sophisticated-trading-bot-exploits-synthetix-oracle-funds-recovered
+
+{Embed}
+https://cointelegraph.com/news/sophisticated-trading-bot-exploits-synthetix-oracle-funds-recovered
+Sophisticated Trading Bot Exploits Synthetix Oracle, Funds Recovered
+A trading bot has stolen over $1 billion from synthetic asset platform Synthetix, but the error was quickly fixed, with no users affected...
+https://images.cointelegraph.com/images/740_aHR0cHM6Ly9zMy5jb2ludGVsZWdyYXBoLmNvbS9zdG9yYWdlL3VwbG9hZHMvdmlldy9iMDY3MWU3OTk1MGM5MDhhMTQ3MzdhMTRhZjE2MjhkMS5qcGc=.jpg
+
+[05-Sep-19 08:52 AM] Mylo#8306
+https://blog.makerdao.com/introducing-oracles-v2-and-defi-feeds/
+
+{Embed}
+Coulter
+https://blog.makerdao.com/introducing-oracles-v2-and-defi-feeds/
+Introducing Oracles V2 and DeFi Feeds
+This blog post introduces exciting changes to the Oracles infrastructure and Oracles governance. The aim of this post is to provide a stepping stone for MKR Governors that lays a foundation for discussing the Oracle proposals on the MakerDAO Governance Calls.
+https://blog.makerdao.com/wp-content/uploads/2019/04/NewBanners-03-1024x512.png
+
+[16-Sep-19 02:52 PM] redp1ll#3268
+When trying to sendrawtransaction after oraclesregister I get following return:
+
+[16-Sep-19 02:52 PM] redp1ll#3268
+16: mandatory-script-verify-flag-failed (Script evaluated without error but finished with a false/empty top stack element)
+
+[16-Sep-19 02:53 PM] redp1ll#3268
+CC Eval EVAL_ORACLES Invalid: vin.3 is CC for oraclesregister or pubkey not same as vin pubkey, register must be done from owner of pubkey that registers to oracle!! spending tx d4889e941eda1b4609c4ff1d7ec1ac4f98819ee82b36dd393424f7c17b373acb
+
+[16-Sep-19 02:53 PM] redp1ll#3268
+How are the pubkeys not the same?
+
+[16-Sep-19 02:53 PM] Mihailo#5902
+@redp1ll You must do a register from a node that is ran with -pubkey= as the one you want to register!
+
+[16-Sep-19 02:54 PM] Mihailo#5902
+Also you must do oralcesfund first on order to prove that you are the owner of pubkey.
+
+[16-Sep-19 02:56 PM] Mihailo#5902
+This was done in order to prevent others to register a pubkey that they do not own!
+
+[16-Sep-19 03:07 PM] redp1ll#3268
+@Mihailo I'm running the 2 node setup on one machine with different .conf files and run both nodes with -pubkey= option. I did the oraclesfund before that too
+
+[16-Sep-19 03:08 PM] redp1ll#3268
+Any idea what I'm doing wrong?
+
+[16-Sep-19 03:15 PM] Mihailo#5902
+Can you paste here the command lines for running nodes, and the oraclesregister command and on which node you ran it?
+
+[16-Sep-19 03:18 PM] redp1ll#3268
+Sure one sec
+
+[16-Sep-19 03:18 PM] redp1ll#3268
+./komodod -ac_name=LEW -ac_supply=100000 atadir=/home/redp1ll/coinData/LEW -addnode=localhost -ac_cc=1 -pubkey=02338fb71f2c71c7f0eb242bf6eb361e9a87ed121875f43b8396df8aff29d1bd19
+
+[16-Sep-19 03:18 PM] redp1ll#3268
+./komodod -ac_name=LEW -ac_supply=100000 ac_cc=1 -pubkey=02338fb71f2c71c7f0eb242bf6eb361e9a87ed121875f43b8396df8aff29d1bd19
+
+[16-Sep-19 03:19 PM] redp1ll#3268
+./komodo-cli -ac_name=LEW oraclesregister a17411b7d8fce50b2d2f697371060eddbd7da527d7f3870cddf98580067cf5cb 10000
+
+[16-Sep-19 03:19 PM] Mihailo#5902
+I see that you are using the same pubkey on both nodes, so I suppose that they do not have private keys for that pubkey on both?
+
+[16-Sep-19 03:22 PM] Mihailo#5902
+Usually you ran the node with pubkey which you have in your wallte on that node. You can run the node with some other pubkey, but then you are not able to sign transaction which need privatekey for that pubkey on that node.
+
+[16-Sep-19 03:22 PM] redp1ll#3268
+I actually importprivkey for both nodes
+
+[16-Sep-19 03:22 PM] Mihailo#5902
+Aha, ok. I just supposed you didn't importprivkeys
+
+[16-Sep-19 03:23 PM] Mihailo#5902
+Hmm, let me try at myside.
+
+[16-Sep-19 03:23 PM] redp1ll#3268
+Thanks a lot, really appreciate it
+
+[16-Sep-19 03:53 PM] Mihailo#5902
+@redp1ll I was able to fund/register on a setup with 2 local nodes ran with same pubkey and both having privatekey for that pubkey
+
+[16-Sep-19 03:54 PM] Mihailo#5902
+Are you sure you imported privkey correctly
+
+[16-Sep-19 03:55 PM] redp1ll#3268
+hmmm yes i think so
+
+[16-Sep-19 03:56 PM] redp1ll#3268
+./komodo-cli -ac_name=LEW -datadir=/home/redp1ll/coinData/LEW -addnode=localhost validateaddress RSBQFTVcmmPdZ1M6SWQjgZazPTH8pKwYHG
+{
+  "isvalid": true,
+  "address": "RSBQFTVcmmPdZ1M6SWQjgZazPTH8pKwYHG",
+  "scriptPubKey": "76a914b961cd7fcdf2ef98806e8114b1b9b550076891c088ac",
+  "segid": 19,
+  "ismine": true,
+  "iswatchonly": false,
+  "isscript": false,
+  "pubkey": "02338fb71f2c71c7f0eb242bf6eb361e9a87ed121875f43b8396df8aff29d1bd19",
+  "iscompressed": true,
+  "account": ""
+}
+redp1ll@ubuntu:~/Desktop/komodo/src$ ./komodo-cli -ac_name=LEW -datadir=/home/redp1ll/coinData/LEW -addnode=localhost dumpprivkey RSBQFTVcmmPdZ1M6SWQjgZazPTH8pKwYHG
+
+[16-Sep-19 03:56 PM] Mihailo#5902
+This is on the node where you are running oracles register?
+
+[16-Sep-19 03:58 PM] redp1ll#3268
+yes, oraclefund works but not register.
+
+[16-Sep-19 03:58 PM] redp1ll#3268
+well i tried it on both nodes with the same result
+
+[16-Sep-19 03:59 PM] Mihailo#5902
+Can you give me the hex of oraclesfund and oraclesregister, you can send it in dm
+
+[16-Sep-19 03:59 PM] redp1ll#3268
+sure!
+
+[30-Sep-19 05:41 AM] smk762 -  dracocanis ominator#7640
+I've hit an issue when reindexing one of my chains
+`CC Eval EVAL_ORACLES Invalid: unexpected OraclesValidate for register spending tx 3cb077f66c9b56a56ce8f586cd6af7b6ef9e7b6c51c42ca8a12b6945b5db903f
+`
+once this happens, it wont progress to next block. Is there a way to fix or overcome this?
+
+[30-Sep-19 07:18 AM] Mihailo#5902
+@smk762 -  dracocanis ominator Hmmm, it may be the fix for pubkey spoofing. But it is time activated. Can you give more details on register tx, when is the block in which is that tx and etc.
+
+[30-Sep-19 07:28 AM] smk762 -  dracocanis ominator#7640
+https://pastebin.com/yWgJ9q94
+
+{Embed}
+https://pastebin.com/yWgJ9q94
+[JSON] Launch Params:     komodod -addnode=45.77.192.213 -addnode=...
+https://pastebin.com/i/facebook.png
+
+[30-Sep-19 07:29 AM] smk762 -  dracocanis ominator#7640
+I can run the chain by using a bootstrap from another node, but was trying to reindex to get addressindex/spentindex up for explorer.
+
+[30-Sep-19 07:31 AM] smk762 -  dracocanis ominator#7640
+if its not an easyfix, I can kill the chain and start again, I think I'm the only one running it unless someone in LABs still is also. Working on an oracles_export script now to migrate existing data if it comes to that (it holds all data for display on https://oracle.earth/).
+
+[30-Sep-19 09:43 AM] Mihailo#5902
+Hmmm, some how that refister tx is spending CC vout and there was no spending of CC vout in register until the spoofing fix. The date of the block is June 14th but the fix starts at July 15th.
+
+[30-Sep-19 09:43 AM] Mihailo#5902
+I`ll sync the chain to see the tx itself
+
+[30-Sep-19 09:44 AM] Mihailo#5902
+@smk762 -  dracocanis ominator Or if you can paste me the decoded tx that fails would be even better.
+
+[30-Sep-19 09:48 AM] Mihailo#5902
+Hmmm, I have synced the chain. I see the tx. Let me check
+
+[30-Sep-19 09:55 AM] Mihailo#5902
+@smk762 -  dracocanis ominator This is strange. The tx seems to be oraclesfund tx, but it is in time when spoofing fix is not active. Still I don't know yet how it complained about unexpected oraclesvalidate for register!
+
+[30-Sep-19 09:55 AM] Mihailo#5902
+Are you sure the time is correct on nodes running that chain?
+
+[30-Sep-19 09:58 AM] smk762 -  dracocanis ominator#7640
+yeah time is correct. Could my fault for tesing the oraclesfund rpc before spoofing fix activation (I recall changing the activation time at some stage to prepare for the change, but thought it was on a different chain). I'll see if I can get decoded tx, though I might not have that wallet active anymore
+
+[30-Sep-19 09:59 AM] Mihailo#5902
+Even if you tested fund before it shouldn't complain. I'm totaly confused how the CC validation is triggered when there is no CC input spent @jl777c
+
+[30-Sep-19 10:01 AM] Mihailo#5902
+Ah, no. It is a problem of spending tx 3cb077f66c9b56a56ce8f586cd6af7b6ef9e7b6c51c42ca8a12b6945b5db903f, so it is probably register that is failing...
+
+[30-Sep-19 10:02 AM] Mihailo#5902
+@smk762 -  dracocanis ominator Could be the problem that you did fund and register before the fix active. But we should also prevent that the chain is stuck...
+
+[30-Sep-19 10:03 AM] smk762 -  dracocanis ominator#7640
+Most likely cause is premature activation, testing rpc, then changing activation back to actual.
+
+[30-Sep-19 10:03 AM] Mihailo#5902
+Yes, that is it.
+
+[30-Sep-19 10:06 AM] Mihailo#5902
+I've commented the else in oraclesregister validation and it passes
+
+[30-Sep-19 10:07 AM] Mihailo#5902
+So basically this shouldn't happen, but for example if anybody was sending the fund and register before the fix activation (for example he creates the tx manually) it could break the sync of the chain.
+
+[30-Sep-19 10:07 AM] Mihailo#5902
+@jl777c This is very unlikely but should we do something about this?
+
+[30-Sep-19 10:08 AM] smk762 -  dracocanis ominator#7640
+decoded tx - https://pastebin.com/g94Jvrgn
+
+{Embed}
+https://pastebin.com/g94Jvrgn
+[JSON] ~/komodo/src/komodo-cli -ac_name=ORACLEARTH getrawtransacti...
+https://pastebin.com/i/facebook.png
+
+[30-Sep-19 10:08 AM] Mihailo#5902
+I've got it already, thnx.
+
+[30-Sep-19 10:09 AM] smk762 -  dracocanis ominator#7640
+I'm halfway through a migration script, and its a rare situation so unlikely to affect production chains
+
+[30-Sep-19 10:09 AM] Mihailo#5902
+YEs
+
+[30-Sep-19 10:23 AM] jl777c#5810
+if it can be worked around, that seems sufficient
+
+[30-Sep-19 10:25 AM] Mihailo#5902
+You can comment the else part in register validation and it will pass. But without code change it cannot be worked around.
+
+[30-Sep-19 10:34 AM] jl777c#5810
+i mean, is this specific oracle so important? can a new one be made as a replacement
+
+[30-Sep-19 10:36 AM] Mihailo#5902
+No, the problem is if someone made and oracle with fund/register tx before the pubkey spoofing fix was activated (this could only be done when moving the time activation or manually creating a tx), then it will stuck the chain sync. But this is very unlikely that someone has done on production chain!
+
+[30-Sep-19 10:48 AM] jl777c#5810
+ok, so can we ignore this? it seems it cant be done anymore and is only for legacy instances?
+
+[30-Sep-19 10:50 AM] Mihailo#5902
+Yes, I think we can ignore it. Just wanted to check with you 😉
+
+[24-Oct-19 02:27 PM] CrisF#3405
+Hi, I have a non-tech general question about Oracles (in general).
+I've been to some conferences and presentations, and met quite a few seemingly smart people recently.  They all seem to be waiting for, or recently developed an oracle.
+We tested this in Labs over 1 year ago.  Seems quite old.
+What am I missing?
+

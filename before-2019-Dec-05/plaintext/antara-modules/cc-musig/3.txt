@@ -1,0 +1,370 @@
+==============================================================
+Guild: Komodo
+Channel: cc-musig
+Topic: ./komodod -ac_name=MUSIG -ac_supply=100000 -ac_reward=10000000 -pubkey=<yourpub> -ac_cclib=sudoku -ac_cc=2 -addnode=5.9.102.210 &
+faucet is funded, do faucetget and sendrawtransaction
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[23-Feb-19 03:30 PM] blackjok3r#3181
+maybe I need to jkust try 3 nodes manually
+
+[23-Feb-19 03:30 PM] jl777c#5810
+all MUSIG need all commitments to generate a nonce
+
+[23-Feb-19 03:30 PM] jl777c#5810
+and all MUSIG need all nonces
+
+[23-Feb-19 03:30 PM] blackjok3r#3181
+well its not working tha way
+
+[23-Feb-19 03:30 PM] blackjok3r#3181
+it taking its own comitment
+
+[23-Feb-19 03:30 PM] blackjok3r#3181
+and as soona s you add on
+
+[23-Feb-19 03:30 PM] blackjok3r#3181
+it returns a nonce
+
+[23-Feb-19 03:30 PM] blackjok3r#3181
+my code shouldnt have changed anything there
+
+[23-Feb-19 03:31 PM] jl777c#5810
+well I assumed it returned an error if there werent enough commitments to return a nonce
+
+[23-Feb-19 03:31 PM] blackjok3r#3181
+no it doesnt...
+
+[23-Feb-19 03:31 PM] jl777c#5810
+maybe manually is the next step to do?
+
+[23-Feb-19 03:31 PM] blackjok3r#3181
+or well to be mroe specific, it just doenst check they are all there, and just returns one as soon as you combine 2 commitments
+
+[23-Feb-19 03:32 PM] blackjok3r#3181
+then when you try to add more, it seemingly ignores them. They are added, but I dont think they are being used
+
+[23-Feb-19 03:33 PM] blackjok3r#3181
+Yes I tguess I will need to try with 3 nodes without my changes, unless I can figure this out.
+
+[23-Feb-19 03:33 PM] blackjok3r#3181
+I think it will act the same way.
+
+[23-Feb-19 03:50 PM] blackjok3r#3181
+I got it working
+
+[23-Feb-19 03:54 PM] jl777c#5810
+what was the trick?
+
+[23-Feb-19 04:04 PM] blackjok3r#3181
+```if ( ind != MUSIG[myind]->num-1 )
+        {
+            fprintf(stderr, "ind.%i MUSIG[myind]->num.%i\n", ind, MUSIG[myind]->num);
+            return(cclib_error(result,"need rest of nonce's to continue"));
+        }```
+Put this on every step
+
+[23-Feb-19 04:05 PM] blackjok3r#3181
+thats really not going to be a solution for actual seperate nodes though maybe? Because I am doing everyhting in an exact order its easier to control
+
+[23-Feb-19 04:08 PM] jl777c#5810
+for separate nodes, the way I had it should work
+
+[23-Feb-19 04:08 PM] jl777c#5810
+the issues are having multiple session data structurs
+
+[23-Feb-19 04:12 PM] blackjok3r#3181
+I am not so sure, I will test that at a later time. The problem is that its returning that nonce as soon as you call `commit` the veryt first time. So it wroks fine for only 2 nodes, but going any higher thatn that it breaks, and returns a nonce before ti has all the commitments.
+
+[23-Feb-19 04:16 PM] jl777c#5810
+oh, maybe we need to track how many commitments it has and only ask for nonce after it has all of them?
+
+[23-Feb-19 04:16 PM] jl777c#5810
+if it only works for 2 pubkeys, its pretty worthless
+
+[23-Feb-19 04:16 PM] blackjok3r#3181
+yes. I will have a think about this, its getting late but I want to get a spend with large number working. gald I figured this out today. 😃
+
+[23-Feb-19 04:18 PM] blackjok3r#3181
+`6528185628d489d2517ccdeb7099ab699bc2a8ce2f096d751351d7c0f29f2752` 
+After losing about 35 coins, due to it failing. Finally have one with 4 signers 😄
+
+[23-Feb-19 04:18 PM] blackjok3r#3181
+will try 100 now
+
+[23-Feb-19 04:22 PM] jl777c#5810
+100 could well be a world record as far as I know
+
+[23-Feb-19 04:22 PM] blackjok3r#3181
+💯  DONE! `baa2c83cf40c7b1fd4dd24a3a52b7a6e5583f8ddb3aa3bd390b25be7e3a34b94`
+
+{Reactions}
+🔥 (3) 
+
+[23-Feb-19 04:22 PM] blackjok3r#3181
+another world record haha
+
+[23-Feb-19 04:23 PM] blackjok3r#3181
+no reason even 5000 would not work
+
+[23-Feb-19 04:23 PM] blackjok3r#3181
+10000 not sure where it would start to break, have to monitor ram use here.
+
+[23-Feb-19 04:29 PM] blackjok3r#3181
+5000 is using 3GB of ram
+
+[23-Feb-19 04:30 PM] gcharang#6833
+now on each signing node, a session needs to be created:
+ 5 args: ind, numsigners, combined_pk, pkhash, message to be signed
+./komodo-cli -ac_name=MUSIG cclib session 18 '[]' -- for this command, the values : 
+```
+ numsigners, combined_pk, pkhash, message to be signed
+```
+same on both nodes or different?
+
+[23-Feb-19 04:32 PM] gcharang#6833
+@blackjok3r ^
+
+[23-Feb-19 04:33 PM] blackjok3r#3181
+index increments with pubkey the rest are the same.
+
+[23-Feb-19 04:33 PM] gcharang#6833
+The example you submitted here: https://github.com/jl777/komodo/blob/145d05a62586760e74c3d3422c104107c583510f/src/cc/musig.cpp#L86
+used different values, so I was a little confused
+
+{Embed}
+https://github.com/jl777/komodo/blob/145d05a62586760e74c3d3422c104107c583510f/src/cc/musig.cpp
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[23-Feb-19 04:34 PM] blackjok3r#3181
+like how I did the single node here is it generate a list of pubkeys, and the index for each pubkey is the number the pubkey is in the list
+Prety sure that example is wrong sorry
+
+[23-Feb-19 04:34 PM] blackjok3r#3181
+my terminal was a mess of commands. Must have copy pasted the wrong one
+
+[23-Feb-19 04:35 PM] gcharang#6833
+No problem. I saw jl's example from yesterday so was able to recognise this lol
+
+[23-Feb-19 04:42 PM] blackjok3r#3181
+wow 5000 is taking a long time, I hope it doesnt run out fo ram here 😅  4.5GB now
+
+[23-Feb-19 04:48 PM] jl777c#5810
+i guess we need to post the pubkeys being combined to prove it is 5000 combined as it wont appear onchain
+
+[23-Feb-19 04:48 PM] jl777c#5810
+so some webpage that proves this world record and we can get some PR
+
+[23-Feb-19 05:05 PM] Mylo#8306
+post to a gist on gitlab 5k sigs
+
+[23-Feb-19 05:05 PM] Mylo#8306
+Github
+
+[23-Feb-19 05:05 PM] jl777c#5810
+it is just one sig 64 bytes
+
+[23-Feb-19 05:06 PM] jl777c#5810
+5000 partial sigs of 32 bytes each
+
+[23-Feb-19 05:06 PM] blackjok3r#3181
+I have a list.json with all the keys. and the combined .. but I dont know if 5000 is going to finish, its extremly slow.
+
+[23-Feb-19 05:06 PM] jl777c#5810
+5000 pubkeys
+
+[23-Feb-19 05:06 PM] gcharang#6833
+@blackjok3r 
+both nodes gave same `combinedsigs` and `verify` gave success on both nodes, but:
+`spend` is giving me:
+```
+{
+  "msg": "78175fde3928fe43f849e1f1f335b6c37532e42d583199cb96836b5305217a9a",
+  "combined_pk": "03d31479e789014a96ba6dd60d50210045aa8292fe693f293d44615929f04cf57a",
+  "combinedsig": "dd85984aff4d0cf43b5ccb17c873f217915e733d12b5fdd3c97536fd5d89235cdd25b30d0b40d5b5ef4af6f3044fefdcfc0e0132e54765b1e716a9cdccb5c7e8",
+  "status": "error",
+  "error": "musig didnt validate"
+}
+```
+
+[23-Feb-19 05:07 PM] blackjok3r#3181
+umm... that was the first bug I had to fix are you updated ?
+
+[23-Feb-19 05:07 PM] gcharang#6833
+no didn't update from yesterday 😓
+
+[23-Feb-19 05:08 PM] blackjok3r#3181
+https://github.com/blackjok3rtt/komodo/commit/b6990f5f5ef7fc5a40251583873c9cda76620bb4
+I pushed my verison with the script top run it... I think on a large server with lots of ram and plenty of time, should be able to do huge numbers opf keys
+
+{Embed}
+https://github.com/blackjok3rtt/komodo/commit/b6990f5f5ef7fc5a40251583873c9cda76620bb4
+working single node multi sign · blackjok3rtt/komodo@b6990f5
+https://avatars1.githubusercontent.com/u/30971146?s=200&v=4
+
+[23-Feb-19 05:08 PM] Mylo#8306
+I just provisioned a new 64GB machine to replace a 16GB machine with NVMe drives for labs and stuff.
+You can use that before I set it up too much, still waiting for /29 - so you can use that for a few days then I nuke it??
+
+[23-Feb-19 05:08 PM] gcharang#6833
+Will update and try again
+
+[23-Feb-19 05:09 PM] blackjok3r#3181
+sure, its getting late, but just to install komodo and start the script. I need to see hwo much ram 5000 uses (hopefully its not more than 9GB)  then we can use your server to do the largest possible.
+
+[23-Feb-19 05:10 PM] Mylo#8306
+Ok I’ll wake up early and install kmd.  I think I’m 2 hours ahead of you.  Will DM u in morning
+
+[23-Feb-19 05:10 PM] Mylo#8306
+jl777 branch
+
+[23-Feb-19 05:10 PM] blackjok3r#3181
+cool man, its 1am here lol... yes jl777 branch on my repo. the script is on /src/ called `musigtest.py`
+
+[23-Feb-19 05:10 PM] blackjok3r#3181
+but I can do it if you need.
+
+[23-Feb-19 05:11 PM] Mylo#8306
+Ok 👌 I’ll try maybe but DM u login deets in AM.
+
+{Reactions}
+👍 
+
+[23-Feb-19 05:13 PM] gcharang#6833
+I will post the finished doc in about an hour if anyone needs
+
+{Reactions}
+🔥 👌 
+
+[23-Feb-19 05:15 PM] blackjok3r#3181
+script is super easy, press y and tye a number of kesy then hit enter and wait 😄
+
+[23-Feb-19 05:15 PM] Mylo#8306
+💤 soon for me, will catch up in morning
+
+[23-Feb-19 05:15 PM] Mylo#8306
+Haha
+
+[23-Feb-19 05:16 PM] blackjok3r#3181
+yes good idea. might just leave this running
+
+[23-Feb-19 05:16 PM] blackjok3r#3181
+and go sleep
+
+[23-Feb-19 06:40 PM] gcharang#6833
+finally! my first musig spend transaction: 332373cd0e4cbdddd3916e827a408ba4a175eb5039cc5a43725a50b83cb74e52
+
+[23-Feb-19 06:48 PM] jl777c#5810
+good news!
+
+[23-Feb-19 08:18 PM] gcharang#6833
+Doc is updated with an example and explanations for various things: https://developers.komodoplatform.com/basic-docs/cryptoconditions/dynamic/cc-musig.html#a-complete-example
+
+{Embed}
+https://developers.komodoplatform.com/basic-docs/cryptoconditions/dynamic/cc-musig.html
+Module: MuSig (In Development) | Komodo Documentation
+Documentation for developers building on Komodo
+
+[24-Feb-19 04:00 AM] Mylo#8306
+docs are great @gcharang thx heaps
+
+[24-Feb-19 04:05 AM] blackjok3r#3181
+Done a 1000 pubkey spend here. 2.5GB ram used.
+
+[24-Feb-19 04:06 AM] blackjok3r#3181
+`7b44fd1c3d94456b076ce6c110f3bb37aaeff45330ec03c4e1be0cab583b257e`
+
+[24-Feb-19 04:07 AM] blackjok3r#3181
+
+{Attachments}
+https://cdn.discordapp.com/attachments/548408393069756417/549079932018622475/list.json
+
+[24-Feb-19 04:07 AM] blackjok3r#3181
+list of pubkeys.
+
+[24-Feb-19 04:08 AM] blackjok3r#3181
+Test can be reporduced by anyone by just using the `musigtest.py` to import list.json and generate the same combinedkey.
+
+[24-Feb-19 04:08 AM] blackjok3r#3181
+Mylo is trying a 5500 test on a larger system. Might take a fair while.
+
+[24-Feb-19 04:12 AM] Mylo#8306
+14.5% of the mem (64GB) taken, 9.3GB RAM.  5550 sigs.
+
+[24-Feb-19 04:15 AM] Mylo#8306
+going to the beach.  i'll have to get the blockchainworldrecord.com site updated and set it up for permanance 😄
+
+[24-Feb-19 04:19 AM] Mylo#8306
+spot price of 384GB RAM systems is 10c/hr - maybe we can try that later in the week
+
+{Reactions}
+🔥 
+
+[24-Feb-19 06:16 AM] Mylo#8306
+37% of mem, 24GB still chugging along it seems.
+
+{Reactions}
+😄 
+
+[24-Feb-19 07:52 AM] grewalsatinder#9653
+anyone attempted to compile and test musig on mac?
+
+[24-Feb-19 07:52 AM] grewalsatinder#9653
+I compiled musig cclib komodo on ubuntu vm
+
+[24-Feb-19 07:52 AM] grewalsatinder#9653
+now compiling on mac
+
+[24-Feb-19 07:53 AM] grewalsatinder#9653
+anyway, compiled with my modified makelibcc script
+
+[24-Feb-19 07:53 AM] grewalsatinder#9653
+now compiling kmd
+
+[24-Feb-19 07:54 AM] grewalsatinder#9653
+@blackjok3r I thought I need two nodes to test musig
+
+[24-Feb-19 07:54 AM] blackjok3r#3181
+The jl777 repo needs 2 nodes (and currentl tdoes nto work with more than 2)
+
+[24-Feb-19 07:54 AM] grewalsatinder#9653
+so I can just do getnewaddress and use it's pubkey to test musig?
+
+[24-Feb-19 07:55 AM] blackjok3r#3181
+if you sue my repo and the script I modified the daemon to be able to simulate unlimded daemons
+
+[24-Feb-19 07:55 AM] grewalsatinder#9653
+how you testing with 1000?
+
+[24-Feb-19 07:55 AM] grewalsatinder#9653
+oh you are using wizard powers of yours 😄
+
+[24-Feb-19 07:55 AM] grewalsatinder#9653
+nice!
+
+[24-Feb-19 07:55 AM] blackjok3r#3181
+I created the MUSIG struct as a vector of sctructs and just simulate unlimited daemons.. its limited by ram. Mylo is runnign at est with 5500 pubkeys atm on 64GB ram server 😄
+
+[24-Feb-19 07:56 AM] grewalsatinder#9653
+very cool!
+
+[24-Feb-19 07:56 AM] blackjok3r#3181
+simple as mine some coins, start script. press `y` and type number of pubkeys and wait... I think 5500 pubkeys is something like `90750000` RPC calls 😂
+
+[24-Feb-19 07:57 AM] blackjok3r#3181
+really not practical, but allows to set another record unlikely to be beated for any time soon lol
+
+[24-Feb-19 07:57 AM] grewalsatinder#9653
+komodod doesn't compile from jl777 repo on mac, and I guess the chances from jl777/jl777 branch are not in komodoplatform/komodo/jl777 branch...
+so, I'll just test things with linux vm
+
+[24-Feb-19 07:57 AM] grewalsatinder#9653
+don't want to spend time torubleshooting mac issues
+
+[24-Feb-19 07:58 AM] blackjok3r#3181
+yes I used ubuntu 16.04 VM's here to test 2 nodes
+

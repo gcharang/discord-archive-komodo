@@ -1,0 +1,447 @@
+==============================================================
+Guild: Komodo
+Channel: dev-scalability
+Topic: Discussion about Komodo scalability. Komodo has demonstrated 20,000 TPS.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[08-Aug-18 08:57 AM] blackjok3r#3181
+many trial and errors here.... I found somehting on google, saying to downgrade to 1.7.2 but the playbook I am using is incompatible with that.
+
+[08-Aug-18 09:10 AM] patchkez#5349
+@blackjok3r  hi. what ansible version do you use?
+
+[08-Aug-18 09:10 AM] blackjok3r#3181
+I think i might have fixed it
+
+[08-Aug-18 09:10 AM] blackjok3r#3181
+https://github.com/ansible/ansible/issues/11536#issuecomment-153030743
+
+{Embed}
+https://github.com/ansible/ansible/issues/11536
+advise updating controlpath settings when ssh throws 'unix domain ...
+ISSUE TYPE Feature Idea COMPONENT NAME ssh control persist ANSIBLE VERSION 2.0 SUMMARY When trying to use the ec2 plugin, ssh fails with this error: SSH Error: unix_listener: "/Users/luke/.ans...
+https://avatars2.githubusercontent.com/u/743?s=400&v=4
+
+[08-Aug-18 09:10 AM] cipi#4502
+i also remember something else... it may have something to do with the hostname... this socket files are created and the hostname is part of the file name... if it is too long, it fails...
+
+[08-Aug-18 09:10 AM] cipi#4502
+😄
+
+[08-Aug-18 09:11 AM] blackjok3r#3181
+The issue is on polling... so while it was waiting for python2 to install... it would los connection then bail out
+
+[08-Aug-18 09:11 AM] blackjok3r#3181
+🤞
+
+[08-Aug-18 09:12 AM] blackjok3r#3181
+Now I just need to figure out if it actually worked lol
+
+[08-Aug-18 09:12 AM] blackjok3r#3181
+there are stll errors everywhere... but it seems a fair few of them are not actually errors
+
+[08-Aug-18 09:13 AM] snowdamn#2414
+most important channel in KMD Discord 👍
+
+[08-Aug-18 09:13 AM] blackjok3r#3181
+We will get there eventually...
+
+[08-Aug-18 09:13 AM] blackjok3r#3181
+lol
+
+[08-Aug-18 09:13 AM] blackjok3r#3181
+Always seems to be another problem around the corner!
+
+[08-Aug-18 10:17 AM] blackjok3r#3181
+Its actually installing 😄 I almost rage quit
+
+[08-Aug-18 10:20 AM] SHossain#0007
+@blackjok3r you are turn off those instances now. we don't need them anymore.
+
+[08-Aug-18 10:21 AM] SHossain#0007
+thank you very much for running them 😃
+
+[08-Aug-18 10:23 AM] blackjok3r#3181
+no worries
+
+[08-Aug-18 12:47 PM] blackjok3r#3181
+@patchkez  Giving up on this... AWS does not report the correct IP address for public access inside iteself. So ceph-ansible is not working, nothing can communicate. 
+I will put off my other work that I had lined up for tomorrow another day and try to start again using GlusterFS, as I have found more up to date docs for that and hopefully wont have to keep going in circles.
+
+[08-Aug-18 12:48 PM] blackjok3r#3181
+Ceph looks great for deploying on physical servers, but on AWS its just not playing ball.
+
+[08-Aug-18 12:50 PM] patchkez#5349
+@blackjok3r ok, thanks for update.  I still need to investigate if we can use any combination of AWS services instead of building dedicated shared storage.
+
+[08-Aug-18 12:52 PM] blackjok3r#3181
+doesn't look like we can, unless we have a heap of separate EBS volumes and then copy all th data to one place aftrerwards, to me this seems like far too much effort to set up. I would rather deploy a shared volume and just push all data directly to that, it has to be easier in the long run. If I knew what I was doing today, I would have realised what I was doing wasn't goig to work, earlier on, but meh. Another day of learning more stuff.
+
+[08-Aug-18 02:29 PM] blackjok3r#3181
+https://banzaicloud.com/blog/aws_provision_efs/
+
+😄
+
+[08-Aug-18 02:29 PM] blackjok3r#3181
+We can use Elastic Cloud Filesystem
+
+[08-Aug-18 02:29 PM] blackjok3r#3181
+I will figure it out 😃
+
+[08-Aug-18 02:32 PM] blackjok3r#3181
+https://github.com/kubernetes-incubator/external-storage/tree/master/aws/efs
+
+{Embed}
+https://github.com/kubernetes-incubator/external-storage/tree/master/aws/efs
+kubernetes-incubator/external-storage
+external-storage - External storage plugins, provisioners, and helper libraries
+https://avatars2.githubusercontent.com/u/20862812?s=400&v=4
+
+[08-Aug-18 03:22 PM] blackjok3r#3181
+```The maximum throughput you can drive for each Amazon EC2 instance is 250 MB/s.
+Up to 128 active user accounts for each instance can have files open at the same time. Each user account represents one local user logged in to the instance.
+Up to 32,768 files open at the same time on the instance.```
+According to these, if each EC2 instance, is a cluster of 64 chains, we are well inside all limits. 
+If we need to spread over the 2 regions with Kubernetes available, we might need to have 2 EFS in total each with 4096 chains. then sync these together after the test. Using this all the Containers can use the same data store, as they already place their stuff in their own folder, we wont get any issues. I can even mount it as the Data Store for the first 64 chains.
+
+[09-Aug-18 08:44 AM] blackjok3r#3181
+I have created a new Kubernetes cluster on AWS with EFS connected to it. This should do it for the last of the issues, unless Patchkez runs into some more. 
+@Steve Lee  is there any news on AWS, and our funding and account limits being raised enough to run a large scale test?
+
+[09-Aug-18 08:44 AM] blackjok3r#3181
+We will hopefully be able to run a smaller scale test over the weekend to make sure everything works as epxected.
+
+[09-Aug-18 10:16 AM] blackjok3r#3181
+I have submitted an Upgrade request to AWS, to upgrade out current limit of 5 `m4.x16large` instances to 128. This is a ridiculous increase request. I wonder if they have ever had one so big before 🤔 
+🤞  they let us do this.
+
+{Reactions}
+🙏 (11) 🤓 (3) shexy (2) 
+
+[09-Aug-18 06:52 PM] Steve Lee#1967
+I emailed them earlier this week, let me follow up. What is the estimated funding needed? @blackjok3r
+
+[09-Aug-18 10:06 PM] Yassin#3685
+@blackjok3r you can sent me your adress, i will donate to you 777 Kmd!!
+
+{Reactions}
+Komodo (3) 
+
+[10-Aug-18 05:09 AM] blackjok3r#3181
+@Steve Lee  Sorry my internet has been down all week, I just rang them to complain and its working for now, I ran out of data on mobile, and they wont refund it , because its on a different company. 
+I will get an estimate of funding later today, tbh its not a huge amount (less than $2000 I think), the larger problem is using so many instances for only such a small time and if they will actually let us do that.
+
+[10-Aug-18 05:09 AM] blackjok3r#3181
+Thanks @Yassin
+
+{Reactions}
+yassinkomodo (2) 
+
+[10-Aug-18 05:09 AM] blackjok3r#3181
+😄
+
+[10-Aug-18 04:47 PM] Steve Lee#1967
+Ok, that shouldn't be a problem @blackjok3r . When you get a final estimate I can over allocate to give us a buffer. If you can also give me the details on instances required and any current restrictions I can also discuss that with them next week.
+
+[10-Aug-18 04:52 PM] blackjok3r#3181
+Will get you both these tomorrow Bo worries.
+
+{Reactions}
+Komodo 
+
+[10-Aug-18 05:16 PM] juangalt#0616
+I just wrote - A Call For Atomic Swap Industry Standards In Blockchains 
+
+A brief look into the emerging decentralized exchange industry. 
+
+https://medium.com/@eljuangalt/a-call-for-atomic-swap-industry-standards-in-blockchains-56854ad662c0
+
+{Embed}
+https://medium.com/@eljuangalt/a-call-for-atomic-swap-industry-standards-in-blockchains-56854ad662c0
+A Call For Atomic Swap Industry Standards in Blockchains
+Atomic swaps are one of the holy grails of cryptographic finance.
+https://cdn-images-1.medium.com/max/1200/1*b6XabQply7VPtwrZGqa3kw.jpeg
+
+[10-Aug-18 11:37 PM] EDDY#4732
+hi just a question to barta dex ... it seems to me that is it is really nice builded ... but it is not that userfriendly..... i cant imagine how normal people which are not involved in crypto yet will ever use such a tool ... are their any plans to make it more userfriendly?
+
+[10-Aug-18 11:48 PM] WhiteWidow#8771
+Try HyperDEX, it's the more user friendly version of BarterDEX but is still in Alpha right now. https://github.com/atomiclabs/hyperdex/releases/tag/v0.1.0-alpha.12
+
+{Embed}
+https://github.com/atomiclabs/hyperdex/releases/tag/v0.1.0-alpha.12
+atomiclabs/hyperdex
+hyperdex - Desktop App for BarterDEX
+https://avatars0.githubusercontent.com/u/1520924?s=400&v=4
+
+[10-Aug-18 11:50 PM] WhiteWidow#8771
+@EDDY
+
+[11-Aug-18 12:25 AM] EDDY#4732
+@WhiteWidow ty
+
+[12-Aug-18 11:17 PM] grewalsatinder#9653
+@blackjok3r @SHossain hey guys!
+
+Plz don’t use hetzner servers further 
+Meshbits will leave them by end of month.
+If u have any data on those plz take backup and update me or @ns408 when done. Thanks 🙏🏼🙂👍
+
+{Reactions}
+👍🏽 
+
+[12-Aug-18 11:28 PM] grewalsatinder#9653
+I know these aren’t used now. Just informing of these servers status and insuring there isn’t data left to backup before discontinuing.
+
+[12-Aug-18 11:32 PM] blackjok3r#3181
+No worries mate. There is only first test explorers on one machine. @jl777c do you want to keep those? It was close to 1tb of data for block chains and explorers, in the .komodo folder.
+
+[13-Aug-18 12:58 AM] grewalsatinder#9653
+if you want I can download whatever TB of data to my offline machine. I'd never ever want to lose our precious test data.
+
+[13-Aug-18 12:59 AM] grewalsatinder#9653
+@ns408 can probably find even better solution to keep it always accessible on online cloud storage.
+
+[13-Aug-18 02:05 AM] blackjok3r#3181
+Yeah its all on the 88.x server. I rsynced it from all the other servers to it, then loaded the exploreres up but I dont think anyone ever has used it. If you can sort that out it would be good, as I have other things I need to get done. 😃
+
+[13-Aug-18 08:43 AM] jl777c#5810
+no need to keep servers not being used
+
+[13-Aug-18 08:13 PM] patchkez#5349
+hey guys, we are not sleeping! here is short update to those reading this channel.  We were working with @blackjok3r  during weekend on AWS Kubernetes cluster. I managed to create POD which contains 2 containers - assetchain container and miner container. This test suppose to give us working K8N definition yaml file, which we can now templatize in order to create X chains. @blackjok3r  was trying to setup EFS provisioner which allows us to mount EFS storage as a persistent volume into Kubernetes cluster. The idea is that every POD/container will have EFS volume attached and blockchain data will be stored there. These data can be used as a proof after the scaling test is finished. We had some troubles with EFS, it could not create PV/PVC. @blackjok3r  I managed to fix it, it was issue with RBAC which was needed to be setup for our cluster. I can now mount EFS volume to both containers and write data there. Next step is to create more PODs (3?) to test they are writing its blockchain to correct place. In the meantime I am going to create script for  generating Kubernetes definition yaml files for all chains participating in scaling test.
+
+{Reactions}
+👍 (5) Komodo (3) 
+
+[13-Aug-18 08:21 PM] Steve Lee#1967
+@blackjok3r @patchkez I have a call scheduled tomorrow with AWS. Please let me know what additional funding is needed, along with any other asks. Thanks in advance.
+
+[13-Aug-18 11:50 PM] blackjok3r#3181
+Cool I can do this hopefully today I guess just wildly over estimating unknown costs should work just fine, most aws stuff is quite cheap over short time periods.
+
+[14-Aug-18 12:11 AM] Steve Lee#1967
+thanks. a  ball park range should be fine.
+
+[14-Aug-18 03:21 AM] blackjok3r#3181
+EC2 instances: 
+128 x m4.x16large : $409.60 per hour
+Test goes for approx 2H, but it is unknown how long it takes to start all containers at this stage.
+I think its safe to bank on a 6-8H peroid, but it will hopefully be much less than this.
+We will have a better idea once we run the 256 chain test on EKS.
+Maximum: $3280
+
+DynamoDB:
+150 Writes / 1500 Reads: Approx $23 per 24/h 
+
+Lambda + API's: For our application this is free or under $1 for entire test and all testing so far.
+
+EKS: 20c per hour for cluster, all chains should run in a single cluster, unless we need to split over 2 regions.
+Most of the cost here will be running this cluster in the weeks leading up to the test, although once it is working we can destroy it and redeploy at a later date to save money.
+2 regions for an entire week is: $135
+
+EFS: $102 per day with 10TB of data. It would be silly to leave the data on here long term, we would move it to a dedicated HDD server to save vast sums of money, after the test is run.
+I guess bank on $400 here as a total maximum, depending on how long it takes to transfer 7-10TB of data to a permenant server, and also data bandwidth could be a factor to move out of AWS if we do that.
+-----------------------------
+Maximum worst case cost of AWS: $3839 – I think there is still $2000 credit on the account, but we will use up some of this in the final tests and the 256 chain test.
+
+[14-Aug-18 03:21 AM] blackjok3r#3181
+Notarization Servers:
+We need 4 servers for notarization, I would prefer to host them outside of AWS as proof the chains work over long distances and the internet in general, not just in a closed AWS environment. 
+Maybe some cheap hetzner servers, or something we already have access too. I ran this on four 4 Core 16GB VPS's on my first try months ago, but they were a little small. 
+Four of 6 core 32Gb will be the minimum requred here, either VPS or dedicated server from any provider with good network speed.
+I would also like these up at least 2 days in advance and possibly a server with explorers for the first 64 chains only so people can inspect the notarization TX's.
+Need some clarification on this part of it, I.e do we need/want explorers, which hosting do we use etc?
+
+[14-Aug-18 03:21 AM] blackjok3r#3181
+@Steve Lee  @jl777c
+
+[14-Aug-18 07:40 AM] jl777c#5810
+people will want proof that we actually did the million tx/sec
+
+[14-Aug-18 07:41 AM] jl777c#5810
+noashh might have some hertzner servers, there is also satinder's hertzners if we need those, he needs to keep them alive a bit longer
+
+[14-Aug-18 07:46 AM] Mylo#8306
+hetzner also has a "storage box" service for hosting 10TB data which might be useful for independent verification as the servers would only have 1-2TB and have 5TB data transfer.   data tx is limited to 20TB though - this may be a more cost effective method of holding data for a month or two?
+
+[14-Aug-18 07:55 AM] grewalsatinder#9653
+Totally fine keeping hetzner servers longer
+
+[14-Aug-18 07:55 AM] grewalsatinder#9653
+Even if need more or different storage servers just tag me or @ns408
+
+{Reactions}
+👍 (2) 
+
+[14-Aug-18 08:39 AM] blackjok3r#3181
+OK cool.
+For the notarization I think the 3 servers Satinder already has will be absolutly fine, there is no need to use 4, thats just the number I chose to use in my first test, 3 is enough with freq.2 to make sure MoMoM is being notarized over 64 chains. So that covers that.
+
+The only thing left is to figure out where we can store the approx 7-10TB of data that is generated in th test, it will be very expensive to leave it on EFS. I can look at another AWS option and check prices if we dont already have access to something to store this on?
+
+[14-Aug-18 08:40 AM] blackjok3r#3181
+What about some explorers for the first 64 chains? Do we need/want those?
+
+[14-Aug-18 09:43 AM] jl777c#5810
+would be good to have explorers so skeptics can just look up the chain data on them
+
+[14-Aug-18 09:43 AM] jl777c#5810
+maybe the satinder nodes can do exploreres too?
+
+[14-Aug-18 09:50 AM] blackjok3r#3181
+They probably can if I spread the explorers over the 3 servers. I can run a 64 chain test on this and test load.
+
+[14-Aug-18 09:50 AM] blackjok3r#3181
+they are 256GB of ram, and the CPU in them was very fast, just small amount of cores.
+
+[14-Aug-18 01:27 PM] grewalsatinder#9653
+@BlackJesus I'd like to backup this 7-10Tb Data on my local 10Tb HDD
+
+[14-Aug-18 01:28 PM] grewalsatinder#9653
+will buy 1 or 2 10 Tb HDD if I need to.
+
+[14-Aug-18 01:29 PM] jl777c#5810
+i think data needs to be online tohave much effect
+
+[14-Aug-18 01:29 PM] jl777c#5810
+it shouldnt be hard to get a normal HDD with 10TB capacity
+
+[14-Aug-18 01:29 PM] grewalsatinder#9653
+yes, not saying taking it offline, just want to have extra offline backup.
+
+[14-Aug-18 01:30 PM] SHossain#0007
+for notarizations, i had 2 rented servers for the previous CC test. was about to cancel end of this month. if needed i can also keep them longer
+
+[14-Aug-18 01:39 PM] blackjok3r#3181
+@SHossain yes cool, that might be a good idea, with those 2 and Satinders 3 we have plenty enough.
+
+[14-Aug-18 01:40 PM] blackjok3r#3181
+I am back on this now, need to work out EFS so data is saved in correct place, then we need to run a few small tests to verify everything is good
+
+[14-Aug-18 01:53 PM] SHossain#0007
+do you have any estimated timeframe?
+
+[14-Aug-18 02:22 PM] blackjok3r#3181
+No not really sure. Its mostly up to marketing when they will want to run the full scale test.
+
+[14-Aug-18 02:23 PM] blackjok3r#3181
+But I dont want to orginise anything unless its 100% perfectly working
+
+{Reactions}
+💯 
+
+[14-Aug-18 05:19 PM] blackjok3r#3181
+```Hello, 
+We have approved and processed your limit increase request(s). It can sometimes take up to 30 minutes for this to propagate and become available for use.
+I hope this helps, but please reopen this case if you encounter any issues. Summary of limit(s) requested for increase: 
+[US East (Northern Virginia)]: EC2 Instances / Instance Limit (m4.16xlarge), New Limit = 128 Best regards, Amazon Web Services```
+🚀
+
+[14-Aug-18 05:19 PM] blackjok3r#3181
+wow 😮
+
+[14-Aug-18 05:23 PM] blackjok3r#3181
+I wonder what would happen if we doubled it :trollface:
+
+{Reactions}
+👆 
+
+[14-Aug-18 06:33 PM] Steve Lee#1967
+@blackjok3r i'll shoot for 5K, or do you think I should target $10K for added buffer?
+
+[14-Aug-18 06:34 PM] blackjok3r#3181
+You can, I mean if we pull it off for cheap we can try for 2 million lol
+
+{Reactions}
+🤞 (2) 
+
+[14-Aug-18 07:28 PM] Steve Lee#1967
+I don't see why not if we can linearly scale.
+
+[14-Aug-18 09:40 PM] Steve Lee#1967
+@blackjok3r @patchkez @jl777c  Met with AWS today and submitted an additional funding request for $5K, which we should be able to get no problem. Adam, we had a few pending questions to complete our baseline review which I've sent to your inbox. Once we get those completed/answered we will begin processing the advanced partnership application. We've discussed getting a joint press release as well as a statement from an AWS executive sponsor. We'll need to coordinate timing of the test as my team is working on aligning a marketing campaign to further amplify this accomplishment. Let me know if you have any questions.
+
+{Reactions}
+👍🏽 (15) 😃 (8) 🤙 (3) shexy (8) Komodo (11) 
+
+[14-Aug-18 11:46 PM] blackjok3r#3181
+Hmmm I already did those questions months ago must have not sent or something 😕
+
+[15-Aug-18 02:28 AM] Steve Lee#1967
+Ok I relayed the info back
+
+{Reactions}
+👍 (3) 
+
+[16-Aug-18 12:54 PM] jl777c#5810
+https://blog.stellarx.com/the-great-filter-why-you-shouldnt-ico-on-ethereum/
+
+{Embed}
+https://blog.stellarx.com/the-great-filter-why-you-shouldnt-ico-on-ethereum/
+The Great Filter: Why You Shouldn’t ICO on Ethereum
+It’s an open secret that Ethereum is simply the wrong technology for most of the stuff being built on it. Here, with data from our own at-scale load tests, we show why many high-profile projects will soon fail.
+https://i2.wp.com/blog.stellarx.com/wp-content/uploads/2018/08/great_filter2.png?fit=2132%2C1215&ssl=1
+
+{Reactions}
+👌 (6) 
+
+[16-Aug-18 02:54 PM] grewalsatinder#9653
+nice article. learnt a bit how transactions are handled in eth in layman's term. 👍
+
+[16-Aug-18 02:54 PM] grewalsatinder#9653
+for companies who only need transactional tokens, a simplest assertchain would be more than enough.
+
+[17-Aug-18 04:25 AM] blackjok3r#3181
+`8859 / 60 = 147 `
+We have 2MB blocks, each can fit 8859 TX of single payment inside, and we have 60s block time.
+Each assetchain can do just under 150 TX/s
+But if you batch the TX's and do more payments per TX, you can get much bigger numbers.
+If every TX is 100 payments for example the calcuation is:
+`557 * 100 /60 = 928` Payments per second.
+
+[17-Aug-18 04:26 AM] blackjok3r#3181
+You can use as many assetchains as you like for unlimited transacion capacity. It scales linear.
+
+[17-Aug-18 04:27 AM] blackjok3r#3181
+Check the pinned posts of this channel for more info 😄
+
+[17-Aug-18 04:27 AM] blackjok3r#3181
+@Deleted User
+
+[17-Aug-18 06:21 AM] ph03nix#3115
+https://bitcoinist.com/new-transport-layer-bloxroute-promises-to-solve-bitcoins-biggest-problem/
+
+{Embed}
+Julio Gil-Pulgar
+https://bitcoinist.com/new-transport-layer-bloxroute-promises-to-solve-bitcoins-biggest-problem/
+New Transport Layer bloXroute Promises to Solve Bitcoin’s Bigges...
+bloXroute Labs and a team of Northwestern University students believe scalability can be solved without affecting decentralization.
+https://bitcoinist.com/wp-content/uploads/2018/08/network-3524352_1920-1.jpg
+
+[21-Aug-18 09:20 AM] Deleted User#0000
+whats been happenin
+
+[21-Aug-18 09:36 AM] WhiteWidow#8771
+Any updates guys
+
+[21-Aug-18 10:06 AM] blackjok3r#3181
+waiting on a script from @patchkez
+
+[25-Aug-18 09:08 AM] patchkez#5349
+@blackjok3r hey hey, I just finished script which can generate Kubernetes yaml file from json. Do you remember what is this value? Is it the same for every container? https://github.com/patchkez/scaletest_containers/blob/master/docker-compose.yml#L21
+
+{Embed}
+https://github.com/patchkez/scaletest_containers/blob/master/docker-compose.yml
+patchkez/scaletest_containers
+Contribute to scaletest_containers development by creating an account on Github.
+https://avatars2.githubusercontent.com/u/11808967?s=400&v=4
+
+{Reactions}
+🚀 
+
+[25-Aug-18 09:08 AM] blackjok3r#3181
+Yes that is the same for all containers
+

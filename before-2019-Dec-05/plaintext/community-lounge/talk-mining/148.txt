@@ -1,0 +1,349 @@
+==============================================================
+Guild: Komodo
+Channel: talk-mining
+Topic: ./komodod -ac_name=ZAWY24 -ac_adaptivepow=1 -ac_supply=1000000 -ac_reward=10000000000 -ac_cc=2 -addnode=5.9.102.210 &
+
+A channel to discuss mining. For useful links and more info click the pinned messages to the right.
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[05-Aug-19 07:02 PM] zawy#5864
+an impotrant problem is digishield is getting the wrong avg target
+
+[05-Aug-19 07:04 PM] zawy#5864
+45 second solves in the past hour
+
+[05-Aug-19 07:04 PM] jl777c#5810
+we could detect the difference between what digishield would have vs the actual for a block
+
+[05-Aug-19 07:05 PM] zawy#5864
+The loop has to cal;culate  the corrected digisheild
+
+[05-Aug-19 07:05 PM] zawy#5864
+but it should still not stay in the triggered state as much as it does.
+
+[05-Aug-19 07:06 PM] jl777c#5810
+it is basically always triggered
+
+[05-Aug-19 07:06 PM] zawy#5864
+yeah that not correct at all, and it's not merely because of digi
+
+[05-Aug-19 07:06 PM] jl777c#5810
+what about averaging the recent bnTarget? that would smooth out the very hard block followed by easy ones
+
+[05-Aug-19 07:07 PM] zawy#5864
+oh, wait, maybe it is because of that min function
+
+[05-Aug-19 07:07 PM] zawy#5864
+that causes it to revert to digi even in the triggered state
+
+[05-Aug-19 07:09 PM] jl777c#5810
+i am never doing a min
+
+[05-Aug-19 07:09 PM] jl777c#5810
+it is always doing the RT_CST_RST calc
+
+[05-Aug-19 07:09 PM] jl777c#5810
+and using that bnTarget, unless exponential is triggered
+
+[05-Aug-19 07:09 PM] zawy#5864
+```        if ( altK > K )
+            altK = K;```
+
+[05-Aug-19 07:10 PM] zawy#5864
+is reverting to digi
+
+[05-Aug-19 07:10 PM] zawy#5864
+but i guess that's only on the initial trigger that does not happen much
+
+[05-Aug-19 07:10 PM] jl777c#5810
+yes, but i think it always gets to i == 0
+
+[05-Aug-19 07:11 PM] zawy#5864
+yeah, so that's not it
+
+[05-Aug-19 07:11 PM] jl777c#5810
+long periods where it does not set the initial bnTarget
+
+[05-Aug-19 07:12 PM] jl777c#5810
+if it sets the initial altK, should it still go into the ii loop?
+
+[05-Aug-19 07:12 PM] jl777c#5810
+it seems then the bnTarget is changed twice and there is a compound increase of difficulty
+
+[05-Aug-19 07:13 PM] jl777c#5810
+maybe to return bnTarget if the first altK is less than a million?
+
+[05-Aug-19 07:15 PM] jl777c#5810
+179,1565030770,537254438,05da2600000000000000000000000000,2.57321538,3.08034084
+180,1565030843,536910090,00990a00000000000000000000000000,25.19003012,3.34148761
+181,1565030851,537341893,072fc500000000000000000000000000,2.09540300,3.05818609
+182,1565030854,521036009,000e60e9000000000000000000000000,268.11167839,3.67409506
+183,1565030863,537253517,05d68d00000000000000000000000000,2.57940957,3.39540557
+184,1565030974,526117643,005beb0b000000000000000000000000,41.94012995,4.09177412
+185,1565030980,537242865,05acf100000000000000000000000000,2.65327877,3.76758009
+186,1565030988,523026768,002cc150000000000000000000000000,86.13669218,4.80261909
+187,1565030997,537440563,08b13300000000000000000000000000,1.73245549,4.21627476
+188,1565031101,536911230,009d7e00000000000000000000000000,24.47777668,4.62894170
+
+[05-Aug-19 07:15 PM] jl777c#5810
+189,1565031105,537116576,03bfa000000000000000000000000000,4.01725528,4.30877608
+190,1565031302,523006702,002c72ee000000000000000000000000,86.73003763,5.03754313
+191,1565031307,537634299,0ba5fb00000000000000000000000000,1.29278466,4.19393154
+192,1565031363,536936658,0100d200000000000000000000000000,15.01072309,4.82435901
+193,1565031369,537663892,0c199400000000000000000000000000,1.24453958,3.93099122
+194,1565031411,536938795,01092b00000000000000000000000000,14.53817598,4.52521459
+195,1565031418,537232251,05837b00000000000000000000000000,2.73121639,3.97850091
+196,1565031561,528431669,007f3a35000000000000000000000000,30.30054427,4.33923978
+197,1565031571,537820051,0e7b9300000000000000000000000000,1.03977921,3.52520414
+198,1565031621,536971685,0189a500000000000000000000000000,9.79324819,3.84653911
+199,1565031625,537284846,0650ee00000000000000000000000000,2.38418444,3.51303199
+200,1565031728,527015210,00699d2a000000000000000000000000,36.50142440,3.79906688
+201,1565031737,537562369,0a8d0100000000000000000000000000,1.42726880,3.22119951
+202,1565031759,536917437,00b5bd00000000000000000000000000,21.21214401,3.48096377
+203,1565031763,537142379,04246b00000000000000000000000000,3.63541425,3.27687021
+204,1565031850,525974487,0059bbd7000000000000000000000000,42.96107786,3.64212247
+205,1565031857,537264179,06003300000000000000000000000000,2.50947829,3.31457561
+206,1565031900,536916009,00b02900000000000000000000000000,21.88382819,3.53975746
+207,1565031902,537010876,0222bc00000000000000000000000000,7.05106313,3.43760450
+208,1565032104,521863021,001aff6d000000000000000000000000,142.79181044,4.02893220
+209,1565032111,537745593,0d58b900000000000000000000000000,1.12829134,3.33712618
+
+[05-Aug-19 07:18 PM] zawy#5864
+This is going to require some work and I need to do some stuff.   Both digi and the loop need     the avg  target, not the one they're using.  That might solve everything
+
+[05-Aug-19 07:18 PM] jl777c#5810
+avg  target?
+
+[05-Aug-19 07:19 PM] zawy#5864
+The final target that they see is larger than the avg target the miner was facing during the solve
+
+[05-Aug-19 07:19 PM] zawy#5864
+that's why solves are too fast
+
+[05-Aug-19 07:20 PM] jl777c#5810
+but what the miner solves is what goes onchain
+
+[05-Aug-19 07:20 PM] zawy#5864
+i need to do some integral of 1/x math to know, but it looks like the correction factor is about  45/60
+
+[05-Aug-19 07:20 PM] zawy#5864
+I guess we have to change that
+
+[05-Aug-19 07:21 PM] jl777c#5810
+i can calculate the average amount the algo is making it harder than ordinary digishield
+
+[05-Aug-19 07:22 PM] jl777c#5810
+and then add that again as a correction factor
+
+[05-Aug-19 07:22 PM] jl777c#5810
+then smooth it out over last 3 blocks?
+
+[05-Aug-19 07:23 PM] zawy#5864
+I'm tinking only the exponential is going to be able to use tipdiff, or you have to have 2 nBit fields
+
+[05-Aug-19 07:24 PM] zawy#5864
+In other words, either 2 nBit fields, or go back to SMAs that do not use nTime
+
+[05-Aug-19 07:24 PM] jl777c#5810
+CST_RST doesnt need to use tipdiff, does it?
+
+[05-Aug-19 07:24 PM] jl777c#5810
+only the initial test uses it
+
+[05-Aug-19 07:24 PM] zawy#5864
+it does use, i just didn't call it that...
+
+[05-Aug-19 07:24 PM] zawy#5864
+nTime-ts[0] shouold be it
+
+[05-Aug-19 07:25 PM] jl777c#5810
+that is only in the initial if statement, not in the ii loop
+
+[05-Aug-19 07:25 PM] zawy#5864
+```altK = (K * (nTime-ts[0]) * (ts[0]-ts[W])) / (W * T * T);```
+
+[05-Aug-19 07:25 PM] jl777c#5810
+if that is taken out, then the diff becomes deterministic unless exp kicks in
+
+[05-Aug-19 07:25 PM] jl777c#5810
+yes, that line is the only place. what if that is disabled ?
+
+[05-Aug-19 07:25 PM] jl777c#5810
+or tweaked
+
+[05-Aug-19 07:26 PM] zawy#5864
+no, the "tipdiff" is everything to this methd
+
+[05-Aug-19 07:26 PM] zawy#5864
+and that's why the targets are not correct
+
+[05-Aug-19 07:26 PM] jl777c#5810
+yes, that was the issue i had with the booster method
+
+[05-Aug-19 07:26 PM] zawy#5864
+I mean why there must be two targets stored in the headers
+
+[05-Aug-19 07:27 PM] jl777c#5810
+which 2 targets need to be stored?
+
+[05-Aug-19 07:27 PM] jl777c#5810
+the before and after the algo modifies it?
+
+[05-Aug-19 07:28 PM] jl777c#5810
+i can get the pure digishield value, as it applies to the onchain and have that for all the recent blocks
+
+[05-Aug-19 07:28 PM] zawy#5864
+the ones the loop is calculating and one that 's about 0.63......oh, actually.....it can be dtermined by the solvetime and the target
+
+[05-Aug-19 07:28 PM] zawy#5864
+maybe 1 target is enough and using the solvetime i think i can calculate the other target
+
+[05-Aug-19 07:29 PM] zawy#5864
+The one that goes no chain is the actual "avg" diff.   Validation would require calculating the acceptable target from that, solvetime, and the previous targets
+
+[05-Aug-19 07:30 PM] jl777c#5810
+i can extract what digishield would have been, had there been no changes
+
+[05-Aug-19 07:30 PM] jl777c#5810
+along with what ended up going onchain
+
+[05-Aug-19 07:30 PM] jl777c#5810
+so you would have two arrays of targets
+
+[05-Aug-19 07:31 PM] zawy#5864
+digishield depends on past targets and solvetimes which were determined by the loop.  The loop needs to put what digishield needs on the chain
+
+[05-Aug-19 07:32 PM] zawy#5864
+It looks like too much work for us
+
+[05-Aug-19 07:32 PM] jl777c#5810
+yes, or we need to calculate what digishield needs and feed that to it, instead of the raw data onchain
+
+[05-Aug-19 07:33 PM] jl777c#5810
+so the problem is that what ends up on chain is too easy, and it needs to be increased in difficulty?
+
+[05-Aug-19 07:35 PM] zawy#5864
+YEs, but validators need to approve the nonce, so the validators need to figure out the acceptable target from the given past 3 (W) targets, and the past 3 (w) solvetimes.
+
+....and the current solvetime and target
+
+[05-Aug-19 07:35 PM] jl777c#5810
+all nodes will calculate the same values
+
+[05-Aug-19 07:36 PM] jl777c#5810
+as long as the algo is deterministic, which it would be if only using the data that is onchain and the nTime
+
+[05-Aug-19 07:47 PM] zawy#5864
+acceptable target might be simply 1/2 the on-chain target
+
+[05-Aug-19 07:48 PM] zawy#5864
+we got 45 second solves instead of 30 because the trigger was working overtime
+
+[05-Aug-19 07:48 PM] zawy#5864
+I mean 2x the on chain target
+
+[05-Aug-19 07:49 PM] zawy#5864
+or something like 2/3 or 0.693
+
+[05-Aug-19 07:50 PM] jl777c#5810
+so make it easier than it is calculating?
+
+[05-Aug-19 07:58 PM] zawy#5864
+Everything will be based on an actual average difficulty that goes on chain.  The loop will calculate based on that....it's been using the wrong targets......it's main calculation will also be that avg target.   but then a different routine that miner and validatorsuse will use will  calculate an allowed target ..... if the target was from the loop (it was the target that got on chain)....so it seems a  yes/no state variable is needed.
+
+[05-Aug-19 07:59 PM] jl777c#5810
+given the original digishield target vs the onchain, we can determine if it was changed
+
+[05-Aug-19 07:59 PM] zawy#5864
+OK, yeah
+
+[05-Aug-19 08:00 PM] jl777c#5810
+the state is already available (though i need to implement extracting the unmodified digishield), still not perfect as what goes onchain is the actual solved target, but at least we can detect when it is being adjusted, how often, even by how much
+
+[05-Aug-19 08:00 PM] zawy#5864
+This problem coming up makes me worred about the target that the exp reports
+
+[05-Aug-19 08:01 PM] jl777c#5810
+i think once this works stable, we wont need to worry about exp, as it wont be triggered very often at all
+
+[05-Aug-19 08:02 PM] zawy#5864
+We need to give it a decent calculation because digishield  and the loop depend on it.
+
+[05-Aug-19 08:03 PM] jl777c#5810
+based on solvtimes, we know the range of tipdiffs that were being attempted
+
+[05-Aug-19 08:03 PM] zawy#5864
+I don't know if it's OK to leave alone or not....
+
+[05-Aug-19 08:04 PM] jl777c#5810
+so we would be able to calculate all the actual adjusted values that were not solved, but not sure all that work is needed
+
+[05-Aug-19 08:04 PM] zawy#5864
+We should not tell digishield it took 10xT to solve a really easy target
+
+[05-Aug-19 08:05 PM] jl777c#5810
+ok, so the median target?
+
+[05-Aug-19 08:06 PM] zawy#5864
+for exp?  i don't nkow without some thought....it's sort of like what time we report to digishield for the solve is more important...maybe need to lower both target and solvetime
+
+[05-Aug-19 08:07 PM] zawy#5864
+it's very roubghlt 1/2 the target in 1xT
+
+[05-Aug-19 08:07 PM] jl777c#5810
+do you know why the diff jumps way up and every 2nd or 3rd block?
+
+[05-Aug-19 08:08 PM] zawy#5864
+and maybe that is equal to 1/20 the target in 10xT
+
+[05-Aug-19 08:09 PM] zawy#5864
+i don't see that in the CSV
+
+[05-Aug-19 08:09 PM] zawy#5864
+i see about 1 jump per 6
+
+[05-Aug-19 08:10 PM] jl777c#5810
+182,1565030854,521036009,000e60e9000000000000000000000000,268.11167839,3.67409506
+183,1565030863,537253517,05d68d00000000000000000000000000,2.57940957,3.39540557
+184,1565030974,526117643,005beb0b000000000000000000000000,41.94012995,4.09177412
+185,1565030980,537242865,05acf100000000000000000000000000,2.65327877,3.76758009
+186,1565030988,523026768,002cc150000000000000000000000000,86.13669218,4.80261909
+187,1565030997,537440563,08b13300000000000000000000000000,1.73245549,4.21627476
+188,1565031101,536911230,009d7e00000000000000000000000000,24.47777668,4.62894170
+1
+
+[05-Aug-19 08:10 PM] zawy#5864
+I sort of expected every 2 or 3 on intuiton
+
+[05-Aug-19 08:10 PM] jl777c#5810
+every other one during that period
+
+[05-Aug-19 08:11 PM] zawy#5864
+the if last 3 solvetimes are fast , target's goign to be hard from low RST value
+
+[05-Aug-19 08:11 PM] zawy#5864
+that will make it jump
+
+[05-Aug-19 08:11 PM] zawy#5864
+and require more time  in CST to bring it down
+
+[05-Aug-19 08:22 PM] zawy#5864
+are those timestamps the end of the previous block?
+
+[05-Aug-19 08:23 PM] jl777c#5810
+each line is from the block at the height
+
+[05-Aug-19 08:24 PM] zawy#5864
+zcash RPC i think has a bug that delays timestamp 1 block
+
+[05-Aug-19 08:24 PM] jl777c#5810
+i wrote this today, i try to avoid off by 1 errors
+
+[05-Aug-19 08:25 PM] zawy#5864
+block 189  was fast?
+
+[05-Aug-19 08:25 PM] zawy#5864
+and low difficulty?
+

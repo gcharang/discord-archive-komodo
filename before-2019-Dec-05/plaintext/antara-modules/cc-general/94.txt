@@ -1,0 +1,464 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[12-Sep-18 08:25 PM] jl777c#5810
+acually all the CC must be bugfree!
+
+{Reactions}
+👆 (3) 
+
+[12-Sep-18 08:26 PM] jl777c#5810
+since if channel open is messed up, only the one who did the channelopen suffers, it limits the risk exposure
+
+{Reactions}
+👍 
+
+[12-Sep-18 08:26 PM] jl777c#5810
+and yes, payment must validate the revealed secret and track how many more iterations are left
+
+[12-Sep-18 08:28 PM] Mihailo#5902
+Yes, but I meant we cannot validate on other nodes that channelopen is correct as somebody can modify code of his node and mess for example channelopen, but there is no way to validate hashchain param on that tx
+
+[12-Sep-18 08:29 PM] jl777c#5810
+as long as the channelopen has the proper opreturn data formats, we just need to assume it is correct
+
+[12-Sep-18 08:30 PM] jl777c#5810
+it is like with dice. if the secret ends up being wrong, the dealer node will not be able to claim a win
+
+[12-Sep-18 08:30 PM] jl777c#5810
+that is bad for the dealer node, but as long as there is no bug in the dice CC, then it is not an issue
+
+[12-Sep-18 08:31 PM] jl777c#5810
+so, plz make sure channelopen doesnt have any bugs
+
+[12-Sep-18 08:39 PM] Mihailo#5902
+Ok
+
+[12-Sep-18 08:43 PM] jl777c#5810
+gatewaysCC ended up at 800 lines, but after validation, likely around 1000, and the oraclefeed app another 800 lines, still quite a bit smaller than the original MGW
+
+[12-Sep-18 08:43 PM] jl777c#5810
+with more features and better security model
+
+[13-Sep-18 07:47 AM] jl777c#5810
+i think i can make it so addressindex is not needed for the KMD side, which is something that I need to get working for it to work with legacy coins like BTC
+
+[13-Sep-18 09:06 AM] jl777c#5810
+updated oraclefeed.c to be able to handle non-KMD as the reference coin, you just need to pass in the way to invoke the cli at the end
+
+[13-Sep-18 09:07 AM] jl777c#5810
+not verified yet, but any bitcoin protocol coin should now be able to be tokenized
+
+[13-Sep-18 09:07 AM] jl777c#5810
+and addressindex mode is not needed for the external reference coin!
+
+[13-Sep-18 09:07 AM] jl777c#5810
+multisig is still not validated, so just test with a single signing pubkey for deposits
+
+[13-Sep-18 10:37 AM] KomodoWorld#8282
+This start sounding as if it will be possible to do sidechains for BTC (or other coins) by locking a certain amount and creating a 1:1 peg on an assetchain
+
+[13-Sep-18 10:40 AM] jl777c#5810
+that is what it already does
+
+[13-Sep-18 10:40 AM] jl777c#5810
+but at the token level
+
+[13-Sep-18 10:41 AM] jl777c#5810
+I would need to change it so the actual coins are locked/redeemed for a sidechain, but for BTC that would make the txfees an issue
+
+[13-Sep-18 10:44 AM] KomodoWorld#8282
+Cool, still useful for large amounts or other coins
+
+[13-Sep-18 10:44 AM] jl777c#5810
+tokenized BTC wont have the txfee issue
+
+[13-Sep-18 10:45 AM] jl777c#5810
+for example, I will support PriceBet using tokens
+
+[13-Sep-18 10:45 AM] jl777c#5810
+so you can win/lose tokens based on real world prices, and where the tokens represent real crypto
+
+[13-Sep-18 10:46 AM] jl777c#5810
+but that is for next week. first need to get the multisig debugged
+
+[13-Sep-18 12:03 PM] siu - Chainmakers#3920
+ok, morning
+
+[13-Sep-18 12:03 PM] siu - Chainmakers#3920
+im going to get into testing the gateway
+
+{Reactions}
+👍 
+
+[13-Sep-18 12:21 PM] jorian#4555
+go siu!
+
+[13-Sep-18 12:31 PM] siu - Chainmakers#3920
+ok, so this is the gateway i had created: ```./komodo-cli -ac_name=ORCL gatewaysinfo 72fc4dd67ed3904f13abb03bca6224f9a508c3ac1ad368e98cbaeb385390fc4c
+{
+  "result": "success",
+  "name": "Gateways",
+  "pubkey": "0229919363523629835e13a1be644fbdace5e75a9b18728d998440f0366c44d60d",
+  "coin": "KMD",
+  "oracletxid": "e4787a70ad99e721b1cad39b00897aa4187d4f91af2be399819531b22f86543d",
+  "taddr": 0,
+  "prefix": 60,
+  "prefix2": 85,
+  "deposit": "RMrGSingGy3qDg6tjfZnFUhrzzoktWkfuV",
+  "tokenid": "9de12387df3077ed33f81e7b2ad769a3bbb30c448c840fbd7c0ece2eca2feeb5",
+  "totalsupply": "1.00000000",
+  "remaining": "1.00000000",
+  "issued": "0.00000000"
+}```
+
+[13-Sep-18 12:35 PM] siu - Chainmakers#3920
+ok, so i send KMD to the deposit address and then execute gatewaysdeposit?
+
+[13-Sep-18 12:57 PM] siu - Chainmakers#3920
+damn this command needs so muchc stuff: ```gatewaysdeposit bindtxid height coin cointxid claimvout deposithex proof destpub amount
+```
+
+{Reactions}
+😄 
+
+[13-Sep-18 01:39 PM] TonyL#3577
+@jl777c latest `jl777` not building for me. FSM building ok:
+```libtool: warning: library '/root/latest_jl777/komodo/depends/x86_64-unknown-linux-gnu/share/../lib/libgmpxx.la' was moved.
+libtool: warning: library '/root/latest_jl777/komodo/depends/x86_64-unknown-linux-gnu/share/../lib/libgmp.la' was moved.
+libtool:   error: cannot find the library '/root/fsm_branch/komodo/depends/x86_64-unknown-linux-gnu/lib/libgmp.la' or unhandled argument '/root/fsm_branch/komodo/depends/x86_64-unknown-linux-gnu/lib/libgmp.la'
+Makefile:2079: recipe for target 'komodo-tx' failed
+make[2]: *** [komodo-tx] Error 1
+make[2]: *** Waiting for unfinished jobs....```
+
+```
+make[3]: Leaving directory '/root/latest_jl777/komodo/src/leveldb'
+make[2]: Leaving directory '/root/latest_jl777/komodo/src'
+Makefile:4634: recipe for target 'all-recursive' failed
+make[1]: *** [all-recursive] Error 1
+make[1]: Leaving directory '/root/latest_jl777/komodo/src'
+Makefile:659: recipe for target 'all-recursive' failed
+make: *** [all-recursive] Error 1
+```
+
+```
+git log -1
+commit 8dc419675a4deb723ed961412dc2dc3ba859239f (HEAD -> jl777, origin/jl777)
+Merge: ac903b5e7 b9de8352c
+Author: jl777 <jl777@users.noreply.github.com>
+Date:   Wed Sep 12 08:55:26 2018 -1100
+
+    Merge pull request #878 from jl777/FSM
+    
+    FSM```
+
+[13-Sep-18 01:46 PM] TonyL#3577
+@siu - Chainmakers are you testing gateways on latest `jl777` atm?
+
+[13-Sep-18 01:46 PM] siu - Chainmakers#3920
+i tried but got stuck, im waiting for jl777 to help
+
+[13-Sep-18 01:47 PM] TonyL#3577
+Hmm, so it built for you without issues?
+
+[13-Sep-18 01:53 PM] siu - Chainmakers#3920
+yep
+
+{Reactions}
+🤔 
+
+[13-Sep-18 01:53 PM] siu - Chainmakers#3920
+like 2 hours ago
+
+[13-Sep-18 01:58 PM] jl777c#5810
+you need to be running oraclefeed (properly)
+
+[13-Sep-18 01:58 PM] jl777c#5810
+then do a deposit
+
+[13-Sep-18 01:58 PM] jl777c#5810
+and then get all the required parameters and submit a gatewaysdeposit
+
+[13-Sep-18 01:58 PM] jl777c#5810
+then you can do a gatewaysclaim
+
+[13-Sep-18 01:58 PM] jl777c#5810
+it is all shown, step by step at the top of gateways.cpp
+
+[13-Sep-18 02:00 PM] siu - Chainmakers#3920
+ok
+
+[13-Sep-18 02:01 PM] jl777c#5810
+jl777 built fine for me
+
+[13-Sep-18 02:02 PM] TonyL#3577
+looking for issues in my local configuration so. thanks!
+
+[13-Sep-18 02:25 PM] siu - Chainmakers#3920
+```./oraclefeed.c
+./oraclefeed.c: line 1: /bin: Is a directory
+./oraclefeed.c: line 2: cJSON.c: command not found
+./oraclefeed.c: line 3: cJSON.c: command not found
+./oraclefeed.c: line 4: cJSON.c: command not found
+./oraclefeed.c: line 5: cJSON.c: command not found
+./oraclefeed.c: line 6: cJSON.c: command not found
+./oraclefeed.c: line 7: cJSON.c: command not found
+./oraclefeed.c: line 8: cJSON.c: command not found
+./oraclefeed.c: line 9: cJSON.c: command not found
+./oraclefeed.c: line 10: cJSON.c: command not found
+./oraclefeed.c: line 11: cJSON.c: command not found
+./oraclefeed.c: line 12: cJSON.c: command not found
+./oraclefeed.c: line 13: cJSON.c: command not found
+./oraclefeed.c: line 14: ******************************************************************************/: No such file or directory
+./oraclefeed.c: line 22: syntax error near unexpected token `('
+./oraclefeed.c: line 22: `char hexbyte(int32_t c)'
+```
+
+[13-Sep-18 02:25 PM] siu - Chainmakers#3920
+seems like i have something missing to run oraclefeed
+
+[13-Sep-18 02:27 PM] TonyL#3577
+Problem was on my side - messed with local variables. Can even send now more than 1 `oraclesdata` in block  :trollface:
+
+{Reactions}
+trollface 
+
+[13-Sep-18 02:29 PM] TonyL#3577
+@siu - Chainmakers you have to build dAPP first like this
+`gcc oraclefeed.c -lm -o oracle_dapp`
+
+[13-Sep-18 02:29 PM] TonyL#3577
+Then put binary to same directory with `komodod`
+
+[13-Sep-18 02:31 PM] siu - Chainmakers#3920
+i did that command, still get the same error.
+
+[13-Sep-18 02:31 PM] TonyL#3577
+You trying to execute file with code. But you have to execute output binary
+
+[13-Sep-18 02:32 PM] TonyL#3577
+In my example binary is `oracle_dapp` so have to execute `./oracle_dapp`
+
+[13-Sep-18 02:33 PM] siu - Chainmakers#3920
+im lost... oracle_dapp is just for a btc pricefeed, i dont know if its related to oraclefeed.c
+
+{Reactions}
+🤔 
+
+[13-Sep-18 02:37 PM] TonyL#3577
+I'm not about `oracle_dapp.sh` script (which I have to delete since it was a temporary solution when oraclefeed didn't accept the cli arguments)
+Ok to make things more clear, run:
+1) Compile oraclefeed sourcecode
+`gcc oraclefeed.c -lm -o oraclefeed`
+2) Execute oraclefeed binary
+`./oraclefeed`
+
+[13-Sep-18 02:45 PM] jl777c#5810
+oracle_dapp is NOT only for btcprice feed. I used it for posting merkleroots and processing withdraws
+
+[13-Sep-18 02:49 PM] siu - Chainmakers#3920
+```siu@T460:~/komodo/src/cc/dapps$ gcc oraclefeed.c -lm -o oraclefeed
+siu@T460:~/komodo/src/cc/dapps$ ./oraclefeed
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   672  100   672    0     0    119      0  0:00:05  0:00:05 --:--:--   163
+BTC/USD 6499.9375
+usage: oraclefeed $ACNAME $ORACLETXID $MYPUBKEY $FORMAT $BINDTXID
+Powered by CoinDesk (https://www.coindesk.com/price/) 6499.93750000
+```
+
+[13-Sep-18 02:50 PM] siu - Chainmakers#3920
+ok, now i got ti
+
+[13-Sep-18 02:56 PM] jl777c#5810
+pushed a new update
+
+[13-Sep-18 02:56 PM] jl777c#5810
+rebuild oraclefeed
+
+[13-Sep-18 03:02 PM] siu - Chainmakers#3920
+ok
+
+[13-Sep-18 03:15 PM] siu - Chainmakers#3920
+```./oraclefeed ORCL e4787a70ad99e721b1cad39b00897aa4187d4f91af2be399819531b22f86543d 0229919363523629835e13a1be644fbdace5e75a9b18728d998440f0366c44d60d Ihh 72fc4dd67ed3904f13abb03bca6224f9a508c3ac1ad368e98cbaeb385390fc4c
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   673    0   673    0     0    104      0 --:--:--  0:00:06 --:--:--   171
+BTC/USD 6483.6475
+Powered by CoinDesk (https://www.coindesk.com/price/) 6483.64750000
+sh: 1: ./komodo-cli: not found
+loadfile null size.(/tmp/oraclefeed.oraclesinfo)
+```
+
+[13-Sep-18 03:16 PM] TonyL#3577
+Put `oraclefeed` to the same folder with `komodo-cli` or set path to `komodo-cli` as a PATH environment variable
+
+[13-Sep-18 03:16 PM] TonyL#3577
+Symlink is possible solution as well
+
+[13-Sep-18 03:18 PM] siu - Chainmakers#3920
+ok
+
+[13-Sep-18 03:19 PM] siu - Chainmakers#3920
+```./oraclefeed ORCL e4787a70ad99e721b1cad39b00897aa4187d4f91af2be399819531b22f86543d 0229919363523629835e13a1be644fbdace5e75a9b18728d998440f0366c44d60d Ihh 72fc4dd67ed3904f13abb03bca6224f9a508c3ac1ad368e98cbaeb385390fc4c
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   673    0   673    0     0    114      0 --:--:--  0:00:05 --:--:--   201
+BTC/USD 6477.0338
+Powered by CoinDesk (https://www.coindesk.com/price/) 6477.03380000
+set refcoin <- KMD [./komodo-cli]
+broadcast ORCL txid.(aa584de467ae3830d22af28a2522c64aec63ccc855354f7560b1dc91a99cde0c)
+KMD ht.30616 <- 98770000e8fc31f35e5d2a98a7c2e701e07c64064346517a4eb910710db27adba6995d02872e06c8e4ef96e5610bca53b2e74149d2945f6f45e825e6f5cf08379e30086f
+```
+
+[13-Sep-18 03:19 PM] siu - Chainmakers#3920
+ok, now i use the height and the merkelroot it prints?
+
+[13-Sep-18 03:27 PM] jl777c#5810
+no
+
+[13-Sep-18 03:27 PM] jl777c#5810
+that is just a continuous process of getting this data onchain
+
+[13-Sep-18 03:27 PM] jl777c#5810
+when you do a gatewaysdeposit, one of the things you need is the txproof
+
+[13-Sep-18 03:27 PM] jl777c#5810
+that generates a merkleroot, which is then compared to the oracle data
+
+[13-Sep-18 04:36 PM] siu - Chainmakers#3920
+my node started a resync unexpectedly, not sure why.
+
+[13-Sep-18 04:36 PM] siu - Chainmakers#3920
+waiting to sync on my locak pc
+
+[14-Sep-18 10:56 AM] jl777c#5810
+Chapter 10 - channels example
+It might be hard to believe, but channels CC implements an instant payment mechanism that is secured by dPoW in a way that is backward compatible with the existing wallets, explorers, etc. and channels CC does not require both nodes to be online. Its usecases are all the usecases for Lightning Network, it is just more secure, less expensive and backward compatible! The one aspect which some might consider a downside (and others another benefit) is that all payments are onchain. This means it would increase blockchain size, but the idea is for channels CC to be used on blockchains with relatively lower value coins, so a txfee of 0.0001 is not anything significant.
+
+Warning: very confusing blockchain reorganization issues described below. Will be confusing to most people
+
+From a distance, the blockchain is a chain of blocks. One block after the next, each referencing all the prior blocks. Each block containing a group of transactions. Prior to getting into a block, the transactions are broadcast to the network and if it is valid, it enters the memory pool. Each miner then constructs a valid block from these memory pool transactions and when a transaction gets mined (confirmed), it is removed from the memory pool.
+
+That is the simple version!
+
+[14-Sep-18 10:56 AM] jl777c#5810
+The reality is quite a bit more complex, but the critical aspect is that the blockchain can (and is) reorganized as part of the expected protocol. This can happen even when there is no 51% attack happening and it is important to understand this process in detail, so here goes.
+
+What happens if two miners find a valid block at the same time? In this case the "same time" means within the time it takes for a block to propagate to the network. When a miner finds a new block, it is broadcast to the network and nodes update and start waiting for the next block. When there are two different (and valid) blocks propagating at the same time, some nodes update with one of the blocks and some the other, lets call it blockA and blockB. Now the nodes will know about both blockA and blockB, but some will consider blockA to be the chaintip and others will consider blockB to be the chaintip. 
+
+This is where it gets confusing. Which is the correct chaintip (latest block?). It turns out that both blockA and blockB are valid at this moment in time. So there are actuall two blockchains. We have what is called a small fork! Now dont worry, the protocol will help us converge to a single chain, but in order to do that, we need the next block.
+
+Some miners will be mining from blockA and others from blockB. In most all cases, when the next block is found, it wont be at the "same time" again. So we will end up with a chain that is blockA+blockA2 or blockB+blockB2. Here comes the small reorg! Let's assuming blockA2 was found before blockB2, so that means all nodes that had blockB as the chaintip now see a longer chain blockA+blockA2, which trumps blockB. When that happens, it reorgs the chain so it is on blockA+blockA2. To do this properly, all the transactions that were in blockB are put back into the mempool and blockA is added, then blockA2.
+
+[14-Sep-18 10:57 AM] jl777c#5810
+Of course, when blockB2 arrives, the nodes see it but blockB+blockB2 is the same length as blockA+blockA2, so no reorg happens. Since we postulated that blockAs arrived "before" blockB2, that means all nodes are on the same chaintip, including all the miners and the next block found would be blockA3, without any complications.
+
+Believe it or not, this sort of thing is happening all the time, one all blockchains. The chaintip is a volatile thing and that is why more than one confirmation is needed to avoid the small reorgs invalidating blockhash. However, it is possible for more than just the blockhash to change. When the reorg happens, all the transactions in the block are put back into the mempool and then the new blocks are processed in order. So what happens if one of the inputs to a transaction that happened in blockB, gets spent in blockA2? Based on random utxo allocation by wallets this is not impossible if an address has a lot of activity, but if it is part of a 51% attack, then this remote chance of an utxo being spent becomes a certainity! In fact, that is what a 51% attack is.
+
+The attack can go much deeper than just one block. For chains that use the longest chain rule, it can go quite deep indeed. So as all the reorged transactions are put back into the mempool, we feel good that it will get confirmed again. Unfortunately, there is no enforcement of a miner needing to mine any specific transaction in the mempool. And the 51% attacker is intent on mining the transaction that spends an already spent utxo in the reorganized chain. it is called a double spend, but in the reorganized chain, it is spent only once. So it is a bit of a misnomer.
+
+[14-Sep-18 10:57 AM] jl777c#5810
+The important thing to understand is that if any transaction has inputs that are signed by a node, it is possible when the chain reorganizes for that transaction to become invalid. This is why dPoW is important as it doesnt strictly use the longest chain rule, but rather the longest notarized chain rule. Once a block is notarized, then it will refuse to reorganize that block (or any block before). So the risk is still there, but only until a notarization. Please see more detailed information about dPoW <here>.
+
+Given the above, if you are wondering how can it be possible to have a mempool payment be secured by dPoW. Since it is explained how the reorgs can make valid transactions disappear, it seems unlikely any such solution is possible. However, the CC is very powerful and it can make unlikely things possible.
+
+The following describes how.
+
+We know that any payment that is utxo based can be invalidated via 51% attack, or even an unlikely but not impossible random utxo allocation from a busy wallet. Which means the payment cant be via a utxo. Since the CC system is utxo based, you might think that it means CC cant solve this. However, CC is very powerful and can implement payments that are not utxo based. But before this non-utxo payment method is explained, first we need to solve the mechanics of payment.
+
+[14-Sep-18 10:57 AM] jl777c#5810
+At a high level, we want to lock funds into a channel, have this lock notarized so it cant be reorganized. Then payments can unlock funds. Additionally, if we are restricting the payment to just one destination, we also need a way for the sender to reclaim the unused funds. So there needs a way for a close channel notification, which when notarized allows the sender to reclaim all funds. After the channel close is notarized, then the only action possible should be a reclaim of sender funds.
+
+We need to assume that any payment, channel close, reclaim can be reorganized until it is notarized so great care needs to be made that a payment that is made will always be valid. With some allowances for blocks after a channelclose is notarized, we can protect the payments using the logic of "stop accepting payments after a channelclose is seen". It might be that a full notarization of wait time after the channelclose is notarized is needed to provide sufficient time for all the payments to be reprocessed.
+
+Now we can finally describe the requirements for the CC. The locked funds need to be able to be spent by either the sender or receiver, the former only after sufficient time after a channelclose and the latter only after a payment is seen (not just confirmed, but just seeing it should be enough). The protection from reorgs is that the payment itself reveals a secret that is needed for the payment and only the secret would be needed, so it wont matter what utxo is used. To lock funds into a CC address that can handle this we need a 1of2 CC address, which can accept a signature from either of two pubkeys. The additional CC constraints would be enforced to make sure payments are made until the channel is closed.
+
+[14-Sep-18 10:57 AM] jl777c#5810
+A hashchain has the nice property of being able to encode a lot of secrets with a single hash. You can hash the hash, over and over and the final hash is the public value. By revealing the next to last hash, it can be verified that it hashes to the final hash. There is a restriction that a hashchain needs to be of reasonable maximum depth, say 1000. That means each iteration of the hashchain that is revealed is worth 1/1000th the total channelfunds. In fact, if the 500th hash value is revealed, half the channelfunds are released. this allows 1/1000th resolution that can be released with a single hash value.
+
+Now we can make the payment based on the hashvalue revealed at a specified depth before the prior released hashchain value. Both the sender and receiver can make a payment to the destination by attaching a hashchain secret. This means even if the sender's payment is reorganized, if the destination has the revealed secret, a replacement payment can be made that is valid. If the destination account isnt monitoring the blockchain, then it wont see the revealed secret, but in this case there shouldnt be value released for the payments that are reorganized. So it would be a case of no harm, no foul. In any event, all the payments end up verifiable on the blockchain to provide verifiability.
+
+Payments at the speed of the mempool, protected by dPoW!
+
+<details of rpc calls, vin/vout allocations, etc>
+
+[14-Sep-18 10:57 AM] jl777c#5810
+@Mihailo hopefully useful for you too
+
+{Reactions}
+🆒 (4) 🚀 (6) ☕ (4) 👌 (5) 📌 (4) 👓 (4) 🎂 (2) 👍 (2) Komodo (6) 
+
+[14-Sep-18 10:58 AM] Mihailo#5902
+Great, I'll read it right away 😉
+
+[14-Sep-18 11:00 AM] jl777c#5810
+@grewalsatinder I updated my FSM branch with the above text
+
+[14-Sep-18 11:08 AM] jl777c#5810
+@Mihailo plz update the last part when you are ready with all the <details of rpc calls, vin/vout allocations, etc>
+
+[14-Sep-18 11:10 AM] Mihailo#5902
+@jl777c From my point of view it is not confusing and well explained (but this can be because I already know part of this stuff) I would only suggest in the end where CC channels explanation starts to first explain how it works normally and then to focus on channel close, reogrs ... So just reverse order of explaining from this one 😉
+
+[14-Sep-18 11:11 AM] Mihailo#5902
+@jl777c I'll add it, np.
+
+[14-Sep-18 11:11 AM] jl777c#5810
+feel free to improve it as you see fit, I just wanted to fill the gap about the blockchain mechanics
+
+{Reactions}
+👍 
+
+[14-Sep-18 11:55 AM] sφldat#8733
+My brain just blew up. In other terms , CC channel is a scalable and programmable atomic instant payment secure by bitcoin ?
+
+[14-Sep-18 11:56 AM] Yassin#3685
+👍 :yassinkomodo: :Komodo:
+
+[14-Sep-18 11:59 AM] jl777c#5810
+channels CC can run on all the different chains, so it is indeed scalable. using an rpc call similar to sendtoaddress, you can make a payment (once a channel is open)
+
+[14-Sep-18 11:59 AM] jl777c#5810
+not sure about the programmable part, it is just a transaction
+
+[14-Sep-18 11:59 AM] jl777c#5810
+atomic is not really applicable but all single blockchain transactions are atomic, in that the inputs are either spent to the outputs, or nothing happens
+
+{Reactions}
+👌 
+
+[14-Sep-18 12:00 PM] jl777c#5810
+it is instant, as fast as it takes to propagate to the mempool and dPoW secures it
+
+[14-Sep-18 12:01 PM] sφldat#8733
+programmable in the sense that it can be "compatible with existing portfolios, explorers, etc."
+
+[14-Sep-18 12:02 PM] sφldat#8733
+but I understand that this is not the right term for a transaction.
+
+[14-Sep-18 12:14 PM] jl777c#5810
+no need to create an entire new set of tools, websites, etc. existing explorers, wallets, etc will just work with these transactions. just some minor changes to display them separately
+
+[14-Sep-18 12:43 PM] sφldat#8733
+wow ok, impressive
+
+[14-Sep-18 12:54 PM] jl777c#5810
+yes, all the benefits of LN, none of the drawbacks
+
+[14-Sep-18 12:54 PM] jl777c#5810
+also, fully decentralized with direct p2p channels
+
+[14-Sep-18 12:55 PM] jl777c#5810
+so no need for centralizing hubs
+
+[14-Sep-18 12:55 PM] jl777c#5810
+no need to solve complex routing issues
+

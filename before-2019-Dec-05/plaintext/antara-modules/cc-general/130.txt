@@ -1,0 +1,379 @@
+==============================================================
+Guild: Komodo
+Channel: cc-general
+Topic: Dev Docs: https://developers.komodoplatform.com | Test plan: https://docs.google.com/spreadsheets/d/1l0dWEPcrv9zE11_TD-XrX_HIYV0VLpadCJN6hvaZERc/edit#gid=211514340
+https://medium.com/@jameslee777/how-to-implement-finite-state-machines-into-a-cc-8dfeadccbcad
+https://github.com/dimxy/komodo/wiki/Designing-RPC-for-FSM-CC
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[19-Nov-18 09:08 PM] jl777c#5810
+but it is out of date
+
+[19-Nov-18 09:08 PM] dukeleto#7326
+it could happen, that the config file itself disagrees with your CLI args, or that they are not specified and over-ridden by CLI
+
+[19-Nov-18 09:09 PM] dukeleto#7326
+i remember stopping, when I didn't want to parse ACNAME.conf to get rpc ports
+
+[19-Nov-18 09:09 PM] jl777c#5810
+but for rpc port you should be able to use -rpcport=nnnn on the commandline
+
+[19-Nov-18 09:09 PM] dukeleto#7326
+yes, i think that is enough
+
+[19-Nov-18 09:09 PM] dukeleto#7326
+komodod must be started with the same values that you use in komodo-cli
+
+[19-Nov-18 09:09 PM] dukeleto#7326
+the test suite can get confused, if everything is not specified correctly
+
+[19-Nov-18 09:10 PM] dukeleto#7326
+@TonyL i think the gremlins have an HQ in the test infra library itself, there are some hacks. The extra_args might be only part of the solution
+
+[19-Nov-18 09:11 PM] dukeleto#7326
+@TonyL here is some of it: https://github.com/jl777/komodo/blob/master/qa/rpc-tests/test_framework/util.py#L79
+
+{Embed}
+https://github.com/jl777/komodo/blob/master/qa/rpc-tests/test_framework/util.py
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[19-Nov-18 09:11 PM] dukeleto#7326
+i highly suggest reading that entire file, even if it all doesn't make sense
+
+[19-Nov-18 09:12 PM] dukeleto#7326
+it's well written code, the functions names tell you what is going on
+
+[19-Nov-18 09:12 PM] TonyL#3577
+Will do 👍
+
+[19-Nov-18 09:12 PM] dukeleto#7326
+that code generates the conf used for komodod regtest daemons
+
+[19-Nov-18 09:13 PM] dukeleto#7326
+instead of specifying in the conf file, it's passed in via extra_args
+
+[19-Nov-18 09:13 PM] dukeleto#7326
+that was the hack I found, after thrashing around a bit
+
+[19-Nov-18 09:14 PM] dukeleto#7326
+```    if extra_args[0] == '-ac_name=REGTEST':
+        url = "http://rt:rt@%s:%d" % (rpchost or '127.0.0.1', 64368)
+    else:
+        url = "http://rt:rt@%s:%d" % (rpchost or '127.0.0.1', rpc_port(i))```
+
+[19-Nov-18 09:14 PM] dukeleto#7326
+from https://github.com/jl777/komodo/blob/master/qa/rpc-tests/test_framework/util.py#L226
+
+{Embed}
+https://github.com/jl777/komodo/blob/master/qa/rpc-tests/test_framework/util.py
+jl777/komodo
+Komodo. Contribute to jl777/komodo development by creating an account on GitHub.
+https://avatars2.githubusercontent.com/u/5962559?s=400&v=4
+
+[19-Nov-18 09:14 PM] dukeleto#7326
+that is gremlins HQ
+
+[19-Nov-18 09:14 PM] dukeleto#7326
+it's a massive hack, that made everything work
+
+[19-Nov-18 09:15 PM] dukeleto#7326
+that will break for any AC not named REGTEST, and also does not support more than 1 node
+
+[19-Nov-18 09:15 PM] TonyL#3577
+Have to look around the code and think a bit, sure there is a solution
+
+[19-Nov-18 09:16 PM] dukeleto#7326
+there should be, i just made it work for the situation at hand
+
+[19-Nov-18 09:17 PM] dukeleto#7326
+@TonyL the extra_args stuff is necessary, and then there may be a few bits of new code in the internals to make it work
+
+[20-Nov-18 03:32 PM] siu - Chainmakers#3920
+Oracles is acting weird for me
+
+[20-Nov-18 03:32 PM] siu - Chainmakers#3920
+```01000000040a4ecd486e74c0856675de8600a6151358634113beebfd79a5a1a59972c9e23802000000484730440220388ab3db17365e2d75aeaf43e2877fa1aebfddd56471c47cbf3151e704d0455102207b88ac19482439f2ae60d08c11d049a5fed30bcaddcfd40120cb064a70debc2901ffffffff2e8f6a0c0c2a65fc9b1d3c4a021ee04f7c619f30b3b80ef50b4a5486fae395f2010000007b4c79a276a072a26ba067a56580210276c574489419e4431525e098fdbffe41e81e48e4aae55bd6c897fcba9bec5e64814012e7b39ea78bbc05829fc09e376613138c73e7dc582255c6d770e78b81f5774e70b6fa9ee350787116e5c8b46fa531b08bb0b99f3a574a8a06a91f4c21ddab54a100af038001eca10001ffffffff450777b15dcddbce836505c08319b14ac4732f597b1ce10e2fc85f9d868cf224000000007b4c79a276a072a26ba067a56580210276c6d1c65abc64c8559710b8aff4b9e33787072d3dda4ec9a47b30da0725f57a814081837add22a773ed45e32bf29a2318d2ec8f4bf6bae00ec06dcae15abc26b76a3ded5cb2b5e36de14b612664d7d2c17f1b7145cc9775b25759e827cb4e34fe18a100af038001eca10001ffffffff0bd1065ab91ae4f1d102f6c246b2c86448a7161d80fc8beeee49a8971d87b13502000000494830450221009dada2822ce22600296dd3e4eceb1455d51cc9e4505eb3786f78687522bb476b02200729c745dd312a4086ac3c9563bee8df0fcad178e753fc63d0722ebaa7577f1401ffffffff05f0b9f50500000000302ea22c8020344295a6b458d8597d9a3a211cd3f2b69d8108a03542cc311fb45e538e7e19fd8103120c008203000401cc1027000000000000302ea22c80209cafa8580047aa339e37619087f8155724ee5a286b4355bef5613f63daad71aa8103120c008203000401cc102700000000000023210276c6d1c65abc64c8559710b8aff4b9e33787072d3dda4ec9a47b30da0725f57aac102700000000000023210276c6d1c65abc64c8559710b8aff4b9e33787072d3dda4ec9a47b30da0725f57aac0000000000000000746a4c71ec4473fa67a32173d366f56e7e8f80905d397fdd23a276ac94c521d4e0ca3f305b802e8f6a0c0c2a65fc9b1d3c4a021ee04f7c619f30b3b80ef50b4a5486fae395f2210276c6d1c65abc64c8559710b8aff4b9e33787072d3dda4ec9a47b30da0725f57a0c0a302e30313031303030310a00000000
+23caac614201eaa091591b848c3dacc332c8a47e96f0eb37598d7534dc588119
+```
+
+[20-Nov-18 03:32 PM] siu - Chainmakers#3920
+```01000000040a4ecd486e74c0856675de8600a6151358634113beebfd79a5a1a59972c9e23802000000484730440220388ab3db17365e2d75aeaf43e2877fa1aebfddd56471c47cbf3151e704d0455102207b88ac19482439f2ae60d08c11d049a5fed30bcaddcfd40120cb064a70debc2901ffffffff2e8f6a0c0c2a65fc9b1d3c4a021ee04f7c619f30b3b80ef50b4a5486fae395f2010000007b4c79a276a072a26ba067a56580210276c574489419e4431525e098fdbffe41e81e48e4aae55bd6c897fcba9bec5e64814012e7b39ea78bbc05829fc09e376613138c73e7dc582255c6d770e78b81f5774e70b6fa9ee350787116e5c8b46fa531b08bb0b99f3a574a8a06a91f4c21ddab54a100af038001eca10001ffffffff450777b15dcddbce836505c08319b14ac4732f597b1ce10e2fc85f9d868cf224000000007b4c79a276a072a26ba067a56580210276c6d1c65abc64c8559710b8aff4b9e33787072d3dda4ec9a47b30da0725f57a814081837add22a773ed45e32bf29a2318d2ec8f4bf6bae00ec06dcae15abc26b76a3ded5cb2b5e36de14b612664d7d2c17f1b7145cc9775b25759e827cb4e34fe18a100af038001eca10001ffffffff0bd1065ab91ae4f1d102f6c246b2c86448a7161d80fc8beeee49a8971d87b13502000000494830450221009dada2822ce22600296dd3e4eceb1455d51cc9e4505eb3786f78687522bb476b02200729c745dd312a4086ac3c9563bee8df0fcad178e753fc63d0722ebaa7577f1401ffffffff05f0b9f50500000000302ea22c8020344295a6b458d8597d9a3a211cd3f2b69d8108a03542cc311fb45e538e7e19fd8103120c008203000401cc1027000000000000302ea22c80209cafa8580047aa339e37619087f8155724ee5a286b4355bef5613f63daad71aa8103120c008203000401cc102700000000000023210276c6d1c65abc64c8559710b8aff4b9e33787072d3dda4ec9a47b30da0725f57aac102700000000000023210276c6d1c65abc64c8559710b8aff4b9e33787072d3dda4ec9a47b30da0725f57aac0000000000000000746a4c71ec4473fa67a32173d366f56e7e8f80905d397fdd23a276ac94c521d4e0ca3f305b802e8f6a0c0c2a65fc9b1d3c4a021ee04f7c619f30b3b80ef50b4a5486fae395f2210276c6d1c65abc64c8559710b8aff4b9e33787072d3dda4ec9a47b30da0725f57a0c0a302e30313031303030310a00000000
+```
+
+[20-Nov-18 03:33 PM] siu - Chainmakers#3920
+i have tried multiple times to do `oraclesdata`
+
+[20-Nov-18 03:33 PM] siu - Chainmakers#3920
+but i get the same exact rawtx and txid on multiple tries
+
+[20-Nov-18 03:37 PM] siu - Chainmakers#3920
+@TonyL @jl777c any particular issue with oracles?
+
+[20-Nov-18 03:37 PM] siu - Chainmakers#3920
+in jl777 branch*
+
+[20-Nov-18 03:44 PM] siu - Chainmakers#3920
+this is for KMDICE.
+
+[20-Nov-18 05:31 PM] dukeleto#7326
+@siu - Chainmakers what error are you getting that is different from what you expect?
+
+[20-Nov-18 05:35 PM] siu - Chainmakers#3920
+That it generates exatly the same hash on every oraclesdata i submit.
+
+[20-Nov-18 05:36 PM] dukeleto#7326
+@siu - Chainmakers i am playing the Dumb Devils Advocate, partly because it's fun, and partly because the new oracle CC is new to me
+
+[20-Nov-18 05:36 PM] dukeleto#7326
+@siu - Chainmakers why is that a bug?
+
+[20-Nov-18 05:37 PM] dukeleto#7326
+we need to write some oracle CC tests, so understanding this will help me and probably others
+
+[20-Nov-18 05:39 PM] siu - Chainmakers#3920
+Expected behaviour is that i submit one oraclesdata and once that transaction gets confirmed another oraclesdata submission would create a new hash.
+
+[20-Nov-18 05:39 PM] siu - Chainmakers#3920
+On this case the tx doesnt seem to get to the mempool in the first place
+
+[20-Nov-18 05:45 PM] jl777c#5810
+"On this case the tx doesnt seem to get to the mempool in the first place" <- that is the problem
+
+[20-Nov-18 05:45 PM] dukeleto#7326
+you have to broadcast it, right?
+
+[20-Nov-18 05:45 PM] dukeleto#7326
+@siu - Chainmakers are you getting some logs about rejection from mempool, or is CC code "failing silently" in your opinion?
+
+[20-Nov-18 05:46 PM] dukeleto#7326
+we have very little error checking in Oracles, so far
+
+[20-Nov-18 06:01 PM] siu - Chainmakers#3920
+Failing silently
+
+[20-Nov-18 06:06 PM] dukeleto#7326
+@siu - Chainmakers some necessary pre-condition that is required, may not be present
+
+[20-Nov-18 06:06 PM] dukeleto#7326
+like enough entropy or something is not confirmed
+
+[20-Nov-18 06:53 PM] siu - Chainmakers#3920
+Hmm.. right, that could be it
+
+[20-Nov-18 07:34 PM] dukeleto#7326
+@jl777c if I want to submit PR's for error-checking stuff for oracles + other new CCs, is the FSM branch the correct place to send those?
+
+[20-Nov-18 07:36 PM] jl777c#5810
+FSM branch
+
+{Reactions}
+👍 
+
+[20-Nov-18 09:42 PM] dukeleto#7326
+i have some error checking improvements cooking, i will send a PR soon. changing branches made my git repo freak out, so I am making clean and testing from a clean build
+
+[21-Nov-18 09:22 AM] TonyL#3577
+@dukeleto got some progress - able to start two nodes daemons:
+```connecting to http://rt:rt@127.0.0.1:64368
+created proxy
+connecting to http://rt:rt@127.0.0.1:64366
+created proxy
+Done setting up network```
+
+[21-Nov-18 09:22 AM] TonyL#3577
+But problem is synchronisation...
+```DEBUG:BitcoinRPC:-2-> getinfo []
+DEBUG:BitcoinRPC:<-2- {"CCid": 2, "notarized": 0, "connections": 0, "prevMoMheight": 0, "notarizedhash": "0000000000000000000000000000000000000000000000000000000000000000", "notarizedtxid": "0000000000000000000000000000000000000000000000000000000000000000", "errors": "", "version": 1001550, "timeoffset": 0, "pubkey": "02676d00110c2cd14ae24f95969e8598f7ccfaa675498b82654a5b5bd57fc1d8cf", "KMDversion": "0.2.1", "keypoolsize": 2, "premine": 5555555, "blocks": 10, "notarizedtxid_height": "mempool", "walletversion": 60000, "difficulty": 1, "proxy": "", "reward": 10000000, "tiptime": 1542792021, "magic": -649655917, "name": "REGTEST", "paytxfee": 0.0, "keypoololdest": 1542792007, "KMDnotarized_height": 0, "longestchain": 0, "testnet": false, "rpcport": 48380, "protocolversion": 170003, "p2pport": 48379, "notarized_confirms": 0, "balance": 0.0, "relayfee": 1e-06}
+DEBUG:BitcoinRPC:-3-> getinfo []
+unexpected fname.(/tmp/testfxgS1t/node1) vs REGTEST [REGTEST] n.7 len.21 (t/node1)
+DEBUG:BitcoinRPC:<-3- {"CCid": 2, "notarized": 0, "connections": 0, "prevMoMheight": 0, "notarizedhash": "0000000000000000000000000000000000000000000000000000000000000000", "notarizedtxid": "0000000000000000000000000000000000000000000000000000000000000000", "errors": "", "version": 1001550, "timeoffset": 0, "pubkey": "024026d4ad4ecfc1f705a9b42ca64af6d2ad947509c085534a30b8861d756c6ff0", "KMDversion": "0.2.1", "keypoolsize": 2, "premine": 5555555, "blocks": 0, "notarizedtxid_height": "mempool", "walletversion": 60000, "difficulty": 1, "proxy": "", "reward": 10000000, "tiptime": 1296688602, "magic": -649655917, "name": "REGTEST", "paytxfee": 0.0, "keypoololdest": 1542792009, "KMDnotarized_height": 0, "longestchain": 0, "testnet": false, "rpcport": 48380, "protocolversion": 170003, "p2pport": 48379, "notarized_confirms": 0, "balance": 0.0, "relayfee": 1e-06}```
+
+[21-Nov-18 09:25 AM] TonyL#3577
+Actually my daemons are with RPC ports which I've specified in config (64368, 64366) - I guess `getinfo` printing same port because of regtest mode
+
+{Attachments}
+https://cdn.discordapp.com/attachments/466507187842187264/514733024269697025/unknown.png
+
+[21-Nov-18 09:26 AM] TonyL#3577
+Hmm maybe `-addnode=127.0.0.1:firstnodeport` can do a trick to make it syncing
+
+[21-Nov-18 09:28 AM] TonyL#3577
+Otherwise only way I see is separate virtual network creation for second node - such way sync should work via `-addnode=`
+
+[21-Nov-18 09:37 AM] dukeleto#7326
+@TonyL cool!
+
+[21-Nov-18 09:37 AM] dukeleto#7326
+the test suite handles connecting your nodes together
+
+[21-Nov-18 09:38 AM] TonyL#3577
+Hmm, sync_all() never synching:
+```DEBUG:BitcoinRPC:-4-> getblockcount []
+DEBUG:BitcoinRPC:<-4- 10
+DEBUG:BitcoinRPC:-5-> getblockcount []
+DEBUG:BitcoinRPC:<-5- 0
+DEBUG:BitcoinRPC:-6-> getblockcount []
+DEBUG:BitcoinRPC:<-6- 10
+DEBUG:BitcoinRPC:-7-> getblockcount []
+DEBUG:BitcoinRPC:<-7- 0
+DEBUG:BitcoinRPC:-8-> getblockcount []
+DEBUG:BitcoinRPC:<-8- 10
+DEBUG:BitcoinRPC:-9-> getblockcount []
+DEBUG:BitcoinRPC:<-9- 0```
+
+[21-Nov-18 09:38 AM] dukeleto#7326
+what are you trying to accomplish with sync_all ?
+
+[21-Nov-18 09:39 AM] dukeleto#7326
+i am not sure it does much for your situation. `generate()` will mine a block
+
+[21-Nov-18 09:39 AM] TonyL#3577
+Yes, I can mine on both nodes but they don't have `connections:` so it's became a separate chains
+
+[21-Nov-18 09:40 AM] dukeleto#7326
+```69:    def sync_all(self):
+70-        if self.is_network_split:
+71-            sync_blocks(self.nodes[:2])
+72-            sync_blocks(self.nodes[2:])
+73-            sync_mempools(self.nodes[:2])
+74-            sync_mempools(self.nodes[2:])
+75-        else:
+76-            sync_blocks(self.nodes)
+77-            sync_mempools(self.nodes)```
+
+[21-Nov-18 09:40 AM] dukeleto#7326
+just so we can be clear, that is what sync_all does
+
+[21-Nov-18 09:42 AM] dukeleto#7326
+@TonyL no connections sounds like the nodes are not being connected together correctly. Since we are over-riding various methods, sometimes the inherited methods don't work well with that, and more methods need to be over-written
+
+[21-Nov-18 09:44 AM] TonyL#3577
+@dukeleto Hmm I think it's more routing issue
+
+[21-Nov-18 09:44 AM] dukeleto#7326
+add some `prints` to see what is going on when you run the test
+
+[21-Nov-18 09:44 AM] TonyL#3577
+Since for assetchain start when you connect second node you have to determine first node's IP in `-addnode=` param
+
+[21-Nov-18 09:45 AM] dukeleto#7326
+@TonyL where is this code? Are you assigning to `self.nodes` ?
+
+[21-Nov-18 09:46 AM] dukeleto#7326
+@TonyL yeah, i can see what you are saying. Second node needs to -addnode the first in CLI
+
+[21-Nov-18 09:46 AM] dukeleto#7326
+that is going to be in extra_args, only on the 2nd node
+
+[21-Nov-18 09:46 AM] TonyL#3577
+Yup, but both nodes are on the same IP (127.0.0.1) so some routing tricks needed
+
+[21-Nov-18 09:47 AM] dukeleto#7326
+@TonyL no routing tricks needed, different ports are enought
+
+[21-Nov-18 09:48 AM] TonyL#3577
+@dukeleto it's possible to use: `-addnode= 127.0.0.1:port` ?
+
+[21-Nov-18 09:48 AM] dukeleto#7326
+addnode ip:port
+
+[21-Nov-18 09:48 AM] TonyL#3577
+Oh ok
+
+[21-Nov-18 09:48 AM] dukeleto#7326
+yes
+
+[21-Nov-18 09:48 AM] dukeleto#7326
+also, we might need to call `connect_nodes` when there is >1 node
+
+[21-Nov-18 09:48 AM] dukeleto#7326
+i didn't call that, because we only had 1 node in our `setup_network`
+
+[21-Nov-18 09:49 AM] dukeleto#7326
+```274:def connect_nodes(from_connection, node_num):
+275-    ip_port = "127.0.0.1:"+str(p2p_port(node_num))
+276-    from_connection.addnode(ip_port, "onetry")
+277-    # poll until version handshake complete to avoid race conditions
+278-    # with transaction relaying
+279-    while any(peer['version'] == 0 for peer in from_connection.getpeerinfo()):
+280-        time.sleep(0.1)```
+
+[21-Nov-18 09:49 AM] TonyL#3577
+I'll try with more than 2 nodes when sync two
+
+[21-Nov-18 09:49 AM] dukeleto#7326
+connect_nodes does what you want, i think. but it doesn't do it in the same way where KMD AC's define it in the CLI, not sure it matters
+
+[21-Nov-18 09:49 AM] TonyL#3577
+```DEBUG:BitcoinRPC:<-2- {"CCid": 2, "notarized": 0, "connections": 1, "prevMoMheight": 0, "notarizedhash": "0000000000000000000000000000000000000000000000000000000000000000", "notarizedtxid": "0000000000000000000000000000000000000000000000000000000000000000", "errors": "", "version": 1001550, "timeoffset": 0, "pubkey": "02676d00110c2cd14ae24f95969e8598f7ccfaa675498b82654a5b5bd57fc1d8cf", "KMDversion": "0.2.1", "keypoolsize": 2, "premine": 5555555, "blocks": 10, "notarizedtxid_height": "mempool", "walletversion": 60000, "difficulty": 1, "proxy": "", "reward": 10000000, "tiptime": 1542793774, "magic": -649655917, "name": "REGTEST", "paytxfee": 0.0, "keypoololdest": 1542793761, "KMDnotarized_height": 0, "longestchain": 0, "testnet": false, "rpcport": 48380, "protocolversion": 170003, "p2pport": 48379, "notarized_confirms": 0, "balance": 0.0, "relayfee": 1e-06}
+DEBUG:BitcoinRPC:-3-> getinfo []
+DEBUG:BitcoinRPC:<-3- {"CCid": 2, "notarized": 0, "connections": 1, "prevMoMheight": 0, "notarizedhash": "0000000000000000000000000000000000000000000000000000000000000000", "notarizedtxid": "0000000000000000000000000000000000000000000000000000000000000000", "errors": "", "version": 1001550, "timeoffset": 0, "pubkey": "024026d4ad4ecfc1f705a9b42ca64af6d2ad947509c085534a30b8861d756c6ff0", "KMDversion": "0.2.1", "keypoolsize": 2, "premine": 5555555, "blocks": 9, "notarizedtxid_height": "mempool", "walletversion": 60000, "difficulty": 1, "proxy": "", "reward": 10000000, "tiptime": 1542793773, "magic": -649655917, "name": "REGTEST", "paytxfee": 0.0, "keypoololdest": 1542793763, "KMDnotarized_height": 0, "longestchain": 9, "testnet": false, "rpcport": 48380, "protocolversion": 170003, "p2pport": 48379, "notarized_confirms": 0, "balance": 0.0, "relayfee": 1e-06}```
+
+[21-Nov-18 09:49 AM] TonyL#3577
+Oh yeah
+
+[21-Nov-18 09:50 AM] TonyL#3577
+:port worked and have 2 nodes synced asset chain now
+
+[21-Nov-18 09:50 AM] dukeleto#7326
+sweet sauce
+
+[21-Nov-18 09:50 AM] dukeleto#7326
+it's nice when test suite stuff works 😃
+
+[21-Nov-18 09:51 AM] TonyL#3577
+Proxy creator now without `-AC_NAME=` hardcode
+    ```port = extra_args[3]
+url = "http://rt:rt@%s:%d" % (rpchost or '127.0.0.1', int(port[9:]))```
+
+[21-Nov-18 09:59 AM] TonyL#3577
+@dukeleto https://github.com/tonymorony/komodo/commit/ec6811d60fbf61680d2b01ab3d2056d46b5d8cf5 initial version
+
+{Embed}
+https://github.com/tonymorony/komodo/commit/ec6811d60fbf61680d2b01ab3d2056d46b5d8cf5
+initial version of multi-nodes testing · tonymorony/komodo@ec6811d
+https://avatars3.githubusercontent.com/u/24797699?s=200&v=4
+
+[21-Nov-18 09:59 AM] TonyL#3577
+Will try to fix dicetests with second node help and PR as soon as it's work
+
+[21-Nov-18 10:00 AM] dukeleto#7326
+@TonyL looks nice, good work!
+
+[21-Nov-18 10:02 AM] TonyL#3577
+Thanks @dukeleto ! More nodes = more fun
+
+[21-Nov-18 10:04 AM] jl777c#5810
+@dukeleto is your missing extern issue a severe one?
+
+[21-Nov-18 10:12 AM] dukeleto#7326
+@jl777c no, i thought that I messed up the FSM build maybe
+
+[21-Nov-18 10:13 AM] jl777c#5810
+it seems to build
+
+[21-Nov-18 10:14 AM] dukeleto#7326
+interesting. I would think that new CC .cpp files would need to declare `extern CCerror`, but maybe not
+
+[21-Nov-18 10:14 AM] dukeleto#7326
+if it works, don't fix it
+
+[21-Nov-18 10:14 AM] jl777c#5810
+i think it is in CCutils.h
+
+[21-Nov-18 10:14 AM] dukeleto#7326
+ok, sounds good
+
+[21-Nov-18 10:14 AM] jl777c#5810
+or CCinclude.h from the other error things
+
+[21-Nov-18 10:15 AM] dukeleto#7326
+there is so much new stuff in FSM, so many new shiny things
+
+[21-Nov-18 10:16 AM] jl777c#5810
+yes, addressindex rpc calls are broken today, but we hope to get it fixed tomorrow
+

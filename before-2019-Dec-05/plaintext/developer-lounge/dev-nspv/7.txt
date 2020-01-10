@@ -1,0 +1,463 @@
+==============================================================
+Guild: Komodo
+Channel: dev-nspv
+Topic: ./komodod -nSPV=1 -ac_reward=100000000  -ac_name=NSPV -ac_supply=10000000000 -ac_cc=2 -addressindex=1 -spentindex=1 -connect=5.9.102.210 &
+./komodod -nSPV=1 -addnode=5.9.253.195 &
+https://drive.google.com/drive/folders/1ZvzrhNBQgroejTKPl0kCOTJ8h7XMnO2M?usp=sharing
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[05-Jul-19 04:41 PM] jl777c#5810
+@TonyL https://iln.explorer.dexstats.info/tx/244ce377e3b22475b59052bba61c2137825805ebeffc8102b53ad1330e4c5442
+
+{Reactions}
+treasure 
+
+[05-Jul-19 04:44 PM] daemonfox#6136
+RW8kWgnvAzYgGTrD66P7ZSpUJxDGzj5KRa for ILN nSPV testing
+
+[05-Jul-19 04:48 PM] daemonfox#6136
+and did we ose the nspv_listunspent call?
+
+[05-Jul-19 04:48 PM] daemonfox#6136
+its no longer listed in help
+
+[05-Jul-19 04:48 PM] daemonfox#6136
+== NSPV ==
+nspv_getinfo
+nspv_hdrsproof prevheight nextheight
+nspv_login wif
+nspv_notarizations height
+nspv_send destaddr amount
+nspv_spentinfo txid vout
+nspv_txproof txid height
+
+[05-Jul-19 04:51 PM] daemonfox#6136
+Also... on wif expiry... th nspv daemon crashes
+
+[05-Jul-19 04:58 PM] jl777c#5810
+fixed
+
+[05-Jul-19 04:58 PM] jl777c#5810
+what are the crash details?
+
+[05-Jul-19 05:08 PM] jl777c#5810
+decoderawtransaction and sendrawtransaction used to crash, so any untested rpc call might crash
+
+[05-Jul-19 05:08 PM] jl777c#5810
+i sent you and tonyL 7.77 ILN, via nspv_send
+
+[05-Jul-19 05:08 PM] jl777c#5810
+all that is left is to make sendrawtransaction actuall send, for now it needs to be broadcast from a different online node
+
+[05-Jul-19 05:09 PM] jl777c#5810
+and doing all the merkle validations, but it is getting all the required data locally when doing the nspv_send
+
+[05-Jul-19 05:09 PM] jl777c#5810
+basically, it is working, but likely half a dozen rpc calls are prone to crashing as there is no normal wallet
+
+[05-Jul-19 05:11 PM] jl777c#5810
+just fixed a random crash, which i think looked like wif expiration caused it
+
+[05-Jul-19 05:26 PM] daemonfox#6136
+thats what happened to me... random segmentation fault on WIF expiry
+
+[05-Jul-19 05:27 PM] jl777c#5810
+in the backtrace where is it?
+
+[05-Jul-19 05:30 PM] daemonfox#6136
+daemonfox@KMDuser:~/komodo/src$ ./komodo-cli -datadir=/home/daemonfox/.komodo2/ILN -ac_name=ILN nspv_listunspent RW8kWgnvAzYgGTrD66P7ZSpUJxDGzj5KRa
+{
+  "result": "success",
+  "utxos": [
+    {
+      "height": 2672,
+      "txid": "b0f3937412b38e8ea52a3e90f77a1abd6fb8f7dba1a20d940c8168016cbc54d3",
+      "vout": 0,
+      "value": 7.77
+    }
+  ],
+  "address": "RW8kWgnvAzYgGTrD66P7ZSpUJxDGzj5KRa",
+  "height": 2675,
+  "numutxos": 1,
+  "balance": 7.77
+}
+
+[05-Jul-19 05:32 PM] daemonfox#6136
+it seems to behave now with this last commit
+
+[05-Jul-19 05:32 PM] daemonfox#6136
+and very fast too
+
+[05-Jul-19 05:38 PM] jl777c#5810
+thats with 322 connections
+
+[05-Jul-19 05:39 PM] jl777c#5810
+seems to be stable now, but i didnt test all rpc calls. with nSPV client, a lot of rpc calls wont make sense
+
+[05-Jul-19 05:40 PM] daemonfox#6136
+i tried a few non nspv and all so far kick back disabled
+
+[05-Jul-19 05:40 PM] jl777c#5810
+the basics of getting balance, listunspent, getinfo and send should work
+
+[05-Jul-19 05:40 PM] daemonfox#6136
+yup all have worked
+
+[05-Jul-19 05:40 PM] jl777c#5810
+but only one tx per block as there is no concept of mempool
+
+[05-Jul-19 05:40 PM] daemonfox#6136
+ill try a send in abit
+
+[05-Jul-19 05:40 PM] jl777c#5810
+that will need more complex handling in the wallet code
+
+[05-Jul-19 05:48 PM] Alright#0419
+@dukeleto all indexes are enabled on HUSH no matter what because of ac_cc
+
+[05-Jul-19 06:01 PM] daemonfox#6136
+so currently, I cant sned any nspv txes?
+
+[05-Jul-19 06:02 PM] daemonfox#6136
+id have to craft a rawtx elsewhere and send that through the nspv client?
+
+[05-Jul-19 06:04 PM] jl777c#5810
+nSPV client cannot do sendrawtransaction yet
+
+[05-Jul-19 06:04 PM] jl777c#5810
+but it is making valid signed tx
+
+[05-Jul-19 06:04 PM] jl777c#5810
+so do the nspv_send to create the signed raw tx and then that can be broadcast on a different node
+
+[05-Jul-19 06:04 PM] daemonfox#6136
+daemonfox@KMDuser:~/komodo/src$ ./komodo-cli -datadir=/home/daemonfox/.komodo2/ILN -ac_name=ILN nspv_login XXX
+{
+  "result": "success",
+  "status": "wif will expire in 60 seconds",
+  "address": "RW8kWgnvAzYgGTrD66P7ZSpUJxDGzj5KRa",
+  "pubkey": "03ffc0a032958132c048acedc2fe03b26bda7a4218f2f69edcf819aa21b9c92d55",
+  "wifprefix": 188,
+  "compressed": 1
+}
+daemonfox@KMDuser:~/komodo/src$ ./komodo-cli -datadir=/home/daemonfox/.komodo2/ILN -ac_name=ILN nspv_send RU6yXkH67VGxDgNKr1rp4yv6E2ZywrZFfT 0.01
+{
+  "result": "error",
+  "error": "couldnt get addressutxos"
+}
+
+[05-Jul-19 06:05 PM] jl777c#5810
+does listunspent work?
+
+[05-Jul-19 06:05 PM] daemonfox#6136
+daemonfox@KMDuser:~/komodo/src$ ./komodo-cli -datadir=/home/daemonfox/.komodo2/ILN -ac_name=ILN nspv_listunspent RW8kWgnvAzYgGTrD66P7ZSpUJxDGzj5KRa
+{
+  "result": "success",
+  "utxos": [
+    {
+      "height": 2672,
+      "txid": "b0f3937412b38e8ea52a3e90f77a1abd6fb8f7dba1a20d940c8168016cbc54d3",
+      "vout": 0,
+      "value": 7.77
+    }
+  ],
+  "address": "",
+  "height": 2676,
+  "numutxos": 1,
+  "balance": 7.77
+}
+
+[05-Jul-19 06:05 PM] daemonfox#6136
+Without WIF logged in
+
+[05-Jul-19 06:05 PM] jl777c#5810
+login and send
+
+[05-Jul-19 06:06 PM] daemonfox#6136
+the first was when logged in
+
+[05-Jul-19 06:06 PM] daemonfox#6136
+litunspent shows same whether logged in or not
+
+[05-Jul-19 06:08 PM] jl777c#5810
+yes, listunspent doesnt require being logged in
+
+[05-Jul-19 06:08 PM] jl777c#5810
+only making a tx
+
+[05-Jul-19 06:09 PM] jl777c#5810
+what if you restart, do login and send, and nothing else
+
+[05-Jul-19 06:09 PM] daemonfox#6136
+restarted client daemon
+
+[05-Jul-19 06:09 PM] daemonfox#6136
+that worked
+
+[05-Jul-19 06:10 PM] daemonfox#6136
+"result": "success",
+  "status": "wif will expire in 60 seconds",
+  "address": "RW8kWgnvAzYgGTrD66P7ZSpUJxDGzj5KRa",
+  "pubkey": "03ffc0a032958132c048acedc2fe03b26bda7a4218f2f69edcf819aa21b9c92d55",
+  "wifprefix": 188,
+  "compressed": 1
+}
+daemonfox@KMDuser:~/komodo/src$ ./komodo-cli -datadir=/home/daemonfox/.komodo2/ILN -ac_name=ILN nspv_send RU6yXkH67VGxDgNKr1rp4yv6E2ZywrZFfT 0.01
+{
+  "result": "success",
+  "hex": "0400008085202f8901d354bc6c0168810c940da2a1dbf7b86fbd1a7af7903e2aa58e8eb3127493f3b0000000006b483045022100a345e30a3d1b34e8c5a7236c3c6fe47bd0456d4d1c05ed38c6dab618475da46a02207003fc0adb4832f05b924c515420a7c4ae5e5e00d255c7605477606b228e2189012103ffc0a032958132c048acedc2fe03b26bda7a4218f2f69edcf819aa21b9c92d55ffffffff0240420f00000000001976a914ce7bc185a78a9d5fb01669e97f52de65a2eab98388acf0aa402e00000000232103ffc0a032958132c048acedc2fe03b26bda7a4218f2f69edcf819aa21b9c92d55ac00000000000000000000000000000000000000"
+}
+
+[05-Jul-19 06:10 PM] daemonfox#6136
+daemon output...
+
+[05-Jul-19 06:10 PM] daemonfox#6136
+daemonfox@KMDuser:~/komodo/src$ ./komodod -datadir=/home/daemonfox/.komodo2/ILN -ac_name=ILN -ac_supply=10000000000 -ac_cc=2 -addnode=5.9.102.210 -listen=0 -nSPV=1
+ASSETCHAINS_SUPPLY 10000000000
+nonz.0 ccenables[]
+MAX_MONEY 1000000006320417438 10000000063.20417404
+call komodo_args.(./komodod) NOTARY_PUBKEY.()
+>>>>>>>>>> ILN: p2p.12985 rpc.12996 magic.23cbb4fe 600552702 1410065408 coins
+initialized ILN at 1562350170
+..got utxos response 1562350184 size.145
+RW8kWgnvAzYgGTrD66P7ZSpUJxDGzj5KRa numutxos.1 balance 7.77000000
+got txproof response 1562350184 size.1820
+got ntzs response 1562350184 size.209
+got ntzproof response 1562350185 size.10930 prev.2668 next.2672
+sign 1 inputs 7.77000000 + interest 0.00000000 -> 2 outputs 0.01000000 change 7.75990000
+
+[05-Jul-19 06:11 PM] jl777c#5810
+it should be a valid tx,which can be verified by broadcasting with a fullnode
+
+[05-Jul-19 06:13 PM] jl777c#5810
+likely the node you contacted was lagging the other node you got getinfo from. almost no error checking going on now
+
+[05-Jul-19 06:13 PM] daemonfox#6136
+but that step will not be needed at some point right... a broadcast call from nspv ?
+
+[05-Jul-19 06:14 PM] jl777c#5810
+once we make sure the rawtx are happy, i will make it automatically broadcast
+
+[05-Jul-19 06:14 PM] daemonfox#6136
+got it
+
+[05-Jul-19 06:14 PM] jl777c#5810
+its just not easy from nSPV node with everything disabled. the bitcoin code assumes mempool is working, etc. for it to be able to start the process
+
+[05-Jul-19 06:14 PM] jl777c#5810
+didnt expect this, so it will be a bit delayed
+
+[05-Jul-19 06:15 PM] jl777c#5810
+so valid bugs now are any crashes, just need to know what causes crash and preferably a backtrace
+
+[05-Jul-19 06:15 PM] jl777c#5810
+any invalid transaction created
+
+[05-Jul-19 06:18 PM] daemonfox#6136
+6a0fe0a5d068d9bf3dedb37b9c601903892c5f62fabb4cd344c4c692352d393e
+
+[05-Jul-19 06:19 PM] daemonfox#6136
+daemonfox@KMDuser:~/komodo/src$ ./komodo-cli -datadir=/home/daemonfox/.komodo2/ILN -ac_name=ILN nspv_listunspent RU6yXkH67VGxDgNKr1rp4yv6E2ZywrZFfT
+{
+  "result": "success",
+  "utxos": [
+    {
+      "height": 2677,
+      "txid": "6a0fe0a5d068d9bf3dedb37b9c601903892c5f62fabb4cd344c4c692352d393e",
+      "vout": 0,
+      "value": 0.01
+    }
+  ],
+  "address": "RU6yXkH67VGxDgNKr1rp4yv6E2ZywrZFfT",
+  "height": 2677,
+  "numutxos": 1,
+  "balance": 0.01
+}
+
+[05-Jul-19 06:19 PM] daemonfox#6136
+thats a happy hex to rawtx
+
+[05-Jul-19 07:08 PM] daemonfox#6136
+thats weird... offtopic for here but i just pulled the Komodoplatform 0.4.0a binaries to mess with ZEXO staking... and they refuse to launch with -pubkey set
+
+[05-Jul-19 10:21 PM] Alright#0419
+@daemonfox what do you mean "refuse to launch"
+
+[05-Jul-19 11:35 PM] daemonfox#6136
+Launch the copmmand and it just shuts down the window
+
+[05-Jul-19 11:35 PM] daemonfox#6136
+but remove -pubkey and daemon starts just fine
+
+[05-Jul-19 11:36 PM] Alright#0419
+"shuts down the window"? @daemonfox
+
+[05-Jul-19 11:36 PM] Alright#0419
+windows?
+
+[06-Jul-19 02:18 AM] TonyL#3577
+latest nSPV build failing on my side @jl777c 
+```In file included from main.cpp:7052:
+komodo_nSPV_wallet.h: In function ‘UniValue NSPV_send(char*, char*, int64_t)’:
+komodo_nSPV_wallet.h:249:49: error: request for member ‘coinaddr’ in ‘srcaddr’, which is of non-class type ‘char*’
+         result.push_back(Pair("srcaddr",srcaddr.coinaddr));
+                                                 ^~~~~~~~
+make[2]: *** [Makefile:3947: libbitcoin_server_a-main.o] Error 1
+make[2]: *** Waiting for unfinished jobs....
+mv -f wallet/.deps/libbitcoin_wallet_a-asyncrpcoperation_mergetoaddress.Tpo wallet/.deps/libbitcoin_wallet_a-asyncrpcoperation_mergetoaddress.Po
+mv -f wallet/.deps/libbitcoin_wallet_a-rpcdump.Tpo wallet/.deps/libbitcoin_wallet_a-rpcdump.Po
+mv -f wallet/.deps/libbitcoin_wallet_a-asyncrpcoperation_sendmany.Tpo wallet/.deps/libbitcoin_wallet_a-asyncrpcoperation_sendmany.Po
+mv -f wallet/.deps/libbitcoin_wallet_a-rpcwallet.Tpo wallet/.deps/libbitcoin_wallet_a-rpcwallet.Po
+make[2]: Leaving directory '/home/tony/nspv_test/komodo/src'
+make[1]: *** [Makefile:5314: all-recursive] Error 1
+make[1]: Leaving directory '/home/tony/nspv_test/komodo/src'
+make: *** [Makefile:659: all-recursive] Error 1```
+
+[06-Jul-19 06:56 AM] jl777c#5810
+fixed
+
+[06-Jul-19 12:14 PM] jl777c#5810
+https://medium.com/@jameslee777/nspv-reference-cli-client-cf1ffdc03631
+
+{Embed}
+https://medium.com/@jameslee777/nspv-reference-cli-client-cf1ffdc03631
+nSPV reference cli client - jl777 - Medium
+Above is the first ever transaction created by nSPV! nSPV went from idea to initial implementation during this last week. With the rest of…
+
+[06-Jul-19 01:46 PM] jl777c#5810
+i have a nSPV fullnode for KMD at: 23.254.165.16
+a cookie for the first one to verify that it works with KMD
+
+[06-Jul-19 01:55 PM] TonyL#3577
+```./komodo-cli nspv_getinfo
+{
+  "result": "success",
+  "height": 1431111,
+  "chaintip": "09b7667b9be203a677bd682daeea04da37f687a99758774b75dd48a7a7f81126",
+  "notarization": {
+    "notarized_height": 1431090,
+    "notarized_blockhash": "00000000b8481bdb62b39e197edffee5836374b2037a13c4ee4caade992b8f18",
+    "notarization_txid": "c9025f00e17d808205b26ee2fd33426700595545b9ca0fb0368e94d3e0fcb127",
+    "notarization_txidheight": 1431103,
+    "notarization_desttxid": "425099fba0d181025405601e0a60de45a3d786e152106e1b17e94f3f0a94e149"
+  }
+}
+```
+
+[06-Jul-19 01:55 PM] TonyL#3577
+getting prints ```[] PASSPORT iteration waiting for KOMODO_INITDONE
+[] PASSPORT iteration waiting for KOMODO_INITDONE
+[] PASSPORT iteration waiting for KOMODO_INITDONE
+[] PASSPORT iteration waiting for KOMODO_INITDONE
+[] PASSPORT iteration waiting for KOMODO_INITDONE
+```  constantly
+
+[06-Jul-19 01:56 PM] TonyL#3577
+let me try to broadcast some tx
+
+[06-Jul-19 01:59 PM] jl777c#5810
+it might mess up a normal fullnodes data to run as nSPV=1
+
+[06-Jul-19 02:00 PM] TonyL#3577
+```./komodo-cli nspv_broadcast 0400008085202f89011b274d79d66fffbccf51bfc98e10d8fadc981fea7c6e2b736b17388ae7390f8a000000006a47304402204560f9efc959634a64812617fc9a37bc6a650a6658c8b582fb0bd02e7e113ba0022076301eaf2bbf12202cd2ebcdb1d79d6caf4156cf503da7d0d2f4c7737d8e0c33012102f76e2d7122dd3c731d15b845337826ce636a43d016e0eaf427fa53894ffdd957ffffffff02c09ee605000000001976a914a19f7aa254dced0a17920ab1c2acf698841f67f688ac301b0f0000000000232102f76e2d7122dd3c731d15b845337826ce636a43d016e0eaf427fa53894ffdd957ac00000000000000000000000000000000000000
+{
+  "result": "success",
+  "expected": "a308279d498fb45b899d645a0e02265f2f689adade8323629fb560a6a79935ee",
+  "broadcast": "a308279d498fb45b899d645a0e02265f2f689adade8323629fb560a6a79935ee",
+  "retcode": 1,
+  "type": "broadcast and mempool"
+}
+```
+
+[06-Jul-19 02:00 PM] TonyL#3577
+https://www.kmdexplorer.io/tx/a308279d498fb45b899d645a0e02265f2f689adade8323629fb560a6a79935ee
+
+[06-Jul-19 02:01 PM] jl777c#5810
+🍪
+
+{Reactions}
+😂 3040_kingpeepo 👏 
+
+[06-Jul-19 02:02 PM] jl777c#5810
+is it still spamming: [] PASSPORT iteration waiting for KOMODO_INITDONE
+
+[06-Jul-19 02:02 PM] TonyL#3577
+yes, it spamming it constantly
+
+[06-Jul-19 02:02 PM] TonyL#3577
+so used another terminal window to broadcast tx
+
+[06-Jul-19 02:06 PM] jl777c#5810
+pushed fix
+
+[06-Jul-19 02:06 PM] jl777c#5810
+this will make onboarding people so easy!
+
+{Reactions}
+🔥 (2) 
+
+[06-Jul-19 02:06 PM] TonyL#3577
+rebuilding
+
+[06-Jul-19 02:07 PM] TonyL#3577
+connected, no spam prints
+
+[06-Jul-19 02:07 PM] TonyL#3577
+trying to broadcast
+
+[06-Jul-19 02:09 PM] TonyL#3577
+https://www.kmdexplorer.io/tx/6e482c390e35c808522daea6dabd4daf42ef704cfab730207847a4f4153939df
+
+[06-Jul-19 02:10 PM] TonyL#3577
+Broadcast KMD tx is easy now like taking candy from a baby
+
+[06-Jul-19 02:10 PM] TonyL#3577
+taking cookie I mean
+
+{Reactions}
+troll_compadre 🍪 (2) troll_cool 
+
+[06-Jul-19 02:13 PM] jl777c#5810
+it is such a simple idea, but very very practical and cool
+
+{Reactions}
+🆒 (2) 🚀 
+
+[06-Jul-19 02:14 PM] TonyL#3577
+mindblowing as usual 😃
+
+[06-Jul-19 02:14 PM] jl777c#5810
+a better than normal week
+
+[06-Jul-19 02:14 PM] jl777c#5810
+it is also possible to support CC signing, but i was too lazy for that
+
+[06-Jul-19 02:15 PM] CHMEX#0686
+So you are eligable for siu's kmdice lite cc bounty
+
+{Reactions}
+PeepoThink 😂 
+
+[06-Jul-19 02:16 PM] jl777c#5810
+CC signing a bit too messy, and the way to support it would be to add an nSPV special case in FinalizeCCtx
+
+[06-Jul-19 02:16 PM] jl777c#5810
+i guess it wont be that hard
+
+[06-Jul-19 02:17 PM] TonyL#3577
+CC based mobile apps seems as close as never before
+
+[06-Jul-19 02:17 PM] jl777c#5810
+not sure mobile can run a komodod, even if nSPV
+
+[06-Jul-19 02:17 PM] TonyL#3577
+so next challenge is mobile komodod
+
+[06-Jul-19 02:18 PM] jl777c#5810
+its 17MB
+
+[06-Jul-19 02:18 PM] jl777c#5810
+so i guess not that big
+

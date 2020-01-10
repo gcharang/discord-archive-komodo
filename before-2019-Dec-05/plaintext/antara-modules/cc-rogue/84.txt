@@ -1,0 +1,413 @@
+==============================================================
+Guild: Komodo
+Channel: cc-rogue
+Topic: use FSM branch AND then build as normal
+ 
+./komodod -ac_name=ROGUE -ac_supply=1000000 -pubkey=<yourpubkey> -addnode=5.9.102.210  -ac_cclib=rogue -ac_perc=10000000 -ac_reward=100000000 -ac_cc=60001 -ac_script=2ea22c80203d1579313abe7d8ea85f48c65ea66fc512c878c0d0e6f6d54036669de940febf8103120c008203000401cc -daemon
+Guide here: https://github.com/KomodoPlatform/komodo/wiki/Get-Started-with-Rogue-Game
+Explorer: http://rogue.explorer.dexstats.info/
+Player's Handbook: https://github.com/jl777/komodo/blob/jl777/src/cc/rogue/rogue.doc
+Messages: 100
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[07-Mar-19 01:32 AM] TonyL#3577
+`117e2378a3f4dbe47a3ac81daa018cab6de615bacb752df03cdd6f441760fd71` aha - it's last keystroke txid in keystrokes.log
+
+[07-Mar-19 01:33 AM] TonyL#3577
+Just will change  in TUI`Waiting for one more block before bailout` to `Waiting for last keystroke to be confirmed`
+
+[07-Mar-19 03:20 AM] TonyL#3577
+TUI version which waiting for last keystroke confirmation is in `master`:
+```Last keystroke not confirmed yet! Let's wait a little
+Last keystroke not confirmed yet! Let's wait a little
+Last keystroke not confirmed yet! Let's wait a little
+Last keystroke confirmed!
+```
+
+{Reactions}
+❤ (3) 
+
+[07-Mar-19 04:13 AM] TonyL#3577
+https://github.com/tonymorony/komodo_cryptoconditions_tui/releases/tag/0.2.1b Updated bundles (ROGUE daemon + Rogue game + TUI) for OSX and Ubuntu
+Have latest jl777 branch daemon inside + TUI with this last keystroke confirmation change
+
+{Embed}
+https://github.com/tonymorony/komodo_cryptoconditions_tui/releases/tag/0.2.1b
+tonymorony/komodo_cryptoconditions_tui
+Terminal user interfaces for Komodo CryptoConditions smart-contracts - tonymorony/komodo_cryptoconditions_tui
+https://avatars1.githubusercontent.com/u/24797699?s=400&v=4
+
+[07-Mar-19 04:27 AM] Cryptofist#7504
+🙌
+
+[07-Mar-19 06:18 AM] TonyL#3577
+Ohh just tried bundle on fresh machine:
+```cc/rogue/rogue: error while loading shared libraries: libncurses.so.5: cannot open shared object file: No such file or directory```
+It seems atm rogue needs ncurses in folder with it
+
+[07-Mar-19 06:43 AM] TonyL#3577
+Oh, just had to install ncurses on this machine
+```sudo apt-get install libncurses5-dev libncursesw5-dev libncurses5```
+
+[07-Mar-19 06:44 AM] jl777c#5810
+are you checking specifically for the keystrokes tx to be confirmed?
+
+[07-Mar-19 06:44 AM] TonyL#3577
+Yes, specifically for txid of last keystroke
+
+[07-Mar-19 06:44 AM] TonyL#3577
+```        # waiting for last keystroke confirmation here
+        last_keystroke_json = json.loads(keystrokes_rpc_responses[-1])
+        while True:
+            confirmations_amount = rpc_connection.getrawtransaction(last_keystroke_json["result"]["txid"], 1)["confirmations"]
+            if confirmations_amount < 2:
+                print("Last keystroke not confirmed yet! Let's wait a little")
+                time.sleep(10)
+            else:
+                print("Last keystroke confirmed!")
+                break```
+
+[07-Mar-19 06:44 AM] jl777c#5810
+ok, then it could solve the edge cases and actually be reliable
+
+[07-Mar-19 06:45 AM] jl777c#5810
+until this last release i was misparsing the json coming back, so it was never even checking for the keystrokes tx!
+
+[07-Mar-19 06:45 AM] TonyL#3577
+-1 it's last element from list with parsed keystrokes
+
+[07-Mar-19 06:45 AM] jl777c#5810
+got fooled into thinking it worked as it started working much better after I first implemented it
+
+[07-Mar-19 06:45 AM] jl777c#5810
+so these are the first versions where it is actually waiting for past keystrokes tx to confirm before sending the next
+
+[07-Mar-19 06:46 AM] jl777c#5810
+before it just sent and if any didnt make it, you get gaps and death
+
+[07-Mar-19 06:46 AM] jl777c#5810
+and the nymph stealing one of the more than one item corrupting the pack... that was nasty bug
+
+{Reactions}
+troll_rage 
+
+[07-Mar-19 06:46 AM] jl777c#5810
+now the nymph will steal all of whatever pack item, so if 4 healing potions, all 4 will be gone
+
+{Reactions}
+😦 
+
+[07-Mar-19 06:47 AM] jl777c#5810
+looking at the code that is what i think was intended
+
+[07-Mar-19 06:48 AM] TonyL#3577
+TUI checking a lot of stuff atm: waiting for registration to be mined, will not allow to bailout if game not started, checking for errors in keystroke tx and rebroadcast it (may help if last keystroke had error), if there are 0 keystrokes it will try to wait also and not allow to bailout
+
+[07-Mar-19 06:48 AM] TonyL#3577
++ now waiting for last keystokes confirmation and as mega feature even after all these steps player can just try to wait one more block if he dont like extract print
+
+[07-Mar-19 06:50 AM] TonyL#3577
+ATTENTION Nymphs buffed!
+
+[07-Mar-19 06:50 AM] TonyL#3577
+😂 can steal all your food
+
+[07-Mar-19 06:51 AM] TonyL#3577
+Pinned a message.
+
+[07-Mar-19 06:53 AM] jl777c#5810
+only if you enchanted your food. nymphs only steal magical items
+
+{Reactions}
+👌 
+
+[07-Mar-19 06:54 AM] jl777c#5810
+assuming this version runs stable, it could be a release candidate. now if we can just get windows version working at all... @Decker any luck?
+
+[07-Mar-19 06:56 AM] TonyL#3577
+Yes, have to test this version good
+
+[07-Mar-19 06:56 AM] TonyL#3577
+Looks promising
+
+[07-Mar-19 06:57 AM] ronyi#5719
+If not found gold at lvl x and quit maybe lvl x-1 the result? I quit on lvl2, but not finded gold, but i found some items and i quit. 302 Testelek: quit on level 2. $$$gold.102 hp.41 strength.16/16 level.5 exp.158 dl.1
+
+[07-Mar-19 06:58 AM] TonyL#3577
+Hmm if it's reproducable - sounds like possible reason
+
+[07-Mar-19 06:58 AM] TonyL#3577
+Because there is a check of 0 gold / 0 mosters hit which couting you as dead
+
+[07-Mar-19 06:58 AM] TwilightPunkster K64#7533
+@TonyL how do you test? Manually?
+
+[07-Mar-19 06:58 AM] TonyL#3577
+@TwilightPunkster K64 - yup just playing games
+
+[07-Mar-19 06:59 AM] TonyL#3577
+https://docs.google.com/spreadsheets/d/1DA3N6aO1QINE_zxsTXO6BfGFh0fTzCJOIkzt5gDT_e8/edit?usp=sharing
+
+{Embed}
+https://docs.google.com/spreadsheets/d/1DA3N6aO1QINE_zxsTXO6BfGFh0fTzCJOIkzt5gDT_e8/edit?usp=sharing
+Rogue test plan
+Singleplayer
+
+Single player testing,Example:
+TUI menu item: [6] Start singleplayer training game (creating, registering and starting game),https://docs.google.com/spreadsheets/d/1PO-Ey528RqDLrSg2I4xMKZfQJb6fXDqgES0TjgfJ9gk/edit?usp=sharing
+Write here your pubkey from -pubkey=...
+https://lh5.googleusercontent.com/lCOnawr6WpqVzJdSTebHxP64jxPsyES6a0ieJeJoygcHmKqS7RxGsmbmM4dmLYDqD1pnfg=w1200-h630-p
+
+[07-Mar-19 06:59 AM] TwilightPunkster K64#7533
+@TonyL you probably dont have time for it, but you could use BDD (Cucumber)
+
+[07-Mar-19 07:00 AM] TonyL#3577
+@TwilightPunkster K64 Is such approach needs interaction with game code?
+
+[07-Mar-19 07:01 AM] TwilightPunkster K64#7533
+I use an abomination of cucumber for automated gameplay testing (saves bucks on beta testers and me getting bored doing the exact same thing every iteration)
+
+[07-Mar-19 07:02 AM] TwilightPunkster K64#7533
+Never used it for Python, but some friends use it for Pylons and Blender tests, its Behave iirc
+
+[07-Mar-19 07:02 AM] TwilightPunkster K64#7533
+sec
+
+[07-Mar-19 07:02 AM] TwilightPunkster K64#7533
+https://behave.readthedocs.io/en/latest/
+
+[07-Mar-19 07:03 AM] TwilightPunkster K64#7533
+You can either soft test, or hard test
+
+[07-Mar-19 07:03 AM] TwilightPunkster K64#7533
+the principle is based on scenario's which you run against the code.
+
+[07-Mar-19 07:03 AM] TwilightPunkster K64#7533
+Very handy in UAT (User Acceptance Testing)
+
+[07-Mar-19 07:05 AM] ronyi#5719
+Another "remark": if i press "w" and "*" is not listing staff items.
+
+[07-Mar-19 07:05 AM] TonyL#3577
+Automation is definetly good yeah @TwilightPunkster K64
+
+[07-Mar-19 07:06 AM] TonyL#3577
+@ronyi Staffs not possible to wield - you can zap em `z`
+
+[07-Mar-19 07:08 AM] TonyL#3577
+Just some rogue bot is needed for automation, he can help with non-det bugs catching as well
+
+[07-Mar-19 07:10 AM] ronyi#5719
+If i have staffs(s) and press w and s, weapon in hand.
+
+[07-Mar-19 07:10 AM] TonyL#3577
+You can wield food as well but dmg will be low so it not suggesting in wielding options menu (same as staffs)
+
+{Reactions}
+💪 
+
+[07-Mar-19 07:11 AM] TwilightPunkster K64#7533
+Many ways to automate 😃
+
+[07-Mar-19 07:12 AM] TonyL#3577
+I dont think there is any framework to test terminal ASCII games
+
+[07-Mar-19 07:12 AM] TonyL#3577
+So probably it will eat much time
+
+[07-Mar-19 07:14 AM] TonyL#3577
+Rogue obv not using any engine (its original 30+ yo code) and have pretty tricky code in some places
+
+[07-Mar-19 07:15 AM] TwilightPunkster K64#7533
+just threw the idea out there
+
+[07-Mar-19 07:15 AM] TonyL#3577
+Idea is great
+
+[07-Mar-19 07:15 AM] TonyL#3577
+Im just thinking loud 😀
+
+[07-Mar-19 07:32 AM] ronyi#5719
+Everything is working good for me, only the deadlock is missing 😂
+
+[07-Mar-19 07:41 AM] jl777c#5810
+deadlocks are bad, why do you want it?
+
+[07-Mar-19 07:49 AM] ronyi#5719
+I don't want,  I started getting used to it. 😃
+
+[07-Mar-19 07:53 AM] ronyi#5719
+TUI: Something went wrong! confirmation
+Gametxid: 3dffecca4d320cf5c2f074caca3106e7e46d377d932169502300d5f29a5302dd
+Manual bailout: db5e7a170424429eda03bb6a565a04ce458633f4600cc730c3cf1874a92fb542 (success)
+
+[07-Mar-19 07:54 AM] TonyL#3577
+Daemon deadlocked and then you was able to execute bailout manually?
+
+[07-Mar-19 07:54 AM] TonyL#3577
+Can you provide more prints from TUI pls?
+
+[07-Mar-19 07:54 AM] TonyL#3577
+It's not clear now where it happened
+
+[07-Mar-19 07:55 AM] jl777c#5810
+manual worked... seems maybe some TUI loop is looping too hard?
+
+[07-Mar-19 07:55 AM] TonyL#3577
+```Something went wrong! ``` may be throwed on various things
+
+[07-Mar-19 07:55 AM] TonyL#3577
+It's just like a `if Exception` print it
+
+[07-Mar-19 07:55 AM] TonyL#3577
+But it should print exception as well
+
+[07-Mar-19 07:56 AM] TonyL#3577
+It can loop for hard easy - there are a lot of `while True` things 😃
+
+[07-Mar-19 07:57 AM] TonyL#3577
+But I dont think that it'll print `Something went wrong!` in such case
+
+[07-Mar-19 07:57 AM] ronyi#5719
+Next time i create screenshot.
+
+{Reactions}
+🙌 
+
+[07-Mar-19 07:58 AM] TonyL#3577
+Screenshot or output copy to pastebin would be very helpful
+
+[07-Mar-19 08:04 AM] TonyL#3577
+Also please ensure that you have very latest daemon/rogue
+
+[07-Mar-19 08:07 AM] ronyi#5719
+Yes, i use lastest daemon and TUI.
+
+{Reactions}
+👍 
+
+[07-Mar-19 08:22 AM] TonyL#3577
+Pushed little patch for TUI (in some cases getrawtransaction not retruns `confirmations` key when I'm checking confirmations for last keystroke and I need to wait for it)
+
+[07-Mar-19 08:23 AM] ronyi#5719
+https://imgur.com/a/elGdj8Q :d yes
+
+{Embed}
+https://imgur.com/a/elGdj8Q
+https://i.imgur.com/GZujBVjh.jpg
+
+[07-Mar-19 08:23 AM] TonyL#3577
+Oh yes
+
+[07-Mar-19 08:23 AM] TonyL#3577
+```Top Ten Scores:
+   Score Name
+ 1    44 : quit on level 1.
+46757
+46757
+Waiting for next block before bailout
+Something went wrong.
+'confirmations'
+```
+
+[07-Mar-19 08:24 AM] TonyL#3577
+Pushed patch for it (not tested yet)
+
+[07-Mar-19 08:25 AM] TonyL#3577
+It checking `confirmations` field for `getrawtransaction lastkeystroke_txid 1` - if  check it too fast there is no such field as I understand. Oh - I think keystroke tx is just not broadcasted yet in such cases
+
+[07-Mar-19 08:26 AM] TonyL#3577
+Ouch, not pushed yet
+
+[07-Mar-19 08:26 AM] TonyL#3577
+Now pushed 😃
+
+{Reactions}
+👌 
+
+[07-Mar-19 08:32 AM] TonyL#3577
+```Top Ten Scores:
+   Score Name
+ 1    28 : quit on level 1.
+46782
+46782
+Waiting for next block before bailout
+46782
+46782
+Waiting for next block before bailout
+46782
+46782
+Waiting for next block before bailout
+'confirmations'
+Let's wait a little bit more
+'confirmations'
+Let's wait a little bit more
+'confirmations'
+Let's wait a little bit more
+'confirmations'
+Let's wait a little bit more
+Last keystroke not confirmed yet! Let's wait a little
+Last keystroke not confirmed yet! Let's wait a little
+Last keystroke not confirmed yet! Let's wait a little
+Last keystroke not confirmed yet! Let's wait a little
+```
+
+[07-Mar-19 08:33 AM] TonyL#3577
+Patiently waiting now for last keystroke broadcasting before checking if it confirmed
+
+[07-Mar-19 08:33 AM] TonyL#3577
+Have to update bundles asap \- it should be very annoying for users to bailout manually
+
+[07-Mar-19 08:36 AM] TonyL#3577
+P.S. it was not a deadlock - just not complete TUI logic
+
+[07-Mar-19 08:39 AM] jl777c#5810
+does this mean we have a potential fix for all known issues?
+
+[07-Mar-19 08:47 AM] TonyL#3577
+Only if there will be no "baton not found" in some middle keystroke
+
+[07-Mar-19 08:48 AM] TonyL#3577
+In such case other issues should be non-det
+
+[07-Mar-19 08:58 AM] jl777c#5810
+looking at the code I can easily believe there are more nymph stealing multiple object items type of bug, that was non-deterministic as it all depended on what the system did with the freed memory
+
+[07-Mar-19 08:58 AM] jl777c#5810
+in the middle keystrokes, I just sendrawtransaction until it returns an error (most likely due to being onchain already)
+
+[07-Mar-19 08:58 AM] jl777c#5810
+if not, it waits till the next level
+
+[07-Mar-19 08:59 AM] jl777c#5810
+if that isnt enough, I have code ready that extracts the current game and compares to local keystrokes and a way to adjust the next keystrokes if needed, but it could be we need a special "patch keystrokes" with a diff sent as a new tx. want to avoid this complexity if at all possible
+
+[07-Mar-19 09:00 AM] jl777c#5810
+if we can reduce the error rate to less than 1%, that would just be part of the game
+
+[07-Mar-19 09:03 AM] TonyL#3577
+Updated bundles with this little patch (it's same 0.2.1b release page - just updated rogue_tui inside zips)
+
+[07-Mar-19 09:04 AM] TonyL#3577
+```in the middle keystrokes, I just sendrawtransaction until it returns an error (most likely due to being onchain already)
+if not, it waits till the next level``` should be enough I think
+
+{Reactions}
+🤞 
+
+[07-Mar-19 09:05 AM] TonyL#3577
+At least now warriors shouldn't die - as I understand worst what happening now is some progress losing
+
+[07-Mar-19 09:05 AM] TonyL#3577
+Even non dead warrior counting as alive not seems to be a case now
+
+[07-Mar-19 09:06 AM] TonyL#3577
+Let's play some games now! 😃
+
+[07-Mar-19 09:07 AM] jl777c#5810
+there didnt seem to be (m)any multiplayer bugs
+
+[07-Mar-19 09:07 AM] jl777c#5810
+likely there are
+

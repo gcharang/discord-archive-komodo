@@ -1,0 +1,244 @@
+AuthorID;Author;Date;Content;Attachments;Reactions;
+"507209916449292303";"dimxy#2587";"20-Jul-19 03:33 PM";"(Maybe when JL reads this he would suggest a better idea)";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 03:38 PM";"just do a test with funds in all segids to smooth out the granularity of initial blocks";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 03:38 PM";"statistically if staking is N times more, over time, it should end up with N times more";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 03:38 PM";"to make it easier to detect, best to make it 30x for testing";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 03:39 PM";"put funds in 64 different segids for each category, just do it with a script";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 03:39 PM";"in normal use it wont matter";"";"👍 (2)";
+"507209916449292303";"dimxy#2587";"20-Jul-19 03:54 PM";"So we want to do a test with activated coins split into 64 segids.";"";"";
+"507209916449292303";"dimxy#2587";"20-Jul-19 03:57 PM";"Suppose we have  those 64 addresses, with some utxos on them, forever.
+And we will not split locked-in-loop amounts into segids.
+Wouldn't these activated utxos outperform locked-in-loop utxos (that are not split)?
+(As I understand splitting is needed only for initial blocks. So later it does not matter, does it?)";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 04:00 PM";"with many users, the splitting effect is averaged out";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 04:00 PM";"but active users can get more blocks by analyzing the 64 segids and putting coins in the weakest one";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 04:00 PM";"it is a multiplayer game on 64 segids, with limited resources";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 04:01 PM";"very complex strategy game that depends on how everybody else allocates their coins";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 04:01 PM";"maybe there is a simple bug in the boosting calc?";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 04:01 PM";"you know for mining to make it easier you need to multiple the value";"";"";
+"507209916449292303";"dimxy#2587";"20-Jul-19 04:08 PM";"Actually I did a test for only activated coins on 2 PoS nodes. I wanted to get to the point where both equal staking utxos would generate approximately equal results.
+But my chain for a weekly test duration was in unstable state (apparently because of no staking utxo spliting).
+So I wondered once more if the splitting needs only for initial blocks or it is better to have it always";"";"";
+"507209916449292303";"dimxy#2587";"20-Jul-19 04:09 PM";"Yes, I 'll do splitting and provide the chain to be stable";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 04:14 PM";"if you start with them split, then each one will increase the coins in that segid, overtime relatively balanced. which is fine";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 04:15 PM";"number of nodes is not what matters as a single node can stake many addresses";"";"";
+"507209916449292303";"dimxy#2587";"20-Jul-19 04:27 PM";"You wrote `put funds in 64 different segids for each category'.
+If we have 'activated' and 'lock-in-loop' accounts does this mean we need to split both of them?
+(our current locked-in-loop account implementation does not allow splitting because of shared 1of2 address)";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 04:51 PM";"need to make 64 different loops?";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 04:52 PM";"it could be there is a bug in your staking percentage multiplier. can you post the code that does the calculation";"";"";
+"507209916449292303";"dimxy#2587";"20-Jul-19 05:07 PM";"I mean suppose we have a credit loop. The issuer has locked some amount in this loop.
+This amount should have 3x multiplier in staking.
+The question is should this amount be split on 64 segids?";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 05:07 PM";"no";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 05:07 PM";"as long as it really has 3x the chance, that is what matters";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 05:07 PM";"i think there must be some bug in the 3x calc";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 05:08 PM";"how exactly do you make it 3x";"";"";
+"507209916449292303";"dimxy#2587";"20-Jul-19 05:13 PM";"this is how I calculate 3x:
+```
+uint32_t komodo_txtime2(uint64_t *valuep,uint256 hash,int32_t n,char *destaddr)
+{
+...
+if ( n < tx.vout.size() )
+    {
+        int32_t stakemultiplier = GetStakeMultiplier(tx, n);
+        *valuep = tx.vout[n].nValue * stakemultiplier; 
+    ...
+    }
+}
+```
+so there is GetStakeMultiplier() func, it calls MarmaraGetStakeMultiplier() func";"";"";
+"507209916449292303";"dimxy#2587";"20-Jul-19 05:15 PM";"MarmaraGetStakeMultiplier() returns either 1 or 3:";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 05:15 PM";"and you verified that the actual stake compare uses the bigger value?";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 05:15 PM";"lets try a 100x boost, that should make it very clear and not need to fiddle with segids";"";"";
+"507209916449292303";"dimxy#2587";"20-Jul-19 05:19 PM";"No, I have not reached this testing progress yet.
+I have been testing only how activated staking amounts work which always should have 1x multiplier. (and I had my chain unstable, as Alright yesterday explained it could have been because of lack of segids)";"";"";
+"507209916449292303";"dimxy#2587";"20-Jul-19 05:20 PM";"So I initiated this discussion about what should we do about splitting utxos on segids in marmara chains";"";"";
+"455741312273219595";"jl777c#5810";"20-Jul-19 05:25 PM";"you need to make sure the actual staking calc is using the bigger values";"";"";
+"507209916449292303";"dimxy#2587";"20-Jul-19 05:35 PM";"okay let's try 100x or similar value";"";"👍 (1)";
+"150437093879840768";"Paro#7842";"20-Jul-19 09:21 PM";"How can I try 100x? @dimxy";"";"";
+"396753788150611968";"B. Gültekin Çetiner#0626";"21-Jul-19 06:22 AM";"I think he will change the code. You need to recompile with that code.";"";"";
+"507209916449292303";"dimxy#2587";"21-Jul-19 08:38 AM";"I have changed the mult for boosted to 100x. Changed it for the version with new rpcs:";"";"";
+"507209916449292303";"dimxy#2587";"21-Jul-19 08:38 AM";"https://github.com/dimxy/komodo/tree/marmara-v1-1-opret-v2";"";"";
+"507209916449292303";"dimxy#2587";"21-Jul-19 08:39 AM";"Did you test this version or the previous?";"";"";
+"507209916449292303";"dimxy#2587";"21-Jul-19 08:39 AM";"(we need yet to split activated into 64 segids)";"";"";
+"396753788150611968";"B. Gültekin Çetiner#0626";"21-Jul-19 12:00 PM";"@dimxy Is this version with non-functional version2 parameters? If so, we tested with @Paro last weekend but deleted the chain soon since settlement was not working.";"";"";
+"150437093879840768";"Paro#7842";"21-Jul-19 12:11 PM";"I made the file 400x.";"";"";
+"396753788150611968";"B. Gültekin Çetiner#0626";"21-Jul-19 01:48 PM";"🙂";"";"";
+"396753788150611968";"B. Gültekin Çetiner#0626";"21-Jul-19 01:50 PM";"I hope we can clearly see this time that LCL coins result in much more staking than activated ones.";"";"";
+"507209916449292303";"dimxy#2587";"21-Jul-19 06:03 PM";"BTW, what was wrong with the settlement in the version with the new rpcs?
+Didn't it start at all?
+Or, was it finished with an error?
+(I tested a credit loop with this version, with an issuer, one endorser and one holder, and the autosettlement seemed worked)";"";"";
+"507209916449292303";"dimxy#2587";"21-Jul-19 07:14 PM";"Plus, for the new version with new rpcs, the tx structures were changed, so it could work only with new credit loops (that is, created with this new version's marmarareceive, marmaraissue etc rpcs)";"";"";
+"150437093879840768";"Paro#7842";"21-Jul-19 08:05 PM";"I don't know, I'm gonna do a new test.";"";"";
+"150437093879840768";"Paro#7842";"21-Jul-19 08:06 PM";"I just made the arrangements.";"";"";
+"150437093879840768";"Paro#7842";"21-Jul-19 08:09 PM";"modified nodes
+first node
+second node
+test node pk1
+test node pk2
+test node pk3";"";"";
+"150437093879840768";"Paro#7842";"21-Jul-19 08:25 PM";"I will create a new chain.";"";"";
+"396753788150611968";"B. Gültekin Çetiner#0626";"21-Jul-19 08:26 PM";"@Paro good You can test with Version 2 params! Remember. We tried with Version 2 params but we could not succeed with settlement";"";"";
+"396753788150611968";"B. Gültekin Çetiner#0626";"21-Jul-19 08:27 PM";"Then we had deleted the chain we created new chain according to old Version";"";"";
+"150437093879840768";"Paro#7842";"21-Jul-19 08:27 PM";"I won't test ""marmara-v1-1-opret-v2."" I'm going to test version-1-1.";"";"";
+"150437093879840768";"Paro#7842";"21-Jul-19 08:27 PM";"""marmara-v1-1-opret-v2"" parameters do not work.";"";"";
+"150437093879840768";"Paro#7842";"21-Jul-19 11:20 PM";"4999 coin test. 400x (time : 60 block)
+http://prntscr.com/oi6g4y";"";"";
+"150437093879840768";"Paro#7842";"22-Jul-19 12:52 AM";"1000 coin test. 400x (time : 60 block)
+http://prntscr.com/oi755p";"";"";
+"150437093879840768";"Paro#7842";"22-Jul-19 03:14 AM";"90000 coin test. 400x  (time: 120 block)
+http://prntscr.com/oi88sj";"";"";
+"507209916449292303";"dimxy#2587";"22-Jul-19 04:14 AM";"Let s check the v2 params together
+As the v2 params contain json you need to pass json objects in quotes (i wrote examples in this chat above)";"";"";
+"150437093879840768";"Paro#7842";"22-Jul-19 04:29 AM";"OK . I'm going to build a ""v2"" branch in a new chain.";"";"";
+"507209916449292303";"dimxy#2587";"22-Jul-19 04:45 AM";"👍";"";"";
+"507209916449292303";"dimxy#2587";"24-Jul-19 10:29 AM";"updated the code for marmaralock issue (insufficient funds)";"";"👍🏾 (1)";
+"150437093879840768";"Paro#7842";"24-Jul-19 11:58 AM";"I'm testing it right away.";"";"";
+"150437093879840768";"Paro#7842";"24-Jul-19 12:28 PM";"""loop"" had the same problem. For your information.";"";"";
+"150437093879840768";"Paro#7842";"24-Jul-19 01:20 PM";"marmaralock fix. I have tested.";"";"";
+"150437093879840768";"Paro#7842";"24-Jul-19 01:21 PM";"I am trying. issue";"";"";
+"150437093879840768";"Paro#7842";"24-Jul-19 03:06 PM";"@dimxy   check : https://docs.google.com/document/d/1Z59CbK-cPjp1wg7hrlzEFTEUgBoPHzegnzhowzJbZIQ/edit";"";"";
+"150437093879840768";"Paro#7842";"24-Jul-19 03:08 PM";"""50000"" coin lost";"";"";
+"507209916449292303";"dimxy#2587";"24-Jul-19 03:20 PM";"on which pubkey?";"";"";
+"507209916449292303";"dimxy#2587";"24-Jul-19 03:28 PM";"I could not see problems with 50,000 coins.
+But I can see that the settled 100,000 amount did not go to PK3 normal account. Did you install the latest update for 'corrected pubkey for the holder in settlement' from 22 July?";"";"";
+"150437093879840768";"Paro#7842";"24-Jul-19 03:35 PM";"yes new rebuild.";"";"";
+"507209916449292303";"dimxy#2587";"24-Jul-19 03:38 PM";"checking for 100,000 for pk3";"";"";
+"150437093879840768";"Paro#7842";"24-Jul-19 03:38 PM";"ok wait";"";"";
+"150437093879840768";"Paro#7842";"24-Jul-19 03:38 PM";"check pk3";"";"";
+"507209916449292303";"dimxy#2587";"24-Jul-19 03:38 PM";"Why do you think 50,000 coin were lost?";"";"";
+"150437093879840768";"Paro#7842";"24-Jul-19 03:38 PM";"marmaracreditloop :   ""numerrors"": 2,:";"";"";
+"507209916449292303";"dimxy#2587";"24-Jul-19 03:39 PM";"errors could be no problem, I ll check for them too";"";"";
+"150437093879840768";"Paro#7842";"24-Jul-19 03:39 PM";"pk3 :  before 
+```{
+  ""result"": ""success"",
+  ""myNormalAddress"": ""RK52ELf7ngsoJSS1We97JHaXTmPkh1C6Hi"",
+  ""myNormalAmount"": 100010.00000000,
+  ""myCCActivatedAddress"": ""RT1eZpfw1LoyLZPu3tT2AV1UuUbcb2Wtbi"",
+  ""myActivatedAmount"": 0.00000000,
+  ""myAmountOnActivatedAddress-old"": 0.00000000,
+  ""myCCAddress"": ""RSWfHtHZTfrrPC1NQDFrYWZD5LBrs8nFfy"",
+  ""myCCBalance"": 0.00000000,
+  ""Loops"": [
+  ],
+  ""TotalLockedInLoop"": 0.00000000,
+  ""firstheight"": 0,
+  ""lastheight"": 1073741824,
+  ""minamount"": 0.00000000,
+  ""maxamount"": 11529215046.06846976,
+  ""currency"": ""MARMARA""
+}
+```
+
+after ```{
+  ""result"": ""success"",
+  ""myNormalAddress"": ""RK52ELf7ngsoJSS1We97JHaXTmPkh1C6Hi"",
+  ""myNormalAmount"": 100009.99980000,
+  ""myCCActivatedAddress"": ""RT1eZpfw1LoyLZPu3tT2AV1UuUbcb2Wtbi"",
+  ""myActivatedAmount"": 0.00000000,
+  ""myAmountOnActivatedAddress-old"": 0.00000000,
+  ""myCCAddress"": ""RSWfHtHZTfrrPC1NQDFrYWZD5LBrs8nFfy"",
+  ""myCCBalance"": 0.00010000,
+  ""Loops"": [
+  ],
+  ""TotalLockedInLoop"": 0.00000000,
+  ""firstheight"": 0,
+  ""lastheight"": 1073741824,
+  ""minamount"": 0.00000000,
+  ""maxamount"": 11529215046.06846976,
+  ""currency"": ""MARMARA""
+}
+
+
+```";"";"";
+"150437093879840768";"Paro#7842";"24-Jul-19 03:41 PM";"Do you want me to retest?";"";"";
+"150437093879840768";"Paro#7842";"24-Jul-19 03:41 PM";"15 minutes.";"";"";
+"150437093879840768";"Paro#7842";"24-Jul-19 03:46 PM";"""50000"" coins are not lost. just did not make settlement.";"";"";
+"150437093879840768";"Paro#7842";"24-Jul-19 03:46 PM";"srry";"";"";
+"150437093879840768";"Paro#7842";"24-Jul-19 03:47 PM";"🙄";"";"";
+"507209916449292303";"dimxy#2587";"24-Jul-19 05:10 PM";"so pk3 still does not receive the settled amount to its normal";"";"";
+"150437093879840768";"Paro#7842";"24-Jul-19 06:11 PM";"yes.";"";"";
+"150437093879840768";"Paro#7842";"24-Jul-19 06:11 PM";"I did not knowingly lock the ""100000"" coin in ""pk3"".";"";"";
+"507209916449292303";"dimxy#2587";"24-Jul-19 08:18 PM";"On my chain the settlement seems works.
+
+Holder's node marmarainfo outputs
+before settlement:
+```
+admin@ip-172-31-28-221:~/repo/komodo/src$ ./komodo-cli -ac_name=MARMARAXY2 marmarainfo 0 0  0 0
+{
+  ""result"": ""success"",
+  ""myNormalAddress"": ""RBaYi5PEBRNntg6jmrjWBBCvTsgfrKb79j"",
+  ""myNormalAmount"": 50.94660000,                  <------------------- initial amount
+  ""myCCActivatedAddress"": ""RBgYd7tBAQ7Vs1ZNQGHwvZNbZmRjZv4X7B"",
+  ""myActivatedAmount"": 78.00000000,
+  ""myAmountOnActivatedAddress-old"": 78.00000000,
+  ""myCCAddress"": ""RPcsj4pdznLkWKw143rsxpwyAfZDAcxQF7"",
+  ""myCCBalance"": 0.00110000,
+  ""Loops"": [
+  ],
+  ""TotalLockedInLoop"": 0.00000000,
+  ""firstheight"": 0,
+  ""lastheight"": 1073741824,
+  ""minamount"": 0.00000000,
+  ""maxamount"": 11529215046.06846976,
+  ""currency"": ""MARMARA"",
+  ""n"": 1,
+  ""numpending"": 1,
+  ""issuances"": [
+    ""a7b6d4efff07868a7665d4995a77906d28e9db4486fd96c07e1ad776e7624dbe""
+  ],
+  ""totalamount"": 4.44400000,     <-----------------  credit amount
+  ""numclosed"": 0,
+  ""closed"": [
+  ],
+  ""totalclosed"": 0.00000000
+}
+```
+
+after settlement:
+```
+admin@ip-172-31-28-221:~/repo/komodo/src$ ./komodo-cli -ac_name=MARMARAXY2 marmarainfo 0 0  0 0./komodo-cli -ac_name=MARMARAXY2 marmarainfo 0 0  0 0
+{
+  ""result"": ""success"",
+  ""myNormalAddress"": ""RBaYi5PEBRNntg6jmrjWBBCvTsgfrKb79j"",
+  ""myNormalAmount"": 55.39060000,    <------------- amount increased on 4.444 coins
+  ""myCCActivatedAddress"": ""RBgYd7tBAQ7Vs1ZNQGHwvZNbZmRjZv4X7B"",
+  ""myActivatedAmount"": 78.00000000,
+  ""myAmountOnActivatedAddress-old"": 78.00000000,
+  ""myCCAddress"": ""RPcsj4pdznLkWKw143rsxpwyAfZDAcxQF7"",
+  ""myCCBalance"": 0.00110000,
+  ""Loops"": [
+  ],
+  ""TotalLockedInLoop"": 0.00000000,
+  ""firstheight"": 0,
+  ""lastheight"": 1073741824,
+  ""minamount"": 0.00000000,
+  ""maxamount"": 11529215046.06846976,
+  ""currency"": ""MARMARA""
+}
+```";"";"";
+"150437093879840768";"Paro#7842";"24-Jul-19 11:08 PM";"recompile I will try. i will test again";"";"";
+"150437093879840768";"Paro#7842";"25-Jul-19 02:00 PM";"@dimxy http://prntscr.com/ojxodg";"";"";
+"150437093879840768";"Paro#7842";"25-Jul-19 02:00 PM";"re-build. new branch ""marmara-v1-1-opret-v2""";"";"";
+"150437093879840768";"Paro#7842";"25-Jul-19 02:00 PM";"I have tested.";"";"";
+"150437093879840768";"Paro#7842";"25-Jul-19 02:00 PM";"settlement did not.";"";"";
+"507209916449292303";"dimxy#2587";"25-Jul-19 02:03 PM";"when will this loop mature?";"";"";
+"150437093879840768";"Paro#7842";"25-Jul-19 02:03 PM";"""amount"": 20000.00000000,
+  ""matures"": 1225,
+  ""currency"": ""MARMARA""";"";"";
+"150437093879840768";"Paro#7842";"25-Jul-19 02:03 PM";"link : https://docs.google.com/document/d/1Z59CbK-cPjp1wg7hrlzEFTEUgBoPHzegnzhowzJbZIQ/edit";"";"";
+"507209916449292303";"dimxy#2587";"25-Jul-19 02:04 PM";"and what is the current chain height?";"";"";
+"150437093879840768";"Paro#7842";"25-Jul-19 02:05 PM";"Height 1228";"";"";
+"150437093879840768";"Paro#7842";"25-Jul-19 02:05 PM";"http://explorer.marmara.io/";"";"";
+"507209916449292303";"dimxy#2587";"25-Jul-19 02:23 PM";"Could you run this command (it will show if lock-in-loop account has been spent):
+./komodo-cli -ac_name=MCL0 getspentinfo '{""txid"": ""27765e142f6f6cc93044ded1dcc499baf085b71a45c48d652cbec56e733ed68a"", ""index"": 4}'";"";"";
+"150437093879840768";"Paro#7842";"25-Jul-19 05:15 PM";"ok wait pls";"";"";
+"150437093879840768";"Paro#7842";"25-Jul-19 06:05 PM";"```./komodo-cli -ac_name=MCL0 getspentinfo '{""txid"": ""27765e142f6f6cc93044ded1dcc499baf085b71a45c48d652cbec56e733ed68a"", ""index"": 4}'
+{
+  ""txid"": ""2d19799c42f59d91266c82896c557c17d67fd727acc97b943329e898aa3035e9"",
+  ""index"": 3,
+  ""height"": 1226
+}
+```";"";"";

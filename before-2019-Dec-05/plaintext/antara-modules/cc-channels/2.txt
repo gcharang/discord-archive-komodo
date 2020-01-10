@@ -1,0 +1,326 @@
+==============================================================
+Guild: Komodo
+Channel: cc-channels
+Topic: https://developers.komodoplatform.com
+Messages: 71
+Range: before 05-Dec-19 12:00 AM
+==============================================================
+
+[28-Mar-19 05:12 PM] TonyL#3577
+At least on usual RPC calls level - I'm not creating some evil transactions or changing source code in tests.
+It would be great I think if such non-standart things can be added to test framework
+
+[29-Mar-19 04:59 AM] blackjok3r#3181
+Dont really need to, the validation just needs to be good enough that these evil transactions cant pass it.
+
+[19-May-19 02:48 PM] TonyL#3577
+https://paste.ubuntu.com/p/Mz7WTCSSrq/ channelsCC tests failing with some scary errors, investigating
+
+[19-May-19 04:21 PM] TonyL#3577
+Looks like some tests problem, was not able to reproduce manually on non regtest chain, and tests also passed fine after machine reboot
+
+[19-May-19 07:08 PM] Alright#0419
+@TonyL you can use `-testnode=1` for running a single network node now
+
+[19-May-19 07:09 PM] Alright#0419
+never trusted that regtest would have the same exact behavior as a real chain
+
+[19-May-19 07:10 PM] Alright#0419
+those errors probably aren't insignificant btw. Seems the daemon built transactions that did not pass consensus rules, it should really never do that
+
+[19-May-19 07:10 PM] TonyL#3577
+Yep, I've tested it on usual chain and it looks fine
+
+[19-May-19 07:10 PM] Alright#0419
+if it is your tests causing it, try to figure out which values do it, so we can prevent people from doing it via rpc
+
+[19-May-19 07:11 PM] TonyL#3577
+It's very normal RPC calls actually
+
+[19-May-19 07:11 PM] Alright#0419
+not familiar enough with channels to see the problem with these
+
+[19-May-19 07:11 PM] TonyL#3577
+I'm trying on real chains with same params and it's fine
+
+[19-May-19 07:11 PM] Alright#0419
+but `decoderawtransaction` on them maybe, try to compare them to ones that did work and see what is different
+
+[19-May-19 07:12 PM] Alright#0419
+I don't think that's just a regtest fluke is what I'm saying
+
+[19-May-19 08:06 PM] Alright#0419
+@TonyL do you still have that chain?
+
+[19-May-19 08:06 PM] TonyL#3577
+Which one?
+
+[19-May-19 08:07 PM] Alright#0419
+the one with channels errors
+
+[19-May-19 08:07 PM] TonyL#3577
+It's regtest chain, actually it's not exists
+
+[19-May-19 08:07 PM] TonyL#3577
+Temp chain creating on tests execution which flushing after tests finishing
+
+[19-May-19 08:07 PM] Alright#0419
+Was just looking at the txs and the code for those errors
+
+[19-May-19 08:07 PM] Alright#0419
+something wrong with the vin on the second one, wanted to look at the tx
+
+[19-May-19 08:07 PM] Alright#0419
+no worries
+
+[19-May-19 08:08 PM] TonyL#3577
+Strange is that after PC reboot it's making same calls fine, thats why I'm thinking it's some tests specific problem
+
+[19-May-19 08:09 PM] Alright#0419
+if you do reproduce(no worries if not), please keep the chain
+
+[19-May-19 08:09 PM] Alright#0419
+would like to look at it
+
+{Reactions}
+👍 
+
+[19-Oct-19 09:00 AM] CrisF#3405
+Hi, Could `Channels` be considered the same as 0conf in terms of usage?
+
+[19-Oct-19 09:01 AM] gcharang#6833
+it is more like lightning without routing problems, but needs a similar commitment of funds towards a receiver
+
+can be used as a replacement for 0conf
+
+[19-Oct-19 09:03 AM] gcharang#6833
+and there is no sending to a third person through a person you have a channel open with
+there is only sender and receiver, there is no bidirectional flow of funds @CrisF
+
+[19-Oct-19 09:05 AM] gcharang#6833
+if you think you will pay your local restaurant 100 KMD in the next month, you can open a channel with them for that amount
+after that txn is notarised, you can make payments of any value < 100 KMD to them, that can be considered final the instant the txn hits the mempool
+
+[19-Oct-19 09:07 AM] gcharang#6833
+the same channel can be closed and all the remaining coins recovered at any time, will take one notarisation for a channel close too
+
+{Reactions}
+🙏 
+
+[19-Oct-19 09:14 AM] CrisF#3405
+Do you know if there is any other equivalent to 0conf available to use @gcharang?
+
+[19-Oct-19 09:17 AM] CrisF#3405
+I'm actually looking for a 0conf kind of speed transaction to use with tokens.
+
+[19-Oct-19 09:28 AM] gcharang#6833
+I don't think 0conf exists for tokens rn
+maybe channels can be updated to include tokens support, I'm not sure
+
+[19-Oct-19 09:33 AM] CrisF#3405
+Ok, thanks @gcharang !
+I tested tokens for a very short time when it was first developed.  Amazed at the speed.
+I'm not sure if `Channels` will suit the project that was asking, but will pass along info on it.
+Not sure how many usecases there would be for 0conf speed tokens, but imagine that there would be some.
+
+[19-Oct-19 01:20 PM] Mihailo#5902
+Channels already support tokens
+
+[19-Oct-19 01:21 PM] gcharang#6833
+oh, then I need to update the docs
+wasn't aware of it
+@CrisF ^
+
+{Reactions}
+🔥 
+
+[19-Oct-19 01:25 PM] gcharang#6833
+@Mihailo which branch/repo is it available in?
+
+[19-Oct-19 01:26 PM] Mihailo#5902
+FSM
+
+[19-Oct-19 01:26 PM] Mihailo#5902
+Probably even in master...
+
+[19-Oct-19 01:27 PM] gcharang#6833
+I can't see it in jl777/dev
+```bash
+./komodo-cli -ac_name=RICK help | grep channels                                 
+
+channelsaddress pubkey
+channelsclose opentxid
+channelsinfo [opentxid]
+channelsinfo
+channelsopen destpubkey numpayments payment
+channelspayment opentxid amount [secret]
+channelsrefund opentxid closetxid
+```
+the help output should be different with tokens support correct?
+@Mihailo
+
+[19-Oct-19 01:28 PM] gcharang#6833
+building FSM now
+
+[19-Oct-19 01:31 PM] Mihailo#5902
+It is there, but it seems it is not in rpc help
+
+[19-Oct-19 01:32 PM] CrisF#3405
+Thanks for letting me know.
+
+[19-Oct-19 01:33 PM] Mihailo#5902
+Pushed the fix for rcp help
+
+[19-Oct-19 01:33 PM] Mihailo#5902
+in channelsopen the last param is optional - tokenid
+
+{Reactions}
+👍 🙏 
+
+[19-Oct-19 01:34 PM] CrisF#3405
+The project has a point card app that is can be used form receiving, trading and using points.
+
+[19-Oct-19 01:35 PM] CrisF#3405
+They are using 0conf on BCH at the moment.
+
+[19-Oct-19 01:36 PM] CrisF#3405
+Not sure if `channels` will work in the same way.
+
+[19-Oct-19 01:38 PM] gcharang#6833
+it isn't as straight forward as 0conf @CrisF 
+but the usage will be quite similar
+the only addition is pre allocation of funds towards a receiver, which will take the time of one notarisation
+
+they will also get on chain orderbook and trade with a Smartchain
+
+[19-Oct-19 01:39 PM] gcharang#6833
+if they manage to integrate gateways, they can even trade real crypto for these points on chain
+
+[19-Oct-19 01:41 PM] gcharang#6833
+they can even make the base coin very scarce (no public mining) and allocate it to registered customers -- this will restrict the number of transactions a person can do
+
+[19-Oct-19 01:42 PM] CrisF#3405
+Thanks!  I'll let them know and see what they think.
+
+{Reactions}
+👍 
+
+[19-Oct-19 03:43 PM] gcharang#6833
+@Mihailo 
+`channelspayment open_tx_id payment_amount (secret)`
+how is the `secret` used ?
+
+[19-Oct-19 03:45 PM] Mihailo#5902
+Secret is used only when destination issues the payment to itself from the channel. The cases for that is that the payment reached mempool but for some reason haven't been mined and it is gone. So the destination can makenpayment tx and supply the secret from the initial payment.
+
+[19-Oct-19 03:47 PM] gcharang#6833
+got it
+
+[19-Oct-19 04:00 PM] gcharang#6833
+@Mihailo there seems to be a double entry for a payment done 
+```json
+{
+  "result": "success",
+  "Channel CC address": "RVEZbEwMBQBdryswcWhtwWY5sYJTiEJ5SG",
+  "Destination address": "RM9n6rts1CBKX4oXziLp1WBBgEUjKKWHb3",
+  "Number of payments": 1000,
+  "Denomination (satoshi)": "10000000",
+  "Amount (satoshi)": "10000000000",
+  "Transactions": [
+    {
+      "Open": "04ed7f0d7c90036bad2822ea32564e38cc517f2ac86c8c53a031543e7d8235d0"
+    },
+    {
+      "Payment": "d16b372eff7de8e0b2fa44bf74d13784c4f1ab45b64296b7e36f74950f892fad",
+      "Number of payments": 21,
+      "Amount": 210000000,
+      "Destination": "RM9n6rts1CBKX4oXziLp1WBBgEUjKKWHb3",
+      "Secret": "570fd06eb542eb0dcb163c42467860194a0a998dfccee047724067f5aab7490e",
+      "Payments left": 979
+    },
+    {
+      "Payment": "d16b372eff7de8e0b2fa44bf74d13784c4f1ab45b64296b7e36f74950f892fad",
+      "Number of payments": 21,
+      "Amount": 210000000,
+      "Destination": "RM9n6rts1CBKX4oXziLp1WBBgEUjKKWHb3",
+      "Secret": "570fd06eb542eb0dcb163c42467860194a0a998dfccee047724067f5aab7490e",
+      "Payments left": 979
+    }
+  ]
+}
+```
+
+[19-Oct-19 04:00 PM] gcharang#6833
+for the channelsinfo call
+
+[19-Oct-19 04:17 PM] Mihailo#5902
+I'll take a look
+
+{Reactions}
+👍 
+
+[03-Nov-19 10:12 PM] Regnar#6164
+```- Assets
+  - Pokemon NFTs - [https://github.com/NOCTLJRNE/Komodo-Pokemon.git](https://github.com/NOCTLJRNE/Komodo-Pokemon.git)
+  - Assets CC TUI in Python - [https://github.com/tonymorony/komodo-cctools-python/blob/master/assets_cc_tui.py](https://github.com/tonymorony/komodo-cctools-python/blob/master/assets_cc_tui.py)```
+
+Hey all, if you have any proof of concepts or built something cool using Channels CC, please let me know. The goal is to build out a list of concepts using CCs to help show other developers what is possible and add this to the Komodo docs page. Here's just a sample of #cc-assets
+
+[07-Nov-19 11:29 AM] TonyL#3577
+@Mihailo looks like similar hang as for oraclescreate happens with `channelspayment` call
+```        # trying to make 0 channel payment
+        result = rpc.channelspayment(channel_txid, "0")
+        assert_error(result)
+    
+        # trying to make negative channel payment
+>       result = rpc.channelspayment(channel_txid, "-1")
+```
+and then hang
+
+[07-Nov-19 11:29 AM] TonyL#3577
+will try to reproduce manually now
+
+[07-Nov-19 11:39 AM] TonyL#3577
+reproduced manually
+
+[07-Nov-19 11:39 AM] TonyL#3577
+```./komodo-cli -ac_name=TONYL channelspayment 15aa84e05b5953fd837e4e6ae4aeb1f1ceaefd0d0f6fc65f492ba40f13d4a7df 0
+{
+  "result": "error",
+  "error": "invalid payment amount, must be greater than 0"
+}
+./komodo-cli -ac_name=TONYL channelspayment 15aa84e05b5953fd837e4e6ae4aeb1f1ceaefd0d0f6fc65f492ba40f13d4a7df -1
+```
+hang, so looks like exactly same thingy as for oracles
+
+[07-Nov-19 11:44 AM] jl777c#5810
+@Mihailo @dimxy do you know how to fix all these related hangs? we are putting together a release candidate, so we need all such hangs fixed. hopefully you can find and fix in code
+
+[07-Nov-19 11:52 AM] dimxy#2587
+@Mihailo seems this is the similar problem with lock ?
+
+[07-Nov-19 11:53 AM] jl777c#5810
+i think all the recently changed rpc calls needs to be checked
+
+[07-Nov-19 11:54 AM] jl777c#5810
+the ones changes for nspv or otherwise
+
+[07-Nov-19 12:08 PM] Mihailo#5902
+Yes, I will fix them today
+
+[07-Nov-19 01:54 PM] Mihailo#5902
+@TonyL @jl777c @dimxy I made PR that should resolve all RPCs that have new locking mechanism and tehre should not be any blocking now.
+
+{Reactions}
+👍 (3) 
+
+[18-Nov-19 10:53 PM] PHBA2061#2530
+@gcharang <https://developers.komodoplatform.com/basic-docs/antara/antara-api/channels.html#channelspayment> I think the arguments tables of `channelspayment` & `channelsrefund` are not correct, it isn't up to date with <https://docs.komodoplatform.com/basic-docs/antara/antara-api/channels.html#channelspayment>
+
+[19-Nov-19 09:17 AM] gcharang#6833
+@PHBA2061 thanks for the report!
+the changes are currently in a PR which should be reviewd and merged in this week
+
+{Reactions}
+👍 
+
